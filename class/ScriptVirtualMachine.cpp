@@ -1,0 +1,1251 @@
+﻿/****************************************************************************
+	Copyright (c) 2019 ZhuLei
+	Email:zhulei1985@foxmail.com
+
+	Licensed under the Apache License, Version 2.0 (the "License");
+	you may not use this file except in compliance with the License.
+	You may obtain a copy of the License at
+
+	http://www.apache.org/licenses/LICENSE-2.0
+
+	Unless required by applicable law or agreed to in writing, software
+	distributed under the License is distributed on an "AS IS" BASIS,
+	WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+	See the License for the specific language governing permissions and
+	limitations under the License.
+ ****************************************************************************/
+
+#include "scriptcommon.h"
+
+#include <stdarg.h>
+
+#include "EScriptSentenceType.h"
+#include "EScriptVariableType.h"
+#include "ScriptCallBackFunion.h"
+
+#include "ScriptVirtualMachine.h"
+#include "ScriptEventMgr.h"
+
+namespace zlscript
+{
+	unsigned long CScriptRunState::s_nIDSum = 0;
+	CScriptRunState::CScriptRunState()
+	{
+		m_pMachine = nullptr;
+		CurStackSizeWithoutFunParam = 0;
+		//_intUntilTime = 0;
+		m_WatingTime = 0;
+
+		nCallEventIndex = -1;
+		m_CallStateId = 0;
+		nRunCount = 0;
+		//m_pBattle = nullptr;
+		//m_pShape = nullptr;
+		if (s_nIDSum == 0)
+		{
+			s_nIDSum++;//跳过0
+		}
+		m_id = s_nIDSum++;
+
+		SetEnd(false);
+	}
+	CScriptRunState::~CScriptRunState()
+	{
+		ClearStack();
+		ClearExecBlock();
+	}
+	void CScriptRunState::WatingTime(unsigned int nTime)
+	{
+		if (m_WatingTime > nTime)
+		{
+			m_WatingTime -= nTime;
+		}
+		else
+		{
+			m_WatingTime = 0;
+		}
+	}
+	bool CScriptRunState::PushEmptyVarToStack()
+	{
+		StackVarInfo var;
+		var.cType = EScriptVal_None;
+		var.Int64 = 0;
+		m_varRegister.push(var);
+
+		return true;
+	}
+	bool CScriptRunState::PushVarToStack(int nVal)
+	{
+		StackVarInfo var;
+		var.cType = EScriptVal_Int;
+		var.Int64 = nVal;
+		m_varRegister.push(var);
+
+		return true;
+	}
+
+	bool CScriptRunState::PushVarToStack(__int64 nVal)
+	{
+		StackVarInfo var;
+		var.cType = EScriptVal_Int;
+		var.Int64 = nVal;
+		m_varRegister.push(var);
+
+		return true;
+	}
+	bool CScriptRunState::PushVarToStack(double Double)
+	{
+		StackVarInfo var;
+		var.cType = EScriptVal_Double;
+		var.Double = Double;
+		m_varRegister.push(var);
+
+		return true;
+	}
+	bool CScriptRunState::PushVarToStack(char* pstr)
+	{
+		StackVarInfo var;
+		var.cType = EScriptVal_String;
+		var.Int64 = StackVarInfo::s_strPool.NewString(pstr);
+		m_varRegister.push(var);
+
+		return true;
+	}
+	bool CScriptRunState::PushClassPointToStack(__int64 nIndex)
+	{
+		StackVarInfo var;
+		var.cType = EScriptVal_ClassPointIndex;
+		var.Int64 = nIndex;
+		m_varRegister.push(var);
+
+		return true;
+	}
+	bool CScriptRunState::PushAndNewStrVarToStack(char* pstr)
+	{
+		if (pstr == nullptr)
+		{
+			return false;
+		}
+		StackVarInfo var;
+		var.cType = EScriptVal_String;
+		var.cExtend = 1;
+		var.Int64 = StackVarInfo::s_strPool.NewString(pstr);
+		m_varRegister.push(var);
+
+		return true;
+	}
+
+	bool CScriptRunState::PushVarToStack(StackVarInfo& Val)
+	{
+		m_varRegister.push(Val);
+		//switch (Val.cType)
+		//{
+		//case EScriptVal_Int:
+		//	PushVarToStack(Val.Int64);
+		//	break;
+		//case EScriptVal_Double:
+		//	PushVarToStack(Val.Double);
+		//	break;
+		//case EScriptVal_String:
+		//	PushAndNewStrVarToStack(Val.pStr);
+		//	break;
+		//}
+
+		return true;
+	}
+
+
+
+	__int64 CScriptRunState::PopIntVarFormStack()
+	{
+		if (m_varRegister.empty())
+		{
+			return 0;
+		}
+		StackVarInfo var = m_varRegister.top();
+		__int64 nReturn = 0;
+		switch (var.cType)
+		{
+		case EScriptVal_None:
+			nReturn = 0;
+			break;
+		case EScriptVal_Int:
+			nReturn = var.Int64;
+			break;
+		case EScriptVal_Double:
+			nReturn = (__int64)(var.Double + 0.5f);
+			break;
+		case EScriptVal_String:
+			{
+				const char* pStr = StackVarInfo::s_strPool.GetString(var.Int64);
+				if (pStr)
+				{
+					nReturn = atoi(pStr);
+
+				}
+				else
+				{
+					nReturn = 0;
+				}
+			}
+
+			break;
+		}
+
+		m_varRegister.pop();
+		return nReturn;
+	}
+	double CScriptRunState::PopDoubleVarFormStack()
+	{
+		if (m_varRegister.empty())
+		{
+			return 0;
+		}
+		StackVarInfo var = m_varRegister.top();
+		double qReturn = 0;
+		switch (var.cType)
+		{
+		case EScriptVal_None:
+			qReturn = 0;
+			break;
+		case EScriptVal_Int:
+			qReturn = (double)var.Int64;
+			break;
+		case EScriptVal_Double:
+			qReturn = var.Double;
+			break;
+		case EScriptVal_String:
+			const char* pStr = StackVarInfo::s_strPool.GetString(var.Int64);
+			if (pStr)
+			{
+				qReturn = atof(pStr);
+
+			}
+			else
+			{
+				qReturn = 0;
+			}
+			break;
+		}
+
+		m_varRegister.pop();
+		return qReturn;
+	}
+	char* CScriptRunState::PopCharVarFormStack()
+	{
+		memset(strbuff,0,sizeof(strbuff));
+		if (m_varRegister.empty())
+		{
+			return strbuff;
+		}
+		StackVarInfo var = m_varRegister.top();
+		switch (var.cType)
+		{
+		case EScriptVal_None:
+			break;
+		case EScriptVal_Int:
+			//ltoa(var.Int64,strbuff,10);
+			sprintf(strbuff, "%lld", var.Int64);
+			break;
+		case EScriptVal_Double:
+			sprintf(strbuff, "%f", var.Double);
+			//gcvt(var.Double,8,strbuff);
+			break;
+		case EScriptVal_String:
+			{
+				const char* pStr = StackVarInfo::s_strPool.GetString(var.Int64);
+				if (pStr)
+					strcpy(strbuff, pStr);
+			}
+
+
+			break;
+		}
+
+		m_varRegister.pop();
+		return strbuff;
+	}
+	__int64 CScriptRunState::PopClassPointFormStack()
+	{
+		if (m_varRegister.empty())
+		{
+			return 0;
+		}
+		StackVarInfo var = m_varRegister.top();
+		__int64 nReturn = 0;
+		switch (var.cType)
+		{
+		case EScriptVal_ClassPointIndex:
+			nReturn = var.Int64;
+			break;
+		//case EScriptVal_String:
+		//	if (var.pStr)
+		//	{
+		//		if (var.cExtend > 0)
+		//		{
+		//			SAFE_DELETE_ARRAY(var.pStr);
+		//		}
+		//	}
+		//	break;
+		}
+
+		m_varRegister.pop();
+		return nReturn;
+	}
+	StackVarInfo CScriptRunState::PopVarFormStack()
+	{
+		if (m_varRegister.empty())
+		{
+			return StackVarInfo();
+		}
+		StackVarInfo var = m_varRegister.top();
+		m_varRegister.pop();
+		return var;
+	}
+	//CScriptBasePointer * CScriptRunState::PopRealClassPointForStack()
+	//{
+	//	if (m_varRegister.empty())
+	//	{
+	//		return 0;
+	//	}
+	//	StackVarInfo var = m_varRegister.top();
+	//	CScriptPointInterface *pReturn = nullptr;
+	//	__int64 index = 0;
+	//	switch (var.cType)
+	//	{
+	//	case EScriptVal_ClassPointIndex:
+	//		index = var.Int64;
+	//		break;
+	//	//case EScriptVal_String:
+	//	//	if (var.pStr)
+	//	//	{
+	//	//		if (var.cExtend > 0)
+	//	//		{
+	//	//			SAFE_DELETE_ARRAY(var.pStr);
+	//	//		}
+	//	//	}
+	//	//	break;
+	//	}
+	//
+	//	m_varRegister.pop();
+	//
+	//	CScriptBasePointer *pPoint = CScriptSuperPointerMgr::GetInstance()->PickupPointer(index);
+	//	if (pPoint)
+	//	{
+	//		return pPoint;
+	//	}
+	//	return nullptr;
+	//}
+	void CScriptRunState::CopyToRegister(CScriptRunState * pState, int nNum)
+	{
+		std::vector<StackVarInfo> vInfo;
+		for (int i = 0; i < nNum; i++)
+		{
+			if (m_varRegister.empty())
+			{
+				break;
+			}
+			StackVarInfo var = m_varRegister.top();
+			vInfo.push_back(var);
+			m_varRegister.pop();
+		}
+		for (int i = (int)vInfo.size() - 1; i >= 0; i--)
+		{
+			pState->m_varRegister.push(vInfo[i]);
+		}
+		pState->SetParamNum(vInfo.size());
+	}
+	void CScriptRunState::CopyFromStack(CScriptStack* pStack)
+	{
+		if (pStack == nullptr)
+		{
+			return;
+		}
+		std::vector<StackVarInfo> vVars;
+		while (!pStack->empty())
+		{
+			vVars.push_back(pStack->top());
+			pStack->pop();
+		}
+		for (unsigned int i = 0; i < vVars.size(); i++)
+		{
+			m_varRegister.push(vVars[i]);
+		}
+	}
+	//__int64 CScriptRunState::GetIntParamVar(int index)
+	//{
+	//	index = index + CurCallFunParamNum;
+	//	if (m_varRegister.size() > index)
+	//	{
+	//		return 0;
+	//	}
+	//	StackVarInfo & var = m_varRegister.GetVal(index);
+	//	__int64 nReturn = 0;
+	//	switch (var.cType)
+	//	{
+	//	case EScriptVal_Int:
+	//		nReturn = var.Int64;
+	//		break;
+	//	case EScriptVal_Double:
+	//		nReturn = (__int64)(var.Double + 0.5f);
+	//		break;
+	//	case EScriptVal_String:
+	//		if (var.pStr)
+	//		{
+	//			nReturn = atoi(var.pStr);
+	//
+	//			if (var.cExtend > 0)
+	//			{
+	//				SAFE_DELETE_ARRAY(var.pStr);
+	//			}
+	//		}
+	//		else
+	//		{
+	//			nReturn = 0;
+	//		}
+	//		break;
+	//	}
+	//	return nReturn;
+	//}
+	//double CScriptRunState::GetDoubleParamVar(int index)
+	//{
+	//	index = index + CurCallFunParamNum;
+	//	if (m_varRegister.size() > index)
+	//	{
+	//		return 0;
+	//	}
+	//	StackVarInfo& var = m_varRegister.GetVal(index);
+	//	double qReturn = 0;
+	//	switch (var.cType)
+	//	{
+	//	case EScriptVal_Int:
+	//		qReturn = (double)var.Int64;
+	//		break;
+	//	case EScriptVal_Double:
+	//		qReturn = var.Double;
+	//		break;
+	//	case EScriptVal_String:
+	//		if (var.pStr)
+	//		{
+	//			qReturn = atof(var.pStr);
+	//
+	//			if (var.cExtend > 0)
+	//			{
+	//				SAFE_DELETE_ARRAY(var.pStr);
+	//			}
+	//		}
+	//		else
+	//		{
+	//			qReturn = 0;
+	//		}
+	//		break;
+	//	}
+	//
+	//	m_varRegister.pop();
+	//	return qReturn;
+	//}
+	//char* CScriptRunState::GetCharParamVar(int index)
+	//{
+	//	static char strbuff[2048];
+	//	memset(strbuff,0,sizeof(strbuff));
+	//
+	//	index = index + CurCallFunParamNum;
+	//	if (m_varRegister.size() > index)
+	//	{
+	//		return strbuff;
+	//	}
+	//
+	//	StackVarInfo& var = m_varRegister.GetVal(index);
+	//	char* pReturn = NULL;
+	//	switch (var.cType)
+	//	{
+	//	case EScriptVal_Int:
+	//		ltoa(var.Int64,strbuff,10);
+	//		break;
+	//	case EScriptVal_Double:
+	//		gcvt(var.Double,8,strbuff);
+	//		break;
+	//	case EScriptVal_String:
+	//		strcpy(strbuff,var.pStr);
+	//
+	//		if (var.cExtend > 0)
+	//		{
+	//			SAFE_DELETE_ARRAY(var.pStr);
+	//		}
+	//		break;
+	//	}
+	//	return strbuff;
+	//}
+	void CScriptRunState::ClearFunParam()
+	{
+		while (m_varRegister.size() > 0 && (int)m_varRegister.size() > CurStackSizeWithoutFunParam)
+		{
+			StackVarInfo var = m_varRegister.top();
+			switch (var.cType)
+			{
+			//case EScriptVal_String:
+			//	if (var.cExtend > 0)
+			//	{
+			//		SAFE_DELETE_ARRAY(var.pStr);
+			//	}
+			//	break;
+			}
+			m_varRegister.pop();
+		}
+	}
+	void CScriptRunState::ClearFunParam(int nKeepNum)
+	{
+		while ((int)m_varRegister.size() > nKeepNum)
+		{
+			StackVarInfo var = m_varRegister.top();
+			switch (var.cType)
+			{
+			//case EScriptVal_String:
+			//	if (var.cExtend > 0)
+			//	{
+			//		SAFE_DELETE_ARRAY(var.pStr);
+			//	}
+			//	break;
+			}
+			m_varRegister.pop();
+		}
+	}
+	void CScriptRunState::ClearStack()
+	{
+		while (!m_varRegister.empty())
+		{
+			StackVarInfo var = m_varRegister.top();
+			switch (var.cType)
+			{
+			//case EScriptVal_String:
+			//	if (var.cExtend > 0)
+			//	{
+			//		SAFE_DELETE_ARRAY(var.pStr);
+			//	}
+			//	break;
+			}
+			m_varRegister.pop();
+		}
+
+	}
+	void CScriptRunState::ClearExecBlock(bool bPrint)
+	{
+		while (!m_BlockStack.empty())
+		{
+			CScriptExecBlock* pBlock = m_BlockStack.top();
+			if (bPrint)
+			{
+				SCRIPT_PRINT(pBlock->GetCurSourceWords().c_str());
+			}
+			SAFE_DELETE(pBlock);
+			m_BlockStack.pop();
+		}
+	}
+	void CScriptRunState::ClearAll()
+	{
+		ClearExecBlock();
+		ClearStack();
+		ClearFunParam();
+		nCallEventIndex = -1;
+		m_CallStateId = 0;
+		FunName = "";
+		nRunCount = 0;
+		m_WatingTime = 0;
+	}
+	unsigned int CScriptRunState::Exec(unsigned int unTimeRes,CScriptVirtualMachine *pMachine)
+	{
+		if (unTimeRes == 0)
+		{
+			unTimeRes = 1;
+		}
+		while (!m_BlockStack.empty() && unTimeRes > 0)
+		{
+			CScriptExecBlock* pBlock = m_BlockStack.top();
+			if (pBlock == NULL)
+			{
+				m_BlockStack.pop();
+				continue;
+			}
+			bool bNeedNext = false;
+		
+			while (unTimeRes > 0)
+			{
+				bool bBreak = false;
+				unsigned int nResult = pBlock->ExecBlock(pMachine);
+				switch (nResult)
+				{
+				case CScriptExecBlock::ERESULT_END:
+					{
+						SAFE_DELETE(pBlock);
+						m_BlockStack.pop();
+						if (m_BlockStack.empty())
+						{
+							return ERunTime_Complete;
+						}
+						bBreak = true;
+						break;
+					}
+				case CScriptExecBlock::ERESULT_ERROR:
+					{
+						ClearExecBlock(true);
+						SCRIPT_PRINT("script","Error script 执行错误: %s",FunName.c_str());
+						return ERunTime_Error;
+					}
+				case CScriptExecBlock::ERESULT_WAITING:
+					{
+						return ERunTime_Waiting;
+					}
+				case CScriptExecBlock::ERESULT_CALLSCRIPTFUN:
+					{
+						//检查是否有被打断的函数
+						bBreak = true;
+					}
+					break;
+				case CScriptExecBlock::ERESULT_NEXTCONTINUE:
+					{
+						bNeedNext = true;
+					}
+					break;
+				}
+				if (bNeedNext)
+				{
+					break;
+				}
+				if (bBreak)
+				{
+					break;
+				}
+
+				unTimeRes--;
+				nRunCount++;
+			}
+			if (bNeedNext)
+			{
+				break;
+			}
+		}
+
+		//if (nRunCount > 50000)
+		//{
+		//	ClearExecBlock();
+		//	PrintDebug("script","Error script 执行步骤过长: %s",FunName.c_str());
+		//	return ERunTime_Error;
+		//}
+		return ERunTime_Continue;
+	}
+
+	int CScriptRunState::CallFun(CScriptVirtualMachine* pMachine, int nType, int FunIndex, int paramNum)
+	{
+		int nReturn = ECALLBACK_FINISH;
+
+		switch (nType)
+		{
+		case 0:
+			{
+				CurCallFunParamNum = paramNum;
+				CurStackSizeWithoutFunParam = m_varRegister.size() - paramNum;
+				C_CallBackScriptFunion pFun = CScriptCallBackFunion::GetFun(FunIndex);
+				if (pFun)
+				{
+					nReturn = pFun(pMachine,this);
+				}
+				else
+				{
+					SCRIPT_PRINT("script","Error: script callfun: %d",FunIndex);
+					return ECALLBACK_ERROR;
+				}
+			}
+			break;
+		case 1:
+			{
+				CScriptCodeLoader::tagCodeData *pCodeData = CScriptCodeLoader::GetInstance()->GetCode(FunIndex);
+				if (pCodeData)
+				{
+					CScriptExecBlock *pBlock = 
+						new CScriptExecBlock(pCodeData,this);
+
+					if (pBlock)
+					{
+						pBlock->SetCallFunParamNum(paramNum);
+						pBlock->SetStackSizeWithoutFunParam(m_varRegister.size() - paramNum);
+
+						if (m_BlockStack.size() > 0)
+						{
+							CScriptExecBlock* pOldBlock = m_BlockStack.top();
+							if (pOldBlock->GetFunType() == EICODE_FUN_CAN_BREAK)
+							{
+								m_BlockStack.pop();
+							}
+						}
+
+						m_BlockStack.push(pBlock);
+						nReturn = ECALLBACK_CALLSCRIPTFUN;
+					}
+					else
+					{
+						nReturn = ECALLBACK_ERROR;
+					}
+				}
+				else
+				{
+					SCRIPT_PRINT("script","Error: script scriptfun: %d",FunIndex);
+					return ECALLBACK_ERROR;
+				}
+			}
+		}
+
+		return nReturn;
+	}
+	int CScriptRunState::CallFun(CScriptVirtualMachine* pMachine, const char *pFunName, int paramNum)
+	{
+		int nReturn = ECALLBACK_FINISH;
+
+		CScriptCodeLoader::tagCodeData *pCode = CScriptCodeLoader::GetInstance()->GetCode(pFunName);
+		if (pCode)
+		{
+			CScriptExecBlock *pBlock = 
+				new CScriptExecBlock(pCode,this);
+
+			if (pBlock)
+			{
+				if (m_BlockStack.size() > 0)
+				{
+					CScriptExecBlock* pOldBlock = m_BlockStack.top();
+					if (pOldBlock->GetFunType() == EICODE_FUN_CAN_BREAK)
+					{
+						m_BlockStack.pop();
+					}
+				}
+
+				pBlock->SetCallFunParamNum(paramNum);
+				pBlock->SetStackSizeWithoutFunParam(m_varRegister.size() - paramNum);
+				m_BlockStack.push(pBlock);
+				nReturn = ECALLBACK_CALLSCRIPTFUN;
+			}
+			else
+			{
+				nReturn = ECALLBACK_ERROR;
+			}
+		}
+		else
+		{
+			CurCallFunParamNum = paramNum;
+			CurStackSizeWithoutFunParam = m_varRegister.size() - paramNum;
+			C_CallBackScriptFunion pFun = CScriptCallBackFunion::GetFun(pFunName);
+			if (pFun)
+			{
+				nReturn = pFun(pMachine,this);
+			}
+			else
+			{
+				SCRIPT_PRINT("script","Error: script callfun: %s",pFunName);
+				return ECALLBACK_ERROR;
+			}
+		}
+
+		return nReturn;
+	}
+	//CScriptVirtualMachine  *CScriptVirtualMachine::m_pInstance = NULL;
+	CScriptVirtualMachine::CScriptVirtualMachine()
+	{
+		init();
+	};
+
+	CScriptVirtualMachine::~CScriptVirtualMachine()
+	{
+		clear();
+		//if (m_xCtrl)
+		//{
+		//	delete m_xCtrl;
+		//}
+	};
+
+	CScriptVirtualMachine* CScriptVirtualMachine::CreateNew()
+	{
+		return new CScriptVirtualMachine();
+	}
+	//bool CScriptVirtualMachine::NewInstance()
+	//{
+	//	m_pInstance = new CScriptVirtualMachine;
+	//	return true;
+	//}
+	//CScriptVirtualMachine *CScriptVirtualMachine::GetInstance()
+	//{
+	//	return m_pInstance;
+	//}
+	//bool CScriptVirtualMachine::DelInstance()
+	//{
+	//	SAFE_DELETE(m_pInstance);
+	//	return true;
+	//}
+
+	void CScriptVirtualMachine::init()
+	{
+		clear();
+		//m_nEventListIndex = CScriptEventMgr::GetInstance()->AssignID();
+		CScriptCodeLoader::GetInstance()->GetGlobalVar(vGlobalNumVar);
+		//LoadDir("data\\scripts\\");
+		//string strDir = "scripts\\";
+		//_finddata_t file;
+		//long lf;
+		//if((lf = _findfirst("scripts\\*.*", &file))==-1l)
+		//{
+
+		//}
+		//else
+		//{
+		//	while ( _findnext( lf, &file ) == 0)
+		//	{
+		//		if(file.attrib == _A_SUBDIR)
+		//		{
+		//			m_CodeLoader.LoadFile(file.name);
+		//		}
+		//		else
+		//		{
+		//			m_CodeLoader.LoadFile(file.name);
+		//		}
+		//	}
+		//}
+		//_findclose(lf);
+		//m_CodeLoader.LoadFile("scripts\\aaa.script");
+	}
+
+	void CScriptVirtualMachine::clear()
+	{
+		//CSingleLock xLock(m_xCtrl, true);
+
+		listRunState::iterator it = m_RunStateList.begin();
+		for (;it != m_RunStateList.end(); it++)
+		{
+			CScriptRunState *pState = *it;
+			SAFE_DELETE(pState);
+		}
+		m_RunStateList.clear();
+		//vGlobalNumVar.clear();
+	}
+
+	void CScriptVirtualMachine::SetEventIndex(int val)
+	{
+		m_nEventListIndex = val;
+	}
+
+	//bool CScriptVirtualMachine::RunFun(string funname)
+	//{
+	//	CScriptRunState *pState = new CScriptRunState();
+	//
+	//	map<string,int>::iterator it = m_CodeLoader.m_mapString2CodeIndex.find(funname);
+	//	if (it == m_CodeLoader.m_mapString2CodeIndex.end())
+	//	{
+	//		return false;
+	//	}
+	//	pState->vGlobalNumVar = m_CodeLoader.vGlobalNumVar;
+	//	CallFun(pState,1,it->second,0);
+	//	m_listRunState.push_back(pState);
+	//	
+	//	return true;
+	//}
+	bool CScriptVirtualMachine::RunFun(CScriptRunState *pState, std::string funname,const char *sFormat,...)
+	{
+		if (pState == nullptr)
+		{
+			return false;
+		}
+		if (funname.empty())
+		{
+			return false;
+		}
+		if (sFormat)
+		{
+			int nlen = strlen(sFormat);
+			va_list argptr;
+
+			va_start( argptr, sFormat);   
+
+			char ch = 0;
+			for (int i = 0; i < nlen; i++)
+			{
+				ch = *(sFormat + i);
+				if (ch == '%')
+				{
+					i++;
+					if (i < nlen)
+					{
+						void *pPoint = nullptr;
+						pPoint = va_arg(argptr, void*); 
+						switch (*(sFormat + i))
+						{
+						case 'd':
+							pState->PushVarToStack(*(int *)pPoint);
+							break;
+						case 's':
+							pState->PushVarToStack((char *)pPoint);
+							break;
+						}
+					}
+				}
+			}
+			va_end(argptr);
+		}
+
+
+		//CSingleLock xLock(m_xCtrl, true);
+		pState->m_pMachine = this;
+		pState->FunName = funname;
+		//pState->vGlobalNumVar = m_CodeLoader.vGlobalNumVar;
+
+		if (pState->CallFun(this,funname.c_str(),pState->m_varRegister.size()) == ECALLBACK_ERROR)
+		{
+			SCRIPT_PRINT("script","EProcess runscript: %s",funname.c_str());
+		}
+		SCRIPT_PRINT("script","Process runscript: %s",funname.c_str());
+		//cocos2d::log("run script %s\n", funname.c_str());
+		if (funname.empty())
+		{
+			//assert(0);
+		}
+
+	#ifdef _DEBUG
+		listRunState::iterator it = m_RunStateList.begin();
+		for (; it != m_RunStateList.end(); it++)
+		{
+			if (*it == pState)
+			{
+				//assert("repeat scriptstate");
+			}
+		}
+	#endif
+		m_RunStateList.push_back(pState);
+
+		return true;
+	}
+
+	bool CScriptVirtualMachine::RunFunImmediate(CScriptRunState* pState, std::string funname, const char* sFormat, ...)
+	{
+		if (funname.empty())
+		{
+			return false;
+		}
+		if (pState == nullptr)
+		{
+			return false;
+		}
+		if (sFormat)
+		{
+			int nlen = strlen(sFormat);
+			va_list argptr;
+
+			va_start(argptr, sFormat);
+
+			char ch = 0;
+			for (int i = 0; i < nlen; i++)
+			{
+				ch = *(sFormat + i);
+				if (ch == '%')
+				{
+					i++;
+					if (i < nlen)
+					{
+						void* pPoint = nullptr;
+						pPoint = va_arg(argptr, void*);
+						switch (*(sFormat + i))
+						{
+						case 'd':
+							pState->PushVarToStack(*(int*)pPoint);
+							break;
+						case 's':
+							pState->PushVarToStack((char*)pPoint);
+							break;
+						}
+					}
+				}
+			}
+			va_end(argptr);
+		}
+
+		pState->FunName = funname;
+		//pState->vGlobalNumVar = m_CodeLoader.vGlobalNumVar;
+
+		if (pState->CallFun(this, funname.c_str(), pState->m_varRegister.size()) == ECALLBACK_ERROR)
+		{
+			SCRIPT_PRINT("script", "EProcess runscript: %s", funname.c_str());
+		}
+		SCRIPT_PRINT("script", "Process runscript: %s", funname.c_str());
+
+		if (funname.empty())
+		{
+			//assert(0);
+		}
+		return true;
+	}
+
+	unsigned int CScriptVirtualMachine::Exec(unsigned int nDelay,unsigned int unTimeRes)
+	{
+		//CSingleLock xLock(m_xCtrl, true);
+		//检验等待队列，太久的话删除
+		//__int64 nowTime = CMyTime::GetTime();
+		int nSize = CScriptEventMgr::GetInstance()->GetEventSize(m_nEventListIndex);
+		for (int i = 0; i < nSize; i++)
+		{
+			int nSendID = 0;
+			CScriptStack ParmInfo;
+			CScriptEventMgr::GetInstance()->Lock();
+			auto pEvent = CScriptEventMgr::GetInstance()->GetEvent(m_nEventListIndex);
+			if (pEvent)
+			{
+				nSendID = pEvent->nSendID;
+				ParmInfo = pEvent->m_Parm;
+				CScriptEventMgr::GetInstance()->PopEvent(m_nEventListIndex);
+			}
+			else
+			{
+				CScriptEventMgr::GetInstance()->Unlock();
+				break;
+			}
+			CScriptEventMgr::GetInstance()->Unlock();
+
+
+			__int64 nEventType = ScriptStack_GetInt(ParmInfo);
+			if (nEventType == E_SCRIPT_EVENT_RETURN)
+			{
+				__int64 nStateID = ScriptStack_GetInt(ParmInfo);
+				std::map<unsigned long, CScriptRunState*>::iterator itWait = m_mapWaiting.find(nStateID);
+				if (itWait != m_mapWaiting.end())
+				{
+					CScriptRunState* pState = itWait->second;
+					pState->CopyFromStack(&ParmInfo);
+					m_RunStateList.push_back(pState);
+					m_mapWaiting.erase(itWait);		
+				}
+			}
+			else if (nEventType == E_SCRIPT_EVENT_RUNSCRIPT)
+			{
+				CScriptRunState* m_pScriptState = new CScriptRunState;
+				if (m_pScriptState)
+				{
+					__int64 nCallStateID = ScriptStack_GetInt(ParmInfo);
+					std::string strScript = ScriptStack_GetString(ParmInfo);
+					m_pScriptState->CopyFromStack(&ParmInfo);
+					if (nCallStateID != 0)
+					{
+						m_pScriptState->nCallEventIndex = nSendID;
+						m_pScriptState->m_CallStateId = nCallStateID;
+					}
+					RunFun(m_pScriptState, strScript, nullptr);
+				}
+			}
+		}
+
+		listRunState::iterator it = m_RunStateList.begin();
+		for (;it != m_RunStateList.end(); )
+		{
+			CScriptRunState *pState = *it;
+			if (pState)
+			{
+				if (pState->GetEnd())
+				{
+					it = m_RunStateList.erase(it);
+				}
+				else if (pState->m_WatingTime <= 0)
+				{
+					//pState->m_WatingTime = 0;
+					int nResult = pState->Exec(unTimeRes,this);
+					switch (nResult)
+					{
+					case ERunTime_Error:
+					case ERunTime_Complete:
+						{
+							if (pState->m_CallStateId != 0)
+							{
+								CScriptStack vRetrunVars;
+								ScriptVector_PushVar(vRetrunVars, (__int64)E_SCRIPT_EVENT_RETURN);
+								ScriptVector_PushVar(vRetrunVars, (__int64)pState->m_CallStateId);
+								ScriptVector_PushVar(vRetrunVars, &pState->PopVarFormStack());
+								CScriptEventMgr::GetInstance()->SendEvent(m_nEventListIndex, pState->nCallEventIndex, vRetrunVars);
+							}
+							SAFE_DELETE(pState);
+							it = m_RunStateList.erase(it);
+						}
+						break;
+					case ERunTime_Waiting:
+						{
+							if (m_mapWaiting.find(pState->GetId()) != m_mapWaiting.end())
+							{
+								CScriptRunState *pWaitingState = m_mapWaiting[pState->GetId()];
+								if (pWaitingState != pState)
+								{
+									SAFE_DELETE(pWaitingState);
+								}
+								else
+								{
+									//assert(0);
+								}
+							}
+							m_mapWaiting[pState->GetId()] = pState;
+							//pState->m_WatingTime = nowTime;
+							it = m_RunStateList.erase(it);
+						}
+						break;
+					default:
+						{
+							it++;
+						}
+						break;
+					}
+				}
+				else
+				{
+					pState->WatingTime(nDelay);
+					it++;
+				}
+			}
+			else
+			{
+				it = m_RunStateList.erase(it);
+			}
+		}
+		//删除
+		for (auto itDel = m_listDel.begin(); itDel != m_listDel.end(); itDel++)
+		{
+			std::map<unsigned long, CScriptRunState*>::iterator itWait = m_mapWaiting.find(*itDel);
+			if (itWait != m_mapWaiting.end())
+			{
+				CScriptRunState* pState = itWait->second;
+				if (pState && pState->GetId() == *itDel)
+				{
+					SAFE_DELETE(pState);
+					m_mapWaiting.erase(itWait);
+					break;
+				}
+			}
+			listRunState::iterator itRun = m_RunStateList.begin();
+			for (; itRun != m_RunStateList.end(); itRun++)
+			{
+				CScriptRunState* pState = *itRun;
+				if (pState && pState->GetId() == *itDel)
+				{
+					SAFE_DELETE(pState);
+					itRun = m_RunStateList.erase(itRun);
+					break;
+				}
+			}
+
+		}
+		m_listDel.clear();
+		return 0;
+	}
+	bool CScriptVirtualMachine::HasWaitingScript(unsigned long id)
+	{
+		//CSingleLock xLock(m_xCtrl, true);
+		std::map<unsigned long,CScriptRunState *>::iterator itWait = m_mapWaiting.find(id);
+		if (itWait != m_mapWaiting.end())
+		{
+			return true;
+		}
+		return false;
+	}
+	bool CScriptVirtualMachine::ResumeFun(unsigned long index,int nVal,const char *pStrVal)
+	{
+		//CSingleLock xLock(m_xCtrl, true);
+		std::map<unsigned long,CScriptRunState *>::iterator itWait = m_mapWaiting.find(index);
+		if (itWait != m_mapWaiting.end())
+		{
+			CScriptRunState *pState = itWait->second;
+			if (pStrVal && strcmp(pStrVal,"") != 0)
+			{
+				pState->PushAndNewStrVarToStack((char*)pStrVal);
+			}
+			pState->PushVarToStack(nVal);
+			m_RunStateList.push_back(pState);
+			m_mapWaiting.erase(itWait);
+			return true;
+		}
+		return false;
+	}
+	bool CScriptVirtualMachine::RemoveRunState(unsigned long id)
+	{
+		listRunState::iterator it = m_RunStateList.begin();
+		for (; it != m_RunStateList.end(); it++)
+		{
+			CScriptRunState *pState = *it;
+			if (pState->GetId() == id)
+			{
+				pState->SetEnd(true);
+				break;
+			}
+		}
+		//return false;
+		m_listDel.push_back(id);
+		return true;
+	}
+	bool CScriptVirtualMachine::RemoveRunStateByShape(int id)
+	{
+		//listRunState::iterator it = m_RunStateList.begin();
+		//for (; it != m_RunStateList.end(); )
+		//{
+		//	CScriptRunState *pState = *it;
+		//	if (pState && pState->GetShape() && pState->GetShape()->GetID() == id)
+		//	{
+		//		delete pState;
+		//		it = m_RunStateList.erase(it);
+		//	}
+		//	else
+		//	{
+		//		it++;
+		//	}
+		//}
+		return true;
+	}
+	bool CScriptVirtualMachine::CheckRun(__int64 id)
+	{
+		listRunState::iterator it = m_RunStateList.begin();
+		for (; it != m_RunStateList.end(); it++)
+		{
+			CScriptRunState *pState = *it;
+			if (pState->GetId() == id)
+			{
+				return true;
+			}
+		}
+		std::map<unsigned long, CScriptRunState *>::iterator itWait = m_mapWaiting.find(id);
+		if (itWait != m_mapWaiting.end())
+		{
+			return true;
+		}
+		return false;
+	}
+	CScriptRunState *CScriptVirtualMachine::GetRunState(unsigned long id)
+	{
+		listRunState::iterator it = m_RunStateList.begin();
+		for (; it != m_RunStateList.end(); it++)
+		{
+			CScriptRunState *pState = *it;
+			if (pState->GetId() == id)
+			{
+				return pState;
+			}
+		}
+		return nullptr;
+	}
+	CScriptRunState *CScriptVirtualMachine::PopRunState(unsigned long id)
+	{
+		listRunState::iterator it = m_RunStateList.begin();
+		for (; it != m_RunStateList.end(); it++)
+		{
+			CScriptRunState *pState = *it;
+			if (pState->GetId() == id)
+			{
+				m_RunStateList.erase(it);
+				return pState;
+			}
+		}
+		return nullptr;
+	}
+	CScriptCodeLoader::VarPoint *CScriptVirtualMachine::GetGlobalVar(unsigned int pos)
+	{
+		if (pos < vGlobalNumVar.size())
+		{
+			return &vGlobalNumVar[pos];
+		}
+		return NULL;
+	}
+}
