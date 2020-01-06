@@ -32,7 +32,6 @@ namespace zlscript
 	CScriptRunState::CScriptRunState()
 	{
 		m_pMachine = nullptr;
-		CurStackSizeWithoutFunParam = 0;
 		//_intUntilTime = 0;
 		m_WatingTime = 0;
 
@@ -70,8 +69,15 @@ namespace zlscript
 		StackVarInfo var;
 		var.cType = EScriptVal_None;
 		var.Int64 = 0;
-		m_varRegister.push(var);
 
+		if (m_BlockStack.size() > 0)
+		{
+			CScriptExecBlock* pBlock = m_BlockStack.top();
+			if (pBlock)
+			{
+				pBlock->PushVar(var);
+			}
+		}
 		return true;
 	}
 	bool CScriptRunState::PushVarToStack(int nVal)
@@ -79,7 +85,15 @@ namespace zlscript
 		StackVarInfo var;
 		var.cType = EScriptVal_Int;
 		var.Int64 = nVal;
-		m_varRegister.push(var);
+		
+		if (m_BlockStack.size() > 0)
+		{
+			CScriptExecBlock* pBlock = m_BlockStack.top();
+			if (pBlock)
+			{
+				pBlock->PushVar(var);
+			}
+		}
 
 		return true;
 	}
@@ -89,7 +103,15 @@ namespace zlscript
 		StackVarInfo var;
 		var.cType = EScriptVal_Int;
 		var.Int64 = nVal;
-		m_varRegister.push(var);
+		
+		if (m_BlockStack.size() > 0)
+		{
+			CScriptExecBlock* pBlock = m_BlockStack.top();
+			if (pBlock)
+			{
+				pBlock->PushVar(var);
+			}
+		}
 
 		return true;
 	}
@@ -98,16 +120,32 @@ namespace zlscript
 		StackVarInfo var;
 		var.cType = EScriptVal_Double;
 		var.Double = Double;
-		m_varRegister.push(var);
+		
+		if (m_BlockStack.size() > 0)
+		{
+			CScriptExecBlock* pBlock = m_BlockStack.top();
+			if (pBlock)
+			{
+				pBlock->PushVar(var);
+			}
+		}
 
 		return true;
 	}
-	bool CScriptRunState::PushVarToStack(char* pstr)
+	bool CScriptRunState::PushVarToStack(const char* pstr)
 	{
 		StackVarInfo var;
 		var.cType = EScriptVal_String;
 		var.Int64 = StackVarInfo::s_strPool.NewString(pstr);
-		m_varRegister.push(var);
+		
+		if (m_BlockStack.size() > 0)
+		{
+			CScriptExecBlock* pBlock = m_BlockStack.top();
+			if (pBlock)
+			{
+				pBlock->PushVar(var);
+			}
+		}
 
 		return true;
 	}
@@ -116,40 +154,29 @@ namespace zlscript
 		StackVarInfo var;
 		var.cType = EScriptVal_ClassPointIndex;
 		var.Int64 = nIndex;
-		m_varRegister.push(var);
-
-		return true;
-	}
-	bool CScriptRunState::PushAndNewStrVarToStack(char* pstr)
-	{
-		if (pstr == nullptr)
+		
+		if (m_BlockStack.size() > 0)
 		{
-			return false;
+			CScriptExecBlock* pBlock = m_BlockStack.top();
+			if (pBlock)
+			{
+				pBlock->PushVar(var);
+			}
 		}
-		StackVarInfo var;
-		var.cType = EScriptVal_String;
-		var.cExtend = 1;
-		var.Int64 = StackVarInfo::s_strPool.NewString(pstr);
-		m_varRegister.push(var);
 
 		return true;
 	}
 
 	bool CScriptRunState::PushVarToStack(StackVarInfo& Val)
 	{
-		m_varRegister.push(Val);
-		//switch (Val.cType)
-		//{
-		//case EScriptVal_Int:
-		//	PushVarToStack(Val.Int64);
-		//	break;
-		//case EScriptVal_Double:
-		//	PushVarToStack(Val.Double);
-		//	break;
-		//case EScriptVal_String:
-		//	PushAndNewStrVarToStack(Val.pStr);
-		//	break;
-		//}
+		if (m_BlockStack.size() > 0)
+		{
+			CScriptExecBlock* pBlock = m_BlockStack.top();
+			if (pBlock)
+			{
+				pBlock->PushVar(Val);
+			}
+		}
 
 		return true;
 	}
@@ -158,11 +185,15 @@ namespace zlscript
 
 	__int64 CScriptRunState::PopIntVarFormStack()
 	{
-		if (m_varRegister.empty())
+		StackVarInfo var;
+		if (m_BlockStack.size() > 0)
 		{
-			return 0;
+			CScriptExecBlock* pBlock = m_BlockStack.top();
+			if (pBlock)
+			{
+				var = pBlock->PopVar();
+			}
 		}
-		StackVarInfo var = m_varRegister.top();
 		__int64 nReturn = 0;
 		switch (var.cType)
 		{
@@ -191,17 +222,19 @@ namespace zlscript
 
 			break;
 		}
-
-		m_varRegister.pop();
 		return nReturn;
 	}
 	double CScriptRunState::PopDoubleVarFormStack()
 	{
-		if (m_varRegister.empty())
+		StackVarInfo var;
+		if (m_BlockStack.size() > 0)
 		{
-			return 0;
+			CScriptExecBlock* pBlock = m_BlockStack.top();
+			if (pBlock)
+			{
+				var = pBlock->PopVar();
+			}
 		}
-		StackVarInfo var = m_varRegister.top();
 		double qReturn = 0;
 		switch (var.cType)
 		{
@@ -228,17 +261,21 @@ namespace zlscript
 			break;
 		}
 
-		m_varRegister.pop();
 		return qReturn;
 	}
 	char* CScriptRunState::PopCharVarFormStack()
 	{
 		memset(strbuff,0,sizeof(strbuff));
-		if (m_varRegister.empty())
+
+		StackVarInfo var;
+		if (m_BlockStack.size() > 0)
 		{
-			return strbuff;
+			CScriptExecBlock* pBlock = m_BlockStack.top();
+			if (pBlock)
+			{
+				var = pBlock->PopVar();
+			}
 		}
-		StackVarInfo var = m_varRegister.top();
 		switch (var.cType)
 		{
 		case EScriptVal_None:
@@ -262,45 +299,54 @@ namespace zlscript
 			break;
 		}
 
-		m_varRegister.pop();
 		return strbuff;
 	}
 	__int64 CScriptRunState::PopClassPointFormStack()
 	{
-		if (m_varRegister.empty())
+		StackVarInfo var;
+		if (m_BlockStack.size() > 0)
 		{
-			return 0;
+			CScriptExecBlock* pBlock = m_BlockStack.top();
+			if (pBlock)
+			{
+				var = pBlock->PopVar();
+			}
 		}
-		StackVarInfo var = m_varRegister.top();
+
 		__int64 nReturn = 0;
 		switch (var.cType)
 		{
 		case EScriptVal_ClassPointIndex:
 			nReturn = var.Int64;
 			break;
-		//case EScriptVal_String:
-		//	if (var.pStr)
-		//	{
-		//		if (var.cExtend > 0)
-		//		{
-		//			SAFE_DELETE_ARRAY(var.pStr);
-		//		}
-		//	}
-		//	break;
 		}
 
-		m_varRegister.pop();
 		return nReturn;
 	}
 	StackVarInfo CScriptRunState::PopVarFormStack()
 	{
-		if (m_varRegister.empty())
+		StackVarInfo var;
+		if (m_BlockStack.size() > 0)
 		{
-			return StackVarInfo();
+			CScriptExecBlock* pBlock = m_BlockStack.top();
+			if (pBlock)
+			{
+				var = pBlock->PopVar();
+			}
 		}
-		StackVarInfo var = m_varRegister.top();
-		m_varRegister.pop();
 		return var;
+	}
+	int CScriptRunState::GetParamNum()
+	{
+		if (m_BlockStack.size() > 0)
+		{
+			CScriptExecBlock* pBlock = m_BlockStack.top();
+			if (pBlock)
+			{
+				return pBlock->GetParamNum();
+			}
+		}
+		return 0;
 	}
 	//CScriptBasePointer * CScriptRunState::PopRealClassPointForStack()
 	//{
@@ -336,25 +382,25 @@ namespace zlscript
 	//	}
 	//	return nullptr;
 	//}
-	void CScriptRunState::CopyToRegister(CScriptRunState * pState, int nNum)
-	{
-		std::vector<StackVarInfo> vInfo;
-		for (int i = 0; i < nNum; i++)
-		{
-			if (m_varRegister.empty())
-			{
-				break;
-			}
-			StackVarInfo var = m_varRegister.top();
-			vInfo.push_back(var);
-			m_varRegister.pop();
-		}
-		for (int i = (int)vInfo.size() - 1; i >= 0; i--)
-		{
-			pState->m_varRegister.push(vInfo[i]);
-		}
-		pState->SetParamNum(vInfo.size());
-	}
+	//void CScriptRunState::CopyToRegister(CScriptRunState * pState, int nNum)
+	//{
+	//	std::vector<StackVarInfo> vInfo;
+	//	for (int i = 0; i < nNum; i++)
+	//	{
+	//		if (m_varRegister.empty())
+	//		{
+	//			break;
+	//		}
+	//		StackVarInfo var = m_varRegister.top();
+	//		vInfo.push_back(var);
+	//		m_varRegister.pop();
+	//	}
+	//	for (int i = (int)vInfo.size() - 1; i >= 0; i--)
+	//	{
+	//		pState->m_varRegister.push(vInfo[i]);
+	//	}
+	//	pState->SetParamNum(vInfo.size());
+	//}
 	void CScriptRunState::CopyFromStack(CScriptStack* pStack)
 	{
 		if (pStack == nullptr)
@@ -367,10 +413,18 @@ namespace zlscript
 			vVars.push_back(pStack->top());
 			pStack->pop();
 		}
-		for (unsigned int i = 0; i < vVars.size(); i++)
+		if (m_BlockStack.size() > 0)
 		{
-			m_varRegister.push(vVars[i]);
+			CScriptExecBlock* pBlock = m_BlockStack.top();
+			if (pBlock)
+			{
+				for (unsigned int i = 0; i < vVars.size(); i++)
+				{
+					pBlock->PushVar(vVars[i]);
+				}				
+			}
 		}
+
 	}
 	//__int64 CScriptRunState::GetIntParamVar(int index)
 	//{
@@ -456,7 +510,7 @@ namespace zlscript
 	//	}
 	//
 	//	StackVarInfo& var = m_varRegister.GetVal(index);
-	//	char* pReturn = NULL;
+	//	char* pReturn = nullptr;
 	//	switch (var.cType)
 	//	{
 	//	case EScriptVal_Int:
@@ -478,55 +532,26 @@ namespace zlscript
 	//}
 	void CScriptRunState::ClearFunParam()
 	{
-		while (m_varRegister.size() > 0 && (int)m_varRegister.size() > CurStackSizeWithoutFunParam)
+		if (m_BlockStack.size() > 0)
 		{
-			StackVarInfo var = m_varRegister.top();
-			switch (var.cType)
+			CScriptExecBlock* pBlock = m_BlockStack.top();
+			if (pBlock)
 			{
-			//case EScriptVal_String:
-			//	if (var.cExtend > 0)
-			//	{
-			//		SAFE_DELETE_ARRAY(var.pStr);
-			//	}
-			//	break;
+				pBlock->ClearFunParam();
 			}
-			m_varRegister.pop();
 		}
 	}
-	void CScriptRunState::ClearFunParam(int nKeepNum)
-	{
-		while ((int)m_varRegister.size() > nKeepNum)
-		{
-			StackVarInfo var = m_varRegister.top();
-			switch (var.cType)
-			{
-			//case EScriptVal_String:
-			//	if (var.cExtend > 0)
-			//	{
-			//		SAFE_DELETE_ARRAY(var.pStr);
-			//	}
-			//	break;
-			}
-			m_varRegister.pop();
-		}
-	}
+
 	void CScriptRunState::ClearStack()
 	{
-		while (!m_varRegister.empty())
+		if (m_BlockStack.size() > 0)
 		{
-			StackVarInfo var = m_varRegister.top();
-			switch (var.cType)
+			CScriptExecBlock* pBlock = m_BlockStack.top();
+			if (pBlock)
 			{
-			//case EScriptVal_String:
-			//	if (var.cExtend > 0)
-			//	{
-			//		SAFE_DELETE_ARRAY(var.pStr);
-			//	}
-			//	break;
+				pBlock->ClearStack();
 			}
-			m_varRegister.pop();
 		}
-
 	}
 	void CScriptRunState::ClearExecBlock(bool bPrint)
 	{
@@ -561,7 +586,7 @@ namespace zlscript
 		while (!m_BlockStack.empty() && unTimeRes > 0)
 		{
 			CScriptExecBlock* pBlock = m_BlockStack.top();
-			if (pBlock == NULL)
+			if (pBlock == nullptr)
 			{
 				m_BlockStack.pop();
 				continue;
@@ -576,11 +601,30 @@ namespace zlscript
 				{
 				case CScriptExecBlock::ERESULT_END:
 					{
-						SAFE_DELETE(pBlock);
 						m_BlockStack.pop();
 						if (m_BlockStack.empty())
 						{
+							SAFE_DELETE(pBlock);
 							return ERunTime_Complete;
+						}
+						else
+						{
+							auto pCurBlock = m_BlockStack.top();
+							if (pCurBlock)
+							{
+								for (unsigned int i = 0; i < pBlock->GetVarSize(); i++)
+								{
+									auto pVar = pBlock->GetVar(i);
+									if (pVar)
+										pCurBlock->PushVar(*pVar);
+									else
+									{
+										StackVarInfo var;
+										pCurBlock->PushVar(var);
+									}
+								}
+							}
+							SAFE_DELETE(pBlock);
 						}
 						bBreak = true;
 						break;
@@ -634,7 +678,79 @@ namespace zlscript
 		return ERunTime_Continue;
 	}
 
-	int CScriptRunState::CallFun(CScriptVirtualMachine* pMachine, int nType, int FunIndex, int paramNum)
+	int CScriptRunState::CallFun(CScriptVirtualMachine* pMachine, CScriptExecBlock *pCurBlock, int nType, int FunIndex, int nParmNum, bool bIsBreak)
+	{
+		int nReturn = ECALLBACK_FINISH;
+
+		switch (nType)
+		{
+		case 0:
+		{
+			pCurBlock->SetCallFunParamNum(nParmNum);
+			C_CallBackScriptFunion pFun = CScriptCallBackFunion::GetFun(FunIndex);
+			if (pFun)
+			{
+				nReturn = pFun(pMachine, this);
+			}
+			else
+			{
+				SCRIPT_PRINT("script", "Error: script callfun: %d", FunIndex);
+				return ECALLBACK_ERROR;
+			}
+		}
+		break;
+		case 1:
+		{
+			CScriptCodeLoader::tagCodeData* pCodeData = CScriptCodeLoader::GetInstance()->GetCode(FunIndex);
+			if (pCodeData)
+			{
+				CScriptExecBlock* pBlock =
+					new CScriptExecBlock(pCodeData, this);
+
+				if (pBlock)
+				{
+					//提取参数
+					if (pCurBlock)
+					{
+
+						for (int i = 0; i < nParmNum; i++)
+						{
+							auto pVar = pCurBlock->GetVar(pCurBlock->GetVarSize()-nParmNum+i);
+							if (pVar)
+								pBlock->PushVar(*pVar);
+							else
+							{
+								StackVarInfo var;
+								pCurBlock->PushVar(var);
+							}
+						}
+						pBlock->SetCallFunParamNum(nParmNum);
+						for (int i = 0; i < nParmNum; i++)
+						{
+							pCurBlock->PopVar();
+						}
+					}
+
+					m_BlockStack.push(pBlock);
+					nReturn = ECALLBACK_CALLSCRIPTFUN;
+				}
+				else
+				{
+					nReturn = ECALLBACK_ERROR;
+				}
+			}
+			else
+			{
+				SCRIPT_PRINT("script", "Error: script scriptfun: %d", FunIndex);
+				return ECALLBACK_ERROR;
+			}
+		}
+		}
+
+		return nReturn;
+	}
+
+	int CScriptRunState::CallFun(CScriptVirtualMachine* pMachine, int nType, int FunIndex, CScriptStack& ParmStack, bool bIsBreak)
 	{
 		int nReturn = ECALLBACK_FINISH;
 
@@ -642,8 +758,22 @@ namespace zlscript
 		{
 		case 0:
 			{
-				CurCallFunParamNum = paramNum;
-				CurStackSizeWithoutFunParam = m_varRegister.size() - paramNum;
+				//注入参数
+				if (m_BlockStack.size() > 0)
+				{
+					CScriptExecBlock* pBlock = m_BlockStack.top();
+					if (pBlock)
+					{
+						for (int i = 0; i < ParmStack.size(); i++)
+						{
+							StackVarInfo* pVar = ParmStack.GetVal(i);
+							if (pVar)
+							{
+								pBlock->PushVar(*pVar);
+							}
+						}
+					}
+				}
 				C_CallBackScriptFunion pFun = CScriptCallBackFunion::GetFun(FunIndex);
 				if (pFun)
 				{
@@ -666,10 +796,16 @@ namespace zlscript
 
 					if (pBlock)
 					{
-						pBlock->SetCallFunParamNum(paramNum);
-						pBlock->SetStackSizeWithoutFunParam(m_varRegister.size() - paramNum);
-
-						if (m_BlockStack.size() > 0)
+						//注入参数
+						for (int i = 0; i < ParmStack.size(); i++)
+						{
+							StackVarInfo* pVar = ParmStack.GetVal(i);
+							if (pVar)
+							{
+								pBlock->PushVar(*pVar);
+							}
+						}
+						if (bIsBreak && m_BlockStack.size() > 0)
 						{
 							CScriptExecBlock* pOldBlock = m_BlockStack.top();
 							if (pOldBlock->GetFunType() == EICODE_FUN_CAN_BREAK)
@@ -696,7 +832,7 @@ namespace zlscript
 
 		return nReturn;
 	}
-	int CScriptRunState::CallFun(CScriptVirtualMachine* pMachine, const char *pFunName, int paramNum)
+	int CScriptRunState::CallFun(CScriptVirtualMachine* pMachine, const char *pFunName, CScriptStack& ParmStack, bool bIsBreak)
 	{
 		int nReturn = ECALLBACK_FINISH;
 
@@ -708,7 +844,16 @@ namespace zlscript
 
 			if (pBlock)
 			{
-				if (m_BlockStack.size() > 0)
+				//注入参数
+				for (int i = 0; i < ParmStack.size(); i++)
+				{
+					StackVarInfo* pVar = ParmStack.GetVal(i);
+					if (pVar)
+					{
+						pBlock->PushVar(*pVar);
+					}
+				}
+				if (bIsBreak && m_BlockStack.size() > 0)
 				{
 					CScriptExecBlock* pOldBlock = m_BlockStack.top();
 					if (pOldBlock->GetFunType() == EICODE_FUN_CAN_BREAK)
@@ -717,8 +862,6 @@ namespace zlscript
 					}
 				}
 
-				pBlock->SetCallFunParamNum(paramNum);
-				pBlock->SetStackSizeWithoutFunParam(m_varRegister.size() - paramNum);
 				m_BlockStack.push(pBlock);
 				nReturn = ECALLBACK_CALLSCRIPTFUN;
 			}
@@ -729,8 +872,23 @@ namespace zlscript
 		}
 		else
 		{
-			CurCallFunParamNum = paramNum;
-			CurStackSizeWithoutFunParam = m_varRegister.size() - paramNum;
+			//注入参数
+			if (m_BlockStack.size() > 0)
+			{
+				CScriptExecBlock* pBlock = m_BlockStack.top();
+				if (pBlock)
+				{
+					for (int i = 0; i < ParmStack.size(); i++)
+					{
+						StackVarInfo* pVar = ParmStack.GetVal(i);
+						if (pVar)
+						{
+							pBlock->PushVar(*pVar);
+						}
+					}
+				}
+			}
+
 			C_CallBackScriptFunion pFun = CScriptCallBackFunion::GetFun(pFunName);
 			if (pFun)
 			{
@@ -745,7 +903,7 @@ namespace zlscript
 
 		return nReturn;
 	}
-	//CScriptVirtualMachine  *CScriptVirtualMachine::m_pInstance = NULL;
+	//CScriptVirtualMachine  *CScriptVirtualMachine::m_pInstance = nullptr;
 	CScriptVirtualMachine::CScriptVirtualMachine()
 	{
 		init();
@@ -854,6 +1012,7 @@ namespace zlscript
 		{
 			return false;
 		}
+		CScriptStack varRegister;
 		if (sFormat)
 		{
 			int nlen = strlen(sFormat);
@@ -875,10 +1034,10 @@ namespace zlscript
 						switch (*(sFormat + i))
 						{
 						case 'd':
-							pState->PushVarToStack(*(int *)pPoint);
+							ScriptVector_PushVar(varRegister, *(__int64*)pPoint);
 							break;
 						case 's':
-							pState->PushVarToStack((char *)pPoint);
+							ScriptVector_PushVar(varRegister, (const char*)pPoint);
 							break;
 						}
 					}
@@ -887,18 +1046,15 @@ namespace zlscript
 			va_end(argptr);
 		}
 
-
-		//CSingleLock xLock(m_xCtrl, true);
 		pState->m_pMachine = this;
 		pState->FunName = funname;
-		//pState->vGlobalNumVar = m_CodeLoader.vGlobalNumVar;
 
-		if (pState->CallFun(this,funname.c_str(),pState->m_varRegister.size()) == ECALLBACK_ERROR)
+		if (pState->CallFun(this,funname.c_str(), varRegister) == ECALLBACK_ERROR)
 		{
-			SCRIPT_PRINT("script","EProcess runscript: %s",funname.c_str());
+			SCRIPT_PRINT("script","Cannot Process runscript: %s",funname.c_str());
 		}
 		SCRIPT_PRINT("script","Process runscript: %s",funname.c_str());
-		//cocos2d::log("run script %s\n", funname.c_str());
+
 		if (funname.empty())
 		{
 			//assert(0);
@@ -919,55 +1075,14 @@ namespace zlscript
 		return true;
 	}
 
-	bool CScriptVirtualMachine::RunFunImmediate(CScriptRunState* pState, std::string funname, const char* sFormat, ...)
+	bool CScriptVirtualMachine::RunFun(CScriptRunState* pState, std::string funname, CScriptStack& ParmStack, bool bIsBreak)
 	{
-		if (funname.empty())
-		{
-			return false;
-		}
-		if (pState == nullptr)
-		{
-			return false;
-		}
-		if (sFormat)
-		{
-			int nlen = strlen(sFormat);
-			va_list argptr;
-
-			va_start(argptr, sFormat);
-
-			char ch = 0;
-			for (int i = 0; i < nlen; i++)
-			{
-				ch = *(sFormat + i);
-				if (ch == '%')
-				{
-					i++;
-					if (i < nlen)
-					{
-						void* pPoint = nullptr;
-						pPoint = va_arg(argptr, void*);
-						switch (*(sFormat + i))
-						{
-						case 'd':
-							pState->PushVarToStack(*(int*)pPoint);
-							break;
-						case 's':
-							pState->PushVarToStack((char*)pPoint);
-							break;
-						}
-					}
-				}
-			}
-			va_end(argptr);
-		}
-
+		pState->m_pMachine = this;
 		pState->FunName = funname;
-		//pState->vGlobalNumVar = m_CodeLoader.vGlobalNumVar;
 
-		if (pState->CallFun(this, funname.c_str(), pState->m_varRegister.size()) == ECALLBACK_ERROR)
+		if (pState->CallFun(this, funname.c_str(), ParmStack, bIsBreak) == ECALLBACK_ERROR)
 		{
-			SCRIPT_PRINT("script", "EProcess runscript: %s", funname.c_str());
+			SCRIPT_PRINT("script", "Cannot Process runscript: %s", funname.c_str());
 		}
 		SCRIPT_PRINT("script", "Process runscript: %s", funname.c_str());
 
@@ -975,6 +1090,19 @@ namespace zlscript
 		{
 			//assert(0);
 		}
+
+#ifdef _DEBUG
+		listRunState::iterator it = m_RunStateList.begin();
+		for (; it != m_RunStateList.end(); it++)
+		{
+			if (*it == pState)
+			{
+				//assert("repeat scriptstate");
+			}
+		}
+#endif
+		m_RunStateList.push_back(pState);
+
 		return true;
 	}
 
@@ -1024,13 +1152,12 @@ namespace zlscript
 				{
 					__int64 nCallStateID = ScriptStack_GetInt(ParmInfo);
 					std::string strScript = ScriptStack_GetString(ParmInfo);
-					m_pScriptState->CopyFromStack(&ParmInfo);
 					if (nCallStateID != 0)
 					{
 						m_pScriptState->nCallEventIndex = nSendID;
 						m_pScriptState->m_CallStateId = nCallStateID;
 					}
-					RunFun(m_pScriptState, strScript, nullptr);
+					RunFun(m_pScriptState, strScript, ParmInfo);
 				}
 			}
 		}
@@ -1143,24 +1270,7 @@ namespace zlscript
 		}
 		return false;
 	}
-	bool CScriptVirtualMachine::ResumeFun(unsigned long index,int nVal,const char *pStrVal)
-	{
-		//CSingleLock xLock(m_xCtrl, true);
-		std::map<unsigned long,CScriptRunState *>::iterator itWait = m_mapWaiting.find(index);
-		if (itWait != m_mapWaiting.end())
-		{
-			CScriptRunState *pState = itWait->second;
-			if (pStrVal && strcmp(pStrVal,"") != 0)
-			{
-				pState->PushAndNewStrVarToStack((char*)pStrVal);
-			}
-			pState->PushVarToStack(nVal);
-			m_RunStateList.push_back(pState);
-			m_mapWaiting.erase(itWait);
-			return true;
-		}
-		return false;
-	}
+
 	bool CScriptVirtualMachine::RemoveRunState(unsigned long id)
 	{
 		listRunState::iterator it = m_RunStateList.begin();
@@ -1246,6 +1356,6 @@ namespace zlscript
 		{
 			return &vGlobalNumVar[pos];
 		}
-		return NULL;
+		return nullptr;
 	}
 }

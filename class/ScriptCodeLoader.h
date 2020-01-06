@@ -41,7 +41,7 @@ namespace zlscript
 		static CScriptCodeLoader s_Instance;
 
 	public:
-		void RegisterCallBack_LoadFun(std::function<bool(const char*, std::vector<char>&)> const&);
+		void RegisterCallBack_LoadFun(std::function<bool(const char*, std::vector<char>&)>);
 		bool LoadFile(const char* filename);
 
 	private:
@@ -170,7 +170,7 @@ namespace zlscript
 			{
 				return &m_vecCodeData[index];
 			}
-			return NULL;
+			return nullptr;
 		}
 		tagCodeData* GetCode(const char* pName);
 		void LoadXml(std::string filename);

@@ -72,19 +72,18 @@ namespace zlscript
 		unsigned int m_WatingTime;
 
 	public:
-		CScriptStack m_varRegister;
+		//CScriptStack m_varRegister;
 		std::stack<CScriptExecBlock*> m_BlockStack;
 
-		int CurCallFunParamNum;//当前调用函数的参数数量
-		int CurStackSizeWithoutFunParam;//除了函数参数，堆栈的大小
+		//int CurCallFunParamNum;//当前调用函数的参数数量
+		//int CurStackSizeWithoutFunParam;//除了函数参数，堆栈的大小
 	public:
 		bool PushEmptyVarToStack();
 		bool PushVarToStack(int nVal);
 		bool PushVarToStack(__int64 nVal);
 		bool PushVarToStack(double Double);
-		bool PushVarToStack(char* pstr);
+		bool PushVarToStack(const char* pstr);
 		bool PushClassPointToStack(__int64 nIndex);
-		bool PushAndNewStrVarToStack(char* pstr);
 
 		bool PushVarToStack(StackVarInfo& Val);
 
@@ -97,30 +96,29 @@ namespace zlscript
 		__int64 PopClassPointFormStack();
 		StackVarInfo PopVarFormStack();
 
-		int GetParamNum()
-		{
-			return CurCallFunParamNum;
-		}
-		void SetParamNum(int val)
-		{
-			CurCallFunParamNum = val;
+		int GetParamNum();
 
-		}
-		void CopyToRegister(CScriptRunState* pState, int nNum);
+		//void SetParamNum(int val)
+		//{
+		//	CurCallFunParamNum = val;
+
+		//}
+		//void CopyToRegister(CScriptRunState* pState, int nNum);
 
 		void CopyFromStack(CScriptStack* pStack);
 
 		//获取函数变量
 		void ClearFunParam();
-		void ClearFunParam(int nKeepNum);
+		//void ClearFunParam(int nKeepNum);
 
 		void ClearStack();
 		void ClearExecBlock(bool bPrint = false);
 
 		void ClearAll();
 
-		int CallFun(CScriptVirtualMachine* pMachine, int nType, int FunIndex, int paramNum);
-		int CallFun(CScriptVirtualMachine* pMachine, const char* pFunName, int paramNum);
+		int CallFun(CScriptVirtualMachine* pMachine, CScriptExecBlock* pCurBlock, int nType, int FunIndex, int nParmNum,bool bIsBreak=false);
+		int CallFun(CScriptVirtualMachine* pMachine, int nType, int FunIndex, CScriptStack& ParmStack, bool bIsBreak = false);
+		int CallFun(CScriptVirtualMachine* pMachine, const char* pFunName, CScriptStack& ParmStack, bool bIsBreak = false);
 		unsigned int Exec(unsigned int unTimeRes, CScriptVirtualMachine* pMachine);
 
 		unsigned long GetId() const
@@ -179,7 +177,7 @@ namespace zlscript
 		static CScriptVirtualMachine* CreateNew();
 
 		virtual void init();
-		//void LoadDir(string dir);
+
 		virtual void clear();
 
 		void SetEventIndex(int val);
@@ -188,12 +186,11 @@ namespace zlscript
 		//unTimeRes, 本次一共执行多少步脚本
 		virtual unsigned int Exec(unsigned int nDelay, unsigned int unTimeRes = 1);
 
-		virtual bool RunFun(CScriptRunState* pState, std::string funname, const char* sFormat, ...);
-
-		virtual bool RunFunImmediate(CScriptRunState* pState, std::string funname, const char* sFormat, ...);
+		bool RunFun(CScriptRunState* pState, std::string funname, const char* sFormat, ...);
+		bool RunFun(CScriptRunState* pState, std::string funname, CScriptStack& ParmStack, bool bIsBreak = false);
 
 		bool HasWaitingScript(unsigned long id);
-		bool ResumeFun(unsigned long index, int nVal, const char* pStrVal);
+
 		bool RemoveRunState(unsigned long id);
 		bool RemoveRunStateByShape(int id);
 		bool CheckRun(__int64 id);

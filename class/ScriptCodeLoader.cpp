@@ -43,7 +43,7 @@ namespace zlscript
 	CScriptCodeLoader::~CScriptCodeLoader(void)
 	{
 	}
-	void CScriptCodeLoader::RegisterCallBack_LoadFun(std::function<bool(const char*, std::vector<char>&)> const& fun)
+	void CScriptCodeLoader::RegisterCallBack_LoadFun(std::function<bool(const char*, std::vector<char>&)> fun)
 	{
 		m_vLoadFun.push_back(fun);
 	}
@@ -82,7 +82,7 @@ namespace zlscript
 //		FILE* fp;
 //		//首先打开文件进行词法分析
 //		fp = fopen(filename, "rb");
-//		if (fp == NULL)
+//		if (fp == nullptr)
 //		{
 //			return false;
 //		}
@@ -109,7 +109,7 @@ namespace zlscript
 //	}
 //#endif
 //		fclose(fp);
-//		fp = NULL;
+//		fp = nullptr;
 
 		std::vector<char> vBuff;
 		auto rit = m_vLoadFun.rbegin();
@@ -157,7 +157,7 @@ namespace zlscript
 			{
 				//ostringstream oss;
 				//oss << "脚本读取失败：" << filename << " "<< strError;
-				//::MessageBox(NULL, oss.str().c_str(), "Error",MB_OK|MB_ICONERROR);
+				//::MessageBox(nullptr, oss.str().c_str(), "Error",MB_OK|MB_ICONERROR);
 				//assert("脚本读取失败 %s:%s",filename,strError.c_str());
 				break;
 			}
@@ -172,7 +172,7 @@ namespace zlscript
 	bool CScriptCodeLoader::DefaultLoadFile(const char* filename, std::vector<char>& vOut)
 	{
 		FILE* fp = fopen(filename, "rb");
-		if (fp == NULL)
+		if (fp == nullptr)
 		{
 			return false;
 		}
@@ -186,7 +186,7 @@ namespace zlscript
 		}
 
 		fclose(fp);
-		fp = NULL;
+		fp = nullptr;
 		return true;
 	}
 
@@ -2384,6 +2384,7 @@ namespace zlscript
 						code.cExtend = 0;
 						code.dwPos = nClassIndex;
 						pVarNode->vTempCode.push_back(code);
+						curPos++;
 					}
 				}
 				else if (LoadAndPushNumVar(vIn, curPos, pVarNode->vTempCode) == ECompile_ERROR)
@@ -2642,7 +2643,7 @@ namespace zlscript
 		map<string, int>::iterator it = m_mapString2CodeIndex.find(pName);
 		if (it == m_mapString2CodeIndex.end())
 		{
-			return NULL;
+			return nullptr;
 		}
 		return GetCode(it->second);
 	}
@@ -2697,7 +2698,7 @@ namespace zlscript
 		}
 
 		tinyxml2::XMLElement* pRoot = xmldoc.RootElement();
-		if (pRoot == NULL)
+		if (pRoot == nullptr)
 		{
 			return;
 		}

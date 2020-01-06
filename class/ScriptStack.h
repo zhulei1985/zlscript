@@ -305,6 +305,20 @@ namespace zlscript
 		return nReturn;
 	}
 
+	inline StackVarInfo ScriptStack_GetVar(CScriptStack& Stack)
+	{
+		if (Stack.empty())
+		{
+			StackVarInfo var;
+			var.cType = EScriptVal_None;
+			var.Int64 = 0;
+			return var;
+		}
+		StackVarInfo var = Stack.top();
+		Stack.pop();
+		return var;
+	}
+
 	inline void ScriptVector_PushVar(CScriptStack& Stack, __int64 val)
 	{
 		StackVarInfo var;

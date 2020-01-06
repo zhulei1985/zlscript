@@ -90,7 +90,7 @@ namespace zlscript
 		{
 			return CScriptCallBackFunion::GetInstance()->m_vecFun[index];
 		}
-		return NULL;
+		return nullptr;
 	}
 	C_CallBackScriptFunion CScriptCallBackFunion::GetFun(const char* pFunName)
 	{
@@ -139,22 +139,25 @@ namespace zlscript
 		std::string scriptname = pState->PopCharVarFormStack();
 
 		bool bResult = false;
+		CScriptStack ParmStack;
 		nParmNum -= 2;
+		for (int i = 2; i < nParmNum; i++)
+		{
+			ScriptVector_PushVar(ParmStack, &pState->PopVarFormStack());
+		}
 		if (nHoldState == 0)
 		{
 			CScriptRunState* m_pScriptState = new CScriptRunState;
 			if (m_pScriptState)
 			{
-				pState->CopyToRegister(m_pScriptState, nParmNum);
-
-				bResult = pMachine->RunFun(m_pScriptState, scriptname, nullptr);
+				bResult = pMachine->RunFun(m_pScriptState, scriptname, ParmStack);
 			}
 			pState->ClearFunParam();
 			pState->PushVarToStack((int)m_pScriptState->GetId());
 		}
 		else
 		{
-			bResult = pMachine->RunFunImmediate(pState, scriptname, nullptr);
+			bResult = pMachine->RunFun(pState, scriptname, ParmStack,true);
 			//pState->ClearFunParam();
 			if (bResult)
 				return ECALLBACK_NEXTCONTINUE;
@@ -197,7 +200,7 @@ namespace zlscript
 
 		while (vTemp.size() > 0)
 		{
-			ScriptVector_PushVar(vTemp, &vTemp.top());
+			ScriptVector_PushVar(vRetrunVars, &vTemp.top());
 			vTemp.pop();
 		}
 		CScriptEventMgr::GetInstance()->SendEvent(pMachine->m_nEventListIndex, nIndex, vRetrunVars);
@@ -245,7 +248,7 @@ namespace zlscript
 	}
 	int CScriptCallBackFunion::print(CScriptVirtualMachine* pMachine, CScriptRunState* pState)
 	{
-		if (pState == NULL)
+		if (pState == nullptr)
 		{
 			return ECALLBACK_ERROR;
 		}
@@ -260,7 +263,7 @@ namespace zlscript
 
 	int CScriptCallBackFunion::getrand(CScriptVirtualMachine* pMachine, CScriptRunState* pState)
 	{
-		if (pState == NULL)
+		if (pState == nullptr)
 		{
 			return ECALLBACK_ERROR;
 		}
@@ -283,7 +286,7 @@ namespace zlscript
 	}
 	int CScriptCallBackFunion::wait(CScriptVirtualMachine* pMachine, CScriptRunState* pState)
 	{
-		if (pState == NULL)
+		if (pState == nullptr)
 		{
 			return ECALLBACK_ERROR;
 		}
@@ -297,7 +300,7 @@ namespace zlscript
 
 	int CScriptCallBackFunion::CheckClassPoint(CScriptVirtualMachine* pMachine, CScriptRunState* pState)
 	{
-		if (pState == NULL)
+		if (pState == nullptr)
 		{
 			return ECALLBACK_ERROR;
 		}
@@ -319,7 +322,7 @@ namespace zlscript
 
 	int CScriptCallBackFunion::NewArray(CScriptVirtualMachine* pMachine, CScriptRunState* pState)
 	{
-		if (pState == NULL)
+		if (pState == nullptr)
 		{
 			return ECALLBACK_ERROR;
 		}
@@ -332,7 +335,7 @@ namespace zlscript
 
 	int CScriptCallBackFunion::ReleaseArray(CScriptVirtualMachine* pMachine, CScriptRunState* pState)
 	{
-		if (pState == NULL)
+		if (pState == nullptr)
 		{
 			return ECALLBACK_ERROR;
 		}
@@ -355,7 +358,7 @@ namespace zlscript
 
 	int CScriptCallBackFunion::GetData(CScriptVirtualMachine* pMachine, CScriptRunState* pState)
 	{
-		if (pState == NULL)
+		if (pState == nullptr)
 		{
 			return ECALLBACK_ERROR;
 		}
@@ -369,7 +372,7 @@ namespace zlscript
 
 	int CScriptCallBackFunion::ReleaseData(CScriptVirtualMachine* pMachine, CScriptRunState* pState)
 	{
-		if (pState == NULL)
+		if (pState == nullptr)
 		{
 			return ECALLBACK_ERROR;
 		}
@@ -387,7 +390,7 @@ namespace zlscript
 
 	int CScriptCallBackFunion::GetVal4Data(CScriptVirtualMachine* pMachine, CScriptRunState* pState)
 	{
-		if (pState == NULL)
+		if (pState == nullptr)
 		{
 			return ECALLBACK_ERROR;
 		}
@@ -433,7 +436,7 @@ namespace zlscript
 
 	int CScriptCallBackFunion::SetVal2Data(CScriptVirtualMachine* pMachine, CScriptRunState* pState)
 	{
-		if (pState == NULL)
+		if (pState == nullptr)
 		{
 			return ECALLBACK_ERROR;
 		}

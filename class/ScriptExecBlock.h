@@ -19,6 +19,7 @@
 #include <stack>
 #include <vector>
 #include "ScriptCodeLoader.h"
+#include "ScriptStack.h"
 //////////////////////////////////////////////////////////////////////////////
 //                              脚本执行块                                  //
 //////////////////////////////////////////////////////////////////////////////
@@ -45,6 +46,10 @@ namespace zlscript
 	private:
 		std::stack<unsigned int> m_sCycBlockEnd;
 		unsigned int m_nCycBlockEnd;
+
+		//堆栈
+		CScriptStack m_varRegister;
+
 	public:
 		enum ERESULT_TYPE
 		{
@@ -62,11 +67,23 @@ namespace zlscript
 		void SetCallFunParamNum(int nVal)
 		{
 			CurCallFunParamNum = nVal;
+			CurStackSizeWithoutFunParam = m_varRegister.size() - CurCallFunParamNum;
+			if (CurStackSizeWithoutFunParam < 0)
+			{
+				CurStackSizeWithoutFunParam = 0;
+			}
 		}
-		void SetStackSizeWithoutFunParam(int nVal)
+		void PushVar(StackVarInfo& var);
+		StackVarInfo PopVar();
+		StackVarInfo* GetVar(unsigned int index);
+		unsigned int GetVarSize();
+
+		int GetParamNum()
 		{
-			CurStackSizeWithoutFunParam = nVal;
+			return CurCallFunParamNum;
 		}
+		void ClearFunParam();
+		void ClearStack();
 
 		std::string GetCurSourceWords();
 	private:

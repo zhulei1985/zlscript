@@ -47,11 +47,11 @@ namespace zlscript
 #endif
 
 #ifndef SAFE_DELETE
-#define SAFE_DELETE(p)			{ if(p) { delete (p); (p)=NULL; }}
+#define SAFE_DELETE(p)			{ if(p) { delete (p); (p)=nullptr; }}
 #endif
 
 #ifndef SAFE_DELETE_ARRAY
-#define SAFE_DELETE_ARRAY(p)	{ if(p) { delete[] (p); (p)=NULL; }}
+#define SAFE_DELETE_ARRAY(p)	{ if(p) { delete[] (p); (p)=nullptr; }}
 #endif
 
 //#if (CC_TARGET_PLATFORM == CC_PLATFORM_ANDROID)
