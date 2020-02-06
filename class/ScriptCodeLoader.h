@@ -157,6 +157,8 @@ namespace zlscript
 
 		//代码库
 		std::vector<tagCodeData> m_vecCodeData;
+
+
 		std::map<std::string, int> m_mapString2CodeIndex;
 	public:
 		void GetGlobalVar(std::vector<VarPoint>& vOut);

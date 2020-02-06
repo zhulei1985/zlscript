@@ -55,7 +55,7 @@ namespace zlscript
 		}
 		return false;
 	}
-	int CScriptPointInterface::GetScriptPointIndex()
+	__int64 CScriptPointInterface::GetScriptPointIndex()
 	{
 		if (!IsInitScriptPointIndex())
 		{

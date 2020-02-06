@@ -55,7 +55,7 @@ namespace zlscript
 
 	public:
 		static int RunScript(CScriptVirtualMachine* pMachine, CScriptRunState* pState);
-		static int RunScriptToEvent(CScriptVirtualMachine* pMachine, CScriptRunState* pState);
+		static int RunScriptToChannel(CScriptVirtualMachine* pMachine, CScriptRunState* pState);
 		static int StopScript(CScriptVirtualMachine* pMachine, CScriptRunState* pState);
 		static int CheckScriptRun(CScriptVirtualMachine* pMachine, CScriptRunState* pState);
 
@@ -64,7 +64,12 @@ namespace zlscript
 		static int getrand(CScriptVirtualMachine* pMachine, CScriptRunState* pState);
 		static int wait(CScriptVirtualMachine* pMachine, CScriptRunState* pState);
 
+		static int TransRadian(CScriptVirtualMachine* pMachine, CScriptRunState* pState);
 		static int CheckClassPoint(CScriptVirtualMachine* pMachine, CScriptRunState* pState);
+
+		static int SetEventTrigger(CScriptVirtualMachine* pMachine, CScriptRunState* pState);
+		static int TriggerEvent(CScriptVirtualMachine* pMachine, CScriptRunState* pState);
+		static int RemoveEventTrigger(CScriptVirtualMachine* pMachine, CScriptRunState* pState);
 
 		static int NewArray(CScriptVirtualMachine* pMachine, CScriptRunState* pState);
 		static int ReleaseArray(CScriptVirtualMachine* pMachine, CScriptRunState* pState);

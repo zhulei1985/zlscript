@@ -81,7 +81,7 @@ namespace zlscript
 		~CScriptPointInterface();
 		virtual void InitScriptPointIndex();
 		bool IsInitScriptPointIndex();
-		int GetScriptPointIndex();
+		__int64 GetScriptPointIndex();
 		void SetFun(int id, CScriptBaseClassFunInfo* pInfo);
 		int RunFun(int id, CScriptRunState* pState);
 

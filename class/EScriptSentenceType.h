@@ -48,6 +48,7 @@ namespace zlscript
 
 	enum EScriptFunType
 	{
+		EICODE_FUN_NO_CODE,
 		EICODE_FUN_DEFAULT,
 		EICODE_FUN_CAN_BREAK,//当其他脚本函数要插入执行时，退出本脚本函数
 	};

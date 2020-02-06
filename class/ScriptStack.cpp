@@ -183,7 +183,11 @@ namespace zlscript
 
 	CScriptStack& CScriptStack::operator=(const CScriptStack& info)
 	{
-		// TODO: 在此处插入 return 语句
+		//先清空，再赋值
+		while (this->size() > 0)
+		{
+			this->pop();
+		}
 		auto it = info.m_vData.begin();
 		for (; it != info.m_vData.end(); it++)
 		{

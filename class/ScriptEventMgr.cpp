@@ -16,12 +16,13 @@
  ****************************************************************************/
 
 #include "ScriptEventMgr.h"
+#include "ScriptVirtualMachine.h"
 namespace zlscript
 {
 	CScriptEventMgr CScriptEventMgr::s_Instance;
 	CScriptEventMgr::CScriptEventMgr()
 	{
-		m_nEventListCount = E_SCRIPT_EVENT_INDEX_ASSIGN;
+		m_nEventListCount = E_SCRIPT_EVENT_CHANNEL_ASSIGN;
 	}
 
 	CScriptEventMgr::~CScriptEventMgr()
@@ -107,6 +108,35 @@ namespace zlscript
 		return nResult;
 	}
 
+	void CScriptEventMgr::ProcessEvent(int nID, std::function<void(int , CScriptStack&, CScriptStack&)> const& fun)
+	{
+		int nSize = GetEventSize(nID);
+
+		for (int i = 0; i < nSize; i++)
+		{
+			int nSendID = 0;
+			CScriptStack ParmInfo;
+			Lock();
+			auto pEvent = GetEvent(nID);
+			if (pEvent)
+			{
+				nSendID = pEvent->nSendID;
+				ParmInfo = pEvent->m_Parm;
+				PopEvent(nID);
+			}
+			else
+			{
+				Unlock();
+				break;
+			}
+			Unlock();
+
+			CScriptStack vRetrunVars;
+
+			fun(nSendID, ParmInfo, vRetrunVars);
+		}
+	}
+
 	void CScriptEventMgr::Lock()
 	{
 		m_Lock.lock();
@@ -115,5 +145,60 @@ namespace zlscript
 	void CScriptEventMgr::Unlock()
 	{
 		m_Lock.unlock();
+	}
+	void CScriptEventMgr::SetEventTrigger(std::string strEvent, __int64 nClassPoint, std::string flag, int nChannel, std::string strScriptName, CScriptStack& parm)
+	{
+		m_TriggerLock.lock();
+		auto & classTrigger = m_mapTriggers[nClassPoint];
+		auto& eventTrigger = classTrigger.vTriggers[strEvent];
+		tagTrigger trigger;
+		trigger.nEventnChannel = nChannel;
+		trigger.strScriptName = strScriptName;
+		trigger.parm = parm;
+		eventTrigger.vTriggers[flag] = trigger;
+		m_TriggerLock.unlock();
+	}
+	void CScriptEventMgr::TriggerEvent(std::string strEvent, __int64 nClassPoint)
+	{
+		m_TriggerLock.lock();
+		auto& classTrigger = m_mapTriggers[nClassPoint];
+		auto& eventTrigger = classTrigger.vTriggers[strEvent];
+		for (auto it = eventTrigger.vTriggers.begin(); it != eventTrigger.vTriggers.end(); it++)
+		{
+			CScriptStack vRetrunVars;
+
+			ScriptVector_PushVar(vRetrunVars, (__int64)E_SCRIPT_EVENT_RUNSCRIPT);
+			ScriptVector_PushVar(vRetrunVars, (__int64)0);
+			ScriptVector_PushVar(vRetrunVars, it->second.strScriptName.c_str());
+			for (int i = 0; i < it->second.parm.size(); i++)
+			{
+				ScriptVector_PushVar(vRetrunVars, it->second.parm.GetVal(i));
+			}
+
+			CScriptEventMgr::GetInstance()->SendEvent(E_SCRIPT_EVENT_CHANNEL_SCRIPT_DRAWING, it->second.nEventnChannel, vRetrunVars);
+		}
+		m_TriggerLock.unlock();
+	}
+	void CScriptEventMgr::RemoveTrigger(std::string strEvent, __int64 nClassPoint, std::string flag)
+	{
+		m_TriggerLock.lock();
+		auto& classTrigger = m_mapTriggers[nClassPoint];
+		if (strEvent == "")
+		{
+			classTrigger.vTriggers.clear();
+		}
+		else
+		{
+			auto& eventTrigger = classTrigger.vTriggers[strEvent];
+			if (flag == "")
+			{
+				eventTrigger.vTriggers.clear();
+			}
+			else
+			{
+				eventTrigger.vTriggers.erase(flag);
+			}
+		}
+		m_TriggerLock.unlock();
 	}
 }

@@ -637,7 +637,7 @@ namespace zlscript
 
 		if (vIn.size() - curPos < 2)
 		{
-			strError="定义语句不完整";
+			strError = "定义语句不完整";
 			return ECompile_ERROR;
 		}
 		int nFunType = EICODE_FUN_DEFAULT;
@@ -667,12 +667,12 @@ namespace zlscript
 		if (m_mapString2CodeIndex.find(strFunName) != m_mapString2CodeIndex.end())
 		{
 			tagCodeData& funCode = m_vecCodeData[m_mapString2CodeIndex[strFunName]];
-			if (!funCode.vCodeData.empty())
+			if (funCode.nType != EICODE_FUN_NO_CODE || !funCode.vCodeData.empty())
 			{
 				strError = "定义名与函数名重复";
+				return ECompile_ERROR;
 			}
 
-			return ECompile_ERROR;
 		}
 
 		//判断变量名是否重复
@@ -1347,22 +1347,10 @@ namespace zlscript
 			strError = "if语句定义格式错误";
 			return ECompile_ERROR;
 		}
-		if (vIn[curPos].word != "if" && vIn[curPos].word != "else")
+		if (vIn[curPos].word != "if")
 		{
 			strError = "if语句定义格式错误,不是if语句";
 			return ECompile_ERROR;
-		}
-
-		CodeStyle elsecode;
-		elsecode.qwCode = 0;
-#if _SCRIPT_DEBUG
-		elsecode.nSourseWordIndex = GetSourceWordsIndex(vIn, curPos);
-#endif
-		if (vIn[curPos].word == "else")
-		{
-			elsecode.wInstruct = ECODE_BRANCH_ELSE;
-			elsecode.cSign = (unsigned char)m_stackBlockLayer.size();
-			curPos++;
 		}
 
 		CodeStyle ifcode;
@@ -1372,42 +1360,26 @@ namespace zlscript
 #if _SCRIPT_DEBUG
 		ifcode.nSourseWordIndex = GetSourceWordsIndex(vIn, curPos);
 #endif
+
+		//读取条件
 		vector<CodeStyle> vBracketCode;
-
-		if (vIn[curPos].word == "if")
-		{
-			curPos++;
-			CodeStyle varTypeCode;
-			varTypeCode.qwCode = 0;
-			varTypeCode.wInstruct = ECODE_INT;
+		curPos++;
+		CodeStyle varTypeCode;
+		varTypeCode.qwCode = 0;
+		varTypeCode.wInstruct = ECODE_INT;
 #if _SCRIPT_DEBUG
-			varTypeCode.nSourseWordIndex = GetSourceWordsIndex(vIn, curPos);
+		varTypeCode.nSourseWordIndex = GetSourceWordsIndex(vIn, curPos);
 #endif
-			vBracketCode.push_back(varTypeCode);
+		vBracketCode.push_back(varTypeCode);
 
-			vOut.push_back(varTypeCode);
-			if (LoadBracket(vIn, curPos, vBracketCode) == ECompile_ERROR)
-			{
-				strError = "if语句定义格式错误";
-				return ECompile_ERROR;
-			}
-
-
-		}
-		else
+		vOut.push_back(varTypeCode);
+		if (LoadBracket(vIn, curPos, vBracketCode) == ECompile_ERROR)
 		{
-			CodeStyle PushCode;
-			PushCode.qwCode = 0;
-			PushCode.wInstruct = ECODE_PUSH;
-			PushCode.cSign = 0;
-			PushCode.dwPos = 1;
-#if _SCRIPT_DEBUG
-			PushCode.nSourseWordIndex = vIn[curPos].nSourceWordsIndex;
-#endif
-			vBracketCode.push_back(PushCode);
+			strError = "if语句定义格式错误";
+			return ECompile_ERROR;
 		}
 
-
+		//读取内容
 		vector<CodeStyle> vBlockCode;
 		vBlockCode.clear();
 		if (vIn[curPos].word != "{")
@@ -1421,12 +1393,6 @@ namespace zlscript
 			return ECompile_ERROR;
 		}
 
-		if (elsecode.wInstruct == ECODE_BRANCH_ELSE)
-		{
-			elsecode.dwPos = 1 + vBracketCode.size() + vBlockCode.size() + 1;
-			vOut.push_back(elsecode);
-		}
-
 		for (unsigned int i = 0; i < vBracketCode.size(); i++)
 		{
 			vOut.push_back(vBracketCode[i]);
@@ -1438,6 +1404,48 @@ namespace zlscript
 		for (unsigned int i = 0; i < vBlockCode.size(); i++)
 		{
 			vOut.push_back(vBlockCode[i]);
+		}
+
+		if (vIn[curPos].word == "else")
+		{
+			CodeStyle elsecode;
+			elsecode.qwCode = 0;
+#if _SCRIPT_DEBUG
+			elsecode.nSourseWordIndex = GetSourceWordsIndex(vIn, curPos);
+#endif
+			elsecode.wInstruct = ECODE_BRANCH_ELSE;
+			elsecode.cSign = (unsigned char)m_stackBlockLayer.size();
+			curPos++;
+			
+			vector<CodeStyle> vElseCode;
+			if (vIn[curPos].word == "{")
+			{
+				vector<CodeStyle> vBackCode;
+				if (LoadBlockState(vIn, curPos, vElseCode, vBackCode) == ECompile_ERROR)
+				{
+					strError = "if语句定义格式错误";
+					return ECompile_ERROR;
+				}
+			}
+			else if(vIn[curPos].word == "if")
+			{
+				if (LoadIfSentence(vIn, curPos, vElseCode) == ECompile_ERROR)
+				{
+					strError = "if语句定义格式错误";
+					return ECompile_ERROR;
+				}
+			}
+			else
+			{
+				strError = "if语句定义格式错误";
+				return ECompile_ERROR;
+			}
+			elsecode.dwPos = 1 + vElseCode.size();
+			vOut.push_back(elsecode);
+			for (unsigned int i = 0; i < vElseCode.size(); i++)
+			{
+				vOut.push_back(vElseCode[i]);
+			}
 		}
 
 		pos = curPos;
@@ -1529,14 +1537,29 @@ namespace zlscript
 			string strName = vIn[curPos].word;
 
 			//脚本函数
-			if (m_mapString2CodeIndex.find(strName) != m_mapString2CodeIndex.end())
+			if (vIn.size() - curPos > 2 && vIn[curPos + 1].word == "(")
 			{
-				LoadCallFunState(vIn, curPos, vOut);
-			}
-			//回调函数
-			else if (CScriptCallBackFunion::GetFunIndex(strName) >= 0)
-			{
-				LoadCallFunState(vIn, curPos, vOut);
+				//脚本函数
+				if (m_mapString2CodeIndex.find(strName) != m_mapString2CodeIndex.end())
+				{
+					LoadCallFunState(vIn, curPos, vOut);
+				}
+				//回调函数
+				else if (CScriptCallBackFunion::GetFunIndex(strName) >= 0)
+				{
+					LoadCallFunState(vIn, curPos, vOut);
+				}
+				else
+				{
+					//TODO:检查函数调用语句是否完整，定义新函数
+					m_mapString2CodeIndex[strName] = m_vecCodeData.size();
+					tagCodeData data;
+					data.funname = strName;
+					data.nType = EICODE_FUN_NO_CODE;
+					m_vecCodeData.push_back(data);
+					//然后再读取
+					LoadCallFunState(vIn, curPos, vOut);
+				}
 			}
 			else
 			{
@@ -1609,7 +1632,31 @@ namespace zlscript
 		if (vIn.size() - curPos > 0)
 		{
 			string strName = vIn[curPos].word;
-			if (vIn[curPos].nFlag == E_WORD_FLAG_STRING)
+			if (vIn.size() - curPos > 2 && vIn[curPos+1].word=="(")
+			{
+				//脚本函数
+				if (m_mapString2CodeIndex.find(strName) != m_mapString2CodeIndex.end())
+				{
+					LoadCallFunState(vIn, curPos, vOut);
+				}
+				//回调函数
+				else if (CScriptCallBackFunion::GetFunIndex(strName) >= 0)
+				{
+					LoadCallFunState(vIn, curPos, vOut);
+				}
+				else
+				{
+					//TODO:检查函数调用语句是否完整，定义新函数
+					m_mapString2CodeIndex[strName] = m_vecCodeData.size();
+					tagCodeData data;
+					data.funname = strName;
+					data.nType = EICODE_FUN_NO_CODE;
+					m_vecCodeData.push_back(data);
+					//然后再读取
+					LoadCallFunState(vIn, curPos, vOut);
+				}
+			}
+			else if (vIn[curPos].nFlag == E_WORD_FLAG_STRING)
 			{
 				//字符串
 				CodeStyle code;
@@ -1624,16 +1671,6 @@ namespace zlscript
 				vOut.push_back(code);
 				pos++;
 				return ECompile_Return;
-			}
-			//脚本函数
-			if (m_mapString2CodeIndex.find(strName) != m_mapString2CodeIndex.end())
-			{
-				LoadCallFunState(vIn, curPos, vOut);
-			}
-			//回调函数
-			else if (CScriptCallBackFunion::GetFunIndex(strName) >= 0)
-			{
-				LoadCallFunState(vIn, curPos, vOut);
 			}
 			else
 			{
@@ -1685,12 +1722,6 @@ namespace zlscript
 					}
 					if (isFloat)
 					{
-						//VarPoint varpoint;
-						//varpoint.unArraySize = 1;
-						//varpoint.cType = EScriptVal_Double;
-						//varpoint.pDouble = new double[1];
-						//varpoint.pDouble[0] = stod(strName.c_str());
-						//m_vTempCodeData.vNumVar.push_back(varpoint);
 						m_vTempCodeData.vFloatConst.push_back(stod(strName.c_str()));
 						code.wInstruct = ECODE_PUSH;
 						code.cSign = 4;
@@ -1698,30 +1729,6 @@ namespace zlscript
 						code.dwPos = m_vTempCodeData.vFloatConst.size() - 1;
 						vOut.push_back(code);
 					}
-					//if (isStr)//字符串
-					//{
-					//	char strbuff[MAXSIZE_STRING];
-					//	memset(strbuff,0,sizeof(strbuff));
-					//	int strIndex = 0;
-					//	for (unsigned int i = 0 ; i < strName.size(); i++)
-					//	{
-					//		if (strIndex < MAXSIZE_STRING - 1)
-					//		{
-					//			strbuff[strIndex++] = strName[i];
-					//		}
-					//	}
-					//	if (strcmp(strbuff,"return")==0)
-					//	{
-					//		int test;
-					//		test = 1;
-					//	}
-					//	m_vTempCodeData.vStrConst.push_back(strbuff);
-					//	code.wInstruct = ECODE_PUSH;
-					//	code.cSign = 3;
-					//	code.cExtend = 0;
-					//	code.dwPos = m_vTempCodeData.vStrConst.size()-1;
-					//	vOut.push_back(code);	
-					//}
 					else
 					{
 						code.wInstruct = ECODE_PUSH;
@@ -1753,20 +1760,28 @@ namespace zlscript
 				//不接受字符串
 				return ECompile_ERROR;
 			}
-			//脚本函数
-			if (m_mapString2CodeIndex.find(strName) != m_mapString2CodeIndex.end())
+			if (vIn.size() - curPos > 2 && vIn[curPos + 1].word == "(")
 			{
-				if (LoadCallFunState(vIn, curPos, vOut) == ECompile_ERROR)
+				//脚本函数
+				if (m_mapString2CodeIndex.find(strName) != m_mapString2CodeIndex.end())
 				{
-					return ECompile_ERROR;
+					LoadCallFunState(vIn, curPos, vOut);
 				}
-			}
-			//回调函数
-			else if (CScriptCallBackFunion::GetFunIndex(strName) >= 0)
-			{
-				if (LoadCallFunState(vIn, curPos, vOut) == ECompile_ERROR)
+				//回调函数
+				else if (CScriptCallBackFunion::GetFunIndex(strName) >= 0)
 				{
-					return ECompile_ERROR;
+					LoadCallFunState(vIn, curPos, vOut);
+				}
+				else
+				{
+					//TODO:检查函数调用语句是否完整，定义新函数
+					m_mapString2CodeIndex[strName] = m_vecCodeData.size();
+					tagCodeData data;
+					data.funname = strName;
+					data.nType = EICODE_FUN_NO_CODE;
+					m_vecCodeData.push_back(data);
+					//然后再读取
+					LoadCallFunState(vIn, curPos, vOut);
 				}
 			}
 			else if (vIn[curPos + 1].word == "->")
@@ -1956,88 +1971,6 @@ namespace zlscript
 		pos = curPos;
 		return ECompile_Return;
 	}
-#if 0
-	int CScriptCodeLoader::LoadAndPushStrVar(vector<string>& vIn, unsigned int& pos, vector<CodeStyle>& vOut)
-	{
-		unsigned int curPos = pos;
-		if (vIn.size() - curPos > 0)
-		{
-			string strName = vIn[curPos];
-
-			tagCodeSection tempCode;
-
-			//脚本函数
-			if (m_mapString2CodeIndex.find(strName) != m_mapString2CodeIndex.end())
-			{
-				LoadCallFunState(vIn, curPos, vOut);
-			}
-			//回调函数
-			else if (CScriptCallBackFunion::GetFunIndex(strName) >= 0)
-			{
-				LoadCallFunState(vIn, curPos, vOut);
-			}
-			else
-			{
-				int nArraySize = 0;
-				CodeStyle code;
-				code.qwCode = 0;
-				int nIndexVar = QueryTempVar(strName);
-				if (nIndexVar >= 0)//临时变量
-				{
-					code.wInstruct = ECODE_PUSH;
-					code.cSign = 2;
-					code.cExtend = nArraySize;
-					code.dwPos = nIndexVar;
-					vOut.push_back(code);
-				}
-				else if (m_mapDicGlobalVar.find(strName) != m_mapDicGlobalVar.end())//全局变量
-				{
-					code.wInstruct = ECODE_PUSH;
-					code.cSign = 1;
-					code.cExtend = nArraySize;
-					VarInfo info;
-					info.nVarInfo = m_mapDicGlobalVar[strName];
-					code.dwPos = info.dwPos;
-					vOut.push_back(code);
-				}
-				else if (strName[0] == '\"')//字符串
-				{
-					char strbuff[MAXSIZE_STRING];
-					memset(strbuff, 0, sizeof(strbuff));
-					int strIndex = 0;
-					for (unsigned int i = 1; i < strName.size() - 1; i++)
-					{
-						if (strIndex < MAXSIZE_STRING - 1)
-						{
-							strbuff[strIndex++] = strName[i];
-						}
-					}
-					m_vTempCodeData.vStrConst.push_back(strbuff);
-					code.wInstruct = ECODE_PUSH;
-					code.cSign = 3;
-					code.cExtend = 0;
-					code.dwPos = m_vTempCodeData.vStrConst.size() - 1;
-					vOut.push_back(code);
-				}
-				else
-				{
-					code.wInstruct = ECODE_PUSH;
-					code.cSign = 3;
-					code.cExtend = 0;
-					code.dwPos = atoi(strName.c_str());
-					vOut.push_back(code);
-				}
-			}
-
-			pos = curPos;
-			return ECompile_Return;
-		}
-		else
-		{
-			return ECompile_ERROR;
-		}
-	}
-#endif 
 	int CScriptCodeLoader::LoadFormulaSentence(SentenceSourceCode& vIn, unsigned int& pos, vector<CodeStyle>& vOut)
 	{
 
@@ -2150,15 +2083,30 @@ namespace zlscript
 		//else
 		if (isClassPoint)
 		{
-			//脚本函数
-			if (m_mapString2CodeIndex.find(vIn[curPos].word) != m_mapString2CodeIndex.end())
+			std::string strName = vIn[curPos].word;
+			if (vIn.size() - curPos > 2 && vIn[curPos + 1].word == "(")
 			{
-				LoadCallFunState(vIn, curPos, vOut);
-			}
-			//回调函数
-			else if (CScriptCallBackFunion::GetFunIndex(vIn[curPos].word) >= 0)
-			{
-				LoadCallFunState(vIn, curPos, vOut);
+				//脚本函数
+				if (m_mapString2CodeIndex.find(strName) != m_mapString2CodeIndex.end())
+				{
+					LoadCallFunState(vIn, curPos, vOut);
+				}
+				//回调函数
+				else if (CScriptCallBackFunion::GetFunIndex(strName) >= 0)
+				{
+					LoadCallFunState(vIn, curPos, vOut);
+				}
+				else
+				{
+					//TODO:检查函数调用语句是否完整，定义新函数
+					m_mapString2CodeIndex[strName] = m_vecCodeData.size();
+					tagCodeData data;
+					data.funname = strName;
+					data.nType = EICODE_FUN_NO_CODE;
+					m_vecCodeData.push_back(data);
+					//然后再读取
+					LoadCallFunState(vIn, curPos, vOut);
+				}
 			}
 			else
 			{
@@ -2535,14 +2483,30 @@ namespace zlscript
 		if (m_nCurFunVarType == EScriptVal_ClassPointIndex)
 		{
 			//脚本函数
-			if (m_mapString2CodeIndex.find(vIn[curPos].word) != m_mapString2CodeIndex.end())
+			std::string strName = vIn[curPos].word;
+			if (vIn.size() - curPos > 2 && vIn[curPos + 1].word == "(")
 			{
-				LoadCallFunState(vIn, curPos, vOut);
-			}
-			//回调函数
-			else if (CScriptCallBackFunion::GetFunIndex(vIn[curPos].word) >= 0)
-			{
-				LoadCallFunState(vIn, curPos, vOut);
+				//脚本函数
+				if (m_mapString2CodeIndex.find(strName) != m_mapString2CodeIndex.end())
+				{
+					LoadCallFunState(vIn, curPos, vOut);
+				}
+				//回调函数
+				else if (CScriptCallBackFunion::GetFunIndex(strName) >= 0)
+				{
+					LoadCallFunState(vIn, curPos, vOut);
+				}
+				else
+				{
+					//TODO:检查函数调用语句是否完整，定义新函数
+					m_mapString2CodeIndex[strName] = m_vecCodeData.size();
+					tagCodeData data;
+					data.funname = strName;
+					data.nType = EICODE_FUN_NO_CODE;
+					m_vecCodeData.push_back(data);
+					//然后再读取
+					LoadCallFunState(vIn, curPos, vOut);
+				}
 			}
 			else
 			{

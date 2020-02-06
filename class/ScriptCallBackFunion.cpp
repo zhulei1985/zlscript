@@ -48,8 +48,8 @@ namespace zlscript
 		RegisterFun("RunScript", (C_CallBackScriptFunion)RunScript);
 		RegisterFun("runscript", (C_CallBackScriptFunion)RunScript);
 
-		RegisterFun("RunScriptToEvent", (C_CallBackScriptFunion)RunScriptToEvent);
-		RegisterFun("runscripttoevent", (C_CallBackScriptFunion)RunScriptToEvent);
+		RegisterFun("RunScriptToChannel", (C_CallBackScriptFunion)RunScriptToChannel);
+		RegisterFun("runscripttochannel", (C_CallBackScriptFunion)RunScriptToChannel);
 
 		RegisterFun("StopScript", (C_CallBackScriptFunion)StopScript);
 		RegisterFun("stopscript", (C_CallBackScriptFunion)StopScript);
@@ -64,6 +64,12 @@ namespace zlscript
 
 		RegisterFun("CheckClassPoint", (C_CallBackScriptFunion)CheckClassPoint);
 		RegisterFun("checkclasspoint", (C_CallBackScriptFunion)CheckClassPoint);
+
+		RegisterFun("TransRadian", (C_CallBackScriptFunion)TransRadian);
+
+		RegisterFun("SetEventTrigger", (C_CallBackScriptFunion)SetEventTrigger);
+		RegisterFun("TriggerEvent", (C_CallBackScriptFunion)TriggerEvent);
+		RegisterFun("RemoveEventTrigger", (C_CallBackScriptFunion)RemoveEventTrigger);
 
 
 		RegisterFun("NewArray", (C_CallBackScriptFunion)NewArray);
@@ -141,7 +147,7 @@ namespace zlscript
 		bool bResult = false;
 		CScriptStack ParmStack;
 		nParmNum -= 2;
-		for (int i = 2; i < nParmNum; i++)
+		for (int i = 0; i < nParmNum; i++)
 		{
 			ScriptVector_PushVar(ParmStack, &pState->PopVarFormStack());
 		}
@@ -169,7 +175,7 @@ namespace zlscript
 		else
 			return ECALLBACK_ERROR;
 	}
-	int CScriptCallBackFunion::RunScriptToEvent(CScriptVirtualMachine* pMachine, CScriptRunState* pState)
+	int CScriptCallBackFunion::RunScriptToChannel(CScriptVirtualMachine* pMachine, CScriptRunState* pState)
 	{
 		if (pState == nullptr)
 		{
@@ -298,6 +304,19 @@ namespace zlscript
 		return ECALLBACK_NEXTCONTINUE;
 	}
 
+	int CScriptCallBackFunion::TransRadian(CScriptVirtualMachine* pMachine, CScriptRunState* pState)
+	{
+		if (pState == nullptr)
+		{
+			return ECALLBACK_ERROR;
+		}
+		__int64 nAngle = pState->PopIntVarFormStack();
+		double fRadian = nAngle / 180.f * 3.1415926f;
+		pState->ClearFunParam();
+		pState->PushVarToStack(fRadian);
+		return ECALLBACK_NEXTCONTINUE;
+	}
+
 	int CScriptCallBackFunion::CheckClassPoint(CScriptVirtualMachine* pMachine, CScriptRunState* pState)
 	{
 		if (pState == nullptr)
@@ -316,6 +335,56 @@ namespace zlscript
 		{
 			pState->PushVarToStack(0);
 		}
+		return ECALLBACK_FINISH;
+	}
+
+	int CScriptCallBackFunion::SetEventTrigger(CScriptVirtualMachine* pMachine, CScriptRunState* pState)
+	{
+		if (pState == nullptr)
+		{
+			return ECALLBACK_ERROR;
+		}
+		int nParmNum = pState->GetParamNum();
+		__int64 nClassPoint = pState->PopClassPointFormStack();
+		std::string strEvent = pState->PopCharVarFormStack();
+		std::string strFlag = pState->PopCharVarFormStack();
+		std::string strScript = pState->PopCharVarFormStack();
+
+		nParmNum -= 4;
+		CScriptStack vParmVars;
+		for (int i = 2; i < nParmNum; i++)
+		{
+			ScriptVector_PushVar(vParmVars, &pState->PopVarFormStack());
+		}
+		CScriptEventMgr::GetInstance()->SetEventTrigger(strEvent, nClassPoint, strFlag, pMachine->m_nEventListIndex, strScript, vParmVars);
+		pState->ClearFunParam();
+		return ECALLBACK_FINISH;
+	}
+
+	int CScriptCallBackFunion::TriggerEvent(CScriptVirtualMachine* pMachine, CScriptRunState* pState)
+	{
+		if (pState == nullptr)
+		{
+			return ECALLBACK_ERROR;
+		}
+		__int64 nClassPoint = pState->PopClassPointFormStack();
+		std::string strEvent = pState->PopCharVarFormStack();
+		CScriptEventMgr::GetInstance()->TriggerEvent(strEvent, nClassPoint);
+		pState->ClearFunParam();
+		return ECALLBACK_FINISH;
+	}
+
+	int CScriptCallBackFunion::RemoveEventTrigger(CScriptVirtualMachine* pMachine, CScriptRunState* pState)
+	{
+		if (pState == nullptr)
+		{
+			return ECALLBACK_ERROR;
+		}
+		__int64 nClassPoint = pState->PopClassPointFormStack();
+		std::string strEvent = pState->PopCharVarFormStack();
+		std::string strFlag = pState->PopCharVarFormStack();
+		CScriptEventMgr::GetInstance()->RemoveTrigger(strEvent, nClassPoint, strFlag);
+		pState->ClearFunParam();
 		return ECALLBACK_FINISH;
 	}
 

@@ -38,7 +38,12 @@ namespace zlscript
 	class CCriticalSection;
 	class CScriptVirtualMachine;
 
-
+	enum E_SCRIPT_EVENT_TYPE
+	{
+		E_SCRIPT_EVENT_NONE,
+		E_SCRIPT_EVENT_RETURN,
+		E_SCRIPT_EVENT_RUNSCRIPT,
+	};
 
 	enum EScript_Channel
 	{

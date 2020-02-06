@@ -1111,38 +1111,25 @@ namespace zlscript
 		//CSingleLock xLock(m_xCtrl, true);
 		//检验等待队列，太久的话删除
 		//__int64 nowTime = CMyTime::GetTime();
-		int nSize = CScriptEventMgr::GetInstance()->GetEventSize(m_nEventListIndex);
-		for (int i = 0; i < nSize; i++)
+
+
+		auto fun = [&](int nSendID, CScriptStack& ParmInfo, CScriptStack& vRetrunVars)
 		{
-			int nSendID = 0;
-			CScriptStack ParmInfo;
-			CScriptEventMgr::GetInstance()->Lock();
-			auto pEvent = CScriptEventMgr::GetInstance()->GetEvent(m_nEventListIndex);
-			if (pEvent)
-			{
-				nSendID = pEvent->nSendID;
-				ParmInfo = pEvent->m_Parm;
-				CScriptEventMgr::GetInstance()->PopEvent(m_nEventListIndex);
-			}
-			else
-			{
-				CScriptEventMgr::GetInstance()->Unlock();
-				break;
-			}
-			CScriptEventMgr::GetInstance()->Unlock();
-
-
 			__int64 nEventType = ScriptStack_GetInt(ParmInfo);
+			int nScriptStateID = ScriptStack_GetInt(ParmInfo);
+			//ScriptVector_PushVar(vRetrunVars, (__int64)E_SCRIPT_EVENT_RETURN);
+			//ScriptVector_PushVar(vRetrunVars, (__int64)nScriptStateID);
+
 			if (nEventType == E_SCRIPT_EVENT_RETURN)
 			{
-				__int64 nStateID = ScriptStack_GetInt(ParmInfo);
-				std::map<unsigned long, CScriptRunState*>::iterator itWait = m_mapWaiting.find(nStateID);
+				//__int64 nStateID = ScriptStack_GetInt(ParmInfo);
+				std::map<unsigned long, CScriptRunState*>::iterator itWait = m_mapWaiting.find(nScriptStateID);
 				if (itWait != m_mapWaiting.end())
 				{
 					CScriptRunState* pState = itWait->second;
 					pState->CopyFromStack(&ParmInfo);
 					m_RunStateList.push_back(pState);
-					m_mapWaiting.erase(itWait);		
+					m_mapWaiting.erase(itWait);
 				}
 			}
 			else if (nEventType == E_SCRIPT_EVENT_RUNSCRIPT)
@@ -1150,17 +1137,24 @@ namespace zlscript
 				CScriptRunState* m_pScriptState = new CScriptRunState;
 				if (m_pScriptState)
 				{
-					__int64 nCallStateID = ScriptStack_GetInt(ParmInfo);
+					//__int64 nCallStateID = ScriptStack_GetInt(ParmInfo);
 					std::string strScript = ScriptStack_GetString(ParmInfo);
-					if (nCallStateID != 0)
+					if (nScriptStateID != 0)
 					{
 						m_pScriptState->nCallEventIndex = nSendID;
-						m_pScriptState->m_CallStateId = nCallStateID;
+						m_pScriptState->m_CallStateId = nScriptStateID;
 					}
 					RunFun(m_pScriptState, strScript, ParmInfo);
 				}
 			}
-		}
+
+			//if (nScriptStateID > 0)
+			//{
+			//	CScriptEventMgr::GetInstance()->SendEvent(m_nEventListIndex, nSendID, vRetrunVars);
+			//}
+		};
+		CScriptEventMgr::GetInstance()->ProcessEvent(m_nEventListIndex, fun);
+		
 
 		listRunState::iterator it = m_RunStateList.begin();
 		for (;it != m_RunStateList.end(); )
