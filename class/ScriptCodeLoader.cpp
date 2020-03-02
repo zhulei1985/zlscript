@@ -26,6 +26,7 @@
 #include "EMicroCodeType.h"
 
 #include "ScriptCodeLoader.h"
+#include "ScriptDebugPrint.h"
 
 #include "zByteArray.h"
 #include "ScriptSuperPointer.h"
@@ -52,64 +53,8 @@ namespace zlscript
 		clearAllCompileData();
 #if _SCRIPT_DEBUG
 		strCurFileName = filename;
-		strCurWords.clear();
+		nErrorWordPos = 0;
 #endif
-		//	std::string fullfile = cocos2d::CCFileUtils::getInstance()->fullPathForFilename(filename);
-		//	//m_vCurWords.clear();
-		//	cocos2d::Data data = cocos2d::FileUtils::getInstance()->getDataFromFile(fullfile);
-		//	unsigned char *pData = data.getBytes();
-		//	string strbuff;
-		//	for (ssize_t i = 0; i < data.getSize();)
-		//	{
-		//		unsigned char ch = *(pData + i);
-
-		//		if (RunLexical(strbuff,ch))
-		//		{
-		//#if _SCRIPT_DEBUG
-		//			strCurWords += ch;
-		//#endif
-		//			i++;
-		//		}
-		//	}
-		//#if _SCRIPT_DEBUG
-		//	if (strCurWords.size() > 0)
-		//	{
-		//		strCurWords = strCurFileName + strCurWords;
-		//		m_vCurWords.push_back(strCurWords);
-		//		strCurWords.clear();
-		//	}
-		//#endif
-//		FILE* fp;
-//		//首先打开文件进行词法分析
-//		fp = fopen(filename, "rb");
-//		if (fp == nullptr)
-//		{
-//			return false;
-//		}
-//
-//		string strbuff;
-//		char ch = fgetc(fp);
-//		while (ch != EOF)
-//		{
-//			if (RunLexical(strbuff, ch))
-//			{
-//				ch = fgetc(fp);
-//
-//#if _SCRIPT_DEBUG
-//				strCurWords += ch;
-//#endif
-//			}
-//		}
-//#if _SCRIPT_DEBUG
-//	if (strCurWords.size() > 0)
-//	{
-//		strCurWords = strCurFileName + strCurWords;
-//		m_vCurWords.push_back(strCurWords);
-//		strCurWords.clear();
-//	}
-//#endif
-//		fclose(fp);
-//		fp = nullptr;
 
 		std::vector<char> vBuff;
 		auto rit = m_vLoadFun.rbegin();
@@ -121,25 +66,17 @@ namespace zlscript
 				break;
 			}
 		}
+#if _SCRIPT_DEBUG
+		PartitionSourceWords(vBuff);
+#endif
 		string strbuff;
 		for (unsigned int i = 0; i < vBuff.size(); )
 		{
-			if (RunLexical(strbuff, vBuff[i]))
+			if (RunLexical(strbuff, vBuff[i], i))
 			{
 				i++;
-#if _SCRIPT_DEBUG
-				strCurWords += vBuff[i];
-#endif
 			}
 		}
-#if _SCRIPT_DEBUG
-		if (strCurWords.size() > 0)
-		{
-			strCurWords = strCurFileName + strCurWords;
-			m_vCurWords.push_back(strCurWords);
-			strCurWords.clear();
-		}
-#endif
 
 
 		if (m_vCurSourceSentence.empty())
@@ -155,10 +92,11 @@ namespace zlscript
 		{
 			if (RunCompileState(m_vCurSourceSentence, nStrIndex) == ECompile_ERROR)
 			{
-				//ostringstream oss;
-				//oss << "脚本读取失败：" << filename << " "<< strError;
-				//::MessageBox(nullptr, oss.str().c_str(), "Error",MB_OK|MB_ICONERROR);
-				//assert("脚本读取失败 %s:%s",filename,strError.c_str());
+				zlscript::CScriptDebugPrintMgr::GetInstance()->Print("ScriptLoad Error:");
+				zlscript::CScriptDebugPrintMgr::GetInstance()->Print(strCurFileName+":"+strError);
+#ifdef  _SCRIPT_DEBUG
+				zlscript::CScriptDebugPrintMgr::GetInstance()->Print(GetSourceWords(GetSourceLineIndex(m_vCurSourceSentence, nErrorWordPos)));
+#endif //  _SCRIPT_DEBUG
 				break;
 			}
 		}
@@ -318,7 +256,7 @@ namespace zlscript
 		//m_vLexicalData.clear();
 		m_vCurSourceSentence.clear();
 	}
-	bool CScriptCodeLoader::RunLexical(string& strOut, char ch)
+	bool CScriptCodeLoader::RunLexical(string& strOut, char ch, unsigned int nSourceIndex)
 	{
 		if (m_stackLexical.empty())
 		{
@@ -361,7 +299,7 @@ namespace zlscript
 						word.nFlag = E_WORD_FLAG_STRING;
 					}
 #if _SCRIPT_DEBUG
-					word.nSourceWordsIndex = m_vCurWords.size();
+					word.nSourceWordsIndex = GetSourceWordsIndex(nSourceIndex);
 #endif
 					m_vCurSourceSentence.push_back(word);
 					strOut.clear();
@@ -373,7 +311,7 @@ namespace zlscript
 					word.word = strOut;
 					word.nFlag = E_WORD_FLAG_STRING;
 #if _SCRIPT_DEBUG
-					word.nSourceWordsIndex = m_vCurWords.size();
+					word.nSourceWordsIndex = GetSourceWordsIndex(nSourceIndex);
 #endif
 					m_vCurSourceSentence.push_back(word);
 				}
@@ -391,7 +329,7 @@ namespace zlscript
 					tagSourceWord word;
 					word.word = strOut;
 #if _SCRIPT_DEBUG
-					word.nSourceWordsIndex = m_vCurWords.size();
+					word.nSourceWordsIndex = GetSourceWordsIndex(nSourceIndex);
 #endif
 					m_vCurSourceSentence.push_back(word);
 				}
@@ -413,14 +351,7 @@ namespace zlscript
 		case ' '://跳过空格
 			return EContinue;
 		case 13://跳过回车
-#if _SCRIPT_DEBUG
-			strCurWords = strCurFileName + strCurWords;
-			m_vCurWords.push_back(strCurWords);
-#endif
 		case 10://跳过换行
-#if _SCRIPT_DEBUG
-			strCurWords.clear();
-#endif
 			return EContinue;
 
 		case '_'://这个字符转到LoadKeyState
@@ -588,36 +519,6 @@ namespace zlscript
 	}
 	bool CScriptCodeLoader::RunCompileState(SentenceSourceCode& vIn, unsigned int& pos)
 	{
-		//if (m_stackCompile.empty())
-		//{
-		//	m_stackCompile.push(ECompile_DefineFunState);
-		//}
-
-		//if (m_stackCompile.size())
-		//{
-		//	int nState = m_stackCompile.top();
-
-		//	int nResult = 0;
-		//	switch (nState)
-		//	{
-		//	//case ECompile_DefineState:
-		//	//	nResult = LoadDefineState(vIn,pos);
-		//	//	break;
-		//	case ECompile_DefineFunState:
-		//		nResult = LoadDefineFunState(vIn,pos);
-		//		break;
-		//	case ECompile_BlockState:
-		//		nResult = LoadDefineFunState(vIn,pos);
-		//		break;
-		//	case ECompile_BracketState:
-		//		nResult = LoadDefineFunState(vIn,pos);
-		//		break;
-		//	case ECompile_FormulaState:
-		//		nResult = LoadDefineFunState(vIn,pos);
-		//		break;
-		//	}
-		//}
-
 		if (LoadDefineFunState(vIn, pos) == ECompile_ERROR)
 		{
 			return false;
@@ -637,7 +538,8 @@ namespace zlscript
 
 		if (vIn.size() - curPos < 2)
 		{
-			strError = "定义语句不完整";
+			strError = "LoadDefineFunState(Incomplete)";
+			nErrorWordPos = curPos;
 			return ECompile_ERROR;
 		}
 		int nFunType = EICODE_FUN_DEFAULT;
@@ -669,7 +571,8 @@ namespace zlscript
 			tagCodeData& funCode = m_vecCodeData[m_mapString2CodeIndex[strFunName]];
 			if (funCode.nType != EICODE_FUN_NO_CODE || !funCode.vCodeData.empty())
 			{
-				strError = "定义名与函数名重复";
+				nErrorWordPos = curPos;
+				strError = "LoadDefineFunState(Function name already exists)";
 				return ECompile_ERROR;
 			}
 
@@ -679,13 +582,15 @@ namespace zlscript
 
 		if (m_mapDicGlobalVar.find(strFunName) != m_mapDicGlobalVar.end())
 		{
-			strError = "定义名与变量名冲突";
+			nErrorWordPos = curPos;
+			strError = "LoadDefineFunState(Variable name already exists)";
 			return ECompile_ERROR;
 		}
 
 		if (CScriptCallBackFunion::GetFunIndex(strFunName) >= 0)
 		{
-			strError = "定义名与回调函数名冲突";
+			nErrorWordPos = curPos;
+			strError = "LoadDefineFunState(Callback Function name already exists)";
 			return ECompile_ERROR;
 		}
 
@@ -706,7 +611,8 @@ namespace zlscript
 					}
 					else
 					{
-						strError = "声明数组的格式错误";
+						nErrorWordPos = curPos;
+						strError = "LoadDefineFunState(Array declaration)";
 						return ECompile_ERROR;
 					}
 				}
@@ -793,7 +699,7 @@ namespace zlscript
 				code.cExtend = 0;
 				code.dwPos = VarIndex;
 #if _SCRIPT_DEBUG
-				code.nSourseWordIndex = GetSourceWordsIndex(vIn, curPos);
+				code.nSourseWordIndex = GetSourceLineIndex(vIn, curPos);
 #endif
 				vData.push_back(code);
 
@@ -803,7 +709,8 @@ namespace zlscript
 				}
 				else if (vIn[curPos].word != ")")
 				{
-					strError = "函数参数定义格式错误";
+					nErrorWordPos = curPos;
+					strError = "LoadDefineFunState(Function parameter definition format error)";
 					return ECompile_ERROR;
 				}
 				VarIndex++;
@@ -829,6 +736,7 @@ namespace zlscript
 				}
 				else
 				{
+					nErrorWordPos = curPos;
 					return ECompile_ERROR;
 				}
 			}
@@ -978,20 +886,22 @@ namespace zlscript
 		{
 			if (CScriptSuperPointerMgr::GetInstance()->GetClassType(strVarType) <= 0)
 			{
-
-				strError = "函数参数定义错误";
+				nErrorWordPos = curPos;
+				strError = "DefineTempVar(Class type error when defining temporary variable)";
 				return ECompile_ERROR;
 			}
 		}
 		if (!CheckVarName(strname))
 		{
-			strError = "变量名不合法";
+			nErrorWordPos = curPos;
+			strError = "DefineTempVar(Illegal variable name when defining temporary variable)";
 			return ECompile_ERROR;
 		}
 		//检查这个变量名是否已经存在
 		if (CheckDefTempVar(strname.c_str()))
 		{
-			strError = "变量名重复";
+			nErrorWordPos = curPos;
+			strError = "DefineTempVar(Variable name already exists when defining temporary variable)";
 			return ECompile_ERROR;
 		}
 
@@ -1008,7 +918,8 @@ namespace zlscript
 			}
 			else
 			{
-				strError = "声明数组的格式错误";
+				nErrorWordPos = curPos;
+				strError = "DefineTempVar(Array declaration is malformed when defining temporary variables)";
 				return -1;
 			}
 		}
@@ -1090,11 +1001,14 @@ namespace zlscript
 
 		if (vIn.size() - curPos <= 0)
 		{
+			nErrorWordPos = curPos;
+			strError = "LoadBlockState(Block format error, insufficient length)";
 			return ECompile_ERROR;
 		}
 		if (vIn[curPos].word != "{")
 		{
-			strError = "块格式错误";
+			nErrorWordPos = curPos;
+			strError = "LoadBlockState(Block format error)";
 			return ECompile_ERROR;
 		}
 		NewTempVarLayer();
@@ -1150,7 +1064,7 @@ namespace zlscript
 				ClearCode.qwCode = 0;
 				ClearCode.wInstruct = ECODE_CLEAR_PARAM;
 #if _SCRIPT_DEBUG
-				ClearCode.nSourseWordIndex = GetSourceWordsIndex(vIn, curPos);
+				ClearCode.nSourseWordIndex = GetSourceLineIndex(vIn, curPos);
 #endif
 				vTempCode.push_back(ClearCode);
 
@@ -1161,7 +1075,7 @@ namespace zlscript
 				breakCode.wInstruct = ECODE_RETURN;
 				breakCode.dwPos = vTempCode.size();
 #if _SCRIPT_DEBUG
-				breakCode.nSourseWordIndex = GetSourceWordsIndex(vIn, curPos);
+				breakCode.nSourseWordIndex = GetSourceLineIndex(vIn, curPos);
 #endif
 				vTempCode.push_back(breakCode);
 			}
@@ -1173,7 +1087,7 @@ namespace zlscript
 				breakCode.wInstruct = ECODE_BREAK;
 				breakCode.dwPos = vTempCode.size();
 #if _SCRIPT_DEBUG
-				breakCode.nSourseWordIndex = GetSourceWordsIndex(vIn, curPos);
+				breakCode.nSourseWordIndex = GetSourceLineIndex(vIn, curPos);
 #endif
 				vTempCode.push_back(breakCode);
 
@@ -1199,6 +1113,8 @@ namespace zlscript
 			}
 			if (nReturn == ECompile_ERROR)
 			{
+				nErrorWordPos = curPos;
+				strError = "LoadBlockState(Statement classification error)";
 				return ECompile_ERROR;
 			}
 		}
@@ -1216,7 +1132,7 @@ namespace zlscript
 		code.wInstruct = ECODE_BLOCK;
 		code.dwPos = vTempCode.size();
 #if _SCRIPT_DEBUG
-		code.nSourseWordIndex = GetSourceWordsIndex(vIn, curPos);
+		code.nSourseWordIndex = GetSourceLineIndex(vIn, curPos);
 #endif
 		vOut.push_back(code);
 
@@ -1238,6 +1154,8 @@ namespace zlscript
 
 		if (vIn.size() - curPos <= 0)
 		{
+			strError = "LoadCallFunState(Function call, statement too short)";
+			nErrorWordPos = curPos;
 			return ECompile_ERROR;
 		}
 		string FunName = vIn[curPos].word;
@@ -1247,7 +1165,7 @@ namespace zlscript
 		callCode.qwCode = 0;
 		callCode.wInstruct = ECODE_CALL;
 #if _SCRIPT_DEBUG
-		callCode.nSourseWordIndex = GetSourceWordsIndex(vIn, curPos);
+		callCode.nSourseWordIndex = GetSourceLineIndex(vIn, curPos);
 #endif
 
 		int nCallFunIndex = CScriptCallBackFunion::GetFunIndex(FunName);
@@ -1263,6 +1181,8 @@ namespace zlscript
 		}
 		else
 		{
+			strError = "LoadCallFunState(Function call, function not found)";
+			nErrorWordPos = curPos;
 			return ECompile_ERROR;
 		}
 
@@ -1270,6 +1190,8 @@ namespace zlscript
 		curPos++;
 		if (vIn.size() - curPos <= 0)
 		{
+			strError = "LoadCallFunState(Function call, statement too short)";
+			nErrorWordPos = curPos;
 			return ECompile_ERROR;
 		}
 		if (vIn[curPos].word == "(")
@@ -1283,6 +1205,8 @@ namespace zlscript
 				curPos++;
 				if (vIn.size() - curPos <= 0)
 				{
+					strError = "LoadCallFunState(Function call, parameter statement too short)";
+					nErrorWordPos = curPos;
 					return ECompile_ERROR;
 				}
 				if (vIn[curPos].word == ")")
@@ -1344,12 +1268,14 @@ namespace zlscript
 		unsigned int curPos = pos;
 		if (vIn.size() - curPos <= 0)
 		{
-			strError = "if语句定义格式错误";
+			nErrorWordPos = curPos;
+			strError = "LoadIfSentence(If statement definition format error)";
 			return ECompile_ERROR;
 		}
 		if (vIn[curPos].word != "if")
 		{
-			strError = "if语句定义格式错误,不是if语句";
+			nErrorWordPos = curPos;
+			strError = "LoadIfSentence(If statement definition format error, not if statement)";
 			return ECompile_ERROR;
 		}
 
@@ -1358,7 +1284,7 @@ namespace zlscript
 		ifcode.wInstruct = ECODE_BRANCH_IF;
 		ifcode.cSign = (unsigned char)m_stackBlockLayer.size();
 #if _SCRIPT_DEBUG
-		ifcode.nSourseWordIndex = GetSourceWordsIndex(vIn, curPos);
+		ifcode.nSourseWordIndex = GetSourceLineIndex(vIn, curPos);
 #endif
 
 		//读取条件
@@ -1368,14 +1294,14 @@ namespace zlscript
 		varTypeCode.qwCode = 0;
 		varTypeCode.wInstruct = ECODE_INT;
 #if _SCRIPT_DEBUG
-		varTypeCode.nSourseWordIndex = GetSourceWordsIndex(vIn, curPos);
+		varTypeCode.nSourseWordIndex = GetSourceLineIndex(vIn, curPos);
 #endif
 		vBracketCode.push_back(varTypeCode);
 
 		vOut.push_back(varTypeCode);
 		if (LoadBracket(vIn, curPos, vBracketCode) == ECompile_ERROR)
 		{
-			strError = "if语句定义格式错误";
+			nErrorWordPos = curPos;
 			return ECompile_ERROR;
 		}
 
@@ -1384,7 +1310,8 @@ namespace zlscript
 		vBlockCode.clear();
 		if (vIn[curPos].word != "{")
 		{
-			strError = "if语句定义格式错误";
+			nErrorWordPos = curPos;
+			strError = "LoadIfSentence(If statement definition format error)";
 			return ECompile_ERROR;
 		}
 		vector<CodeStyle> vBackCode;
@@ -1411,7 +1338,7 @@ namespace zlscript
 			CodeStyle elsecode;
 			elsecode.qwCode = 0;
 #if _SCRIPT_DEBUG
-			elsecode.nSourseWordIndex = GetSourceWordsIndex(vIn, curPos);
+			elsecode.nSourseWordIndex = GetSourceLineIndex(vIn, curPos);
 #endif
 			elsecode.wInstruct = ECODE_BRANCH_ELSE;
 			elsecode.cSign = (unsigned char)m_stackBlockLayer.size();
@@ -1423,7 +1350,6 @@ namespace zlscript
 				vector<CodeStyle> vBackCode;
 				if (LoadBlockState(vIn, curPos, vElseCode, vBackCode) == ECompile_ERROR)
 				{
-					strError = "if语句定义格式错误";
 					return ECompile_ERROR;
 				}
 			}
@@ -1431,13 +1357,12 @@ namespace zlscript
 			{
 				if (LoadIfSentence(vIn, curPos, vElseCode) == ECompile_ERROR)
 				{
-					strError = "if语句定义格式错误";
 					return ECompile_ERROR;
 				}
 			}
 			else
 			{
-				strError = "if语句定义格式错误";
+				strError = "LoadIfSentence(If statement definition format error)";
 				return ECompile_ERROR;
 			}
 			elsecode.dwPos = 1 + vElseCode.size();
@@ -1460,13 +1385,13 @@ namespace zlscript
 
 		if (vIn.size() - curPos <= 0)
 		{
-			strError = "while语句读取失败";
+			strError = "LoadWhileSentence(While statement read failed)";
 			return ECompile_ERROR;
 		}
 
 		if (vIn[curPos].word != "while")
 		{
-			strError = "while语句格式错误";
+			strError = "LoadWhileSentence(While statement format error)";
 			return ECompile_ERROR;
 		}
 		curPos++;
@@ -1476,12 +1401,11 @@ namespace zlscript
 		varTypeCode.qwCode = 0;
 		varTypeCode.wInstruct = ECODE_INT;
 #if _SCRIPT_DEBUG
-		varTypeCode.nSourseWordIndex = GetSourceWordsIndex(vIn, curPos);
+		varTypeCode.nSourseWordIndex = GetSourceLineIndex(vIn, curPos);
 #endif
 		vTempCode.push_back(varTypeCode);
 		if (LoadBracket(vIn, curPos, vTempCode) == ECompile_ERROR)
 		{
-			strError = "while语句格式错误";
 			return ECompile_ERROR;
 		}
 
@@ -1499,12 +1423,11 @@ namespace zlscript
 		backcode.qwCode = 0;
 		backcode.wInstruct = ECODE_BLOCK_CYC;
 #if _SCRIPT_DEBUG
-		backcode.nSourseWordIndex = GetSourceWordsIndex(vIn, curPos);
+		backcode.nSourseWordIndex = GetSourceLineIndex(vIn, curPos);
 #endif
 		vBackCode.push_back(backcode);
 		if (LoadBlockState(vIn, curPos, vTempCode, vBackCode) == ECompile_ERROR)
 		{
-			strError = "while语句格式错误";
 			return ECompile_ERROR;
 		}
 
@@ -1517,7 +1440,7 @@ namespace zlscript
 		code.wInstruct = ECODE_CYC_IF;
 		code.dwPos = vTempCode.size() + 1;
 #if _SCRIPT_DEBUG
-		code.nSourseWordIndex = GetSourceWordsIndex(vIn, curPos);
+		code.nSourseWordIndex = GetSourceLineIndex(vIn, curPos);
 #endif
 		vOut.push_back(code);
 
@@ -1567,7 +1490,7 @@ namespace zlscript
 				CodeStyle code;
 				code.qwCode = 0;
 #if _SCRIPT_DEBUG
-				code.nSourseWordIndex = GetSourceWordsIndex(vIn, curPos);
+				code.nSourseWordIndex = GetSourceLineIndex(vIn, curPos);
 #endif
 				int nIndexVar = QueryTempVar(strName);
 				if (nIndexVar >= 0)//临时变量
@@ -1666,7 +1589,7 @@ namespace zlscript
 				code.cExtend = 0;
 				code.dwPos = m_vTempCodeData.vStrConst.size() - 1;
 #if _SCRIPT_DEBUG
-				code.nSourseWordIndex = GetSourceWordsIndex(vIn, curPos);
+				code.nSourseWordIndex = GetSourceLineIndex(vIn, curPos);
 #endif
 				vOut.push_back(code);
 				pos++;
@@ -1678,7 +1601,7 @@ namespace zlscript
 				CodeStyle code;
 				code.qwCode = 0;
 #if _SCRIPT_DEBUG
-				code.nSourseWordIndex = GetSourceWordsIndex(vIn, curPos);
+				code.nSourseWordIndex = GetSourceLineIndex(vIn, curPos);
 #endif
 				int nIndexVar = QueryTempVar(strName);
 				if (nIndexVar >= 0)//临时变量
@@ -1746,6 +1669,8 @@ namespace zlscript
 		}
 		else
 		{
+			strError = "LoadWhileSentence(Constant or variable read error)";
+			nErrorWordPos = curPos;
 			return ECompile_ERROR;
 		}
 	}
@@ -1758,6 +1683,8 @@ namespace zlscript
 			if (vIn[curPos].nFlag == E_WORD_FLAG_STRING)
 			{
 				//不接受字符串
+				strError = "LoadWhileSentence(String is not accepted when reading a class pointer)";
+				nErrorWordPos = curPos;
 				return ECompile_ERROR;
 			}
 			if (vIn.size() - curPos > 2 && vIn[curPos + 1].word == "(")
@@ -1798,7 +1725,7 @@ namespace zlscript
 				CodeStyle code;
 				code.qwCode = 0;
 #if _SCRIPT_DEBUG
-				code.nSourseWordIndex = GetSourceWordsIndex(vIn, curPos);
+				code.nSourseWordIndex = GetSourceLineIndex(vIn, curPos);
 #endif
 				int nIndexVar = QueryTempVar(strName);
 				if (nIndexVar >= 0)//临时变量
@@ -1822,6 +1749,8 @@ namespace zlscript
 				else
 				{
 					//不接受常量
+					strError = "LoadWhileSentence(Constants are not accepted when reading class pointers)";
+					nErrorWordPos = curPos;
 					return ECompile_ERROR;
 				}
 				curPos++;
@@ -1832,6 +1761,8 @@ namespace zlscript
 		}
 		else
 		{
+			strError = "LoadWhileSentence(Format error reading class pointer)";
+			nErrorWordPos = curPos;
 			return ECompile_ERROR;
 		}
 	}
@@ -1841,13 +1772,13 @@ namespace zlscript
 		classcode.qwCode = 0;
 		classcode.wInstruct = ECODE_PUSH;
 #if _SCRIPT_DEBUG
-		classcode.nSourseWordIndex = GetSourceWordsIndex(vIn, pos);
+		classcode.nSourseWordIndex = GetSourceLineIndex(vIn, pos);
 #endif
 		CodeStyle callCode;
 		callCode.qwCode = 0;
 		callCode.wInstruct = ECODE_CALL_CLASS_FUN;
 #if _SCRIPT_DEBUG
-		callCode.nSourseWordIndex = GetSourceWordsIndex(vIn, pos);
+		callCode.nSourseWordIndex = GetSourceLineIndex(vIn, pos);
 #endif
 		unsigned int curPos = pos;
 		if (vIn.size() - curPos < 3)
@@ -1880,26 +1811,31 @@ namespace zlscript
 		}
 		else
 		{
-			strError = "非类指针";
+			strError = "LoadCallClassFunn(Non class pointer when calling class function)";
+			nErrorWordPos = curPos;
 			return ECompile_ERROR;
 		}
 		curPos++;
 		if (vIn[curPos].word != "->")
 		{
-			strError = "类指针不能参与四则运算";
+			strError = "LoadCallClassFunn(When calling a class function, the class pointer cannot have an operator other than)";
+			nErrorWordPos = curPos;
 			return ECompile_ERROR;
 		}
 		curPos++;
 		int nFunIndex = CScriptSuperPointerMgr::GetInstance()->GetClassFunIndex(pVar->unArraySize, vIn[curPos].word);
 		if (nFunIndex < 0)
 		{
-			strError = "类函数没有注册";
+			strError = "LoadCallClassFunn(Class function not registered when calling class function)";
+			nErrorWordPos = curPos;
 			return ECompile_ERROR;
 		}
 		callCode.dwPos = nFunIndex;
 		curPos++;
 		if (vIn.size() - curPos <= 0)
 		{
+			strError = "LoadCallClassFunn(Insufficient statement length when calling class function)";
+			nErrorWordPos = curPos;
 			return ECompile_ERROR;
 		}
 		vector<CodeStyle> vCode;
@@ -1914,6 +1850,8 @@ namespace zlscript
 				curPos++;
 				if (vIn.size() - curPos <= 0)
 				{
+					strError = "LoadCallClassFunn(When calling a class function, the length of the statement taking the parameter is insufficient)";
+					nErrorWordPos = curPos;
 					return ECompile_ERROR;
 				}
 				if (vIn[curPos].word == ")")
@@ -1977,7 +1915,8 @@ namespace zlscript
 		unsigned int curPos = pos;
 		if (vIn.size() - curPos < 2)
 		{
-			strError = "算式语句定义格式错误";
+			strError = "LoadFormulaSentence(Wrong format of arithmetic statement definition)";
+			nErrorWordPos = curPos;
 			return ECompile_ERROR;
 		}
 
@@ -1988,7 +1927,7 @@ namespace zlscript
 		CodeStyle code;
 		code.qwCode = 0;
 #if _SCRIPT_DEBUG
-		code.nSourseWordIndex = GetSourceWordsIndex(vIn, curPos);
+		code.nSourseWordIndex = GetSourceLineIndex(vIn, curPos);
 #endif
 		if (vIn[curPos + 1].word == "=")
 		{
@@ -2004,7 +1943,8 @@ namespace zlscript
 				VarPoint& pVar = m_vTempCodeData.vNumVar[nVarIndex];
 				if (pVar.cType == EScriptVal_None)
 				{
-					strError = "临时变量查询失败";
+					strError = "LoadFormulaSentence(Temporary variable query failed)";
+					nErrorWordPos = curPos;
 					return ECompile_ERROR;
 				}
 
@@ -2042,7 +1982,8 @@ namespace zlscript
 				VarPoint pVar = vGlobalNumVar[nVarIndex];
 				if (pVar.cType == EScriptVal_None)
 				{
-					strError = "全局变量查询失败";
+					strError = "LoadFormulaSentence(Global variable query failed)";
+					nErrorWordPos = curPos;
 					return ECompile_ERROR;
 				}
 
@@ -2069,7 +2010,8 @@ namespace zlscript
 			}
 			else
 			{
-				strError = "赋值对象错误";
+				strError = "LoadFormulaSentence(Wrong assignment object)";
+				nErrorWordPos = curPos;
 				return ECompile_ERROR;
 			}
 
@@ -2127,13 +2069,13 @@ namespace zlscript
 				{
 					if (LoadAndPushClassPoint(vIn, curPos, vOut) == ECompile_ERROR)
 					{
-						strError = "处理类指针变量失败";
 						return ECompile_ERROR;
 					}
 				}
 				else
 				{
-					strError = "应该处理类指针变量";
+					strError = "LoadFormulaSentence(Class pointer variable should be handled)";
+					nErrorWordPos = curPos;
 					return ECompile_ERROR;
 				}
 
@@ -2143,7 +2085,6 @@ namespace zlscript
 		{
 			if (LoadFormulaRecursion(vIn, curPos, vOut, nVarType) == ECompile_ERROR)
 			{
-				strError = "算式分析失败";
 				return ECompile_ERROR;
 			}
 		}
@@ -2164,6 +2105,8 @@ namespace zlscript
 		unsigned int curPos = pos;
 		if (vIn.size() - curPos <= 0)
 		{
+			strError = "LoadFormulaSentence(Wrong format of arithmetic statement definition)";
+			nErrorWordPos = curPos;
 			return ECompile_ERROR;
 		}
 
@@ -2325,7 +2268,7 @@ namespace zlscript
 						CodeStyle code;
 						code.qwCode = 0;
 #if _SCRIPT_DEBUG
-						code.nSourseWordIndex = GetSourceWordsIndex(vIn, curPos);
+						code.nSourseWordIndex = GetSourceLineIndex(vIn, curPos);
 #endif
 						code.wInstruct = ECODE_PUSH;
 						code.cSign = 2;
@@ -2364,7 +2307,7 @@ namespace zlscript
 				}
 				nLastNodeType = E_NODE_SIGN;
 #if _SCRIPT_DEBUG
-				pSignNode->nSourseWordIndex = GetSourceWordsIndex(vIn, curPos);
+				pSignNode->nSourseWordIndex = GetSourceLineIndex(vIn, curPos);
 #endif
 				pNode = pSignNode;
 				curPos++;
@@ -2527,13 +2470,13 @@ namespace zlscript
 				{
 					if (LoadAndPushClassPoint(vIn, curPos, vOut) == ECompile_ERROR)
 					{
-						strError = "处理类指针变量失败";
 						return ECompile_ERROR;
 					}
 				}
 				else
 				{
-					strError = "应该处理类指针变量";
+					strError = "LoadReturnFormulaRecursion(Class pointer variable should be handled)";
+					nErrorWordPos = curPos;
 					return ECompile_ERROR;
 				}
 
@@ -2543,7 +2486,6 @@ namespace zlscript
 		{
 			if (LoadFormulaRecursion(vIn, curPos, vOut, m_nCurFunVarType) == ECompile_ERROR)
 			{
-				strError = "算式分析失败";
 				return ECompile_ERROR;
 			}
 		}
@@ -2557,12 +2499,16 @@ namespace zlscript
 		unsigned int curPos = pos;
 		if (vIn.size() - curPos <= 0)
 		{
+			strError = "LoadBracket(Wrong definition format in parentheses)";
+			nErrorWordPos = curPos;
 			return ECompile_ERROR;
 		}
 
 		//先确认一下是在括号里
 		if (vIn[curPos].word != "(")
 		{
+			strError = "LoadBracket(Wrong definition format in parentheses)";
+			nErrorWordPos = curPos;
 			return ECompile_ERROR;
 		}
 		curPos++;
@@ -2585,12 +2531,16 @@ namespace zlscript
 
 		if (vIn.size() - curPos <= 0)
 		{
+			strError = "LoadBracket(Wrong definition format in parentheses)";
+			nErrorWordPos = curPos;
 			return ECompile_ERROR;
 		}
 
 		//结尾没有括号，格式错误
 		if (vIn[curPos].word != ")")
 		{
+			strError = "LoadBracket(Wrong definition format in parentheses)";
+			nErrorWordPos = curPos;
 			return ECompile_ERROR;
 		}
 
@@ -2970,7 +2920,100 @@ namespace zlscript
 	}
 
 #if _SCRIPT_DEBUG
-	unsigned int CScriptCodeLoader::GetSourceWordsIndex(SentenceSourceCode& vIn, unsigned int pos)
+	void CScriptCodeLoader::PartitionSourceWords(std::vector<char>& vSource)
+	{
+		m_vSourceWords.clear();
+		unsigned int nLineIndex = 1;
+		char ch[2] = { 0,0 };
+		std::string strCurWord;
+		for (size_t i = 0; i < vSource.size(); i++)
+		{
+			bool bNewLine = false;
+			if (vSource[i] == 10)
+			{
+				bNewLine = true;
+			}
+			else if (vSource[i] == 13)
+			{
+				if (i + 1 < vSource.size())
+				{
+					if (vSource[i + 1] == 10)
+					{
+						i++;
+					}
+				}
+				bNewLine = true;
+			}
+			if (bNewLine)
+			{
+				tagSourceWordInfo wordsinfo;
+				wordsinfo.nEndIndex = i;
+				wordsinfo.nSourceLineIndex = m_vScoureLines.size();
+				m_vSourceWords.push_back(wordsinfo);
+				tagSourceLineInfo info;
+				info.nLineNum = nLineIndex++;
+				info.strLineWords = strCurWord;
+				m_vScoureLines.push_back(info);
+				strCurWord.clear();
+			}
+			else
+			{
+				ch[0] = vSource[i];
+				strCurWord += ch;
+			}
+
+		}
+		if (m_vScoureLines.size() > 0)
+		{
+			tagSourceWordInfo wordsinfo;
+			wordsinfo.nEndIndex = vSource.size();
+			wordsinfo.nSourceLineIndex = m_vScoureLines.size();
+			m_vSourceWords.push_back(wordsinfo);
+			tagSourceLineInfo info;
+			info.nLineNum = nLineIndex++;
+			info.nLineNum = nLineIndex++;
+			info.strLineWords = strCurWord;
+			m_vScoureLines.push_back(info);
+			strCurWord.clear();
+		}
+	}
+	unsigned int CScriptCodeLoader::GetSourceWordsIndex(unsigned int nIndex)
+	{
+		std::function<unsigned int(unsigned int , unsigned int)> fun;
+		fun = [&](unsigned int BeginPos, unsigned int EndPos) {
+			if (EndPos - BeginPos > 1)
+			{
+				unsigned int nMidPos = BeginPos + (EndPos - BeginPos) / 2;
+				if (m_vSourceWords[nMidPos].nEndIndex == nIndex)
+				{
+					return m_vSourceWords[nMidPos].nSourceLineIndex;
+				}
+				else if (m_vSourceWords[nMidPos].nEndIndex > nIndex)
+				{
+					return fun(BeginPos, nMidPos);
+				}
+				else
+				{
+					return fun(nMidPos, EndPos);
+				}
+			}
+			else
+			{
+				if (m_vSourceWords[EndPos].nEndIndex >= nIndex)
+				{
+					return m_vSourceWords[EndPos].nSourceLineIndex;
+				}
+				else
+				{
+					return m_vSourceWords[BeginPos].nSourceLineIndex;
+				}
+			}
+			return  m_vScoureLines.size();
+		};
+		
+		return fun(0, m_vSourceWords.size()-1);
+	}
+	unsigned int CScriptCodeLoader::GetSourceLineIndex(SentenceSourceCode& vIn, unsigned int pos)
 	{
 		if (vIn.size() <= 0)
 		{
@@ -2987,9 +3030,9 @@ namespace zlscript
 	std::string CScriptCodeLoader::GetSourceWords(unsigned int nIndex)
 	{
 #if _SCRIPT_DEBUG
-		if (m_vCurWords.size() > nIndex)
+		if (m_vScoureLines.size() > nIndex)
 		{
-			return m_vCurWords[nIndex];
+			return m_vScoureLines[nIndex].strLineWords;
 		}
 #endif
 		return std::string();

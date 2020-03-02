@@ -25,7 +25,7 @@
 
 #include "ScriptVirtualMachine.h"
 #include "ScriptEventMgr.h"
-
+#include "ScriptDebugPrint.h"
 namespace zlscript
 {
 	unsigned long CScriptRunState::s_nIDSum = 0;
@@ -555,12 +555,15 @@ namespace zlscript
 	}
 	void CScriptRunState::ClearExecBlock(bool bPrint)
 	{
+		if (!m_BlockStack.empty())
+			zlscript::CScriptDebugPrintMgr::GetInstance()->Print("Script Run Error");
 		while (!m_BlockStack.empty())
 		{
+
 			CScriptExecBlock* pBlock = m_BlockStack.top();
 			if (bPrint)
 			{
-				SCRIPT_PRINT(pBlock->GetCurSourceWords().c_str());
+				zlscript::CScriptDebugPrintMgr::GetInstance()->Print(pBlock->GetCurSourceWords().c_str());
 			}
 			SAFE_DELETE(pBlock);
 			m_BlockStack.pop();
@@ -669,6 +672,10 @@ namespace zlscript
 			}
 		}
 
+		if (m_BlockStack.empty())
+		{
+			return ERunTime_Complete;
+		}
 		//if (nRunCount > 50000)
 		//{
 		//	ClearExecBlock();

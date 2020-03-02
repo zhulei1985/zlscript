@@ -26,7 +26,6 @@
 #include <time.h>
 #include <string.h>
 
-
 namespace zlscript
 {
 	typedef	unsigned long	PROCESS_ID;

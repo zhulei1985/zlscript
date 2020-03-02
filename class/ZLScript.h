@@ -20,13 +20,17 @@
 #include "ScriptCallBackFunion.h"
 #include"ScriptCodeLoader.h"
 #include "ScriptVirtualMachine.h"
-
+#include "ScriptDataMgr.h"
+#include "ScriptEventMgr.h"
+#include "ScriptDebugPrint.h"
 namespace zlscript
 {
 	inline void InitScript()
 	{
 		CScriptCallBackFunion::GetInstance()->init();
 		CScriptSuperPointerMgr::GetInstance()->Init();
+		CScriptData::Init2Script();
+		CScriptArray::Init2Script();
 	}
 	inline void LoadFile(const char * filename)
 	{

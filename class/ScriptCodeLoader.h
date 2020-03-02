@@ -205,7 +205,7 @@ namespace zlscript
 		int LoadSkipAnnotateState(std::string& strOut, char ch);
 
 		//返回true表示该字符处理完毕
-		bool RunLexical(std::string& strOut, char ch);
+		bool RunLexical(std::string& strOut, char ch, unsigned int nSourceIndex);
 	private:
 		//一句源码
 		enum E_SOURCE_WORD_FLAG
@@ -302,7 +302,7 @@ namespace zlscript
 
 			ECompile_Next = 0x8000,
 		};
-		std::vector<std::string> vDebugStringLog;
+		//std::vector<std::string> vDebugStringLog;
 		std::string strError;
 
 		std::stack<int> m_stackCompile;//语法分析机的状态堆栈
@@ -335,15 +335,32 @@ namespace zlscript
 	//*************************************************************//
 
 	private:
+		
+
 		//****************编译以及调试用信息*****************//
 		bool bCompileStop;//编译终止
-#if _SCRIPT_DEBUG
 		std::string strCurFileName;
 		std::string strCurFunName;
-		std::string strCurWords;
-		std::vector<std::string> m_vCurWords;
+		unsigned int nErrorWordPos;
+#if _SCRIPT_DEBUG
 
-		unsigned int GetSourceWordsIndex(SentenceSourceCode& vIn, unsigned int pos);
+		struct tagSourceWordInfo
+		{
+			unsigned int nEndIndex;
+			unsigned int nSourceLineIndex;
+		};
+		std::vector<tagSourceWordInfo> m_vSourceWords;
+		struct tagSourceLineInfo
+		{
+			std::string strCurFileName;
+			unsigned int nLineNum;
+			std::string strLineWords;
+		};
+		std::vector<tagSourceLineInfo> m_vScoureLines;
+
+		void PartitionSourceWords(std::vector<char> &vSource);
+		unsigned int GetSourceWordsIndex(unsigned int nIndex);
+		unsigned int GetSourceLineIndex(SentenceSourceCode& vIn, unsigned int pos);
 #endif
 	public:
 		std::string GetSourceWords(unsigned int nIndex);

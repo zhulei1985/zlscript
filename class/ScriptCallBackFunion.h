@@ -60,6 +60,7 @@ namespace zlscript
 		static int CheckScriptRun(CScriptVirtualMachine* pMachine, CScriptRunState* pState);
 
 		static int print(CScriptVirtualMachine* pMachine, CScriptRunState* pState);
+		static int Printf(CScriptVirtualMachine* pMachine, CScriptRunState* pState);
 
 		static int getrand(CScriptVirtualMachine* pMachine, CScriptRunState* pState);
 		static int wait(CScriptVirtualMachine* pMachine, CScriptRunState* pState);

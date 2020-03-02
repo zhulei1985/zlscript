@@ -58,6 +58,7 @@ namespace zlscript
 		RegisterFun("checkscriptrun", (C_CallBackScriptFunion)CheckScriptRun);
 
 		RegisterFun("print", (C_CallBackScriptFunion)print);
+		RegisterFun("printf", (C_CallBackScriptFunion)Printf);
 		RegisterFun("rand", (C_CallBackScriptFunion)getrand);
 		RegisterFun("getrand", (C_CallBackScriptFunion)getrand);
 		RegisterFun("wait", (C_CallBackScriptFunion)wait);
@@ -147,10 +148,18 @@ namespace zlscript
 		bool bResult = false;
 		CScriptStack ParmStack;
 		nParmNum -= 2;
+		CScriptStack vTemp;
 		for (int i = 0; i < nParmNum; i++)
 		{
-			ScriptVector_PushVar(ParmStack, &pState->PopVarFormStack());
+			ScriptVector_PushVar(vTemp, &pState->PopVarFormStack());
 		}
+
+		while (vTemp.size() > 0)
+		{
+			ScriptVector_PushVar(ParmStack, &vTemp.top());
+			vTemp.pop();
+		}
+
 		if (nHoldState == 0)
 		{
 			CScriptRunState* m_pScriptState = new CScriptRunState;
@@ -266,6 +275,57 @@ namespace zlscript
 		return ECALLBACK_FINISH;
 	}
 
+	int CScriptCallBackFunion::Printf(CScriptVirtualMachine* pMachine, CScriptRunState* pState)
+	{
+
+		if (pState == nullptr)
+		{
+			return ECALLBACK_ERROR;
+		}
+		std::string strReturn;
+		char ch[2] = { 0,0 };
+		std::string str = pState->PopCharVarFormStack();
+		const char* pStr = str.c_str();
+		for (unsigned int i = 0; i < str.size(); i++)
+		{
+			if (pStr[i] == '%')
+			{
+				if (i + 1 < str.size())
+				{
+					switch (pStr[i+1])
+					{
+					case 'd':
+					case 'f':
+					case 's':
+						strReturn += pState->PopCharVarFormStack();
+						break;
+					default:
+						break;
+					}
+					i++;
+				}
+			}
+			else if (pStr[i] == '\\')
+			{
+				if (i + 1 < str.size())
+				{
+					i++;
+					ch[0] = pStr[i];
+					strReturn += ch;
+				}
+			}
+			else
+			{
+				ch[0] = pStr[i];
+				strReturn += ch;
+			}
+		}
+
+		pState->ClearFunParam();
+		pState->PushVarToStack(strReturn.c_str());
+		return ECALLBACK_FINISH;
+	}
+
 
 	int CScriptCallBackFunion::getrand(CScriptVirtualMachine* pMachine, CScriptRunState* pState)
 	{
@@ -352,7 +412,7 @@ namespace zlscript
 
 		nParmNum -= 4;
 		CScriptStack vParmVars;
-		for (int i = 2; i < nParmNum; i++)
+		for (int i = 0; i < nParmNum; i++)
 		{
 			ScriptVector_PushVar(vParmVars, &pState->PopVarFormStack());
 		}
