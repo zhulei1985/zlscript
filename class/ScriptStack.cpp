@@ -100,6 +100,21 @@ namespace zlscript
 	{
 		nIndex = 0;
 	}
+	CScriptStack::CScriptStack(const CScriptStack& info)
+	{
+		//先清空，再赋值
+		while (this->size() > 0)
+		{
+			this->pop();
+		}
+		auto it = info.m_vData.begin();
+		for (; it != info.m_vData.end(); it++)
+		{
+			StackVarInfo* info = *it;
+			this->push(*info);
+		}
+		//return *this;
+	}
 	CScriptStack::~CScriptStack()
 	{
 		while (size() > 0)

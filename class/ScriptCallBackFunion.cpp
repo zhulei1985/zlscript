@@ -22,6 +22,7 @@
 #include "ScriptVirtualMachine.h"
 
 #include "ScriptEventMgr.h"
+#include "ScriptTriggerMgr.h"
 #include "ScriptDataMgr.h"
 
 #include <math.h>
@@ -45,8 +46,8 @@ namespace zlscript
 
 	void CScriptCallBackFunion::init()
 	{
-		RegisterFun("RunScript", (C_CallBackScriptFunion)RunScript);
-		RegisterFun("runscript", (C_CallBackScriptFunion)RunScript);
+		RegisterFun("RunScript", (C_CallBackScriptFunion)RunScriptToChannel);
+		RegisterFun("runscript", (C_CallBackScriptFunion)RunScriptToChannel);
 
 		RegisterFun("RunScriptToChannel", (C_CallBackScriptFunion)RunScriptToChannel);
 		RegisterFun("runscripttochannel", (C_CallBackScriptFunion)RunScriptToChannel);
@@ -172,6 +173,7 @@ namespace zlscript
 		}
 		else
 		{
+			//TODO 此处有问题
 			bResult = pMachine->RunFun(pState, scriptname, ParmStack,true);
 			//pState->ClearFunParam();
 			if (bResult)
@@ -197,16 +199,15 @@ namespace zlscript
 		}
 		int nParmNum = pState->GetParamNum();
 		CScriptStack vRetrunVars;
-		int nIndex = pState->PopIntVarFormStack();
 		int nIsWaiting = pState->PopIntVarFormStack();//是否等待调用函数完成
-		ScriptVector_PushVar(vRetrunVars, (__int64)E_SCRIPT_EVENT_RUNSCRIPT);
+		//ScriptVector_PushVar(vRetrunVars, (__int64)E_SCRIPT_EVENT_RUNSCRIPT);
 		if (nIsWaiting > 0)
 			ScriptVector_PushVar(vRetrunVars, (__int64)pState->GetId());
 		else
 			ScriptVector_PushVar(vRetrunVars, (__int64)0);
 		ScriptVector_PushVar(vRetrunVars, pState->PopCharVarFormStack());
 		//ScriptVector_PushVar(vRetrunVars, this);
-		nParmNum -= 3;
+		nParmNum -= 2;
 		CScriptStack vTemp;
 		for (int i = 0; i < nParmNum; i++)
 		{
@@ -218,7 +219,7 @@ namespace zlscript
 			ScriptVector_PushVar(vRetrunVars, &vTemp.top());
 			vTemp.pop();
 		}
-		CScriptEventMgr::GetInstance()->SendEvent(pMachine->m_nEventListIndex, nIndex, vRetrunVars);
+		CScriptEventMgr::GetInstance()->SendEvent(E_SCRIPT_EVENT_RUNSCRIPT,pMachine->m_nEventListIndex, vRetrunVars);
 
 		pState->ClearFunParam();
 		if (nIsWaiting)
@@ -416,7 +417,7 @@ namespace zlscript
 		{
 			ScriptVector_PushVar(vParmVars, &pState->PopVarFormStack());
 		}
-		CScriptEventMgr::GetInstance()->SetEventTrigger(strEvent, nClassPoint, strFlag, pMachine->m_nEventListIndex, strScript, vParmVars);
+		CScriptTriggerMgr::GetInstance()->SetEventTrigger(strEvent, nClassPoint, strFlag, pMachine->m_nEventListIndex, strScript, vParmVars);
 		pState->ClearFunParam();
 		return ECALLBACK_FINISH;
 	}
@@ -429,7 +430,7 @@ namespace zlscript
 		}
 		__int64 nClassPoint = pState->PopClassPointFormStack();
 		std::string strEvent = pState->PopCharVarFormStack();
-		CScriptEventMgr::GetInstance()->TriggerEvent(strEvent, nClassPoint);
+		CScriptTriggerMgr::GetInstance()->TriggerEvent(strEvent, nClassPoint);
 		pState->ClearFunParam();
 		return ECALLBACK_FINISH;
 	}
@@ -443,7 +444,7 @@ namespace zlscript
 		__int64 nClassPoint = pState->PopClassPointFormStack();
 		std::string strEvent = pState->PopCharVarFormStack();
 		std::string strFlag = pState->PopCharVarFormStack();
-		CScriptEventMgr::GetInstance()->RemoveTrigger(strEvent, nClassPoint, strFlag);
+		CScriptTriggerMgr::GetInstance()->RemoveTrigger(strEvent, nClassPoint, strFlag);
 		pState->ClearFunParam();
 		return ECALLBACK_FINISH;
 	}
@@ -476,7 +477,7 @@ namespace zlscript
 			auto pMaster = dynamic_cast<CScriptArray*>(pPoint->GetPoint());
 			if (pMaster)
 			{
-				delete pPoint;
+				delete pMaster;
 			}
 			pPoint->Unlock();
 		}

@@ -29,6 +29,8 @@ namespace zlscript
 		RegisterClassFun(GetSize, this, &CScriptArray::GetSize2Script);
 		RegisterClassFun(SetVal, this, &CScriptArray::SetVal2Script);
 		RegisterClassFun(DelVal, this, &CScriptArray::DelVal2Script);
+
+		RegisterClassFun(Clear, this, &CScriptArray::Clear2Script);
 	}
 
 	CScriptArray::~CScriptArray()
@@ -45,6 +47,8 @@ namespace zlscript
 		RegisterClassFun1("GetSize", CScriptArray);
 		RegisterClassFun1("SetVal", CScriptArray);
 		RegisterClassFun1("DelVal", CScriptArray);
+
+		RegisterClassFun1("Clear", CScriptArray);
 	}
 
 	int CScriptArray::GetVal2Script(CScriptRunState* pState)
@@ -148,7 +152,7 @@ namespace zlscript
 			}
 			m_vecVars.erase(itDel);
 
-			it = m_mapDic.find(str);
+			it = m_mapDic.begin();
 			for (; it != m_mapDic.end(); it++)
 			{
 				if (it->second > index)
@@ -157,6 +161,18 @@ namespace zlscript
 				}
 			}
 		}
+		pState->ClearFunParam();
+		return ECALLBACK_FINISH;
+	}
+
+	int CScriptArray::Clear2Script(CScriptRunState* pState)
+	{
+		if (pState == nullptr)
+		{
+			return ECALLBACK_ERROR;
+		}
+		m_vecVars.clear();
+		m_mapDic.clear();
 		pState->ClearFunParam();
 		return ECALLBACK_FINISH;
 	}

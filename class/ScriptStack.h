@@ -52,6 +52,7 @@ namespace zlscript
 	{
 	public:
 		CScriptStack();
+		CScriptStack(const CScriptStack& info);
 		~CScriptStack();
 	public:
 		void pop();

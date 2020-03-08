@@ -43,6 +43,36 @@ namespace zlscript
 		//传递参数
 		CScriptStack m_Parm;
 	};
+	class tagEventChannel
+	{
+	public:
+		tagEventChannel()
+		{
+			nChannelID = 0;
+		}
+		~tagEventChannel()
+		{
+			clear();
+		}
+		void clear();
+	public:
+		int nChannelID;
+		std::list<tagScriptEvent*> listEvent;
+	};
+	class tagMapEventChannel
+	{
+	public:
+		tagMapEventChannel()
+		{
+
+		}
+		~tagMapEventChannel()
+		{
+
+		}
+	public:
+		std::map<int, tagEventChannel> m_mapEventChannel;
+	};
 	class CScriptEventMgr
 	{
 	public:
@@ -51,46 +81,21 @@ namespace zlscript
 	public:
 		int AssignID();
 
-		bool SendEvent(int nSendID, int nRecvID, CScriptStack& vIn);
-		tagScriptEvent* GetEvent(int nID);
-		void PopEvent(int nID);
-		int GetEventSize(int nID);
+		void RegisterEvent(int nEventType, int nChannelID);
 
-		void ProcessEvent(int nID, std::function<void(int, CScriptStack &, CScriptStack&)> const& fun);
+		bool SendEvent(int nEventType, int nSendID, CScriptStack& vIn, int nRecvID = 0);
+		void GetEvent(int nEventType, int nChannelID,std::vector<tagScriptEvent> &vOut);
+
+
+		void ProcessEvent(int nEventType, int nID, std::function<void(int, CScriptStack &)> const& fun);
 
 		void Lock();
 		void Unlock();
 	protected:
-		typedef std::list<tagScriptEvent*> listEvent;
-		std::map<int, listEvent> m_mapEvent;
+		std::map<int, tagMapEventChannel> m_mapEvent;
 		int m_nEventListCount;
 		std::mutex m_Lock;
 
-		//触发器功能
-	public:
-		struct tagTrigger
-		{
-			int nEventnChannel;
-			std::string strScriptName;
-			CScriptStack parm;
-		};
-		struct tagEventTriggers
-		{
-			int nEventID;
-			std::map<std::string, tagTrigger> vTriggers;
-		};
-		struct tagClassTriggers
-		{
-			__int64 nClassPoint;
-			std::map<std::string, tagEventTriggers> vTriggers;
-		};
-
-		void SetEventTrigger(std::string strEvent, __int64 nClassPoint, std::string flag, int nChannel, std::string strScriptName, CScriptStack& parm);
-		void TriggerEvent(std::string strEvent, __int64 nClassPoint);
-		void RemoveTrigger(std::string strEvent, __int64 nClassPoint, std::string flag);
-	protected:
-		std::map<__int64, tagClassTriggers> m_mapTriggers;
-		std::mutex m_TriggerLock;
 	public:
 		static CScriptEventMgr* GetInstance()
 		{

@@ -1,15 +1,32 @@
 //注释为两个'/'，当前只支持这一种注释方法
 
-int Fun1(int x, int y)
+
+void main()
 {
-	return x+y;
+
+	int i = 0;
+	print("Begin");
+	while (i < 100)
+	{
+		i = i + 1;
+		RunScript(0,"Fun1",i);
+	}
+	print("Assignment completed");
+}
+
+void Fun1(int a)
+{
+	int nResult = 0;
+	int i = 0;
+	while (i < 1000)
+	{
+		i= i+ 1;
+		nResult = nResult + a;
+	}
+	string strOut = " "+ a + " plus 1000 times,result:" + nResult;
+	print(strOut);
 }
 int Fun2(string x, string y)
 {
 	return x+y;
-}
-void main()
-{
-	print(Fun1(4,3));
-	print(Fun2(4,3));
 }

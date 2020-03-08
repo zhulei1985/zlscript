@@ -40,6 +40,12 @@ namespace zlscript
 		int DelVal2Script(CScriptRunState* pState);
 
 		int DelValByIndex2Script(CScriptRunState* pState);
+		int Clear2Script(CScriptRunState* pState);
+	public:
+		std::vector<StackVarInfo>& GetVars()
+		{
+			return m_vecVars;
+		}
 	private:
 		std::map<std::string, unsigned int> m_mapDic;
 		std::vector<StackVarInfo> m_vecVars;

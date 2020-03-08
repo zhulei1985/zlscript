@@ -19,6 +19,23 @@
 #include "ScriptVirtualMachine.h"
 namespace zlscript
 {
+	void tagEventChannel::clear()
+	{
+		{
+			auto it = listEvent.begin();
+			for (; it != listEvent.end(); it++)
+			{
+				tagScriptEvent* pEvent = *it;
+				if (pEvent)
+				{
+					delete pEvent;
+				}
+			}
+			listEvent.clear();
+		}
+	}
+
+
 	CScriptEventMgr CScriptEventMgr::s_Instance;
 	CScriptEventMgr::CScriptEventMgr()
 	{
@@ -28,21 +45,13 @@ namespace zlscript
 	CScriptEventMgr::~CScriptEventMgr()
 	{
 		Lock();
-		std::map<int, listEvent>::iterator itList = m_mapEvent.begin();
+		auto itList = m_mapEvent.begin();
 		for (; itList != m_mapEvent.end(); itList++)
 		{
-			listEvent& le = itList->second;
-			while (le.size() > 0)
-			{
-				tagScriptEvent* pEvent = le.front();
-				le.pop_front();
-				if (pEvent)
-				{
-					delete pEvent;
-				}
-			}
+			auto& ch = itList->second;
+			ch.m_mapEventChannel.clear();
 		}
-
+		m_mapEvent.clear();
 		Unlock();
 	}
 
@@ -56,84 +65,93 @@ namespace zlscript
 		return nResult;
 	}
 
-	bool CScriptEventMgr::SendEvent(int nSendID, int nRecvID, CScriptStack& vIn)
+	void CScriptEventMgr::RegisterEvent(int nEventType, int nChannelID)
 	{
 		Lock();
-		listEvent& le = m_mapEvent[nRecvID];
-		tagScriptEvent* pEvent = new tagScriptEvent;
-		pEvent->nRecvID = nRecvID;
-		pEvent->nSendID = nSendID;
+		auto& MapChannel = m_mapEvent[nEventType];
+		auto& channel = MapChannel.m_mapEventChannel[nChannelID];
+		channel.nChannelID = nChannelID;
+		Unlock();
+	}
 
-		while (vIn.size() > 0)
+	bool CScriptEventMgr::SendEvent(int nEventType, int nSendID, CScriptStack& vIn, int nRecvID)
+	{
+		Lock();
+		auto& mapChannel = m_mapEvent[nEventType];
+		tagEventChannel* pChannel = nullptr;
+		//查找一个合适的频道
+		if (nRecvID == 0)
 		{
-			pEvent->m_Parm.push(vIn.top());
-			vIn.pop();
+			unsigned int nAmend = 0xffffffff;
+			for (auto it = mapChannel.m_mapEventChannel.begin(); it != mapChannel.m_mapEventChannel.end(); it++)
+			{
+				auto pCur = &it->second;
+				if (pCur->listEvent.size() < nAmend)
+				{
+					nAmend = pCur->listEvent.size();
+					pChannel = pCur;
+				}
+			}
 		}
-		le.push_back(pEvent);
+		else
+		{
+			auto it = mapChannel.m_mapEventChannel.find(nRecvID);
+			if (it != mapChannel.m_mapEventChannel.end())
+			{
+				pChannel = &it->second;
+			}
+		}
+
+		if (pChannel)
+		{
+			tagScriptEvent* pEvent = new tagScriptEvent;
+			pEvent->nSendID = nSendID;
+
+			while (vIn.size() > 0)
+			{
+				pEvent->m_Parm.push(vIn.top());
+				vIn.pop();
+			}
+			pChannel->listEvent.push_back(pEvent);
+		}
+
 		Unlock();
 		return true;
 	}
 
-	tagScriptEvent* CScriptEventMgr::GetEvent(int nID)
-	{
-		listEvent& le = m_mapEvent[nID];
-		if (le.size() > 0)
-		{
-			return le.front();
-		}
-		return nullptr;
-	}
-
-	void CScriptEventMgr::PopEvent(int nID)
-	{
-		listEvent& le = m_mapEvent[nID];
-		if (le.size() > 0)
-		{
-			tagScriptEvent* pEvent = le.front();
-			le.pop_front();
-			if (pEvent)
-			{
-				delete pEvent;
-			}
-		}
-	}
-
-	int CScriptEventMgr::GetEventSize(int nID)
+	void CScriptEventMgr::GetEvent(int nEventType, int nChannelID, std::vector<tagScriptEvent>& vOut)
 	{
 		Lock();
-		int nResult = 0;
-		listEvent& le = m_mapEvent[nID];
-		nResult = le.size();
+		auto& mapChannel = m_mapEvent[nEventType];
+		auto itChannel = mapChannel.m_mapEventChannel.find(nChannelID);
+		if (itChannel != mapChannel.m_mapEventChannel.end())
+		{
+			tagEventChannel& eventChannel = itChannel->second;
+			for (auto it = eventChannel.listEvent.begin(); it != eventChannel.listEvent.end(); it++)
+			{
+				tagScriptEvent* pEvent = *it;
+				if (pEvent)
+				{
+					vOut.push_back(*pEvent);
+				}
+			}
+			eventChannel.clear();
+		}
 		Unlock();
-		return nResult;
 	}
 
-	void CScriptEventMgr::ProcessEvent(int nID, std::function<void(int , CScriptStack&, CScriptStack&)> const& fun)
+
+	void CScriptEventMgr::ProcessEvent(int nEventType, int nID, std::function<void(int , CScriptStack&)> const& fun)
 	{
-		int nSize = GetEventSize(nID);
+		std::vector<tagScriptEvent> vEvent;
 
-		for (int i = 0; i < nSize; i++)
+		//获取所有对应事件
+		GetEvent(nEventType, nID, vEvent);
+
+
+		for (int i = 0; i < vEvent.size(); i++)
 		{
-			int nSendID = 0;
-			CScriptStack ParmInfo;
-			Lock();
-			auto pEvent = GetEvent(nID);
-			if (pEvent)
-			{
-				nSendID = pEvent->nSendID;
-				ParmInfo = pEvent->m_Parm;
-				PopEvent(nID);
-			}
-			else
-			{
-				Unlock();
-				break;
-			}
-			Unlock();
-
-			CScriptStack vRetrunVars;
-
-			fun(nSendID, ParmInfo, vRetrunVars);
+			fun(vEvent[i].nSendID, vEvent[i].m_Parm);
 		}
 	}
 
@@ -146,59 +164,6 @@ namespace zlscript
 	{
 		m_Lock.unlock();
 	}
-	void CScriptEventMgr::SetEventTrigger(std::string strEvent, __int64 nClassPoint, std::string flag, int nChannel, std::string strScriptName, CScriptStack& parm)
-	{
-		m_TriggerLock.lock();
-		auto & classTrigger = m_mapTriggers[nClassPoint];
-		auto& eventTrigger = classTrigger.vTriggers[strEvent];
-		tagTrigger trigger;
-		trigger.nEventnChannel = nChannel;
-		trigger.strScriptName = strScriptName;
-		trigger.parm = parm;
-		eventTrigger.vTriggers[flag] = trigger;
-		m_TriggerLock.unlock();
-	}
-	void CScriptEventMgr::TriggerEvent(std::string strEvent, __int64 nClassPoint)
-	{
-		m_TriggerLock.lock();
-		auto& classTrigger = m_mapTriggers[nClassPoint];
-		auto& eventTrigger = classTrigger.vTriggers[strEvent];
-		for (auto it = eventTrigger.vTriggers.begin(); it != eventTrigger.vTriggers.end(); it++)
-		{
-			CScriptStack vRetrunVars;
 
-			ScriptVector_PushVar(vRetrunVars, (__int64)E_SCRIPT_EVENT_RUNSCRIPT);
-			ScriptVector_PushVar(vRetrunVars, (__int64)0);
-			ScriptVector_PushVar(vRetrunVars, it->second.strScriptName.c_str());
-			for (int i = 0; i < it->second.parm.size(); i++)
-			{
-				ScriptVector_PushVar(vRetrunVars, it->second.parm.GetVal(i));
-			}
 
-			CScriptEventMgr::GetInstance()->SendEvent(E_SCRIPT_EVENT_CHANNEL_SCRIPT_DRAWING, it->second.nEventnChannel, vRetrunVars);
-		}
-		m_TriggerLock.unlock();
-	}
-	void CScriptEventMgr::RemoveTrigger(std::string strEvent, __int64 nClassPoint, std::string flag)
-	{
-		m_TriggerLock.lock();
-		auto& classTrigger = m_mapTriggers[nClassPoint];
-		if (strEvent == "")
-		{
-			classTrigger.vTriggers.clear();
-		}
-		else
-		{
-			auto& eventTrigger = classTrigger.vTriggers[strEvent];
-			if (flag == "")
-			{
-				eventTrigger.vTriggers.clear();
-			}
-			else
-			{
-				eventTrigger.vTriggers.erase(flag);
-			}
-		}
-		m_TriggerLock.unlock();
-	}
 }

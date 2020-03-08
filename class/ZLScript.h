@@ -42,9 +42,19 @@ namespace zlscript
 			zlscript::CScriptRunState* m_pScriptState = new zlscript::CScriptRunState; \
 			if (m_pScriptState) \
 			{ \
-				pMachine->RunFun(m_pScriptState, "main", __VA_ARGS__); \
+				pMachine->RunFun(m_pScriptState, scriptname, __VA_ARGS__); \
 			} \
 		} \
 	}
-
+	inline void RunScript(const char* pName, ...)
+	{
+		if (pName == nullptr)
+		{
+			return;
+		}
+		CScriptStack vRetrunVars;
+		ScriptVector_PushVar(vRetrunVars, (__int64)0);
+		ScriptVector_PushVar(vRetrunVars, pName);
+		CScriptEventMgr::GetInstance()->SendEvent(E_SCRIPT_EVENT_RUNSCRIPT,0, vRetrunVars);
+	}
 }
