@@ -141,7 +141,7 @@ namespace zlscript
 	}
 
 
-	void CScriptEventMgr::ProcessEvent(int nEventType, int nID, std::function<void(int , CScriptStack&)> const& fun)
+	void CScriptEventMgr::ProcessEvent(int nEventType, int nID, EventProcessFun const& fun)
 	{
 		std::vector<tagScriptEvent> vEvent;
 

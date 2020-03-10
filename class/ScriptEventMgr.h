@@ -24,15 +24,15 @@
 
 #include "ScriptStack.h"
 
+typedef std::function<void(int, zlscript::CScriptStack&)> EventProcessFun;
+
 namespace zlscript
 {
 	enum E_SCRIPT_GLOBAL_EVENT_CHANNEL
 	{
-		E_SCRIPT_EVENT_CHANNEL_UI,
-
-		E_SCRIPT_EVENT_CHANNEL_SCRIPT_DRAWING,
 		E_SCRIPT_EVENT_CHANNEL_ASSIGN,
 	};
+
 
 	class tagScriptEvent
 	{
@@ -87,7 +87,7 @@ namespace zlscript
 		void GetEvent(int nEventType, int nChannelID,std::vector<tagScriptEvent> &vOut);
 
 
-		void ProcessEvent(int nEventType, int nID, std::function<void(int, CScriptStack &)> const& fun);
+		void ProcessEvent(int nEventType, int nID, EventProcessFun const& fun);
 
 		void Lock();
 		void Unlock();

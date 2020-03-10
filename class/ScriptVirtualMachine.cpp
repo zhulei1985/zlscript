@@ -951,8 +951,6 @@ namespace zlscript
 		CScriptCodeLoader::GetInstance()->GetGlobalVar(vGlobalNumVar);
 		
 		m_nEventListIndex = CScriptEventMgr::GetInstance()->AssignID();
-		CScriptEventMgr::GetInstance()->RegisterEvent(E_SCRIPT_EVENT_RETURN, m_nEventListIndex);
-		CScriptEventMgr::GetInstance()->RegisterEvent(E_SCRIPT_EVENT_RUNSCRIPT, m_nEventListIndex);
 	}
 
 	void CScriptVirtualMachine::clear()
@@ -1102,55 +1100,11 @@ namespace zlscript
 
 	unsigned int CScriptVirtualMachine::Exec(unsigned int nDelay,unsigned int unTimeRes)
 	{
-		//CSingleLock xLock(m_xCtrl, true);
-		//检验等待队列，太久的话删除
-		//__int64 nowTime = CMyTime::GetTime();
 
-
-		auto fun_return = [&](int nSendID, CScriptStack& ParmInfo)
+		for (auto it = m_mapEventProcess.begin(); it != m_mapEventProcess.end(); it++)
 		{
-			__int64 nScriptStateID = ScriptStack_GetInt(ParmInfo);
-			//ScriptVector_PushVar(vRetrunVars, (__int64)E_SCRIPT_EVENT_RETURN);
-			//ScriptVector_PushVar(vRetrunVars, (__int64)nScriptStateID);
-
-
-				//__int64 nStateID = ScriptStack_GetInt(ParmInfo);
-				std::map<unsigned long, CScriptRunState*>::iterator itWait = m_mapWaiting.find(nScriptStateID);
-				if (itWait != m_mapWaiting.end())
-				{
-					CScriptRunState* pState = itWait->second;
-					pState->CopyFromStack(&ParmInfo);
-					m_RunStateList.push_back(pState);
-
-					char cbuff[1024];
-					sprintf(cbuff, "Script State Return : %d:", pState);
-					zlscript::CScriptDebugPrintMgr::GetInstance()->Print(cbuff);
-					m_mapWaiting.erase(itWait);
-				}
-			
-		};
-		auto fun_runScript = [&](int nSendID, CScriptStack& ParmInfo)
-		{
-			__int64 nScriptStateID = ScriptStack_GetInt(ParmInfo);
-			
-			CScriptRunState* m_pScriptState = new CScriptRunState;
-			if (m_pScriptState)
-			{
-					//__int64 nCallStateID = ScriptStack_GetInt(ParmInfo);
-					std::string strScript = ScriptStack_GetString(ParmInfo);
-					if (nScriptStateID != 0)
-					{
-						m_pScriptState->nCallEventIndex = nSendID;
-						m_pScriptState->m_CallStateId = nScriptStateID;
-					}
-					RunFun(m_pScriptState, strScript, ParmInfo);
-			}
-			
-		};
-		CScriptEventMgr::GetInstance()->ProcessEvent(E_SCRIPT_EVENT_RETURN, m_nEventListIndex, fun_return);
-		CScriptEventMgr::GetInstance()->ProcessEvent(E_SCRIPT_EVENT_RUNSCRIPT,m_nEventListIndex, fun_runScript);
-
-
+			CScriptEventMgr::GetInstance()->ProcessEvent(it->first, m_nEventListIndex, it->second);
+		}
 
 		listRunState::iterator it = m_RunStateList.begin();
 		for (;it != m_RunStateList.end(); )
@@ -1356,5 +1310,45 @@ namespace zlscript
 			return &vGlobalNumVar[pos];
 		}
 		return nullptr;
+	}
+	void CScriptVirtualMachine::InitEvent(int nEventType, EventProcessFun fun)
+	{
+		m_mapEventProcess[nEventType] = fun;
+
+		CScriptEventMgr::GetInstance()->RegisterEvent(nEventType, m_nEventListIndex);
+	}
+	void CScriptVirtualMachine::EventReturnFun(int nSendID, CScriptStack& ParmInfo)
+	{
+		__int64 nScriptStateID = ScriptStack_GetInt(ParmInfo);
+
+		std::map<unsigned long, CScriptRunState*>::iterator itWait = m_mapWaiting.find(nScriptStateID);
+		if (itWait != m_mapWaiting.end())
+		{
+			CScriptRunState* pState = itWait->second;
+			pState->CopyFromStack(&ParmInfo);
+			m_RunStateList.push_back(pState);
+
+			char cbuff[1024];
+			sprintf(cbuff, "Script State Return : %d:", pState);
+			zlscript::CScriptDebugPrintMgr::GetInstance()->Print(cbuff);
+			m_mapWaiting.erase(itWait);
+		}
+	}
+	void CScriptVirtualMachine::EventRunScriptFun(int nSendID, CScriptStack& ParmInfo)
+	{
+		__int64 nScriptStateID = ScriptStack_GetInt(ParmInfo);
+
+		CScriptRunState* m_pScriptState = new CScriptRunState;
+		if (m_pScriptState)
+		{
+			//__int64 nCallStateID = ScriptStack_GetInt(ParmInfo);
+			std::string strScript = ScriptStack_GetString(ParmInfo);
+			if (nScriptStateID != 0)
+			{
+				m_pScriptState->nCallEventIndex = nSendID;
+				m_pScriptState->m_CallStateId = nScriptStateID;
+			}
+			RunFun(m_pScriptState, strScript, ParmInfo);
+		}
 	}
 }

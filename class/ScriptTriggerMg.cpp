@@ -53,7 +53,7 @@ namespace zlscript
 		{
 			CScriptStack vRetrunVars;
 
-			ScriptVector_PushVar(vRetrunVars, (__int64)E_SCRIPT_EVENT_RUNSCRIPT);
+			//ScriptVector_PushVar(vRetrunVars, (__int64)E_SCRIPT_EVENT_RUNSCRIPT);
 			ScriptVector_PushVar(vRetrunVars, (__int64)0);
 			ScriptVector_PushVar(vRetrunVars, it->second.strScriptName.c_str());
 			for (int i = 0; i < it->second.parm.size(); i++)
@@ -61,7 +61,7 @@ namespace zlscript
 				ScriptVector_PushVar(vRetrunVars, it->second.parm.GetVal(i));
 			}
 
-			CScriptEventMgr::GetInstance()->SendEvent(E_SCRIPT_EVENT_CHANNEL_ASSIGN, it->second.nEventnChannel, vRetrunVars);
+			CScriptEventMgr::GetInstance()->SendEvent(E_SCRIPT_EVENT_RUNSCRIPT,it->second.nEventnChannel, vRetrunVars);
 		}
 		m_TriggerLock.unlock();
 	}

@@ -208,17 +208,18 @@ namespace zlscript
 		ScriptVector_PushVar(vRetrunVars, pState->PopCharVarFormStack());
 		//ScriptVector_PushVar(vRetrunVars, this);
 		nParmNum -= 2;
-		CScriptStack vTemp;
+		//CScriptStack vTemp;
 		for (int i = 0; i < nParmNum; i++)
 		{
-			ScriptVector_PushVar(vTemp, &pState->PopVarFormStack());
+			//ScriptVector_PushVar(vTemp, &pState->PopVarFormStack());
+			ScriptVector_PushVar(vRetrunVars, &pState->PopVarFormStack());
 		}
 
-		while (vTemp.size() > 0)
-		{
-			ScriptVector_PushVar(vRetrunVars, &vTemp.top());
-			vTemp.pop();
-		}
+		//while (vTemp.size() > 0)
+		//{
+		//	ScriptVector_PushVar(vRetrunVars, &vTemp.top());
+		//	vTemp.pop();
+		//}
 		CScriptEventMgr::GetInstance()->SendEvent(E_SCRIPT_EVENT_RUNSCRIPT,pMachine->m_nEventListIndex, vRetrunVars);
 
 		pState->ClearFunParam();

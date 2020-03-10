@@ -6,6 +6,10 @@ std::atomic_int g_nThreadRunState = 0;//0 退出 1 运行 2 暂停
 void BackGroundThreadFun()
 {
 	zlscript::CScriptVirtualMachine Machine;
+	Machine.InitEvent(zlscript::E_SCRIPT_EVENT_RETURN,
+		std::bind(&zlscript::CScriptVirtualMachine::EventReturnFun,&Machine, std::placeholders::_1, std::placeholders::_2));
+	Machine.InitEvent(zlscript::E_SCRIPT_EVENT_RUNSCRIPT,
+		std::bind(&zlscript::CScriptVirtualMachine::EventRunScriptFun, &Machine, std::placeholders::_1, std::placeholders::_2));
 	auto oldtime = std::chrono::steady_clock::now();
 	while (g_nThreadRunState > 0)
 	{

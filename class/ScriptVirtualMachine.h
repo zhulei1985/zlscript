@@ -26,6 +26,7 @@
 #include "ScriptExecBlock.h"
 #include "ScriptCodeLoader.h"
 #include "ScriptSuperPointer.h"
+#include "ScriptEventMgr.h"
 #include <vector>
 #include <string>
 #include <map>
@@ -218,6 +219,15 @@ namespace zlscript
 		friend class CScriptExecBlock;
 
 		int m_nEventListIndex;
+
+	public:
+		void InitEvent(int nEventType, EventProcessFun fun);
+
+		void EventReturnFun(int nSendID, CScriptStack& ParmInfo);
+		void EventRunScriptFun(int nSendID, CScriptStack& ParmInfo);
+
+	protected:
+		std::map<int, EventProcessFun> m_mapEventProcess;
 	};
 
 }
