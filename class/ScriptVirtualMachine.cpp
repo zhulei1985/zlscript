@@ -334,6 +334,10 @@ namespace zlscript
 				var = pBlock->PopVar();
 			}
 		}
+		else
+		{
+			var = m_varReturn;
+		}
 		return var;
 	}
 	int CScriptRunState::GetParamNum()
@@ -607,6 +611,12 @@ namespace zlscript
 						m_BlockStack.pop();
 						if (m_BlockStack.empty())
 						{
+							if (pBlock->GetVarSize())
+							{
+								auto pVar = pBlock->GetVar(pBlock->GetVarSize()-1);
+								if (pVar)
+									m_varReturn = *pVar;
+							}
 							SAFE_DELETE(pBlock);
 							return ERunTime_Complete;
 						}
@@ -1059,9 +1069,9 @@ namespace zlscript
 	#endif
 		m_RunStateList.push_back(pState);
 
-		char cbuff[1024];
-		sprintf(cbuff, "Script State Add 1: %d:", pState);
-		zlscript::CScriptDebugPrintMgr::GetInstance()->Print(cbuff);
+		//char cbuff[1024];
+		//sprintf(cbuff, "Script State Add 1: %d:", pState);
+		//zlscript::CScriptDebugPrintMgr::GetInstance()->Print(cbuff);
 		return true;
 	}
 
@@ -1092,9 +1102,9 @@ namespace zlscript
 		}
 #endif
 		m_RunStateList.push_back(pState);
-		char cbuff[1024];
-		sprintf(cbuff, "Script State Add 2: %d:", pState);
-		zlscript::CScriptDebugPrintMgr::GetInstance()->Print(cbuff);
+		//char cbuff[1024];
+		//sprintf(cbuff, "Script State Add 2: %d:", pState);
+		//zlscript::CScriptDebugPrintMgr::GetInstance()->Print(cbuff);
 		return true;
 	}
 
@@ -1132,9 +1142,9 @@ namespace zlscript
 								ScriptVector_PushVar(vRetrunVars, &pState->PopVarFormStack());
 								CScriptEventMgr::GetInstance()->SendEvent(E_SCRIPT_EVENT_RETURN,m_nEventListIndex, vRetrunVars, pState->nCallEventIndex);
 							}
-							char cbuff[1024];
-							sprintf(cbuff, "Script State Remove : %d:", pState);
-							zlscript::CScriptDebugPrintMgr::GetInstance()->Print(cbuff);
+							//char cbuff[1024];
+							//sprintf(cbuff, "Script State Remove : %d:", pState);
+							//zlscript::CScriptDebugPrintMgr::GetInstance()->Print(cbuff);
 							SAFE_DELETE(pState);
 							it = m_RunStateList.erase(it);
 						}
@@ -1146,9 +1156,9 @@ namespace zlscript
 								CScriptRunState *pWaitingState = m_mapWaiting[pState->GetId()];
 								if (pWaitingState != pState)
 								{
-									char cbuff[1024];
-									sprintf(cbuff, "Script State Remove Waiting: %d:", pWaitingState);
-									zlscript::CScriptDebugPrintMgr::GetInstance()->Print(cbuff);
+									//char cbuff[1024];
+									//sprintf(cbuff, "Script State Remove Waiting: %d:", pWaitingState);
+									//zlscript::CScriptDebugPrintMgr::GetInstance()->Print(cbuff);
 									SAFE_DELETE(pWaitingState);
 								}
 								else
@@ -1158,9 +1168,9 @@ namespace zlscript
 							}
 							m_mapWaiting[pState->GetId()] = pState;
 
-							char cbuff[1024];
-							sprintf(cbuff, "Script State Wait : %d:", pState);
-							zlscript::CScriptDebugPrintMgr::GetInstance()->Print(cbuff);
+							//char cbuff[1024];
+							//sprintf(cbuff, "Script State Wait : %d:", pState);
+							//zlscript::CScriptDebugPrintMgr::GetInstance()->Print(cbuff);
 							//pState->m_WatingTime = nowTime;
 							it = m_RunStateList.erase(it);
 						}
@@ -1328,9 +1338,9 @@ namespace zlscript
 			pState->CopyFromStack(&ParmInfo);
 			m_RunStateList.push_back(pState);
 
-			char cbuff[1024];
-			sprintf(cbuff, "Script State Return : %d:", pState);
-			zlscript::CScriptDebugPrintMgr::GetInstance()->Print(cbuff);
+			//char cbuff[1024];
+			//sprintf(cbuff, "Script State Return : %d:", pState);
+			//zlscript::CScriptDebugPrintMgr::GetInstance()->Print(cbuff);
 			m_mapWaiting.erase(itWait);
 		}
 	}

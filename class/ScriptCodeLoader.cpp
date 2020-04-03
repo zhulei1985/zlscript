@@ -332,6 +332,7 @@ namespace zlscript
 					word.nSourceWordsIndex = GetSourceWordsIndex(nSourceIndex);
 #endif
 					m_vCurSourceSentence.push_back(word);
+					strOut.clear();
 				}
 				m_stackLexical.push(nResult & 0x7fff);
 				if (nResult & ENeedLoadNewChar)

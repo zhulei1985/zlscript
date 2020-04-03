@@ -78,7 +78,7 @@ namespace zlscript
 		unsigned int m_WatingTime;
 
 	public:
-		//CScriptStack m_varRegister;
+		StackVarInfo m_varReturn;
 		std::stack<CScriptExecBlock*> m_BlockStack;
 
 		//int CurCallFunParamNum;//当前调用函数的参数数量
