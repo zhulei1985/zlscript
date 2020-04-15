@@ -29,9 +29,43 @@ void BackGroundThreadFun()
 		//std::this_thread::sleep_for(std::chrono::milliseconds(1));
 	}
 }
+using namespace zlscript;
+class CTest : public CScriptPointInterface
+{
+public:
+	CTest()
+	{
+		AddClassObject(CScriptPointInterface::GetScriptPointIndex(), this);
+
+		RegisterClassFun(Add, this, &CTest::Add2Script);
+	}
+	~CTest()
+	{
+
+	}
+
+	int Add2Script(CScriptRunState* pState)
+	{
+		if (pState == nullptr)
+		{
+			return ECALLBACK_ERROR;
+		}
+		int nVal1 = pState->PopIntVarFormStack();
+		int nVal2 = pState->PopIntVarFormStack();
+
+		pState->ClearFunParam();
+		pState->PushVarToStack(nVal1 + nVal2);
+		return ECALLBACK_FINISH;
+	}
+};
 int main()
 {
 	zlscript::InitScript();
+
+	//注册类和类函数
+	RegisterClassType("CTest", CTest);
+	RegisterClassFun1("Add", CTest);
+
 	zlscript::LoadFile("test.script");
 	g_nThreadRunState = 1;
 
@@ -48,3 +82,4 @@ int main()
 	}
 	g_nThreadRunState = 0;
 }
+

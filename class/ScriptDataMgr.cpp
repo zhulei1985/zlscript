@@ -35,7 +35,7 @@ namespace zlscript
 
 	CScriptArray::~CScriptArray()
 	{
-		RemoveClassObject(CScriptPointInterface::GetScriptPointIndex());
+		//RemoveClassObject(CScriptPointInterface::GetScriptPointIndex());
 	}
 
 	void CScriptArray::Init2Script()
@@ -199,7 +199,7 @@ namespace zlscript
 
 	CScriptData::~CScriptData()
 	{
-		RemoveClassObject(CScriptPointInterface::GetScriptPointIndex());
+		//RemoveClassObject(CScriptPointInterface::GetScriptPointIndex());
 	}
 
 	void CScriptData::Init2Script()

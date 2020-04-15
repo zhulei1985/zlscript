@@ -62,6 +62,9 @@ namespace zlscript
 		ECODE_CLEAR_PARAM,//清空堆栈里的参数
 
 		ECODE_CALL_CLASS_FUN,//调用类函数 cSign:类函数索引 cExtend:参数数量,脚本函数 dwPos:类指针索引
+
+		ECODE_NEW_CLASS, //新建一个类实例
+		ECODE_RELEASE_CLASS,//释放一个类实例
 		/*************标识符************/
 		ECODE_INT = 200,//接下来的变量取成INT
 		ECODE_DOUDLE = 201,//接下来的变量取成double

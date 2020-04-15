@@ -8,6 +8,7 @@
 
 #include "ScriptExecBlock.h"
 #include "ScriptSuperPointer.h"
+#include "ScriptClassMgr.h"
 #include <string>
 namespace zlscript
 {
@@ -768,6 +769,37 @@ namespace zlscript
 				else
 				{
 					nResult = ERESULT_ERROR;
+				}
+				m_nCodePoint++;
+			}
+			break;
+			case ECODE_NEW_CLASS: //新建一个类实例
+			{
+				CBaseScriptClassMgr* pMgr = CScriptSuperPointerMgr::GetInstance()->GetClassMgr(code.dwPos);
+				if (pMgr)
+				{
+					auto pNewPoint = pMgr->New();
+					ScriptVector_PushVar(m_varRegister, pNewPoint);
+				}
+				else
+				{
+					ScriptVector_PushVar(m_varRegister, (CScriptPointInterface*)nullptr);
+				}
+				m_nCodePoint++;
+			}
+			break;
+			case ECODE_RELEASE_CLASS://释放一个类实例
+			{
+				__int64 nVal = ScriptStack_GetClassPointIndex(m_varRegister);
+				CScriptBasePointer* pPoint = CScriptSuperPointerMgr::GetInstance()->PickupPointer(nVal);
+				if (pPoint)
+				{
+					CBaseScriptClassMgr* pMgr = CScriptSuperPointerMgr::GetInstance()->GetClassMgr(pPoint->GetType());
+					if (pMgr)
+					{
+						pMgr->Release(pPoint);
+					}
+					CScriptSuperPointerMgr::GetInstance()->ReturnPointer(pPoint);
 				}
 				m_nCodePoint++;
 			}

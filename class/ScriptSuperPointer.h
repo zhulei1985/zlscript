@@ -24,81 +24,16 @@
 #include <string>
 #include <vector>
 
+#include "ScriptPointInterface.h"
+#include "ScriptClassMgr.h"
+
 namespace zlscript
 {
-	enum
-	{
-		ECALLBACK_ERROR,
-		ECALLBACK_FINISH,
-		ECALLBACK_WAITING,
-		ECALLBACK_CALLSCRIPTFUN,
-		ECALLBACK_NEXTCONTINUE,
-	};
-	template<typename TFuncAddr, typename TFunc>
-	inline void GetMemberFuncAddr(TFuncAddr& addr, TFunc func)
-	{
-		union
-		{
-			TFunc _func;
-			TFuncAddr _addr;
-		}ut;
-		ut._func = func;
-		addr = ut._addr;
-	}
-	template<typename TFuncAddr, typename TFunc>
-	inline void GetFuncForAddr(TFuncAddr addr, TFunc& func)
-	{
-		union
-		{
-			TFunc _func;
-			TFuncAddr _addr;
-		}ut;
-		ut._addr = addr;
-		func = ut._func;
-	}
-	class CScriptRunState;
-	typedef int (*ScriptClassFunHandler)(CScriptRunState*);
-	struct CScriptBaseClassFunInfo
-	{
-		struct tagParameterInfo
-		{
-			int type;//1 数值 2 浮点 3 字符串 4 类指针
-			int classtype;//如果是类指针，类类型值
-		};
-		//virtual void init() = 0;
-		std::vector<tagParameterInfo> vParmeterInfo;
-		virtual int RunFun(CScriptRunState* pState) = 0;
-		virtual CScriptBaseClassFunInfo* Copy() = 0;
-	};
-
-	class CScriptPointInterface
-	{
-	public:
-		CScriptPointInterface();
-		//{
-		//	m_nID = 0;
-		//}
-		~CScriptPointInterface();
-		virtual void InitScriptPointIndex();
-		bool IsInitScriptPointIndex();
-		__int64 GetScriptPointIndex();
-		void SetFun(int id, CScriptBaseClassFunInfo* pInfo);
-		int RunFun(int id, CScriptRunState* pState);
-
-		CScriptPointInterface(const CScriptPointInterface& val);
-		CScriptPointInterface& operator=(const CScriptPointInterface& val);
-	private:
-		__int64 m_nID;
-		static __int64 s_nIDCount;
-		std::map<int, CScriptBaseClassFunInfo*> m_mapScriptClassFun;
-
-		std::mutex m_FunLock;
-		//std::shared_ptr<std::mutex> m_FunLock;
-	};
 
 	class CScriptBasePointer
 	{
 	public:
+		virtual const char* GetClassName() = 0;
 		virtual int GetType() = 0;
 		virtual __int64 GetID();
 		virtual void SetID(__int64 id);
@@ -125,6 +60,10 @@ namespace zlscript
 	class CScriptSuperPointer : public CScriptBasePointer
 	{
 	public:
+		virtual const char* GetClassName()
+		{
+			return s_strClassName.c_str();
+		}
 		int GetType();
 		//typedef int (T::*ClassFun)(CScriptRunState *);
 		virtual CScriptPointInterface* GetPoint()
@@ -154,6 +93,7 @@ namespace zlscript
 		static std::map<std::string, int> m_mapDicString2Index;
 		static std::atomic_int s_nFunSize;
 		static std::atomic_int s_nClassType;
+		static std::string s_strClassName;
 	};
 
 	template<class T>
@@ -164,6 +104,9 @@ namespace zlscript
 
 	template<class T>
 	std::map<std::string, int> CScriptSuperPointer<T>::m_mapDicString2Index;
+
+	template<class T>
+	std::string CScriptSuperPointer<T>::s_strClassName;
 
 	template<class T>
 	inline int CScriptSuperPointer<T>::GetType()
@@ -258,12 +201,16 @@ namespace zlscript
 		void ReturnPointer(CScriptBasePointer* pPointer);
 
 		int GetClassFunIndex(int classindex, std::string funname);
+
+		CBaseScriptClassMgr* GetClassMgr(int nType);
 	private:
 		int nClassTypeCount;
 		std::map<std::string, int> m_mapString2ClassType;
 		std::map<__int64, CScriptBasePointer*> m_mapPointer;
 
 		std::map<__int64, CScriptBasePointer*> m_mapTypePointer;
+
+		std::map<int, CBaseScriptClassMgr*> m_mapClassMgr;
 
 		std::mutex m_MutexLock;
 		std::mutex m_MutexTypeLock;
@@ -286,6 +233,9 @@ namespace zlscript
 			m_mapString2ClassType[classname] = nClassTypeCount;
 			CScriptSuperPointer<T>::s_nClassType = nClassTypeCount;
 
+			CScriptSuperPointer<T>::s_strClassName = classname;
+
+			m_mapClassMgr[nClassTypeCount] = CScriptClassMgr<T>::GetInstance();
 			m_MutexTypeLock.unlock();
 			return true;
 		}

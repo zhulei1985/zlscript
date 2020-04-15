@@ -23,6 +23,9 @@
 #include "zStringBuffer.h"
 #include "EScriptVariableType.h"
 #include "ScriptSuperPointer.h"
+
+#pragma warning(disable : 4996) 
+
 namespace zlscript
 {
 	struct StackVarInfo

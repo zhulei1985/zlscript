@@ -30,6 +30,9 @@
 
 #include "zByteArray.h"
 #include "ScriptSuperPointer.h"
+
+#pragma warning(disable : 4996) 
+
 using namespace std;
 namespace zlscript
 {
@@ -1094,6 +1097,57 @@ namespace zlscript
 
 				nReturn = ECompile_Return;
 			}
+			else if (vIn[curPos].word == "delete")//释放一个类实例
+			{
+				curPos++;
+				//先检查是否是类指针
+				int nClassIndex = QueryTempVar(vIn[curPos].word);
+				char cSign = 0;
+				VarPoint* pVar = nullptr;
+				if (nClassIndex >= 0)
+				{
+					pVar = &m_vTempCodeData.vNumVar[nClassIndex];
+					cSign = 2;
+				}
+				else if (m_mapDicGlobalVar.find(vIn[curPos].word) != m_mapDicGlobalVar.end())
+				{
+					VarInfo info;
+					info.nVarInfo = m_mapDicGlobalVar[vIn[curPos].word];
+					nClassIndex = info.dwPos;
+					pVar = &vGlobalNumVar[nClassIndex];
+					cSign = 1;
+				}
+				if (pVar && pVar->cType == EScriptVal_ClassPointIndex)
+				{
+					CodeStyle code;
+					code.qwCode = 0;
+#if _SCRIPT_DEBUG
+					code.nSourseWordIndex = GetSourceLineIndex(vIn, curPos);
+#endif
+					code.wInstruct = ECODE_PUSH;
+					code.cSign = cSign;
+					code.cExtend = 0;
+					code.dwPos = nClassIndex;
+					vTempCode.push_back(code);
+				}
+				else
+				{
+					//不是类指针，错误
+					nReturn == ECompile_ERROR;
+				}
+
+				CodeStyle deleteCode;
+				deleteCode.qwCode = 0;
+				deleteCode.wInstruct = ECODE_RELEASE_CLASS;
+				deleteCode.dwPos = vTempCode.size();
+#if _SCRIPT_DEBUG
+				deleteCode.nSourseWordIndex = GetSourceLineIndex(vIn, curPos);
+#endif
+				vTempCode.push_back(deleteCode);
+
+				nReturn = ECompile_Return;
+				curPos++;
+			}
 			else
 			{
 				if (m_mapString2CodeIndex.find(vIn[curPos].word) != m_mapString2CodeIndex.end())
@@ -2027,7 +2081,25 @@ namespace zlscript
 		if (isClassPoint)
 		{
 			std::string strName = vIn[curPos].word;
-			if (vIn.size() - curPos > 2 && vIn[curPos + 1].word == "(")
+			if (strName == "new")
+			{
+				if (vIn.size() - curPos < 2)
+				{
+					//错误
+					return ECompile_ERROR;
+				}
+				std::string strClassName = vIn[curPos+1].word;
+				CodeStyle newCode;
+				newCode.qwCode = 0;
+				newCode.wInstruct = ECODE_NEW_CLASS;
+				newCode.dwPos = CScriptSuperPointerMgr::GetInstance()->GetClassType(strClassName);
+#if _SCRIPT_DEBUG
+				newCode.nSourseWordIndex = GetSourceLineIndex(vIn, curPos);
+#endif
+				vOut.push_back(newCode);
+				curPos += 2;
+			}
+			else if (vIn.size() - curPos > 2 && vIn[curPos + 1].word == "(")
 			{
 				//脚本函数
 				if (m_mapString2CodeIndex.find(strName) != m_mapString2CodeIndex.end())

@@ -511,7 +511,7 @@ namespace zlscript
 		CScriptBasePointer* pPoint = CScriptSuperPointerMgr::GetInstance()->PickupPointer(index);
 		if (pPoint)
 		{
-			auto pData = dynamic_cast<CScriptData*>(pPoint);
+			auto pData = dynamic_cast<CScriptData*>(pPoint->GetPoint());
 			CScriptDataMgr::GetInstance()->ReleaseData(pData);
 		}
 

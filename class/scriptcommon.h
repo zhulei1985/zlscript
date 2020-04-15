@@ -30,7 +30,7 @@ namespace zlscript
 {
 	typedef	unsigned long	PROCESS_ID;
 
-#ifdef WIN32
+#ifdef _WIN32
 
 #else
 
@@ -54,7 +54,7 @@ namespace zlscript
 #endif
 
 //#if (CC_TARGET_PLATFORM == CC_PLATFORM_ANDROID)
-#ifndef WIN32
+#ifndef _WIN32
 #include <string>
 	inline double stod(std::string str)
 	{

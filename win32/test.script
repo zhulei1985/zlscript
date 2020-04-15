@@ -3,30 +3,9 @@
 
 void main()
 {
+	CTest test = new CTest;
+	int nVal = test->Add(1,2);
+	print(nVal);
+	delete test;
 
-	int i = 0;
-	print("Begin");
-	while (i < 100)
-	{
-		i = i + 1;
-		RunScript(0,"Fun1",i);
-	}
-	print("Assignment completed");
-}
-
-void Fun1(int a)
-{
-	int nResult = 0;
-	int i = 0;
-	while (i < 1000)
-	{
-		i= i+ 1;
-		nResult = nResult + a;
-	}
-	string strOut = " "+ a + " plus 1000 times,result:" + nResult;
-	print(strOut);
-}
-int Fun2(string x, string y)
-{
-	return x+y;
 }

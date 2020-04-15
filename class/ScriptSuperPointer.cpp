@@ -18,132 +18,9 @@
 #include "ScriptSuperPointer.h"
 #include "ScriptDataMgr.h"
 
+
 namespace zlscript
 {
-	__int64 CScriptPointInterface::s_nIDCount = 0;
-	CScriptPointInterface::CScriptPointInterface()
-	{
-		m_nID = 0;
-	}
-	CScriptPointInterface::~CScriptPointInterface()
-	{
-		std::map<int, CScriptBaseClassFunInfo*>::iterator it = m_mapScriptClassFun.begin();
-		for (; it != m_mapScriptClassFun.end(); it++)
-		{
-			CScriptBaseClassFunInfo* pInfo = it->second;
-			if (pInfo)
-			{
-				delete pInfo;
-			}
-		}
-		m_mapScriptClassFun.clear();
-	}
-	void CScriptPointInterface::InitScriptPointIndex()
-	{
-		if (!IsInitScriptPointIndex())
-		{
-			s_nIDCount++;
-			m_nID = s_nIDCount;
-		}
-
-	}
-	bool CScriptPointInterface::IsInitScriptPointIndex()
-	{
-		if (m_nID > 0)
-		{
-			return true;
-		}
-		return false;
-	}
-	__int64 CScriptPointInterface::GetScriptPointIndex()
-	{
-		if (!IsInitScriptPointIndex())
-		{
-			InitScriptPointIndex();
-		}
-		return m_nID;
-	}
-	void CScriptPointInterface::SetFun(int id, CScriptBaseClassFunInfo* pInfo)
-	{
-		if (pInfo == nullptr)
-		{
-			return;
-		}
-		std::map<int, CScriptBaseClassFunInfo*>::iterator it = m_mapScriptClassFun.find(id);
-		if (it != m_mapScriptClassFun.end())
-		{
-			CScriptBaseClassFunInfo* pOld = it->second;
-			if (pOld)
-			{
-				delete pOld;
-			}
-		}
-		m_mapScriptClassFun[id] = pInfo;
-	}
-	int CScriptPointInterface::RunFun(int id, CScriptRunState* pState)
-	{
-		int nResult = 0;
-		//std::lock_guard<std::mutex> _lock{ *m_FunLock };
-		m_FunLock.lock();
-		std::map<int, CScriptBaseClassFunInfo*>::iterator it = m_mapScriptClassFun.find(id);
-		if (it != m_mapScriptClassFun.end())
-		{
-			CScriptBaseClassFunInfo* pOld = it->second;
-			if (pOld)
-			{
-				nResult = pOld->RunFun(pState);
-			}
-		}
-		//std::lock_guard<std::mutex> _unlock{ *m_FunLock };
-		m_FunLock.unlock();
-		return nResult;
-	}
-	CScriptPointInterface::CScriptPointInterface(const CScriptPointInterface& val)
-	{
-		//AddClassObject(CScriptPointInterface::GetScriptPointIndex(), this);
-		//this->m_nID = val.m_nID;
-		auto itOld = m_mapScriptClassFun.begin();
-		for (; itOld != m_mapScriptClassFun.end(); itOld++)
-		{
-			CScriptBaseClassFunInfo* pInfo = itOld->second;
-			if (pInfo)
-			{
-				delete pInfo;
-			}
-		}
-		m_mapScriptClassFun.clear();
-		//this->m_mapScriptClassFun = val.m_mapScriptClassFun;
-		auto it = val.m_mapScriptClassFun.begin();
-		for (; it != val.m_mapScriptClassFun.end(); it++)
-		{
-			m_mapScriptClassFun[it->first] = it->second->Copy();
-		}
-	}
-	CScriptPointInterface& CScriptPointInterface::operator=(const CScriptPointInterface& val)
-	{
-		//this->m_nID = val.m_nID;
-		//this->m_mapScriptClassFun = val.m_mapScriptClassFun;
-		// TODO: 在此处插入 return 语句
-
-		auto itOld = m_mapScriptClassFun.begin();
-		for (; itOld != m_mapScriptClassFun.end(); itOld++)
-		{
-			CScriptBaseClassFunInfo* pInfo = itOld->second;
-			if (pInfo)
-			{
-				delete pInfo;
-			}
-		}
-		m_mapScriptClassFun.clear();
-		//this->m_mapScriptClassFun = val.m_mapScriptClassFun;
-		auto it = val.m_mapScriptClassFun.begin();
-		for (; it != val.m_mapScriptClassFun.end(); it++)
-		{
-			m_mapScriptClassFun[it->first] = it->second->Copy();
-		}
-
-		return *this;
-	}
 	__int64 CScriptBasePointer::GetID()
 	{
 		return m_ID;
@@ -292,5 +169,14 @@ namespace zlscript
 		}
 		m_MutexTypeLock.unlock();
 		return nResult;
+	}
+	CBaseScriptClassMgr* CScriptSuperPointerMgr::GetClassMgr(int nType)
+	{
+		auto it = m_mapClassMgr.find(nType);
+		if (it != m_mapClassMgr.end())
+		{
+			return it->second;
+		}
+		return nullptr;
 	}
 }
