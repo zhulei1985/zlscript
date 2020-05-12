@@ -54,6 +54,7 @@ namespace zlscript
 		std::unordered_map<std::string, int> m_mapFunIndex;
 
 	public:
+		static int SetProcessID(CScriptVirtualMachine* pMachine, CScriptRunState* pState);
 		static int RunScript(CScriptVirtualMachine* pMachine, CScriptRunState* pState);
 		static int RunScriptToChannel(CScriptVirtualMachine* pMachine, CScriptRunState* pState);
 		static int StopScript(CScriptVirtualMachine* pMachine, CScriptRunState* pState);

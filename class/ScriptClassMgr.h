@@ -19,6 +19,7 @@
 #include <mutex>
 #include <unordered_map>
 #include "ScriptPointInterface.h"
+#include "ScriptSuperPointer.h"
 namespace zlscript
 {
 	class CScriptPointInterface;
@@ -30,8 +31,9 @@ namespace zlscript
 		~CBaseScriptClassMgr();
 
 		virtual CScriptPointInterface* New() = 0;
-		virtual CScriptPointInterface* New(__int64 nID) = 0;
+		//virtual CScriptPointInterface* NewImage(__int64 nID) = 0;
 		virtual CScriptPointInterface* Get(__int64 nID) = 0;
+		//virtual CScriptPointInterface* GetImage(__int64 nID) = 0;
 		virtual void Release(CScriptPointInterface* pPoint) ;
 
 		virtual void Release(CScriptBasePointer* pPoint);
@@ -52,7 +54,7 @@ namespace zlscript
 		}
 
 		virtual CScriptPointInterface* New();
-		virtual CScriptPointInterface* New(__int64 nID);
+		//virtual CScriptPointInterface* New(__int64 nID);
 		virtual CScriptPointInterface* Get(__int64 nID);
 
 		virtual void Release(CScriptPointInterface* pPoint);
@@ -63,7 +65,9 @@ namespace zlscript
 		}
 	private:
 		__int64 m_nIDCount;
-		std::unordered_map<__int64, T*> m_mapClassPoint;
+		//本地类实例
+		std::unordered_map<__int64, T*> m_mapLocalClassPoint;
+
 
 		std::mutex m_MutexLock;
 
@@ -80,45 +84,66 @@ namespace zlscript
 		T* pPoint = new T;
 		if (pPoint)
 		{
-			pPoint->SetID(++m_nIDCount);
-			m_mapClassPoint[pPoint->GetID()] = pPoint;
+			//pPoint->SetID(++m_nIDCount);
+			CScriptSuperPointerMgr::GetInstance()->SetClassPoint(pPoint->GetScriptPointIndex(), pPoint);
+			m_mapLocalClassPoint[pPoint->GetScriptPointIndex()] = pPoint;
 		}
 		return pPoint;
 	}
 
-	template<class T>
-	inline CScriptPointInterface* CScriptClassMgr<T>::New(__int64 nID)
-	{
-		std::lock_guard<std::mutex> Lock(m_MutexLock);
-		T* pPoint = dynamic_cast<T*>(Get(nID));
-		if (pPoint == nullptr)
-		{
-			pPoint = new T;
-			if (pPoint)
-			{
-				pPoint->SetID(nID);
-				m_mapClassPoint[pPoint->GetID()] = pPoint;
-			}
-		}
-		return pPoint;
-	}
+	//template<class T>
+	//inline CScriptPointInterface* CScriptClassMgr<T>::New(__int64 nID)
+	//{
+	//	std::lock_guard<std::mutex> Lock(m_MutexLock);
+	//	T* pPoint = dynamic_cast<T*>(Get(nID));
+	//	if (pPoint == nullptr)
+	//	{
+	//		pPoint = new T;
+	//		if (pPoint)
+	//		{
+	//			pPoint->CScriptPointInterface::SetType(CScriptPointInterface::E_TYPE_IMAGE);
+	//			m_mapImageClassPoint[pPoint->GetScriptPointIndex()] = pPoint;
+	//		}
+	//	}
+	//	return pPoint;
+	//}
 
 	template<class T>
 	inline CScriptPointInterface* CScriptClassMgr<T>::Get(__int64 nID)
 	{
 		std::lock_guard<std::mutex> Lock(m_MutexLock);
-		auto it = m_mapClassPoint.find(nID);
-		if (it != m_mapClassPoint.end())
+		auto it = m_mapLocalClassPoint.find(nID);
+		if (it != m_mapLocalClassPoint.end())
 		{
 			return it->second;
 		}
 		return nullptr;
 	}
 
+	//template<class T>
+	//inline CScriptPointInterface* CScriptClassMgr<T>::GetImage(__int64 nID)
+	//{
+	//	std::lock_guard<std::mutex> Lock(m_MutexLock);
+	//	auto it = m_mapImageClassPoint.find(nID);
+	//	if (it != m_mapImageClassPoint.end())
+	//	{
+	//		return it->second;
+	//	}
+	//	return nullptr;
+	//}
+
 	template<class T>
 	inline void CScriptClassMgr<T>::Release(CScriptPointInterface* pPoint)
 	{
 		std::lock_guard<std::mutex> Lock(m_MutexLock);
+		//if (pPoint->GetType() == CScriptPointInterface::E_TYPE_LOCAL)
+		//{
+			m_mapLocalClassPoint.erase(pPoint->GetScriptPointIndex());
+		//}
+		//else if(pPoint->GetType() == CScriptPointInterface::E_TYPE_IMAGE)
+		//{
+		//	m_mapImageClassPoint.erase(pPoint->GetID());
+		//}
 		CBaseScriptClassMgr::Release(pPoint);
 		if (pPoint)
 			delete pPoint;

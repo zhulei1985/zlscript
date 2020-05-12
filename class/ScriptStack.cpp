@@ -63,7 +63,7 @@ namespace zlscript
 		{
 			s_strPool.ReleaseString(Int64);
 		}
-		cType = EScriptVal_Int;
+		cType = EScriptVal_None;
 		Int64 = 0;
 	}
 

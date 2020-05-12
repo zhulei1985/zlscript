@@ -30,6 +30,7 @@ namespace zlscript
 {
 	typedef	unsigned long	PROCESS_ID;
 
+	extern short g_Process_ID;
 #ifdef _WIN32
 
 #else

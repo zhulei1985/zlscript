@@ -345,6 +345,10 @@ namespace zlscript
 				} \
 				return pInfo; \
 			} \
+			const char* GetFunName() \
+			{ \
+				return #name; \
+			} \
 		}; \
 		CScript_##name##_ClassFunInfo *pInfo = new CScript_##name##_ClassFunInfo; \
 		pInfo->m_fun = std::bind(fun,p,std::placeholders::_1); \

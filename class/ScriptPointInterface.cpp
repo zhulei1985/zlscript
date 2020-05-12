@@ -24,8 +24,8 @@ namespace zlscript
 	__int64 CScriptPointInterface::s_nScriptPointIndexCount = 0;
 	CScriptPointInterface::CScriptPointInterface()
 	{
+		m_bInit = true;
 		m_nScriptPointIndex = 0;
-		m_nID = 0;
 	}
 	CScriptPointInterface::~CScriptPointInterface()
 	{
@@ -75,14 +75,7 @@ namespace zlscript
 	{
 		m_nScriptPointIndex = 0;
 	}
-	void CScriptPointInterface::SetID(__int64 nID)
-	{
-		m_nID = nID;
-	}
-	__int64 CScriptPointInterface::GetID()
-	{
-		return m_nID;
-	}
+
 	void CScriptPointInterface::SetFun(int id, CScriptBaseClassFunInfo* pInfo)
 	{
 		if (pInfo == nullptr)
@@ -164,6 +157,5 @@ namespace zlscript
 
 		return *this;
 	}
-
 
 }

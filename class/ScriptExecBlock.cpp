@@ -24,27 +24,8 @@ namespace zlscript
 			vNumVar.resize(pData->vNumVar.size());
 			for (unsigned int i = 0; i < pData->vNumVar.size(); i++)
 			{
-				CScriptCodeLoader::VarPoint& var = vNumVar[i];
-				var.cType = pData->vNumVar[i].cType;
-				var.unArraySize = pData->vNumVar[i].unArraySize;
-				switch (var.cType)
-				{
-				case EScriptVal_Int:
-				{
-					var.pInt64 = new __int64[var.unArraySize];
-				}
-				break;
-				case EScriptVal_Double:
-				{
-					var.pDouble = new double[var.unArraySize];
-				}
-				break;
-				case  EScriptVal_String:
-				{
-					var.pStr = new char[var.unArraySize * MAXSIZE_STRING];
-				}
-				break;
-				}
+				StackVarInfo& var = vNumVar[i];
+				var = pData->vNumVar[i];
 			}
 
 		}
@@ -55,28 +36,6 @@ namespace zlscript
 
 	CScriptExecBlock::~CScriptExecBlock(void)
 	{
-		for (unsigned int i = 0; i < vNumVar.size(); i++)
-		{
-			CScriptCodeLoader::VarPoint& var = vNumVar[i];
-			switch (var.cType)
-			{
-			case EScriptVal_Int:
-			{
-				SAFE_DELETE_ARRAY(var.pInt64);
-			}
-			break;
-			case EScriptVal_Double:
-			{
-				SAFE_DELETE_ARRAY(var.pDouble);
-			}
-			break;
-			case  EScriptVal_String:
-			{
-				SAFE_DELETE_ARRAY(var.pStr);
-			}
-			break;
-			}
-		}
 		vNumVar.clear();
 	}
 
@@ -85,6 +44,14 @@ namespace zlscript
 		if (m_pCodeData)
 		{
 			return m_pCodeData->nType;
+		}
+		return 0;
+	}
+	int CScriptExecBlock::GetDefaultReturnType()
+	{
+		if (m_pCodeData)
+		{
+			return m_pCodeData->nDefaultReturnType;
 		}
 		return 0;
 	}
@@ -98,7 +65,7 @@ namespace zlscript
 		int nResult = ERESULT_CONTINUE;
 		if (m_nCodePoint < m_pCodeData->vCodeData.size())
 		{
-			CScriptCodeLoader::CodeStyle& code = m_pCodeData->vCodeData[m_nCodePoint];
+			CodeStyle& code = m_pCodeData->vCodeData[m_nCodePoint];
 			switch (code.wInstruct)
 			{
 				/*********************计算符************************/
@@ -502,28 +469,10 @@ namespace zlscript
 				break;
 				case 1://全局变量
 				{
-					CScriptCodeLoader::VarPoint* var = pMachine->GetGlobalVar(code.dwPos);
+					StackVarInfo* var = pMachine->GetGlobalVar(code.dwPos);
 					if (var)
 					{
-						switch (var->cType)
-						{
-						case EScriptVal_Int:
-							m_cVarType = EScriptVal_Int;
-							ScriptVector_PushVar(m_varRegister,var->pInt64[code.cExtend]);
-							break;
-						case EScriptVal_Double:
-							m_cVarType = EScriptVal_Double;
-							ScriptVector_PushVar(m_varRegister,var->pDouble[code.cExtend]);
-							break;
-						case EScriptVal_String:
-							m_cVarType = EScriptVal_String;
-							ScriptVector_PushVar(m_varRegister,(const char*)var->pStr[MAXSIZE_STRING * code.cExtend]);
-							break;
-						case EScriptVal_ClassPointIndex:
-							m_cVarType = EScriptVal_ClassPointIndex;
-							ScriptVector_PushClassPointIndex(m_varRegister,var->nClassPointIndex);
-							break;
-						}
+						ScriptVector_PushVar(m_varRegister, var);
 					}
 					else
 					{
@@ -533,26 +482,8 @@ namespace zlscript
 				break;
 				case 2:
 				{
-					CScriptCodeLoader::VarPoint& var = vNumVar[code.dwPos];
-					switch (var.cType)
-					{
-					case EScriptVal_Int:
-						m_cVarType = EScriptVal_Int;
-						ScriptVector_PushVar(m_varRegister,var.pInt64[code.cExtend]);
-						break;
-					case EScriptVal_Double:
-						m_cVarType = EScriptVal_Double;
-						ScriptVector_PushVar(m_varRegister,var.pDouble[code.cExtend]);
-						break;
-					case EScriptVal_String:
-						m_cVarType = EScriptVal_String;
-						ScriptVector_PushVar(m_varRegister,&var.pStr[MAXSIZE_STRING * code.cExtend]);
-						break;
-					case EScriptVal_ClassPointIndex:
-						m_cVarType = EScriptVal_ClassPointIndex;
-						ScriptVector_PushClassPointIndex(m_varRegister, var.nClassPointIndex);
-						break;
-					}
+					StackVarInfo& var = vNumVar[code.dwPos];
+					ScriptVector_PushVar(m_varRegister, &var);
 				}
 				break;
 				case 3:
@@ -584,24 +515,10 @@ namespace zlscript
 				{
 				case 0://全局变量
 				{
-					CScriptCodeLoader::VarPoint* var = pMachine->GetGlobalVar(code.dwPos);
+					StackVarInfo* var = pMachine->GetGlobalVar(code.dwPos);
 					if (var)
 					{
-						switch (var->cType)
-						{
-						case EScriptVal_Int:
-							var->pInt64[code.cExtend] = ScriptStack_GetInt(m_varRegister);
-							break;
-						case EScriptVal_Double:
-							var->pDouble[code.cExtend] = ScriptStack_GetFloat(m_varRegister);
-							break;
-						case EScriptVal_String:
-							strcpy(&var->pStr[MAXSIZE_STRING * code.cExtend], ScriptStack_GetString(m_varRegister).c_str());
-							break;
-						case EScriptVal_ClassPointIndex:
-							var->nClassPointIndex = ScriptStack_GetClassPointIndex(m_varRegister);
-							break;
-						}
+						*var = ScriptStack_GetVar(m_varRegister);
 					}
 					else
 					{
@@ -611,31 +528,31 @@ namespace zlscript
 				break;
 				case 1:
 				{
-					CScriptCodeLoader::VarPoint& var = vNumVar[code.dwPos];
-					switch (var.cType)
-					{
-					case EScriptVal_Int:
-						var.pInt64[code.cExtend] = ScriptStack_GetInt(m_varRegister);
-						break;
-					case EScriptVal_Double:
-						var.pDouble[code.cExtend] = ScriptStack_GetFloat(m_varRegister);
-						break;
-					case EScriptVal_String:
-						strcpy(&var.pStr[MAXSIZE_STRING * code.cExtend], ScriptStack_GetString(m_varRegister).c_str());
-						break;
-					case EScriptVal_ClassPointIndex:
-						var.nClassPointIndex = ScriptStack_GetClassPointIndex(m_varRegister);
-						break;
-					}
+					StackVarInfo& var = vNumVar[code.dwPos];
+					var = ScriptStack_GetVar(m_varRegister);
+
 				}
 				break;
 				}
 				m_nCodePoint++;
 			}
 			break;
+			case ECODE_BEGIN_CALL:
+			{
+				m_sCurStackSizeWithoutFunParam.push(m_varRegister.size());
+				m_nCodePoint++;
+			}
+			break;
 			case ECODE_CALL:		//调用函数
 			{
-				switch (m_pMaster->CallFun(pMachine, this,code.cSign, code.dwPos, code.cExtend))
+				int nParmNum = code.cExtend;
+				if (m_sCurStackSizeWithoutFunParam.size() > 0)
+				{
+					nParmNum = m_varRegister.size() - m_sCurStackSizeWithoutFunParam.top();
+					m_sCurStackSizeWithoutFunParam.pop();
+				}
+				
+				switch (m_pMaster->CallFun(pMachine, this,code.cSign, code.dwPos, nParmNum))
 				{
 				case ECALLBACK_ERROR:
 					nResult = ERESULT_ERROR;
@@ -729,23 +646,41 @@ namespace zlscript
 				m_nCodePoint = m_pCodeData->vCodeData.size();
 
 				nResult = ERESULT_END;
+				if (m_pCodeData->nDefaultReturnType != EScriptVal_None)
+				{
+					//当此函数需要返回值，但是没有的时候
+					if (CurStackSizeWithoutFunParam == m_varRegister.size())
+					{
+						//压入一个空值
+						ScriptVector_PushEmptyVar(m_varRegister);
+					}
+				}
 			}
 			break;
 			case ECODE_CLEAR_PARAM:
 			{
-				ClearFunParam();
-
-				SetCallFunParamNum(0);
+				while (m_varRegister.size() > 0)
+				{
+					m_varRegister.pop();
+				}
+				CurStackSizeWithoutFunParam = 0;
+				CurCallFunParamNum = 0;
 				m_nCodePoint++;
 			}
 			break;
 			case ECODE_CALL_CLASS_FUN:
 			{
 				__int64 nVal = ScriptStack_GetClassPointIndex(m_varRegister);
+				int nParmNum = code.cExtend;
+				if (m_sCurStackSizeWithoutFunParam.size() > 0)
+				{
+					nParmNum = m_varRegister.size() - m_sCurStackSizeWithoutFunParam.top();
+					m_sCurStackSizeWithoutFunParam.pop();
+				}
 				CScriptBasePointer* pPoint = CScriptSuperPointerMgr::GetInstance()->PickupPointer(nVal);
 				if (pPoint)
 				{
-					SetCallFunParamNum(code.cExtend);
+					SetCallFunParamNum(nParmNum);
 					//CurCallFunParamNum = code.cExtend;
 
 					switch (pPoint->RunFun(code.dwPos, m_pMaster))
@@ -900,7 +835,7 @@ namespace zlscript
 		int nResult = ERESULT_CONTINUE;
 		if (m_nCodePoint < m_pCodeData->vCodeData.size())
 		{
-			CScriptCodeLoader::CodeStyle& code = m_pCodeData->vCodeData[m_nCodePoint];
+			CodeStyle& code = m_pCodeData->vCodeData[m_nCodePoint];
 #if _SCRIPT_DEBUG
 			return CScriptCodeLoader::GetInstance()->GetSourceWords(code.nSourseWordIndex);
 #endif

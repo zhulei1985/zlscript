@@ -34,6 +34,7 @@ namespace zlscript
 		CScriptExecBlock(CScriptCodeLoader::tagCodeData* pData, CScriptRunState* pMaster);
 		~CScriptExecBlock(void);
 
+		int GetDefaultReturnType();
 		int GetFunType();
 	private:
 
@@ -44,6 +45,7 @@ namespace zlscript
 		unsigned int m_nCodePoint;
 
 	private:
+		std::stack<int> m_sCurStackSizeWithoutFunParam;
 		std::stack<unsigned int> m_sCycBlockEnd;
 		unsigned int m_nCycBlockEnd;
 
@@ -87,7 +89,7 @@ namespace zlscript
 
 		std::string GetCurSourceWords();
 	private:
-		std::vector<CScriptCodeLoader::VarPoint> vNumVar;//临时变量
+		std::vector<StackVarInfo> vNumVar;//临时变量
 
 		//当前变量类型
 		unsigned char m_cVarType;

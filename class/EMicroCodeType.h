@@ -50,6 +50,9 @@ namespace zlscript
 		//ECODE_JMP,//无条件跳转
 		//ECODE_JMP_JUDGE,//m_JudgeRegister为真跳转
 		ECODE_EVALUATE,//从堆栈中取一个值放入指定地址cSign::0，全局变量，1，临时变量 cExtend:数组索引 dwPos:表示地址
+
+		ECODE_BEGIN_CALL,//开始计算本次函数调用实际压入多少个参数
+
 		ECODE_CALL,		//调用函数 cSign:0,回调函数, 1,cExtend:参数数量,脚本函数 dwPos:函数索引
 
 		ECODE_BRANCH_IF,	// if分支,从堆栈中取一个值，如果非0则执行接下来的块

@@ -29,11 +29,11 @@
 
 #include "ScriptCallBackFunion.h"
 //#include "tagTime.h"
-
 //std::vector<C_CallBackScriptFunion> CScriptCallBackFunion::m_vecFun;
 //std::unordered_map<std::string,int> CScriptCallBackFunion::m_mapFunIndex;
 namespace zlscript
 {
+
 	CScriptCallBackFunion CScriptCallBackFunion::s_Instance;
 	CScriptCallBackFunion::CScriptCallBackFunion(void)
 	{
@@ -46,6 +46,9 @@ namespace zlscript
 
 	void CScriptCallBackFunion::init()
 	{
+		RegisterFun("SetProcessID", (C_CallBackScriptFunion)SetProcessID);
+		RegisterFun("setprocessid", (C_CallBackScriptFunion)SetProcessID);
+
 		RegisterFun("RunScript", (C_CallBackScriptFunion)RunScriptToChannel);
 		RegisterFun("runscript", (C_CallBackScriptFunion)RunScriptToChannel);
 
@@ -128,6 +131,24 @@ namespace zlscript
 			int index = m_mapFunIndex[str];
 			m_vecFun[index] = pFun;
 		}
+	}
+
+	int CScriptCallBackFunion::SetProcessID(CScriptVirtualMachine* pMachine, CScriptRunState* pState)
+	{
+		if (pState == nullptr)
+		{
+			return ECALLBACK_ERROR;
+		}
+
+		if (pMachine == nullptr)
+		{
+			return ECALLBACK_ERROR;
+		}
+		short nVal = pState->PopIntVarFormStack();
+
+		g_Process_ID = nVal;
+		pState->ClearFunParam();
+		return ECALLBACK_FINISH;
 	}
 
 	int CScriptCallBackFunion::RunScript(CScriptVirtualMachine* pMachine, CScriptRunState* pState)

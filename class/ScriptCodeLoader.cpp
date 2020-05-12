@@ -91,12 +91,12 @@ namespace zlscript
 		//词法分析完成，开始语法分析
 		unsigned int nStrIndex = 0;
 
-		while (m_vCurSourceSentence.size() > nStrIndex)
+		while (m_vCurSourceSentence.size())
 		{
-			if (RunCompileState(m_vCurSourceSentence, nStrIndex) == ECompile_ERROR)
+			if (RunCompileState(m_vCurSourceSentence) == ECompile_ERROR)
 			{
 				zlscript::CScriptDebugPrintMgr::GetInstance()->Print("ScriptLoad Error:");
-				zlscript::CScriptDebugPrintMgr::GetInstance()->Print(strCurFileName+":"+strError);
+				zlscript::CScriptDebugPrintMgr::GetInstance()->Print(strCurFileName + ":" + strError);
 #ifdef  _SCRIPT_DEBUG
 				zlscript::CScriptDebugPrintMgr::GetInstance()->Print(GetSourceWords(GetSourceLineIndex(m_vCurSourceSentence, nErrorWordPos)));
 #endif //  _SCRIPT_DEBUG
@@ -198,55 +198,8 @@ namespace zlscript
 	{
 		m_mapString2CodeIndex.clear();
 
-		for (unsigned int i = 0; i < m_vecCodeData.size(); i++)
-		{
-			for (unsigned int j = 0; j < m_vecCodeData[i].vNumVar.size(); j++)
-			{
-				VarPoint& var = m_vecCodeData[i].vNumVar[j];
-				switch (var.cType)
-				{
-				case EScriptVal_Int:
-				{
-					SAFE_DELETE_ARRAY(var.pInt64);
-				}
-				break;
-				case EScriptVal_Double:
-				{
-					SAFE_DELETE_ARRAY(var.pDouble);
-				}
-				break;
-				case  EScriptVal_String:
-				{
-					SAFE_DELETE_ARRAY(var.pStr);
-				}
-				break;
-				}
-			}
-		}
 		m_vecCodeData.clear();
 
-		for (unsigned int i = 0; i < vGlobalNumVar.size(); i++)
-		{
-			VarPoint& var = vGlobalNumVar[i];
-			switch (var.cType)
-			{
-			case EScriptVal_Int:
-			{
-				SAFE_DELETE_ARRAY(var.pInt64);
-			}
-			break;
-			case EScriptVal_Double:
-			{
-				SAFE_DELETE_ARRAY(var.pDouble);
-			}
-			break;
-			case  EScriptVal_String:
-			{
-				SAFE_DELETE_ARRAY(var.pStr);
-			}
-			break;
-			}
-		}
 		vGlobalNumVar.clear();
 	}
 	void CScriptCodeLoader::clearAllCompileData()
@@ -411,10 +364,10 @@ namespace zlscript
 		case '"'://双引号转到LoadStringState
 			//strOut.push_back(ch);
 			return EStringState | ENeedLoadNewChar;
-		case ';'://分号作为一句的结束
-			//m_vLexicalData.push_back(m_vCurSourceSentence);
-			//m_vCurSourceSentence.clear();
-			return EReturn | ENeedLoadNewChar;
+			//case ';'://分号作为一句的结束
+			//	//m_vLexicalData.push_back(m_vCurSourceSentence);
+			//	//m_vCurSourceSentence.clear();
+			//	return EReturn | ENeedLoadNewChar;
 		}
 
 		//排除所有大些字母
@@ -521,42 +474,169 @@ namespace zlscript
 		}
 		return EContinue;
 	}
-	bool CScriptCodeLoader::RunCompileState(SentenceSourceCode& vIn, unsigned int& pos)
+
+
+	bool CScriptCodeLoader::CheckVarName(string varName)
 	{
-		if (LoadDefineFunState(vIn, pos) == ECompile_ERROR)
+		if (varName == "")
+		{
+			return false;
+		}
+		bool bResult = true;
+		//TODO 不能是关键字和函数名
+		return bResult;
+	}
+
+	int CScriptCodeLoader::QueryTempVar(std::string varName, CBaseICode* pICode)
+	{
+		if (pICode)
+		{
+			return pICode->GetTempVarIndex(varName.c_str());
+		}
+		return g_nTempVarIndexError;
+	}
+
+
+#define GetNewWord(word) \
+	if (vIn.size() == 0) \
+	{ \
+		strError = "(Unexpected end of statement)"; \
+		return ECompile_ERROR; \
+	} \
+	tagSourceWord word = vIn.front(); \
+	vIn.pop_front();
+
+#define GetWord(word) \
+	if (vIn.size() == 0) \
+	{ \
+		strError = "(Unexpected end of statement)"; \
+		return ECompile_ERROR; \
+	} \
+	word = vIn.front(); \
+	vIn.pop_front();
+
+#define RevertWord(word) \
+	vIn.push_front(word);
+
+	bool CScriptCodeLoader::RunCompileState(SentenceSourceCode& vIn)
+	{
+		if (LoadDefineFunState(vIn) == ECompile_ERROR)
 		{
 			return false;
 		}
 		return true;
 	}
 
-
-	int CScriptCodeLoader::LoadDefineFunState(SentenceSourceCode& vIn, unsigned int& pos)
+	int CScriptCodeLoader::LoadDefineFunctionParameter(SentenceSourceCode& vIn, CBaseICode* pCode)
 	{
-		while (m_stackBlockLayer.size())
+		GetNewWord(strType);
+		GetNewWord(strName);
+
+		int nParameterType = m_mapDicVarTypeToICode[strType.word];
+		int nClassType = 0;
+		if (nParameterType == EScriptVal_None)
 		{
-			m_stackBlockLayer.pop();
+			nClassType = CScriptSuperPointerMgr::GetInstance()->GetClassType(strType.word);
+			if (nClassType <= 0)
+			{
+				nErrorWordPos = strType.nSourceWordsIndex;
+				strError = "DefineTempVar(Class type error when defining temporary variable)";
+				return ECompile_ERROR;
+			}
+			nParameterType = EScriptVal_ClassPointIndex;
 		}
-
-		unsigned int curPos = pos;
-
-		if (vIn.size() - curPos < 2)
+		if (!CheckVarName(strName.word))
 		{
-			strError = "LoadDefineFunState(Incomplete)";
-			nErrorWordPos = curPos;
+			nErrorWordPos = strName.nSourceWordsIndex;
+			strError = "DefineTempVar(Illegal variable name when defining temporary variable)";
 			return ECompile_ERROR;
 		}
-		int nFunType = EICODE_FUN_DEFAULT;
-		string strHeadCheck = vIn[curPos].word;
+		//检查这个变量名是否已经存在
+		if (pCode->CheckTempVar(strName.word.c_str()))
 		{
-			auto it = m_mapDicFunToICode.find(strHeadCheck);
+			nErrorWordPos = strName.nSourceWordsIndex;
+			strError = "DefineTempVar(Variable name already exists when defining temporary variable)";
+			return ECompile_ERROR;
+		}
+
+		StackVarInfo defVar;//默认值
+		defVar.cType = nParameterType;
+
+		pCode->SetTempVarIndex(strName.word.c_str(), m_vTempCodeData.vNumVar.size(), nParameterType, nClassType);
+		m_vTempCodeData.vNumVar.push_back(defVar);
+		return ECompile_Return;
+	}
+
+	int CScriptCodeLoader::LoadDefineTempVar(SentenceSourceCode& vIn, CBaseICode* pCode)
+	{
+		GetNewWord(strType);
+		GetNewWord(strName);
+
+		int nParameterType = m_mapDicVarTypeToICode[strType.word];
+		int nClassType = 0;
+		if (nParameterType == EScriptVal_None)
+		{
+			nClassType = CScriptSuperPointerMgr::GetInstance()->GetClassType(strType.word);
+			if (nClassType <= 0)
+			{
+				nErrorWordPos = strType.nSourceWordsIndex;
+				strError = "DefineTempVar(Class type error when defining temporary variable)";
+				return ECompile_ERROR;
+			}
+			nParameterType = EScriptVal_ClassPointIndex;
+		}
+
+		if (!CheckVarName(strName.word))
+		{
+			nErrorWordPos = strName.nSourceWordsIndex;
+			strError = "DefineTempVar(Illegal variable name when defining temporary variable)";
+			return ECompile_ERROR;
+		}
+		//检查这个变量名是否已经存在
+		if (pCode->CheckTempVar(strName.word.c_str()))
+		{
+			nErrorWordPos = strName.nSourceWordsIndex;
+			strError = "DefineTempVar(Variable name already exists when defining temporary variable)";
+			return ECompile_ERROR;
+		}
+		StackVarInfo varpoint;
+		varpoint.cType = nParameterType;
+		varpoint.Int64 = 0;
+		pCode->SetTempVarIndex(strName.word.c_str(), m_vTempCodeData.vNumVar.size(), nParameterType, nClassType);
+		m_vTempCodeData.vNumVar.push_back(varpoint);
+
+		GetNewWord(nextWord);
+		if (nextWord.word == "=")
+		{
+			RevertWord(nextWord);
+			RevertWord(strName);
+		}
+		return ECompile_Return;
+	}
+
+	int CScriptCodeLoader::LoadDefineFunState(SentenceSourceCode& vIn)
+	{
+		GetNewWord(strHeadCheck);
+
+		int nFunType = EICODE_FUN_DEFAULT;
+		{
+			auto it = m_mapDicFunToICode.find(strHeadCheck.word);
 			if (it != m_mapDicFunToICode.end())
 			{
 				nFunType = it->second;
-				curPos++;
 			}
 		}
-		string strVarType = vIn[curPos++].word;
+		string strVarType;
+		if (nFunType != EICODE_FUN_DEFAULT)
+		{
+			GetNewWord(varType);
+			strVarType = varType.word;
+		}
+		else
+		{
+			strVarType = strHeadCheck.word;
+		}
+
 		int nVarType = m_mapDicVarTypeToICode[strVarType];
 		if (nVarType == EICode_NONE)
 		{
@@ -567,15 +647,16 @@ namespace zlscript
 			}
 		}
 		m_nCurFunVarType = nVarType;
-		string strFunName = vIn[curPos++].word;
+
+		GetNewWord(wordFunName);
 
 
-		if (m_mapString2CodeIndex.find(strFunName) != m_mapString2CodeIndex.end())
+		if (m_mapString2CodeIndex.find(wordFunName.word) != m_mapString2CodeIndex.end())
 		{
-			tagCodeData& funCode = m_vecCodeData[m_mapString2CodeIndex[strFunName]];
+			tagCodeData& funCode = m_vecCodeData[m_mapString2CodeIndex[wordFunName.word]];
 			if (funCode.nType != EICODE_FUN_NO_CODE || !funCode.vCodeData.empty())
 			{
-				nErrorWordPos = curPos;
+				nErrorWordPos = wordFunName.nSourceWordsIndex;
 				strError = "LoadDefineFunState(Function name already exists)";
 				return ECompile_ERROR;
 			}
@@ -584,637 +665,588 @@ namespace zlscript
 
 		//判断变量名是否重复
 
-		if (m_mapDicGlobalVar.find(strFunName) != m_mapDicGlobalVar.end())
+		if (m_mapDicGlobalVar.find(wordFunName.word) != m_mapDicGlobalVar.end())
 		{
-			nErrorWordPos = curPos;
+			nErrorWordPos = wordFunName.nSourceWordsIndex;
 			strError = "LoadDefineFunState(Variable name already exists)";
 			return ECompile_ERROR;
 		}
 
-		if (CScriptCallBackFunion::GetFunIndex(strFunName) >= 0)
+		if (CScriptCallBackFunion::GetFunIndex(wordFunName.word) >= 0)
 		{
-			nErrorWordPos = curPos;
+			nErrorWordPos = wordFunName.nFlag;
 			strError = "LoadDefineFunState(Callback Function name already exists)";
 			return ECompile_ERROR;
 		}
 
+		GetNewWord(nextWord);
+
 		//如果语句结束，说明只是定义了一个全局变量
-		if (vIn.size() - curPos == 0 || vIn[curPos].word != "(")
+		if (nextWord.word != "(")
 		{
-			//接下来检查下一步
-			if (vIn.size() - curPos > 0)
+			GetWord(nextWord);
+			StackVarInfo defVar;//默认值
+			defVar.cType = nVarType;
+			if (nextWord.word == "=")
 			{
-				int nArraySize = 1;
-				//数组声明
-				if (vIn[curPos].word == "[")
-				{
-					if (vIn.size() - curPos >= 3 && vIn[curPos + 2].word == "]")
-					{
-						nArraySize = atoi(vIn[curPos + 1].word.c_str());
-						curPos += 3;
-					}
-					else
-					{
-						nErrorWordPos = curPos;
-						strError = "LoadDefineFunState(Array declaration)";
-						return ECompile_ERROR;
-					}
-				}
-
-				VarInfo info;
-				info.nVarInfo = 0;
-				info.cGlobal = 1;
-				info.wSize = nArraySize;
-
-				//创建全局变量
-				VarPoint varpoint;
+				//有初始化值，只支持常量赋值
+				GetWord(nextWord);
 				switch (nVarType)
 				{
 				case EScriptVal_Int:
-					info.cType = EScriptVal_Int;
-
-					varpoint.cType = EScriptVal_Int;
-					varpoint.pInt64 = new __int64[nArraySize];
-					break;
-				case EScriptVal_Double:
-					info.cType = EScriptVal_Double;
-
-					varpoint.cType = EScriptVal_Double;
-					varpoint.pDouble = new double[nArraySize];
-					break;
-				case EScriptVal_String:
-					info.cType = EScriptVal_String;
-
-					varpoint.cType = EScriptVal_String;
-					varpoint.pStr = new char[nArraySize * MAXSIZE_STRING];
-					break;
-				default:
-					//检查是否是类指针
-					int nClassType = CScriptSuperPointerMgr::GetInstance()->GetClassType(strVarType);
-					if (nClassType > 0)
-					{
-						varpoint.cType = EScriptVal_ClassPointIndex;
-						varpoint.unArraySize = nClassType;
-					}
-					else
-						varpoint.cType = EScriptVal_None;
-					break;
+				{
+					defVar.Int64 = atoi(nextWord.word.c_str());
 				}
+				break;
+				case EScriptVal_Double:
+				{
+					defVar.Double = atof(nextWord.word.c_str());
+				}
+				break;
+				case EScriptVal_String:
+				{
+					defVar.Int64 = StackVarInfo::s_strPool.NewString(nextWord.word.c_str());
+				}
+				break;
+				case EScriptVal_ClassPointIndex:
+				{
+					if (nextWord.word == "nullptr")
+					{
+						defVar.Int64 = 0;
+					}
+				}
+				GetWord(nextWord);
+				}
+				if (nextWord.word != ";")
+				{
+					nErrorWordPos = wordFunName.nFlag;
+					strError = "Format error defining global variable";
+					return ECompile_ERROR;
+				}
+				VarInfo info;
+				info.cType = nVarType;
+				info.cGlobal = 1;
+				info.wExtend = 1;
 				info.dwPos = vGlobalNumVar.size();
-				m_mapDicGlobalVar[strFunName] = info.nVarInfo;
+				m_mapDicGlobalVar[wordFunName.word] = info;
 
-				vGlobalNumVar.push_back(varpoint);
-				pos = curPos;
+				vGlobalNumVar.push_back(defVar);
 
-				SetVarDefaultValue(vIn, pos, info.nVarInfo);
 			}
 		}
 		//如果接下来的是括号，说明是函数定义
-		else if (vIn[curPos].word == "(")
+		else
 		{
-			//一个新函数，临时变量重置
-			ClearStackTempVarInfo();
-			NewTempVarLayer();
-			//清空代码
 			m_vTempCodeData.vCodeData.clear();
 			m_vTempCodeData.vNumVar.clear();
+			//一个新函数
+			m_pFun_ICode = CICodeMgr::GetInstance()->New<CFunICode>();
 
-			curPos += 1;
-
-			vector<CodeStyle> vData;
 			int VarIndex = 0;
 			while (true)
 			{
-				if (vIn[curPos].word == ")")
+				GetWord(nextWord);
+				if (nextWord.word == ")")
 				{
 					break;
 				}
+				RevertWord(nextWord);
 
-
-				if (DefineTempVar(vIn, curPos) <= 0)
+				if (LoadDefineFunctionParameter(vIn, m_pFun_ICode) <= 0)
 				{
 					return ECompile_ERROR;
 				}
 
-				CodeStyle code;
-				code.qwCode = 0;
-				code.cSign = 1;
-				code.wInstruct = ECODE_EVALUATE;
-				code.cExtend = 0;
-				code.dwPos = VarIndex;
-#if _SCRIPT_DEBUG
-				code.nSourseWordIndex = GetSourceLineIndex(vIn, curPos);
-#endif
-				vData.push_back(code);
+				GetWord(nextWord);
 
-				if (vIn[curPos].word == ",")
+				if (nextWord.word == ")")
 				{
-					curPos += 1;
+					break;
 				}
-				else if (vIn[curPos].word != ")")
+				else if (nextWord.word != ",")
 				{
-					nErrorWordPos = curPos;
+					nErrorWordPos = nextWord.nSourceWordsIndex;
 					strError = "LoadDefineFunState(Function parameter definition format error)";
 					return ECompile_ERROR;
 				}
-				VarIndex++;
 			}
 
-			if (vIn[curPos + 1].word == "{")
+			GetWord(nextWord);
+			if (nextWord.word == "{")
 			{
-				curPos = curPos + 1;
-				vector<CodeStyle> vBlockCode;
-				vector<CodeStyle> vBackCode;
-				if (LoadBlockState(vIn, curPos, vBlockCode, vBackCode) != ECompile_ERROR)
+				RevertWord(nextWord);
+				if (LoadBlockState(vIn, m_pFun_ICode, 0) != ECompile_ERROR)
 				{
-
-					for (unsigned int i = 0; i < vData.size(); i++)
-					{
-						m_vTempCodeData.vCodeData.push_back(vData[i]);
-					}
-
-					for (unsigned int i = 0; i < vBlockCode.size(); i++)
-					{
-						m_vTempCodeData.vCodeData.push_back(vBlockCode[i]);
-					}
+					m_pFun_ICode->MakeExeCode(m_vTempCodeData.vCodeData);
+					m_pFun_ICode = nullptr;
+					CICodeMgr::GetInstance()->Clear();
 				}
 				else
 				{
-					nErrorWordPos = curPos;
 					return ECompile_ERROR;
 				}
 			}
-			else
+			else if (nextWord.word == ";")
 			{
-				curPos++;
+				//说明只是声明了函数，还没有定义
 			}
 
 			//将数据放入代码库
-			m_vTempCodeData.nType = nFunType;
-#if _SCRIPT_DEBUG
+
+
 			m_vTempCodeData.filename = strCurFileName;
-#endif
-			m_vTempCodeData.funname = strFunName;
-			if (m_mapString2CodeIndex.find(strFunName) != m_mapString2CodeIndex.end())
+			m_vTempCodeData.funname = wordFunName.word;
+			m_vTempCodeData.nDefaultReturnType = m_nCurFunVarType;
+
+			if (m_mapString2CodeIndex.find(wordFunName.word) != m_mapString2CodeIndex.end())
 			{
 				if (m_vTempCodeData.vCodeData.size())
 				{
-					tagCodeData& funCode = m_vecCodeData[m_mapString2CodeIndex[strFunName]];
+					tagCodeData& funCode = m_vecCodeData[m_mapString2CodeIndex[wordFunName.word]];
 					funCode = m_vTempCodeData;
 				}
 			}
 			else
 			{
-				m_mapString2CodeIndex[strFunName] = m_vecCodeData.size();
+				m_vTempCodeData.nType = nFunType;
+				m_mapString2CodeIndex[wordFunName.word] = m_vecCodeData.size();
 				m_vecCodeData.push_back(m_vTempCodeData);
 			}
 
-			pos = curPos;
+
+
 		}
+
+
 
 		return ECompile_Return;
 	}
-
-	int CScriptCodeLoader::SetVarDefaultValue(SentenceSourceCode& vIn, unsigned int& pos, __int64 info)
+	int CScriptCodeLoader::LoadBlockState(SentenceSourceCode& vIn, CBaseICode* pCode, int nType)
 	{
-		VarInfo varinfo;
-		varinfo.nVarInfo = info;
-
-		if (vIn[pos].word == "=")
+		CBlockICode* pBlockICode = CICodeMgr::GetInstance()->New<CBlockICode>();
+		if (pBlockICode == nullptr)
 		{
-			pos++;
-			if (vIn[pos].word == "{")
-			{
-				//说明是给数组赋值
-
-				int index = 0;
-				VarPoint& point = vGlobalNumVar[varinfo.dwPos];
-				while (true)
-				{
-					pos++;
-					if (vIn[pos].word == "}")
-					{
-						break;
-					}
-					else if (vIn[pos].word != "," && index < varinfo.wSize)
-					{
-						switch (point.cType)
-						{
-						case EScriptVal_Int:
-						{
-							point.pInt64[index++] = atoi(vIn[pos].word.c_str());
-						}
-						break;
-						case EScriptVal_Double:
-						{
-							point.pDouble[index++] = atof(vIn[pos].word.c_str());
-						}
-						break;
-						case EScriptVal_String:
-						{
-							strcpy(point.pStr + (MAXSIZE_STRING * index), vIn[pos].word.c_str());
-							index++;
-						}
-						break;
-						case EScriptVal_ClassPointIndex:
-						{
-							if (vIn[pos].word == "nullptr")
-							{
-								point.nClassPointIndex = 0;
-							}
-						}
-						break;
-						}
-					}
-				}
-				pos++;
-			}
-			else
-			{
-
-				VarPoint& point = vGlobalNumVar[varinfo.dwPos];
-
-				switch (point.cType)
-				{
-				case EScriptVal_Int:
-				{
-					point.pInt64[0] = atoi(vIn[pos].word.c_str());
-				}
-				break;
-				case EScriptVal_Double:
-				{
-					point.pDouble[0] = atof(vIn[pos].word.c_str());
-				}
-				break;
-				case EScriptVal_String:
-				{
-					strcpy(point.pStr, vIn[pos].word.c_str());
-				}
-				break;
-				}
-				pos++;
-			}
-		}
-		return ECompile_Return;
-	}
-
-	bool CScriptCodeLoader::CheckVarName(string varName)
-	{
-		if (varName == "")
-		{
-			return false;
-		}
-		bool bResult = true;
-		//if (varName[0])
-		//{
-		//}
-
-		//for (int i = 0; i < varName.size(); i++)
-		//{
-		//	char ch = varName[i];
-		//	if (ch)
-		//	{
-		//	}
-		//}
-		return bResult;
-	}
-	int CScriptCodeLoader::DefineTempVar(SentenceSourceCode& vIn, unsigned int& pos/*,vector<CodeStyle>  &vOut*/)
-	{
-		unsigned int curPos = pos;
-		string strVarType = vIn[curPos].word;
-		int nParameterType = m_mapDicVarTypeToICode[vIn[curPos].word];
-		string strname = vIn[curPos + 1].word;
-		string strsign = vIn[curPos + 2].word;
-
-		if (nParameterType == EICode_NONE)
-		{
-			if (CScriptSuperPointerMgr::GetInstance()->GetClassType(strVarType) <= 0)
-			{
-				nErrorWordPos = curPos;
-				strError = "DefineTempVar(Class type error when defining temporary variable)";
-				return ECompile_ERROR;
-			}
-		}
-		if (!CheckVarName(strname))
-		{
-			nErrorWordPos = curPos;
-			strError = "DefineTempVar(Illegal variable name when defining temporary variable)";
 			return ECompile_ERROR;
 		}
-		//检查这个变量名是否已经存在
-		if (CheckDefTempVar(strname.c_str()))
+		pCode->AddICode(nType, pBlockICode);
+
+		GetNewWord(nextWord);
+		if (nextWord.word != "{")
 		{
-			nErrorWordPos = curPos;
-			strError = "DefineTempVar(Variable name already exists when defining temporary variable)";
-			return ECompile_ERROR;
-		}
-
-		curPos += 2;
-		int TempPos = curPos - 1;
-		int nArraySize = 1;
-
-		if (strsign == "[")
-		{
-			if (vIn.size() - curPos >= 3 && vIn[curPos + 2].word == "]")
-			{
-				nArraySize = atoi(vIn[curPos + 1].word.c_str());
-				curPos += 3;
-			}
-			else
-			{
-				nErrorWordPos = curPos;
-				strError = "DefineTempVar(Array declaration is malformed when defining temporary variables)";
-				return -1;
-			}
-		}
-
-		//CodeStyle defineCode;
-		//defineCode.qwCode = 0;
-		//defineCode.dwPos = nArraySize;
-
-		VarPoint varpoint;
-		varpoint.unArraySize = (unsigned short)nArraySize;
-		switch (nParameterType)
-		{
-		case EScriptVal_Int:
-			varpoint.cType = EScriptVal_Int;
-			varpoint.pInt64 = new __int64[nArraySize];
-
-			//defineCode.wInstruct = ECODE_Define_INT;
-			break;
-		case EScriptVal_Double:
-			varpoint.cType = EScriptVal_Double;
-			varpoint.pDouble = new double[nArraySize];
-
-			//defineCode.wInstruct = ECODE_Define_INT;
-			break;
-		case EScriptVal_String:
-			varpoint.cType = EScriptVal_String;
-			varpoint.pStr = new char[nArraySize * MAXSIZE_STRING];
-
-			//defineCode.wInstruct = ECODE_Define_INT;
-			break;
-		default:
-			//检查是否是类指针
-			int nClassType = CScriptSuperPointerMgr::GetInstance()->GetClassType(strVarType);
-			if (nClassType > 0)
-			{
-				varpoint.cType = EScriptVal_ClassPointIndex;
-				varpoint.unArraySize = nClassType;
-			}
-			else
-				varpoint.cType = EScriptVal_None;
-
-			//defineCode.wInstruct = ECODE_NONE;
-			break;
-
-		}
-		//int nReturn = m_vTempCodeData.vNumVar.size();
-		//tagVarName2Pos &mapDic = m_stackTempVarInfo.top();
-		//mapDic[strname] = m_vTempCodeData.vNumVar.size();
-		NewTempVarIndex(strname.c_str(), m_vTempCodeData.vNumVar.size());
-		m_vTempCodeData.vNumVar.push_back(varpoint);
-
-
-		//vOut.push_back(defineCode);
-		//如果接下来是赋值，倒回
-		if (vIn[curPos].word == "=")
-		{
-			curPos = TempPos;
-		}
-		//else if (vIn[curPos].word == ")")
-		//{
-		//	curPos = TempPos;
-		//}
-		pos = curPos;
-		return ECompile_Return;
-	}
-
-	int CScriptCodeLoader::QueryTempVar(string varName)
-	{
-		//检查这个变量名是否已经存在
-
-		return GetTempVarIndex(varName.c_str());
-
-	}
-
-	int CScriptCodeLoader::LoadBlockState(SentenceSourceCode& vIn, unsigned int& pos, vector<CodeStyle>& vOut, vector<CodeStyle> vBackCode)
-	{
-		m_stackBlockLayer.push(0);
-		unsigned int curPos = pos;
-
-		if (vIn.size() - curPos <= 0)
-		{
-			nErrorWordPos = curPos;
-			strError = "LoadBlockState(Block format error, insufficient length)";
-			return ECompile_ERROR;
-		}
-		if (vIn[curPos].word != "{")
-		{
-			nErrorWordPos = curPos;
+			nErrorWordPos = nextWord.nFlag;
 			strError = "LoadBlockState(Block format error)";
 			return ECompile_ERROR;
 		}
-		NewTempVarLayer();
-		vector<CodeStyle> vTempCode;
 
-		curPos++;
-
-		int nReturn = 0;
-		while (vIn.size() > curPos)
+		int nReturn = ECompile_Return;
+		while (vIn.size())
 		{
-			if (vIn[curPos].word == "}")
+			GetWord(nextWord);
+			if (nextWord.word == "}")
 			{
-				curPos++;
 				break;
 			}
-			else if (vIn[curPos].word == "{")
+			else if (nextWord.word == "{")
 			{
-				vector<CodeStyle> vBackCode;
-				nReturn = LoadBlockState(vIn, curPos, vTempCode, vBackCode);
+				nReturn = LoadBlockState(vIn, pBlockICode, 0);
 			}
-			else if (vIn[curPos].word == "if")
+			else if (nextWord.word == "if")
 			{
-				nReturn = LoadIfSentence(vIn, curPos, vTempCode);
+				RevertWord(nextWord);
+				nReturn = LoadIfSentence(vIn, pBlockICode, 0);
 			}
-			else if (vIn[curPos].word == "else")
+			else if (nextWord.word == "for")
 			{
-				nReturn = LoadIfSentence(vIn, curPos, vTempCode);
+				RevertWord(nextWord);
+				nReturn = LoadForSentence(vIn, pBlockICode, 0);
 			}
-			else if (vIn[curPos].word == "for")
+			else if (nextWord.word == "while")
 			{
-
+				RevertWord(nextWord);
+				nReturn = LoadWhileSentence(vIn, pBlockICode, 0);
 			}
-			else if (vIn[curPos].word == "while")
+			else if (nextWord.word == "switch")
 			{
-				nReturn = LoadWhileSentence(vIn, curPos, vTempCode);
+				RevertWord(nextWord);
+				nReturn = LoadSwitchSentence(vIn, pBlockICode, 0);
 			}
-			else if (vIn[curPos].word == "switch")
+			else if (nextWord.word == "return")
 			{
-
+				RevertWord(nextWord);
+				nReturn = LoadReturnSentence(vIn, pBlockICode, 0);
 			}
-			else if (vIn[curPos].word == "int" || vIn[curPos].word == "float" || vIn[curPos].word == "string")
+			else if (nextWord.word == "int" || nextWord.word == "float" || nextWord.word == "string"
+				|| CScriptSuperPointerMgr::GetInstance()->GetClassType(nextWord.word) > 0)
 			{
-				nReturn = DefineTempVar(vIn, curPos);
-			}
-			else if (CScriptSuperPointerMgr::GetInstance()->GetClassType(vIn[curPos].word) > 0)
-			{
-				nReturn = DefineTempVar(vIn, curPos);
-			}
-			else if (vIn[curPos].word == "return")
-			{
-				curPos++;
-				CodeStyle ClearCode;
-				ClearCode.qwCode = 0;
-				ClearCode.wInstruct = ECODE_CLEAR_PARAM;
-#if _SCRIPT_DEBUG
-				ClearCode.nSourseWordIndex = GetSourceLineIndex(vIn, curPos);
-#endif
-				vTempCode.push_back(ClearCode);
-
-				nReturn = LoadReturnFormulaRecursion(vIn, curPos, vTempCode);
-
-				CodeStyle breakCode;
-				breakCode.qwCode = 0;
-				breakCode.wInstruct = ECODE_RETURN;
-				breakCode.dwPos = vTempCode.size();
-#if _SCRIPT_DEBUG
-				breakCode.nSourseWordIndex = GetSourceLineIndex(vIn, curPos);
-#endif
-				vTempCode.push_back(breakCode);
-			}
-			else if (vIn[curPos].word == "break")
-			{
-				curPos++;
-				CodeStyle breakCode;
-				breakCode.qwCode = 0;
-				breakCode.wInstruct = ECODE_BREAK;
-				breakCode.dwPos = vTempCode.size();
-#if _SCRIPT_DEBUG
-				breakCode.nSourseWordIndex = GetSourceLineIndex(vIn, curPos);
-#endif
-				vTempCode.push_back(breakCode);
-
-				nReturn = ECompile_Return;
-			}
-			else if (vIn[curPos].word == "delete")//释放一个类实例
-			{
-				curPos++;
-				//先检查是否是类指针
-				int nClassIndex = QueryTempVar(vIn[curPos].word);
-				char cSign = 0;
-				VarPoint* pVar = nullptr;
-				if (nClassIndex >= 0)
-				{
-					pVar = &m_vTempCodeData.vNumVar[nClassIndex];
-					cSign = 2;
-				}
-				else if (m_mapDicGlobalVar.find(vIn[curPos].word) != m_mapDicGlobalVar.end())
-				{
-					VarInfo info;
-					info.nVarInfo = m_mapDicGlobalVar[vIn[curPos].word];
-					nClassIndex = info.dwPos;
-					pVar = &vGlobalNumVar[nClassIndex];
-					cSign = 1;
-				}
-				if (pVar && pVar->cType == EScriptVal_ClassPointIndex)
-				{
-					CodeStyle code;
-					code.qwCode = 0;
-#if _SCRIPT_DEBUG
-					code.nSourseWordIndex = GetSourceLineIndex(vIn, curPos);
-#endif
-					code.wInstruct = ECODE_PUSH;
-					code.cSign = cSign;
-					code.cExtend = 0;
-					code.dwPos = nClassIndex;
-					vTempCode.push_back(code);
-				}
-				else
-				{
-					//不是类指针，错误
-					nReturn == ECompile_ERROR;
-				}
-
-				CodeStyle deleteCode;
-				deleteCode.qwCode = 0;
-				deleteCode.wInstruct = ECODE_RELEASE_CLASS;
-				deleteCode.dwPos = vTempCode.size();
-#if _SCRIPT_DEBUG
-				deleteCode.nSourseWordIndex = GetSourceLineIndex(vIn, curPos);
-#endif
-				vTempCode.push_back(deleteCode);
-
-				nReturn = ECompile_Return;
-				curPos++;
+				RevertWord(nextWord);
+				nReturn = LoadDefineTempVar(vIn, pBlockICode);
+				if (nReturn != ECompile_ERROR)
+					nReturn = LoadOneSentence(vIn, pBlockICode, 0);
 			}
 			else
 			{
-				if (m_mapString2CodeIndex.find(vIn[curPos].word) != m_mapString2CodeIndex.end())
-				{
-					nReturn = LoadCallFunState(vIn, curPos, vTempCode);
-				}
-				//回调函数
-				else if (CScriptCallBackFunion::GetFunIndex(vIn[curPos].word) >= 0)
-				{
-					nReturn = LoadCallFunState(vIn, curPos, vTempCode);
-				}
-				else
-				{
-					//什么都不是，那就可能是算式了
-					nReturn = LoadFormulaSentence(vIn, curPos, vTempCode);
-				}
-
+				RevertWord(nextWord);
+				nReturn = LoadOneSentence(vIn, pBlockICode, 0);
 			}
-			if (nReturn == ECompile_ERROR)
+		}
+
+		return nReturn;
+	}
+	int CScriptCodeLoader::LoadIfSentence(SentenceSourceCode& vIn, CBaseICode* pCode, int nType)
+	{
+		CIfICode* pIfICode = CICodeMgr::GetInstance()->New<CIfICode>();
+		if (pIfICode == nullptr)
+		{
+			return ECompile_ERROR;
+		}
+		pCode->AddICode(nType, pIfICode);
+
+		GetNewWord(nextWord);
+		if (nextWord.word != "if")
+		{
+			nErrorWordPos = nextWord.nFlag;
+			strError = "LoadIfSentence(Block format error)";
+			return ECompile_ERROR;
+		}
+
+		GetWord(nextWord);
+		if (nextWord.word != "(")
+		{
+			nErrorWordPos = nextWord.nFlag;
+			strError = "LoadIfSentence(Block format error)";
+			return ECompile_ERROR;
+		}
+
+		int nBracketSize = 0;
+		SentenceSourceCode vCondCode;
+		while (true)
+		{
+			GetWord(nextWord);
+			if (nextWord.word == "(")
 			{
-				nErrorWordPos = curPos;
-				strError = "LoadBlockState(Statement classification error)";
+				nBracketSize++;
+			}
+			else if (nextWord.word == ")")
+			{
+				nBracketSize--;
+				if (nBracketSize < 0)
+				{
+					break;
+				}
+			}
+			vCondCode.push_back(nextWord);
+		}
+		if (LoadOneSentence(vCondCode, pIfICode, 0,"") == ECompile_ERROR)
+		{
+			return ECompile_ERROR;
+		}
+
+		GetWord(nextWord);
+		if (nextWord.word != "{")
+		{
+			nErrorWordPos = nextWord.nFlag;
+			strError = "LoadIfSentence(Block format error)";
+			return ECompile_ERROR;
+		}
+		RevertWord(nextWord);
+		if (LoadBlockState(vIn, pIfICode, 1) == ECompile_ERROR)
+		{
+			return ECompile_ERROR;
+		}
+		GetWord(nextWord);
+		if (nextWord.word == "else")
+		{
+			GetWord(nextWord);
+			if (nextWord.word == "if")
+			{
+				RevertWord(nextWord);
+				if (LoadIfSentence(vIn, pIfICode, 2) == ECompile_ERROR)
+				{
+					return ECompile_ERROR;
+				}
+			}
+			else if (nextWord.word == "{")
+			{
+				RevertWord(nextWord);
+				if (LoadBlockState(vIn, pIfICode, 2) == ECompile_ERROR)
+				{
+					return ECompile_ERROR;
+				}
+			}
+			else
+			{
+				nErrorWordPos = nextWord.nFlag;
+				strError = "LoadIfSentence(Block format error)";
 				return ECompile_ERROR;
 			}
+
 		}
-
-
-		//将预订的代码压入
-		for (unsigned int i = 0; i < vBackCode.size(); i++)
+		else
 		{
-			vTempCode.push_back(vBackCode[i]);
+			RevertWord(nextWord);
 		}
-
-		//将代码压入输出
-		CodeStyle code;
-		code.qwCode = 0;
-		code.wInstruct = ECODE_BLOCK;
-		code.dwPos = vTempCode.size();
-#if _SCRIPT_DEBUG
-		code.nSourseWordIndex = GetSourceLineIndex(vIn, curPos);
-#endif
-		vOut.push_back(code);
-
-		for (unsigned int i = 0; i < vTempCode.size(); i++)
+		return ECompile_Return;
+	}
+	int CScriptCodeLoader::LoadForSentence(SentenceSourceCode& vIn, CBaseICode* pCode, int nType)
+	{
+		return 0;
+	}
+	int CScriptCodeLoader::LoadWhileSentence(SentenceSourceCode& vIn, CBaseICode* pCode, int nType)
+	{
+		CWhileICode* pWhileICode = CICodeMgr::GetInstance()->New<CWhileICode>();
+		if (pWhileICode == nullptr)
 		{
-			vOut.push_back(vTempCode[i]);
+			return ECompile_ERROR;
+		}
+		pCode->AddICode(nType, pWhileICode);
+
+		GetNewWord(nextWord);
+		if (nextWord.word != "while")
+		{
+			nErrorWordPos = nextWord.nFlag;
+			strError = "LoadWhileSentence(Block format error)";
+			return ECompile_ERROR;
 		}
 
-		pos = curPos;
+		GetWord(nextWord);
+		if (nextWord.word != "(")
+		{
+			nErrorWordPos = nextWord.nFlag;
+			strError = "LoadWhileSentence(Block format error)";
+			return ECompile_ERROR;
+		}
 
-		RemoveTempVarLayer();
-		m_stackBlockLayer.pop();
+		int nBracketSize = 0;
+		SentenceSourceCode vCondCode;
+		while (true)
+		{
+			GetWord(nextWord);
+
+			if (nextWord.word == "(")
+			{
+				nBracketSize++;
+			}
+			else if (nextWord.word == ")")
+			{
+				nBracketSize--;
+				if (nBracketSize < 0)
+				{
+					break;
+				}
+			}
+			vCondCode.push_back(nextWord);
+		}
+		if (LoadOneSentence(vCondCode, pWhileICode, 0,"") == ECompile_ERROR)
+		{
+			return ECompile_ERROR;
+		}
+		GetWord(nextWord);
+		if (nextWord.word != "{")
+		{
+			nErrorWordPos = nextWord.nFlag;
+			strError = "LoadIfSentence(Block format error)";
+			return ECompile_ERROR;
+		}
+		RevertWord(nextWord);
+		if (LoadBlockState(vIn, pWhileICode, 1) == ECompile_ERROR)
+		{
+			return ECompile_ERROR;
+		}
+		return ECompile_Return;
+	}
+	int CScriptCodeLoader::LoadSwitchSentence(SentenceSourceCode& vIn, CBaseICode* pCode, int nType)
+	{
+		return 0;
+	}
+	int CScriptCodeLoader::LoadReturnSentence(SentenceSourceCode& vIn, CBaseICode* pCode, int nType)
+	{
+		CReturnICode* pReturnICode = CICodeMgr::GetInstance()->New<CReturnICode>();
+		if (pReturnICode == nullptr)
+		{
+			return ECompile_ERROR;
+		}
+		pCode->AddICode(nType, pReturnICode);
+		GetNewWord(nextWord);
+		if (nextWord.word != "return")
+		{
+			nErrorWordPos = nextWord.nFlag;
+			strError = "LoadReturnSentence:format error)";
+			return ECompile_ERROR;
+		}
+
+		GetWord(nextWord);
+		if (nextWord.word == ";")
+		{
+			return ECompile_Return;
+		}
+		RevertWord(nextWord);
+		//什么都不是，那就可能是算式了
+		if (LoadOneSentence(vIn, pReturnICode, 0) == ECompile_ERROR)
+		{
+			return ECompile_Return;
+		}
 		return ECompile_Return;
 	}
 
-	int CScriptCodeLoader::LoadCallFunState(SentenceSourceCode& vIn, unsigned int& pos, vector<CodeStyle>& vOut)
+	int CScriptCodeLoader::LoadOneSentence(SentenceSourceCode& vIn, CBaseICode* pCode, int nType, std::string endFlag)
 	{
-		unsigned int curPos = pos;
-
-		if (vIn.size() - curPos <= 0)
+		CSentenceICode* pSentenceICode = CICodeMgr::GetInstance()->New<CSentenceICode>();
+		if (pSentenceICode == nullptr)
 		{
-			strError = "LoadCallFunState(Function call, statement too short)";
-			nErrorWordPos = curPos;
 			return ECompile_ERROR;
 		}
-		string FunName = vIn[curPos].word;
-		vector<CodeStyle> vCode;
+		pCode->AddICode(nType, pSentenceICode);
+
+		GetNewWord(nextWord);
+		if (nextWord.word == "delete")
+		{
+			GetWord(nextWord);
+			int nClassIndex = QueryTempVar(nextWord.word, pSentenceICode);
+			char cSign = 0;
+			StackVarInfo* pVar = nullptr;
+			if (nClassIndex >= 0)
+			{
+				pVar = &m_vTempCodeData.vNumVar[nClassIndex];
+				cSign = 2;
+			}
+			else if (m_mapDicGlobalVar.find(nextWord.word) != m_mapDicGlobalVar.end())
+			{
+				VarInfo info = m_mapDicGlobalVar[nextWord.word];
+				nClassIndex = info.dwPos;
+				pVar = &vGlobalNumVar[nClassIndex];
+				cSign = 1;
+			}
+			if (pVar && pVar->cType == EScriptVal_ClassPointIndex)
+			{
+				CodeStyle code;
+				code.qwCode = 0;
+				code.wInstruct = ECODE_PUSH;
+				code.cSign = cSign;
+				code.cExtend = 0;
+				code.dwPos = nClassIndex;
+				pSentenceICode->AddExeCode(code);
+			}
+			else
+			{
+				//不是类指针，错误
+				nErrorWordPos = nextWord.nFlag;
+				strError = "delete: no class point";
+				return ECompile_ERROR;
+			}
+			CodeStyle deleteCode;
+			deleteCode.qwCode = 0;
+			deleteCode.wInstruct = ECODE_RELEASE_CLASS;
+			pSentenceICode->AddExeCode(deleteCode);
+
+			GetWord(nextWord);
+			if (nextWord.word != ";")
+			{
+				nErrorWordPos = nextWord.nFlag;
+				strError = "delete: format error";
+				return ECompile_ERROR;
+			}
+		}
+		else if (nextWord.word == "break")
+		{
+			GetWord(nextWord);
+
+			if (nextWord.word != ";")
+			{
+				nErrorWordPos = nextWord.nFlag;
+				strError = "break: format error";
+				return ECompile_ERROR;
+			}
+			CodeStyle breakCode;
+			breakCode.qwCode = 0;
+			breakCode.wInstruct = ECODE_BREAK;
+			pSentenceICode->AddExeCode(breakCode);
+		}
+		else
+		{
+			std::vector<CodeStyle> vTempCode;
+			int nReturn = ECompile_ERROR;
+			//if (m_mapString2CodeIndex.find(nextWord.word) != m_mapString2CodeIndex.end())
+			//{
+			//	RevertWord(nextWord);
+			//	//脚本函数调用
+			//	nReturn = LoadCallFunState(vIn, pSentenceICode, vTempCode);
+			//}
+			////回调函数
+			//else if (CScriptCallBackFunion::GetFunIndex(nextWord.word) >= 0)
+			//{
+			//	RevertWord(nextWord);
+			//	nReturn = LoadCallFunState(vIn, pSentenceICode, vTempCode);
+			//}
+			//else
+			{
+				bool isEvaluate = false;
+				CodeStyle code;
+				if (vIn.size() > 0)
+				{
+					GetNewWord(flagWord);
+					if (flagWord.word == "=")
+					{
+						//赋值
+						isEvaluate = true;
+						//查询临时变量
+						int nVarIndex = QueryTempVar(nextWord.word, pSentenceICode);
+						if (nVarIndex != g_nTempVarIndexError)
+						{
+							code.qwCode = 0;
+							code.wInstruct = ECODE_EVALUATE;
+							code.cSign = 1;
+							code.cExtend = 0;
+							code.dwPos = nVarIndex;
+						}
+					}
+					else
+					{
+						RevertWord(flagWord);
+						RevertWord(nextWord);
+					}
+				}
+				else
+				{
+					RevertWord(nextWord);
+				}
+
+				//什么都不是，那就可能是算式了
+				nReturn = LoadFormulaSentence(vIn, pSentenceICode, vTempCode);
+				if (isEvaluate)
+				{
+					vTempCode.push_back(code);
+				}
+			}
+			if (!endFlag.empty())
+			{
+				GetWord(nextWord);
+				if (nextWord.word != endFlag)
+				{
+					nErrorWordPos = nextWord.nFlag;
+					strError = "Sentence format error";
+					return ECompile_ERROR;
+				}
+			}
+			else
+			{
+				pSentenceICode->SetClear(false);
+			}
+
+			for (auto it = vTempCode.begin(); it != vTempCode.end(); it++)
+			{
+				pSentenceICode->AddExeCode(*it);
+			}
+			return nReturn;
+		}
+		return ECompile_Return;
+	}
+	int CScriptCodeLoader::LoadCallFunState(SentenceSourceCode& vIn, CBaseICode* pCode, std::vector<CodeStyle>& vOut)
+	{
+		GetNewWord(FunName);
+
+		CodeStyle begincode;
+		begincode.qwCode = 0;
+		begincode.wInstruct = ECODE_BEGIN_CALL;
 
 		CodeStyle callCode;
 		callCode.qwCode = 0;
@@ -1223,637 +1255,126 @@ namespace zlscript
 		callCode.nSourseWordIndex = GetSourceLineIndex(vIn, curPos);
 #endif
 
-		int nCallFunIndex = CScriptCallBackFunion::GetFunIndex(FunName);
+		int nCallFunIndex = CScriptCallBackFunion::GetFunIndex(FunName.word);
 		if (nCallFunIndex >= 0)
 		{
 			callCode.cSign = 0;
 			callCode.dwPos = nCallFunIndex;
 		}
-		else if (m_mapString2CodeIndex.find(FunName) != m_mapString2CodeIndex.end())
+		else if (m_mapString2CodeIndex.find(FunName.word) != m_mapString2CodeIndex.end())
 		{
 			callCode.cSign = 1;
-			callCode.dwPos = m_mapString2CodeIndex[FunName];
+			callCode.dwPos = m_mapString2CodeIndex[FunName.word];
 		}
 		else
 		{
 			strError = "LoadCallFunState(Function call, function not found)";
-			nErrorWordPos = curPos;
+			nErrorWordPos = FunName.nSourceWordsIndex;
 			return ECompile_ERROR;
 		}
-
-
-		curPos++;
-		if (vIn.size() - curPos <= 0)
+		GetNewWord(nextWord);
+		if (nextWord.word != "(")
 		{
-			strError = "LoadCallFunState(Function call, statement too short)";
-			nErrorWordPos = curPos;
+			nErrorWordPos = nextWord.nFlag;
+			strError = "LoadCallFunState(Block format error)";
 			return ECompile_ERROR;
 		}
-		if (vIn[curPos].word == "(")
+		//函数参数要倒着取才行
+		stack<tagCodeSection> sTempCode;
+		int nParamNum = 0;
+		while (true)
 		{
-			//函数参数要倒着取才行
-
-			stack<tagCodeSection> sTempCode;
-			int nParamNum = 0;
+			int nBracketSize = 0;
+			SentenceSourceCode vParmCode;
 			while (true)
 			{
-				curPos++;
-				if (vIn.size() - curPos <= 0)
+				GetWord(nextWord);
+				if (nextWord.word == "(")
 				{
-					strError = "LoadCallFunState(Function call, parameter statement too short)";
-					nErrorWordPos = curPos;
-					return ECompile_ERROR;
+					nBracketSize++;
 				}
-				if (vIn[curPos].word == ")")
+				else if (nextWord.word == ")")
 				{
-					curPos++;
-					break;
-				}
-				else if (vIn[curPos].word == ",")
-				{
-
-				}
-				else if (vIn[curPos + 1].word == "," || vIn[curPos + 1].word == ")")
-				{
-					//直接读取变量和常量
-					tagCodeSection vTemp;
-					if (LoadAndPushNumVar(vIn, curPos, vTemp) == ECompile_ERROR)
+					nBracketSize--;
+					if (nBracketSize < 0)
 					{
-						return ECompile_ERROR;
+						break;
 					}
-					sTempCode.push(vTemp);
-					curPos--;
-					nParamNum++;
 				}
-				else
+				else if (nextWord.word == ",")
 				{
-					tagCodeSection vTemp;
-					if (LoadFormulaSentence(vIn, curPos, vTemp) == ECompile_ERROR)
+					if (nBracketSize <= 0)
 					{
-						return ECompile_ERROR;
+						break;
 					}
-					sTempCode.push(vTemp);
-					curPos--;
-					nParamNum++;
 				}
+				vParmCode.push_back(nextWord);
 			}
 
-			while (!sTempCode.empty())
+			if (vParmCode.size() > 0)
 			{
-				tagCodeSection& vTemp = sTempCode.top();
-				for (unsigned int i = 0; i < vTemp.size(); i++)
-				{
-					vCode.push_back(vTemp[i]);
-				}
-				sTempCode.pop();
-			}
-			callCode.cExtend = nParamNum;
-		}
-		vCode.push_back(callCode);
-
-		for (unsigned int i = 0; i < vCode.size(); i++)
-		{
-			vOut.push_back(vCode[i]);
-		}
-		pos = curPos;
-		return ECompile_Return;
-	}
-	int CScriptCodeLoader::LoadIfSentence(SentenceSourceCode& vIn, unsigned int& pos, vector<CodeStyle>& vOut)
-	{
-		unsigned int curPos = pos;
-		if (vIn.size() - curPos <= 0)
-		{
-			nErrorWordPos = curPos;
-			strError = "LoadIfSentence(If statement definition format error)";
-			return ECompile_ERROR;
-		}
-		if (vIn[curPos].word != "if")
-		{
-			nErrorWordPos = curPos;
-			strError = "LoadIfSentence(If statement definition format error, not if statement)";
-			return ECompile_ERROR;
-		}
-
-		CodeStyle ifcode;
-		ifcode.qwCode = 0;
-		ifcode.wInstruct = ECODE_BRANCH_IF;
-		ifcode.cSign = (unsigned char)m_stackBlockLayer.size();
-#if _SCRIPT_DEBUG
-		ifcode.nSourseWordIndex = GetSourceLineIndex(vIn, curPos);
-#endif
-
-		//读取条件
-		vector<CodeStyle> vBracketCode;
-		curPos++;
-		CodeStyle varTypeCode;
-		varTypeCode.qwCode = 0;
-		varTypeCode.wInstruct = ECODE_INT;
-#if _SCRIPT_DEBUG
-		varTypeCode.nSourseWordIndex = GetSourceLineIndex(vIn, curPos);
-#endif
-		vBracketCode.push_back(varTypeCode);
-
-		vOut.push_back(varTypeCode);
-		if (LoadBracket(vIn, curPos, vBracketCode) == ECompile_ERROR)
-		{
-			nErrorWordPos = curPos;
-			return ECompile_ERROR;
-		}
-
-		//读取内容
-		vector<CodeStyle> vBlockCode;
-		vBlockCode.clear();
-		if (vIn[curPos].word != "{")
-		{
-			nErrorWordPos = curPos;
-			strError = "LoadIfSentence(If statement definition format error)";
-			return ECompile_ERROR;
-		}
-		vector<CodeStyle> vBackCode;
-		if (LoadBlockState(vIn, curPos, vBlockCode, vBackCode) == ECompile_ERROR)
-		{
-			return ECompile_ERROR;
-		}
-
-		for (unsigned int i = 0; i < vBracketCode.size(); i++)
-		{
-			vOut.push_back(vBracketCode[i]);
-		}
-
-		ifcode.dwPos = vBlockCode.size() + 1;
-		vOut.push_back(ifcode);
-
-		for (unsigned int i = 0; i < vBlockCode.size(); i++)
-		{
-			vOut.push_back(vBlockCode[i]);
-		}
-
-		if (vIn[curPos].word == "else")
-		{
-			CodeStyle elsecode;
-			elsecode.qwCode = 0;
-#if _SCRIPT_DEBUG
-			elsecode.nSourseWordIndex = GetSourceLineIndex(vIn, curPos);
-#endif
-			elsecode.wInstruct = ECODE_BRANCH_ELSE;
-			elsecode.cSign = (unsigned char)m_stackBlockLayer.size();
-			curPos++;
-			
-			vector<CodeStyle> vElseCode;
-			if (vIn[curPos].word == "{")
-			{
-				vector<CodeStyle> vBackCode;
-				if (LoadBlockState(vIn, curPos, vElseCode, vBackCode) == ECompile_ERROR)
+				tagCodeSection vTemp;
+				if (LoadFormulaSentence(vParmCode, pCode, vTemp) == ECompile_ERROR)
 				{
 					return ECompile_ERROR;
 				}
+				sTempCode.push(vTemp);
+				nParamNum++;
 			}
-			else if(vIn[curPos].word == "if")
-			{
-				if (LoadIfSentence(vIn, curPos, vElseCode) == ECompile_ERROR)
-				{
-					return ECompile_ERROR;
-				}
-			}
-			else
-			{
-				strError = "LoadIfSentence(If statement definition format error)";
-				return ECompile_ERROR;
-			}
-			elsecode.dwPos = 1 + vElseCode.size();
-			vOut.push_back(elsecode);
-			for (unsigned int i = 0; i < vElseCode.size(); i++)
-			{
-				vOut.push_back(vElseCode[i]);
-			}
-		}
 
-		pos = curPos;
+			if (nextWord.word == ")")
+			{
+				break;
+			}
+
+		}
+		vOut.push_back(begincode);
+		while (!sTempCode.empty())
+		{
+			tagCodeSection& vTemp = sTempCode.top();
+			for (unsigned int i = 0; i < vTemp.size(); i++)
+			{
+				vOut.push_back(vTemp[i]);
+			}
+			sTempCode.pop();
+		}
+		callCode.cExtend = nParamNum;
+		vOut.push_back(callCode);
+
 
 		return ECompile_Return;
 	}
-	//读取while语句
-	int CScriptCodeLoader::LoadWhileSentence(SentenceSourceCode& vIn, unsigned int& pos, vector<CodeStyle>& vOut)
+
+	int CScriptCodeLoader::LoadCallClassFun(SentenceSourceCode& vIn, CBaseICode* pCode, std::vector<CodeStyle>& vOut)
 	{
-		unsigned int curPos = pos;
-		unsigned int nSize = 0;
+		CodeStyle begincode;
+		begincode.qwCode = 0;
+		begincode.wInstruct = ECODE_BEGIN_CALL;
 
-		if (vIn.size() - curPos <= 0)
-		{
-			strError = "LoadWhileSentence(While statement read failed)";
-			return ECompile_ERROR;
-		}
-
-		if (vIn[curPos].word != "while")
-		{
-			strError = "LoadWhileSentence(While statement format error)";
-			return ECompile_ERROR;
-		}
-		curPos++;
-
-		vector<CodeStyle> vTempCode;
-		CodeStyle varTypeCode;
-		varTypeCode.qwCode = 0;
-		varTypeCode.wInstruct = ECODE_INT;
-#if _SCRIPT_DEBUG
-		varTypeCode.nSourseWordIndex = GetSourceLineIndex(vIn, curPos);
-#endif
-		vTempCode.push_back(varTypeCode);
-		if (LoadBracket(vIn, curPos, vTempCode) == ECompile_ERROR)
-		{
-			return ECompile_ERROR;
-		}
-
-		for (unsigned int i = 0; i < vTempCode.size(); i++)
-		{
-			vOut.push_back(vTempCode[i]);
-		}
-		nSize += vTempCode.size();
-
-		vTempCode.clear();
-
-		//要在块尾加入返回块头的指令
-		vector<CodeStyle> vBackCode;
-		CodeStyle backcode;
-		backcode.qwCode = 0;
-		backcode.wInstruct = ECODE_BLOCK_CYC;
-#if _SCRIPT_DEBUG
-		backcode.nSourseWordIndex = GetSourceLineIndex(vIn, curPos);
-#endif
-		vBackCode.push_back(backcode);
-		if (LoadBlockState(vIn, curPos, vTempCode, vBackCode) == ECompile_ERROR)
-		{
-			return ECompile_ERROR;
-		}
-
-		//给ECODE_BLOCK_CYC设置返回的量
-		nSize += vTempCode.size();
-		vTempCode[vTempCode.size() - 1].dwPos = nSize;
-
-		CodeStyle code;
-		code.qwCode = 0;
-		code.wInstruct = ECODE_CYC_IF;
-		code.dwPos = vTempCode.size() + 1;
-#if _SCRIPT_DEBUG
-		code.nSourseWordIndex = GetSourceLineIndex(vIn, curPos);
-#endif
-		vOut.push_back(code);
-
-		for (unsigned int i = 0; i < vTempCode.size(); i++)
-		{
-			vOut.push_back(vTempCode[i]);
-		}
-
-		pos = curPos;
-		return ECompile_Return;
-	}
-	int CScriptCodeLoader::LoadAndPushVar(SentenceSourceCode& vIn, unsigned int& pos, vector<CodeStyle>& vOut)
-	{
-		unsigned int curPos = pos;
-		if (vIn.size() - curPos > 0)
-		{
-			string strName = vIn[curPos].word;
-
-			//脚本函数
-			if (vIn.size() - curPos > 2 && vIn[curPos + 1].word == "(")
-			{
-				//脚本函数
-				if (m_mapString2CodeIndex.find(strName) != m_mapString2CodeIndex.end())
-				{
-					LoadCallFunState(vIn, curPos, vOut);
-				}
-				//回调函数
-				else if (CScriptCallBackFunion::GetFunIndex(strName) >= 0)
-				{
-					LoadCallFunState(vIn, curPos, vOut);
-				}
-				else
-				{
-					//TODO:检查函数调用语句是否完整，定义新函数
-					m_mapString2CodeIndex[strName] = m_vecCodeData.size();
-					tagCodeData data;
-					data.funname = strName;
-					data.nType = EICODE_FUN_NO_CODE;
-					m_vecCodeData.push_back(data);
-					//然后再读取
-					LoadCallFunState(vIn, curPos, vOut);
-				}
-			}
-			else
-			{
-				int nArraySize = 0;
-				CodeStyle code;
-				code.qwCode = 0;
-#if _SCRIPT_DEBUG
-				code.nSourseWordIndex = GetSourceLineIndex(vIn, curPos);
-#endif
-				int nIndexVar = QueryTempVar(strName);
-				if (nIndexVar >= 0)//临时变量
-				{
-					code.wInstruct = ECODE_PUSH;
-					code.cSign = 2;
-					code.cExtend = nArraySize;
-					code.dwPos = nIndexVar;
-					vOut.push_back(code);
-				}
-				else if (m_mapDicGlobalVar.find(strName) != m_mapDicGlobalVar.end())//全局变量
-				{
-					code.wInstruct = ECODE_PUSH;
-					code.cSign = 1;
-					code.cExtend = nArraySize;
-					VarInfo info;
-					info.nVarInfo = m_mapDicGlobalVar[strName];
-					code.dwPos = info.dwPos;
-					vOut.push_back(code);
-				}
-				else if (strName[0] == '\"')//字符串
-				{
-					char strbuff[MAXSIZE_STRING];
-					memset(strbuff, 0, sizeof(strbuff));
-					int strIndex = 0;
-					for (unsigned int i = 1; i < strName.size() - 1; i++)
-					{
-						if (strIndex < MAXSIZE_STRING - 1)
-						{
-							strbuff[strIndex++] = strName[i];
-						}
-					}
-					m_vTempCodeData.vStrConst.push_back(strbuff);
-					code.wInstruct = ECODE_PUSH;
-					code.cSign = 3;
-					code.cExtend = 0;
-					code.dwPos = m_vTempCodeData.vStrConst.size() - 1;
-					vOut.push_back(code);
-				}
-				else
-				{
-					code.wInstruct = ECODE_PUSH;
-					code.cSign = 0;
-					code.cExtend = 0;
-					code.dwPos = atoi(strName.c_str());
-					vOut.push_back(code);
-				}
-				curPos++;
-			}
-
-			pos = curPos;
-			return ECompile_Return;
-		}
-		else
-		{
-			return ECompile_ERROR;
-		}
-	}
-	int CScriptCodeLoader::LoadAndPushNumVar(SentenceSourceCode& vIn, unsigned int& pos, vector<CodeStyle>& vOut)
-	{
-		unsigned int curPos = pos;
-		if (vIn.size() - curPos > 0)
-		{
-			string strName = vIn[curPos].word;
-			if (vIn.size() - curPos > 2 && vIn[curPos+1].word=="(")
-			{
-				//脚本函数
-				if (m_mapString2CodeIndex.find(strName) != m_mapString2CodeIndex.end())
-				{
-					LoadCallFunState(vIn, curPos, vOut);
-				}
-				//回调函数
-				else if (CScriptCallBackFunion::GetFunIndex(strName) >= 0)
-				{
-					LoadCallFunState(vIn, curPos, vOut);
-				}
-				else
-				{
-					//TODO:检查函数调用语句是否完整，定义新函数
-					m_mapString2CodeIndex[strName] = m_vecCodeData.size();
-					tagCodeData data;
-					data.funname = strName;
-					data.nType = EICODE_FUN_NO_CODE;
-					m_vecCodeData.push_back(data);
-					//然后再读取
-					LoadCallFunState(vIn, curPos, vOut);
-				}
-			}
-			else if (vIn[curPos].nFlag == E_WORD_FLAG_STRING)
-			{
-				//字符串
-				CodeStyle code;
-				m_vTempCodeData.vStrConst.push_back(vIn[curPos].word);
-				code.wInstruct = ECODE_PUSH;
-				code.cSign = 3;
-				code.cExtend = 0;
-				code.dwPos = m_vTempCodeData.vStrConst.size() - 1;
-#if _SCRIPT_DEBUG
-				code.nSourseWordIndex = GetSourceLineIndex(vIn, curPos);
-#endif
-				vOut.push_back(code);
-				pos++;
-				return ECompile_Return;
-			}
-			else
-			{
-				int nArraySize = 0;
-				CodeStyle code;
-				code.qwCode = 0;
-#if _SCRIPT_DEBUG
-				code.nSourseWordIndex = GetSourceLineIndex(vIn, curPos);
-#endif
-				int nIndexVar = QueryTempVar(strName);
-				if (nIndexVar >= 0)//临时变量
-				{
-					code.wInstruct = ECODE_PUSH;
-					code.cSign = 2;
-					code.cExtend = nArraySize;
-					code.dwPos = nIndexVar;
-					vOut.push_back(code);
-				}
-				else if (m_mapDicGlobalVar.find(strName) != m_mapDicGlobalVar.end())//全局变量
-				{
-					code.wInstruct = ECODE_PUSH;
-					code.cSign = 1;
-					code.cExtend = nArraySize;
-					VarInfo info;
-					info.nVarInfo = m_mapDicGlobalVar[strName];
-					code.dwPos = info.dwPos;
-					vOut.push_back(code);
-				}
-				else
-				{
-					bool isStr = false;
-					bool isFloat = false;
-					for (unsigned int i = 0; i < strName.size(); i++)
-					{
-						if ((strName[i] >= '0' && strName[i] <= '9'))
-						{
-							//是数字
-						}
-						else if (strName[i] == '.')
-						{
-							//是点
-							isFloat = true;
-						}
-						else
-						{
-							isStr = true;
-							break;
-						}
-					}
-					if (isFloat)
-					{
-						m_vTempCodeData.vFloatConst.push_back(stod(strName.c_str()));
-						code.wInstruct = ECODE_PUSH;
-						code.cSign = 4;
-						code.cExtend = 1;
-						code.dwPos = m_vTempCodeData.vFloatConst.size() - 1;
-						vOut.push_back(code);
-					}
-					else
-					{
-						code.wInstruct = ECODE_PUSH;
-						code.cSign = 0;
-						code.cExtend = 0;
-						code.dwPos = atoi(strName.c_str());
-						vOut.push_back(code);
-					}
-				}
-				curPos++;
-			}
-
-			pos = curPos;
-			return ECompile_Return;
-		}
-		else
-		{
-			strError = "LoadWhileSentence(Constant or variable read error)";
-			nErrorWordPos = curPos;
-			return ECompile_ERROR;
-		}
-	}
-	int CScriptCodeLoader::LoadAndPushClassPoint(SentenceSourceCode& vIn, unsigned int& pos, std::vector<CodeStyle>& vOut)
-	{
-		unsigned int curPos = pos;
-		if (vIn.size() - curPos > 0)
-		{
-			string strName = vIn[curPos].word;
-			if (vIn[curPos].nFlag == E_WORD_FLAG_STRING)
-			{
-				//不接受字符串
-				strError = "LoadWhileSentence(String is not accepted when reading a class pointer)";
-				nErrorWordPos = curPos;
-				return ECompile_ERROR;
-			}
-			if (vIn.size() - curPos > 2 && vIn[curPos + 1].word == "(")
-			{
-				//脚本函数
-				if (m_mapString2CodeIndex.find(strName) != m_mapString2CodeIndex.end())
-				{
-					LoadCallFunState(vIn, curPos, vOut);
-				}
-				//回调函数
-				else if (CScriptCallBackFunion::GetFunIndex(strName) >= 0)
-				{
-					LoadCallFunState(vIn, curPos, vOut);
-				}
-				else
-				{
-					//TODO:检查函数调用语句是否完整，定义新函数
-					m_mapString2CodeIndex[strName] = m_vecCodeData.size();
-					tagCodeData data;
-					data.funname = strName;
-					data.nType = EICODE_FUN_NO_CODE;
-					m_vecCodeData.push_back(data);
-					//然后再读取
-					LoadCallFunState(vIn, curPos, vOut);
-				}
-			}
-			else if (vIn[curPos + 1].word == "->")
-			{
-				if (LoadCallClassFunn(vIn, curPos, vOut) == ECompile_ERROR)
-				{
-					//生成压值进堆栈的代码失败
-					return ECompile_ERROR;
-				}
-			}
-			else
-			{
-				int nArraySize = 0;
-				CodeStyle code;
-				code.qwCode = 0;
-#if _SCRIPT_DEBUG
-				code.nSourseWordIndex = GetSourceLineIndex(vIn, curPos);
-#endif
-				int nIndexVar = QueryTempVar(strName);
-				if (nIndexVar >= 0)//临时变量
-				{
-					code.wInstruct = ECODE_PUSH;
-					code.cSign = 2;
-					code.cExtend = nArraySize;
-					code.dwPos = nIndexVar;
-					vOut.push_back(code);
-				}
-				else if (m_mapDicGlobalVar.find(strName) != m_mapDicGlobalVar.end())//全局变量
-				{
-					code.wInstruct = ECODE_PUSH;
-					code.cSign = 1;
-					code.cExtend = nArraySize;
-					VarInfo info;
-					info.nVarInfo = m_mapDicGlobalVar[strName];
-					code.dwPos = info.dwPos;
-					vOut.push_back(code);
-				}
-				else
-				{
-					//不接受常量
-					strError = "LoadWhileSentence(Constants are not accepted when reading class pointers)";
-					nErrorWordPos = curPos;
-					return ECompile_ERROR;
-				}
-				curPos++;
-			}
-
-			pos = curPos;
-			return ECompile_Return;
-		}
-		else
-		{
-			strError = "LoadWhileSentence(Format error reading class pointer)";
-			nErrorWordPos = curPos;
-			return ECompile_ERROR;
-		}
-	}
-	int CScriptCodeLoader::LoadCallClassFunn(SentenceSourceCode& vIn, unsigned int& pos, std::vector<CodeStyle>& vOut)
-	{
 		CodeStyle classcode;
 		classcode.qwCode = 0;
 		classcode.wInstruct = ECODE_PUSH;
-#if _SCRIPT_DEBUG
-		classcode.nSourseWordIndex = GetSourceLineIndex(vIn, pos);
-#endif
+
 		CodeStyle callCode;
 		callCode.qwCode = 0;
 		callCode.wInstruct = ECODE_CALL_CLASS_FUN;
-#if _SCRIPT_DEBUG
-		callCode.nSourseWordIndex = GetSourceLineIndex(vIn, pos);
-#endif
-		unsigned int curPos = pos;
-		if (vIn.size() - curPos < 3)
-		{
-			return ECompile_ERROR;
-		}
 
-		int nClassIndex = QueryTempVar(vIn[curPos].word);
-		VarPoint* pVar = nullptr;
+		GetNewWord(FunName);
+		int nClassIndex = QueryTempVar(FunName.word, pCode);
+		int nClassType = 0;
+		VarInfo info;
+		StackVarInfo* pVar = nullptr;
 		if (nClassIndex >= 0)
 		{
+			info = pCode->GetTempVarInfo(FunName.word.c_str());
 			pVar = &m_vTempCodeData.vNumVar[nClassIndex];
 			classcode.cSign = 2;
 			classcode.cExtend = 0;
 			classcode.dwPos = nClassIndex;
 		}
-		else if (m_mapDicGlobalVar.find(vIn[curPos].word) != m_mapDicGlobalVar.end())
+		else if (m_mapDicGlobalVar.find(FunName.word) != m_mapDicGlobalVar.end())
 		{
-			VarInfo info;
-			info.nVarInfo = m_mapDicGlobalVar[vIn[curPos].word];
+			info = m_mapDicGlobalVar[FunName.word];
 			nClassIndex = info.dwPos;
 			pVar = &vGlobalNumVar[nClassIndex];
 			classcode.cSign = 1;
@@ -1862,336 +1383,120 @@ namespace zlscript
 		}
 		if (pVar && pVar->cType == EScriptVal_ClassPointIndex)
 		{
-			//callCode.dwPos = pVar->nClassPointIndex;
+			callCode.dwPos = info.wExtend;
 		}
 		else
 		{
 			strError = "LoadCallClassFunn(Non class pointer when calling class function)";
-			nErrorWordPos = curPos;
+			nErrorWordPos = FunName.nSourceWordsIndex;
 			return ECompile_ERROR;
 		}
-		curPos++;
-		if (vIn[curPos].word != "->")
+		GetNewWord(nextWord);
+		if (nextWord.word != "->")
 		{
 			strError = "LoadCallClassFunn(When calling a class function, the class pointer cannot have an operator other than)";
-			nErrorWordPos = curPos;
+			nErrorWordPos = nextWord.nSourceWordsIndex;
 			return ECompile_ERROR;
 		}
-		curPos++;
-		int nFunIndex = CScriptSuperPointerMgr::GetInstance()->GetClassFunIndex(pVar->unArraySize, vIn[curPos].word);
+		GetWord(nextWord);
+		int nFunIndex = CScriptSuperPointerMgr::GetInstance()->GetClassFunIndex(info.wExtend, nextWord.word);
 		if (nFunIndex < 0)
 		{
 			strError = "LoadCallClassFunn(Class function not registered when calling class function)";
-			nErrorWordPos = curPos;
+			nErrorWordPos = nextWord.nSourceWordsIndex;
 			return ECompile_ERROR;
 		}
 		callCode.dwPos = nFunIndex;
-		curPos++;
-		if (vIn.size() - curPos <= 0)
+
+		GetWord(nextWord);
+		if (nextWord.word != "(")
 		{
-			strError = "LoadCallClassFunn(Insufficient statement length when calling class function)";
-			nErrorWordPos = curPos;
+			strError = "LoadCallClassFunn()";
+			nErrorWordPos = nextWord.nSourceWordsIndex;
 			return ECompile_ERROR;
 		}
-		vector<CodeStyle> vCode;
-		if (vIn[curPos].word == "(")
-		{
-			//函数参数要倒着取才行
 
-			stack<tagCodeSection> sTempCode;
-			int nParamNum = 0;
+		stack<tagCodeSection> sTempCode;
+		int nParamNum = 0;
+		while (true)
+		{
+			int nBracketSize = 0;
+			SentenceSourceCode vParmCode;
 			while (true)
 			{
-				curPos++;
-				if (vIn.size() - curPos <= 0)
+				GetWord(nextWord);
+				if (nextWord.word == "(")
 				{
-					strError = "LoadCallClassFunn(When calling a class function, the length of the statement taking the parameter is insufficient)";
-					nErrorWordPos = curPos;
-					return ECompile_ERROR;
+					nBracketSize++;
 				}
-				if (vIn[curPos].word == ")")
+				else if (nextWord.word == ")")
 				{
-					curPos++;
-					break;
-				}
-				else if (vIn[curPos].word == ",")
-				{
-
-				}
-				else if (vIn[curPos + 1].word == "," || vIn[curPos + 1].word == ")")
-				{
-					//直接读取变量和常量
-					tagCodeSection vTemp;
-					if (LoadAndPushNumVar(vIn, curPos, vTemp) == ECompile_ERROR)
+					nBracketSize--;
+					if (nBracketSize < 0)
 					{
-						return ECompile_ERROR;
-					}
-					sTempCode.push(vTemp);
-					curPos--;
-					nParamNum++;
-				}
-				else
-				{
-					tagCodeSection vTemp;
-					if (LoadFormulaSentence(vIn, curPos, vTemp) == ECompile_ERROR)
-					{
-						return ECompile_ERROR;
-					}
-					sTempCode.push(vTemp);
-					curPos--;
-					nParamNum++;
-				}
-			}
-
-			while (!sTempCode.empty())
-			{
-				tagCodeSection& vTemp = sTempCode.top();
-				for (unsigned int i = 0; i < vTemp.size(); i++)
-				{
-					vCode.push_back(vTemp[i]);
-				}
-				sTempCode.pop();
-			}
-			callCode.cExtend = nParamNum;
-		}
-		vCode.push_back(classcode);
-		vCode.push_back(callCode);
-
-		for (unsigned int i = 0; i < vCode.size(); i++)
-		{
-			vOut.push_back(vCode[i]);
-		}
-		pos = curPos;
-		return ECompile_Return;
-	}
-	int CScriptCodeLoader::LoadFormulaSentence(SentenceSourceCode& vIn, unsigned int& pos, vector<CodeStyle>& vOut)
-	{
-
-		unsigned int curPos = pos;
-		if (vIn.size() - curPos < 2)
-		{
-			strError = "LoadFormulaSentence(Wrong format of arithmetic statement definition)";
-			nErrorWordPos = curPos;
-			return ECompile_ERROR;
-		}
-
-		int nArraySize = 0;
-		bool isEvaluate = false;
-		bool isClassPoint = false;
-		int nVarType = EScriptVal_None;
-		CodeStyle code;
-		code.qwCode = 0;
-#if _SCRIPT_DEBUG
-		code.nSourseWordIndex = GetSourceLineIndex(vIn, curPos);
-#endif
-		if (vIn[curPos + 1].word == "=")
-		{
-			//先查询临时变量
-			int nVarIndex = QueryTempVar(vIn[curPos].word);
-			if (nVarIndex >= 0)
-			{
-				code.wInstruct = ECODE_EVALUATE;
-				code.cSign = 1;
-				code.cExtend = nArraySize;
-				code.dwPos = nVarIndex;
-
-				VarPoint& pVar = m_vTempCodeData.vNumVar[nVarIndex];
-				if (pVar.cType == EScriptVal_None)
-				{
-					strError = "LoadFormulaSentence(Temporary variable query failed)";
-					nErrorWordPos = curPos;
-					return ECompile_ERROR;
-				}
-
-				//CodeStyle varTypeCode;
-				//varTypeCode.qwCode = 0;
-				nVarType = pVar.cType;
-				switch (pVar.cType)
-				{
-				case EScriptVal_Int:
-					//varTypeCode.wInstruct = ECODE_INT;
-					break;
-				case EScriptVal_Double:
-					//varTypeCode.wInstruct = ECODE_DOUDLE;
-					break;
-				case EScriptVal_String:
-					//varTypeCode.wInstruct = ECODE_STRING;
-					break;
-				case EScriptVal_ClassPointIndex:
-					//varTypeCode.wInstruct = ECODE_CLASSPOINT;
-					isClassPoint = true;
-					break;
-				}
-				//vOut.push_back(varTypeCode);
-			}
-			else if (m_mapDicGlobalVar.find(vIn[curPos].word) != m_mapDicGlobalVar.end())
-			{
-				VarInfo info;
-				info.nVarInfo = m_mapDicGlobalVar[vIn[curPos].word];
-				nVarIndex = info.dwPos;
-				code.wInstruct = ECODE_EVALUATE;
-				code.cSign = 0;
-				code.cExtend = nArraySize;
-				code.dwPos = nVarIndex;
-
-				VarPoint pVar = vGlobalNumVar[nVarIndex];
-				if (pVar.cType == EScriptVal_None)
-				{
-					strError = "LoadFormulaSentence(Global variable query failed)";
-					nErrorWordPos = curPos;
-					return ECompile_ERROR;
-				}
-
-				nVarType = pVar.cType;
-				//CodeStyle varTypeCode;
-				//varTypeCode.qwCode = 0;
-				switch (pVar.cType)
-				{
-				case EScriptVal_Int:
-					//varTypeCode.wInstruct = ECODE_INT;
-					break;
-				case EScriptVal_Double:
-					//varTypeCode.wInstruct = ECODE_DOUDLE;
-					break;
-				case EScriptVal_String:
-					//varTypeCode.wInstruct = ECODE_STRING;
-					break;
-				case EScriptVal_ClassPointIndex:
-					//varTypeCode.wInstruct = ECODE_CLASSPOINT;
-					isClassPoint = true;
-					break;
-				}
-				//vOut.push_back(varTypeCode);
-			}
-			else
-			{
-				strError = "LoadFormulaSentence(Wrong assignment object)";
-				nErrorWordPos = curPos;
-				return ECompile_ERROR;
-			}
-
-			isEvaluate = true;
-			curPos = curPos + 2;
-		}
-		//if (isStr)
-		//{
-
-		//}
-		//else
-		if (isClassPoint)
-		{
-			std::string strName = vIn[curPos].word;
-			if (strName == "new")
-			{
-				if (vIn.size() - curPos < 2)
-				{
-					//错误
-					return ECompile_ERROR;
-				}
-				std::string strClassName = vIn[curPos+1].word;
-				CodeStyle newCode;
-				newCode.qwCode = 0;
-				newCode.wInstruct = ECODE_NEW_CLASS;
-				newCode.dwPos = CScriptSuperPointerMgr::GetInstance()->GetClassType(strClassName);
-#if _SCRIPT_DEBUG
-				newCode.nSourseWordIndex = GetSourceLineIndex(vIn, curPos);
-#endif
-				vOut.push_back(newCode);
-				curPos += 2;
-			}
-			else if (vIn.size() - curPos > 2 && vIn[curPos + 1].word == "(")
-			{
-				//脚本函数
-				if (m_mapString2CodeIndex.find(strName) != m_mapString2CodeIndex.end())
-				{
-					LoadCallFunState(vIn, curPos, vOut);
-				}
-				//回调函数
-				else if (CScriptCallBackFunion::GetFunIndex(strName) >= 0)
-				{
-					LoadCallFunState(vIn, curPos, vOut);
-				}
-				else
-				{
-					//TODO:检查函数调用语句是否完整，定义新函数
-					m_mapString2CodeIndex[strName] = m_vecCodeData.size();
-					tagCodeData data;
-					data.funname = strName;
-					data.nType = EICODE_FUN_NO_CODE;
-					m_vecCodeData.push_back(data);
-					//然后再读取
-					LoadCallFunState(vIn, curPos, vOut);
-				}
-			}
-			else
-			{
-				int nClassIndex = QueryTempVar(vIn[curPos].word);
-				VarPoint* pVar = nullptr;
-				if (nClassIndex >= 0)
-				{
-					pVar = &m_vTempCodeData.vNumVar[nClassIndex];
-				}
-				else if (m_mapDicGlobalVar.find(vIn[curPos].word) != m_mapDicGlobalVar.end())
-				{
-					VarInfo info;
-					info.nVarInfo = m_mapDicGlobalVar[vIn[curPos].word];
-					nClassIndex = info.dwPos;
-					pVar = &vGlobalNumVar[nClassIndex];
-				}
-				if (pVar && pVar->cType == EScriptVal_ClassPointIndex)
-				{
-					if (LoadAndPushClassPoint(vIn, curPos, vOut) == ECompile_ERROR)
-					{
-						return ECompile_ERROR;
+						break;
 					}
 				}
-				else
+				else if (nextWord.word == ",")
 				{
-					strError = "LoadFormulaSentence(Class pointer variable should be handled)";
-					nErrorWordPos = curPos;
+					if (nBracketSize <= 0)
+					{
+						break;
+					}
+				}
+				vParmCode.push_back(nextWord);
+			}
+			if (vParmCode.size() > 0)
+			{
+				tagCodeSection vTemp;
+				if (LoadFormulaSentence(vParmCode, pCode, vTemp) == ECompile_ERROR)
+				{
 					return ECompile_ERROR;
 				}
-
+				sTempCode.push(vTemp);
+				nParamNum++;
 			}
-		}
-		else
-		{
-			if (LoadFormulaRecursion(vIn, curPos, vOut, nVarType) == ECompile_ERROR)
+			if (nextWord.word == ")")
 			{
-				return ECompile_ERROR;
+				break;
 			}
+
 		}
 
-		if (isEvaluate)
+		vOut.push_back(begincode);
+
+		while (!sTempCode.empty())
 		{
-			vOut.push_back(code);
+			tagCodeSection& vTemp = sTempCode.top();
+			for (unsigned int i = 0; i < vTemp.size(); i++)
+			{
+				vOut.push_back(vTemp[i]);
+			}
+			sTempCode.pop();
 		}
+		callCode.cExtend = nParamNum;
 
+		vOut.push_back(classcode);
+		vOut.push_back(callCode);
 
-		pos = curPos;
 		return ECompile_Return;
 	}
 
-	int CScriptCodeLoader::LoadFormulaRecursion(SentenceSourceCode& vIn, unsigned int& pos, vector<CodeStyle>& vOut, int nVarType, int nLevel)
+	int CScriptCodeLoader::LoadFormulaSentence(SentenceSourceCode& vIn, CBaseICode* pCode, std::vector<CodeStyle>& vOut)
 	{
-		//TODO 添加算式默认类型
-		unsigned int curPos = pos;
-		if (vIn.size() - curPos <= 0)
+		GetNewWord(nextWord);
+		if (nextWord.word == "new")
 		{
-			strError = "LoadFormulaSentence(Wrong format of arithmetic statement definition)";
-			nErrorWordPos = curPos;
-			return ECompile_ERROR;
+			GetNewWord(ClassName);
+			CodeStyle newCode;
+			newCode.qwCode = 0;
+			newCode.wInstruct = ECODE_NEW_CLASS;
+			newCode.dwPos = CScriptSuperPointerMgr::GetInstance()->GetClassType(ClassName.word);
+
+			vOut.push_back(newCode);
+			return ECompile_Return;
 		}
-
-		//if (vIn[curPos].word == "(")
-		//{
-		//	//一上来就遇到了括号
-		//	if (LoadBracket(vIn,curPos,vOut) == ECompile_ERROR)
-		//	{
-		//		return ECompile_ERROR;
-		//	}
-		//}
-
+		RevertWord(nextWord);
 		//先检查是不是运算符
 		enum
 		{
@@ -2281,15 +1586,27 @@ namespace zlscript
 		CBaseNode* pRootNode = nullptr;
 		int nResult = ECompile_Return;
 		int nState = 0;
-		while (vIn.size() - curPos > 1)
+		while (true)
 		{
+			if (vIn.empty())
+			{
+				break;
+			}
+			GetNewWord(nextWord);
+
 			CBaseNode* pNode = nullptr;
-			if (vIn[curPos].word == "(")
+			if (nextWord.word == ";")
+			{
+				RevertWord(nextWord);
+				break;
+			}
+			else if (nextWord.word == "(")
 			{
 				nState = 1;
+				RevertWord(nextWord);
 				CVarNode* pVarNode = new CVarNode;
 				//unsigned int nTempPos = curPos;
-				if (LoadBracket(vIn, curPos, vOut) == ECompile_ERROR)
+				if (LoadBracket(vIn, pCode, vOut) == ECompile_ERROR)
 				{
 					nResult = ECompile_ERROR;
 					break;
@@ -2297,7 +1614,7 @@ namespace zlscript
 				nLastNodeType = E_NODE_VAR;
 				pNode = pVarNode;
 			}
-			else if (m_mapDicSignToPRI.find(vIn[curPos].word) == m_mapDicSignToPRI.end())
+			else if (m_mapDicSignToPRI.find(nextWord.word) == m_mapDicSignToPRI.end())
 			{
 				if (nState == 1)
 				{
@@ -2307,56 +1624,15 @@ namespace zlscript
 				nState = 1;
 				CVarNode* pVarNode = new CVarNode;
 				nLastNodeType = E_NODE_VAR;
-				//unsigned int nTempPos = curPos;
-				//先检查是否是类指针
-				int nClassIndex = QueryTempVar(vIn[curPos].word);
-				VarPoint* pVar = nullptr;
-				if (nClassIndex >= 0)
-				{
-					pVar = &m_vTempCodeData.vNumVar[nClassIndex];
-				}
-				else if (m_mapDicGlobalVar.find(vIn[curPos].word) != m_mapDicGlobalVar.end())
-				{
-					VarInfo info;
-					info.nVarInfo = m_mapDicGlobalVar[vIn[curPos].word];
-					nClassIndex = info.dwPos;
-					pVar = &vGlobalNumVar[nClassIndex];
-				}
-				if (pVar && pVar->cType == EScriptVal_ClassPointIndex)
-				{
-					if (vIn[curPos + 1].word == "->")
+
+					RevertWord(nextWord);
+					if (LoadAndPushNumVar(vIn, pCode, pVarNode->vTempCode) == ECompile_ERROR)
 					{
-						if (LoadCallClassFunn(vIn, curPos, pVarNode->vTempCode) == ECompile_ERROR)
-						{
-							//生成压值进堆栈的代码失败
-							nResult = ECompile_ERROR;
-							break;
-						}
+						//生成压值进堆栈的代码失败
+						nResult = ECompile_ERROR;
+						break;
 					}
-					else
-					{
-						//strError = "类指针不能参与四则运算";
-						//nResult = ECompile_ERROR;
-						//break;
-						CodeStyle code;
-						code.qwCode = 0;
-#if _SCRIPT_DEBUG
-						code.nSourseWordIndex = GetSourceLineIndex(vIn, curPos);
-#endif
-						code.wInstruct = ECODE_PUSH;
-						code.cSign = 2;
-						code.cExtend = 0;
-						code.dwPos = nClassIndex;
-						pVarNode->vTempCode.push_back(code);
-						curPos++;
-					}
-				}
-				else if (LoadAndPushNumVar(vIn, curPos, pVarNode->vTempCode) == ECompile_ERROR)
-				{
-					//生成压值进堆栈的代码失败
-					nResult = ECompile_ERROR;
-					break;
-				}
+				//}
 				pNode = pVarNode;
 			}
 			else
@@ -2371,19 +1647,15 @@ namespace zlscript
 				if (nLastNodeType != E_NODE_VAR)
 				{
 					pSignNode->nLevel = 0;
-					pSignNode->unSign = m_mapDicSingleSignToEnum[vIn[curPos].word];
+					pSignNode->unSign = m_mapDicSingleSignToEnum[nextWord.word];
 				}
 				else
 				{
-					pSignNode->nLevel = m_mapDicSignToPRI[vIn[curPos].word];
-					pSignNode->unSign = m_mapDicSignToEnum[vIn[curPos].word];
+					pSignNode->nLevel = m_mapDicSignToPRI[nextWord.word];
+					pSignNode->unSign = m_mapDicSignToEnum[nextWord.word];
 				}
 				nLastNodeType = E_NODE_SIGN;
-#if _SCRIPT_DEBUG
-				pSignNode->nSourseWordIndex = GetSourceLineIndex(vIn, curPos);
-#endif
 				pNode = pSignNode;
-				curPos++;
 			}
 			if (pRootNode == nullptr)
 			{
@@ -2457,25 +1729,6 @@ namespace zlscript
 				}
 			}
 		}
-		//默认变量类型
-	//	CodeStyle varTypeCode;
-	//	varTypeCode.qwCode = 0;
-	//#if _SCRIPT_DEBUG
-	//	varTypeCode.nSourseWordIndex = GetSourceWordsIndex(vIn, curPos);
-	//#endif
-	//	switch (nVarType)
-	//	{
-	//	case EScriptVal_Int:
-	//		varTypeCode.wInstruct = ECODE_INT;
-	//		break;
-	//	case EScriptVal_Double:
-	//		varTypeCode.wInstruct = ECODE_DOUDLE;
-	//		break;
-	//	case EScriptVal_String:
-	//		varTypeCode.wInstruct = ECODE_STRING;
-	//		break;
-	//	}
-	//	vOut.push_back(varTypeCode);
 
 		if (nResult != ECompile_ERROR)
 		{
@@ -2489,139 +1742,177 @@ namespace zlscript
 		{
 			pRootNode->ReleaseSelf();
 		}
-		pos = curPos;
 		return nResult;
 	}
 
-	int CScriptCodeLoader::LoadReturnFormulaRecursion(SentenceSourceCode& vIn, unsigned int& pos, std::vector<CodeStyle>& vOut)
+	int CScriptCodeLoader::LoadAndPushNumVar(SentenceSourceCode& vIn, CBaseICode* pCode, std::vector<CodeStyle>& vOut)
 	{
-		unsigned int curPos = pos;
-		if (m_nCurFunVarType == EScriptVal_ClassPointIndex)
+		GetNewWord(varName);
+		if (vIn.size() > 0)
 		{
-			//脚本函数
-			std::string strName = vIn[curPos].word;
-			if (vIn.size() - curPos > 2 && vIn[curPos + 1].word == "(")
+			GetNewWord(nextWord);
+			if (nextWord.word == "->")
 			{
-				//脚本函数
-				if (m_mapString2CodeIndex.find(strName) != m_mapString2CodeIndex.end())
+				RevertWord(nextWord);
+				RevertWord(varName);
+				if (LoadCallClassFun(vIn, pCode, vOut) == ECompile_ERROR)
 				{
-					LoadCallFunState(vIn, curPos, vOut);
+					return ECompile_ERROR;
+				}
+				return ECompile_Return;
+			}
+			else if (nextWord.word == "(")
+			{
+				RevertWord(nextWord);
+				//脚本函数
+				if (m_mapString2CodeIndex.find(varName.word) != m_mapString2CodeIndex.end())
+				{
+					RevertWord(varName);
+					if (LoadCallFunState(vIn, pCode, vOut) == ECompile_ERROR)
+					{
+						return ECompile_ERROR;
+					}
 				}
 				//回调函数
-				else if (CScriptCallBackFunion::GetFunIndex(strName) >= 0)
+				else if (CScriptCallBackFunion::GetFunIndex(varName.word) >= 0)
 				{
-					LoadCallFunState(vIn, curPos, vOut);
-				}
-				else
-				{
-					//TODO:检查函数调用语句是否完整，定义新函数
-					m_mapString2CodeIndex[strName] = m_vecCodeData.size();
-					tagCodeData data;
-					data.funname = strName;
-					data.nType = EICODE_FUN_NO_CODE;
-					m_vecCodeData.push_back(data);
-					//然后再读取
-					LoadCallFunState(vIn, curPos, vOut);
-				}
-			}
-			else
-			{
-				int nClassIndex = QueryTempVar(vIn[curPos].word);
-				VarPoint* pVar = nullptr;
-				if (nClassIndex >= 0)
-				{
-					pVar = &m_vTempCodeData.vNumVar[nClassIndex];
-				}
-				else if (m_mapDicGlobalVar.find(vIn[curPos].word) != m_mapDicGlobalVar.end())
-				{
-					VarInfo info;
-					info.nVarInfo = m_mapDicGlobalVar[vIn[curPos].word];
-					nClassIndex = info.dwPos;
-					pVar = &vGlobalNumVar[nClassIndex];
-				}
-				if (pVar && pVar->cType == EScriptVal_ClassPointIndex)
-				{
-					if (LoadAndPushClassPoint(vIn, curPos, vOut) == ECompile_ERROR)
+					RevertWord(varName);
+					if (LoadCallFunState(vIn, pCode, vOut) == ECompile_ERROR)
 					{
 						return ECompile_ERROR;
 					}
 				}
 				else
 				{
-					strError = "LoadReturnFormulaRecursion(Class pointer variable should be handled)";
-					nErrorWordPos = curPos;
-					return ECompile_ERROR;
+					//TODO:检查函数调用语句是否完整，定义新函数
+					m_mapString2CodeIndex[varName.word] = m_vecCodeData.size();
+					tagCodeData data;
+					data.funname = varName.word;
+					data.nType = EICODE_FUN_NO_CODE;
+					m_vecCodeData.push_back(data);
+					//然后再读取
+					RevertWord(varName);
+					if (LoadCallFunState(vIn, pCode, vOut) == ECompile_ERROR)
+					{
+						return ECompile_ERROR;
+					}
 				}
-
+				return ECompile_Return;
 			}
+			RevertWord(nextWord);
 		}
-		else
+		//if (vIn.empty())
 		{
-			if (LoadFormulaRecursion(vIn, curPos, vOut, m_nCurFunVarType) == ECompile_ERROR)
+			if (varName.nFlag == E_WORD_FLAG_STRING)
 			{
-				return ECompile_ERROR;
+				//字符串
+				CodeStyle code;
+				m_vTempCodeData.vStrConst.push_back(varName.word);
+				code.wInstruct = ECODE_PUSH;
+				code.cSign = 3;
+				code.cExtend = 0;
+				code.dwPos = m_vTempCodeData.vStrConst.size() - 1;
+				vOut.push_back(code);
+			}
+			else
+			{
+				CodeStyle code;
+				code.qwCode = 0;
+				int nIndexVar = QueryTempVar(varName.word, pCode);
+				if (nIndexVar >= 0)//临时变量
+				{
+					code.wInstruct = ECODE_PUSH;
+					code.cSign = 2;
+					code.cExtend = 0;
+					code.dwPos = nIndexVar;
+					vOut.push_back(code);
+				}
+				else if (m_mapDicGlobalVar.find(varName.word) != m_mapDicGlobalVar.end())//全局变量
+				{
+					code.wInstruct = ECODE_PUSH;
+					code.cSign = 1;
+					code.cExtend = 0;
+					VarInfo info = m_mapDicGlobalVar[varName.word];
+					code.dwPos = info.dwPos;
+					vOut.push_back(code);
+				}
+				else
+				{
+					bool isStr = false;
+					bool isFloat = false;
+					for (unsigned int i = 0; i < varName.word.size(); i++)
+					{
+						if ((varName.word[i] >= '0' && varName.word[i] <= '9'))
+						{
+							//是数字
+						}
+						else if (varName.word[i] == '.')
+						{
+							//是点
+							isFloat = true;
+						}
+						else
+						{
+							isStr = true;
+							break;
+						}
+					}
+					if (isFloat)
+					{
+						m_vTempCodeData.vFloatConst.push_back(stod(varName.word.c_str()));
+						code.wInstruct = ECODE_PUSH;
+						code.cSign = 4;
+						code.cExtend = 1;
+						code.dwPos = m_vTempCodeData.vFloatConst.size() - 1;
+						vOut.push_back(code);
+					}
+					else
+					{
+						code.wInstruct = ECODE_PUSH;
+						code.cSign = 0;
+						code.cExtend = 0;
+						code.dwPos = atoi(varName.word.c_str());
+						vOut.push_back(code);
+					}
+				}
 			}
 		}
 
-		pos = curPos;
 		return ECompile_Return;
 	}
 
-	int CScriptCodeLoader::LoadBracket(SentenceSourceCode& vIn, unsigned int& pos, vector<CodeStyle>& vOut)//读取括号内
+	int CScriptCodeLoader::LoadBracket(SentenceSourceCode& vIn, CBaseICode* pCode, std::vector<CodeStyle>& vOut)
 	{
-		unsigned int curPos = pos;
-		if (vIn.size() - curPos <= 0)
+		GetNewWord(nextWord);
+		if (nextWord.word != "(")
 		{
 			strError = "LoadBracket(Wrong definition format in parentheses)";
-			nErrorWordPos = curPos;
+			nErrorWordPos = nextWord.nSourceWordsIndex;
 			return ECompile_ERROR;
 		}
-
-		//先确认一下是在括号里
-		if (vIn[curPos].word != "(")
+		GetWord(nextWord);
+		if (nextWord.word == ")")
 		{
-			strError = "LoadBracket(Wrong definition format in parentheses)";
-			nErrorWordPos = curPos;
-			return ECompile_ERROR;
-		}
-		curPos++;
-
-		//如果接下来就是括号结束
-		if (vIn[curPos].word == ")")
-		{
-			curPos++;
-			pos = curPos;
 			return ECompile_Return;
 		}
 
-		if (vIn.size() - curPos > 0)
+		if (LoadFormulaSentence(vIn, pCode, vOut) == ECompile_ERROR)
 		{
-			if (LoadFormulaRecursion(vIn, curPos, vOut, EScriptVal_None) == ECompile_ERROR)
-			{
-				return ECompile_ERROR;
-			}
-		}
-
-		if (vIn.size() - curPos <= 0)
-		{
-			strError = "LoadBracket(Wrong definition format in parentheses)";
-			nErrorWordPos = curPos;
 			return ECompile_ERROR;
 		}
-
+		GetWord(nextWord);
 		//结尾没有括号，格式错误
-		if (vIn[curPos].word != ")")
+		if (nextWord.word != ")")
 		{
 			strError = "LoadBracket(Wrong definition format in parentheses)";
-			nErrorWordPos = curPos;
+			nErrorWordPos = nextWord.nSourceWordsIndex;
 			return ECompile_ERROR;
 		}
 
-		curPos++;
-		pos = curPos;
 		return ECompile_Return;
 	}
-	void CScriptCodeLoader::GetGlobalVar(vector<CScriptCodeLoader::VarPoint>& vOut)
+
+	void CScriptCodeLoader::GetGlobalVar(vector<StackVarInfo>& vOut)
 	{
 		vOut = vGlobalNumVar;
 	}
@@ -2705,69 +1996,6 @@ namespace zlscript
 #endif
 	}
 
-	void CScriptCodeLoader::ClearStackTempVarInfo()
-	{
-		while (!m_ListTempVarInfo.empty())
-			m_ListTempVarInfo.pop_back();
-	}
-
-	void CScriptCodeLoader::NewTempVarLayer()
-	{
-		tagVarName2Pos mapdic;
-		m_ListTempVarInfo.push_back(mapdic);
-	}
-
-	void CScriptCodeLoader::RemoveTempVarLayer()
-	{
-		if (m_ListTempVarInfo.size())
-			m_ListTempVarInfo.pop_back();
-	}
-
-	bool CScriptCodeLoader::CheckDefTempVar(const char* pStr)
-	{
-		auto rit = m_ListTempVarInfo.rbegin();
-		if (rit != m_ListTempVarInfo.rend())
-		{
-			tagVarName2Pos& mapdic = *rit;
-			auto itDic = mapdic.find(pStr);
-			if (itDic != mapdic.end())
-			{
-				return true;
-			}
-		}
-		return false;
-	}
-
-	unsigned int CScriptCodeLoader::GetTempVarIndex(const char* pStr)
-	{
-		if (pStr == nullptr)
-		{
-			return m_nTempVarIndexError;
-		}
-		unsigned int result = m_nTempVarIndexError;
-		auto rit = m_ListTempVarInfo.rbegin();
-		for (; rit != m_ListTempVarInfo.rend(); rit++)
-		{
-			tagVarName2Pos& mapdic = *rit;
-			auto itDic = mapdic.find(pStr);
-			if (itDic != mapdic.end())
-			{
-				return itDic->second;
-			}
-		}
-		return result;
-	}
-
-	bool CScriptCodeLoader::NewTempVarIndex(const char* pStr, unsigned int nIndex)
-	{
-		if (pStr == nullptr)
-		{
-			return false;
-		}
-		tagVarName2Pos& mapDic = m_ListTempVarInfo.back();
-		mapDic[pStr] = nIndex;
-		return true;
-	}
 
 	void CScriptCodeLoader::SaveToBin()
 	{
@@ -3052,7 +2280,7 @@ namespace zlscript
 	}
 	unsigned int CScriptCodeLoader::GetSourceWordsIndex(unsigned int nIndex)
 	{
-		std::function<unsigned int(unsigned int , unsigned int)> fun;
+		std::function<unsigned int(unsigned int, unsigned int)> fun;
 		fun = [&](unsigned int BeginPos, unsigned int EndPos) {
 			if (EndPos - BeginPos > 1)
 			{
@@ -3083,8 +2311,8 @@ namespace zlscript
 			}
 			return  m_vScoureLines.size();
 		};
-		
-		return fun(0, m_vSourceWords.size()-1);
+
+		return fun(0, m_vSourceWords.size() - 1);
 	}
 	unsigned int CScriptCodeLoader::GetSourceLineIndex(SentenceSourceCode& vIn, unsigned int pos)
 	{
@@ -3114,5 +2342,6 @@ namespace zlscript
 	CScriptCodeLoader::tagCodeData::tagCodeData()
 	{
 		nType = EICODE_FUN_DEFAULT;
+		nDefaultReturnType = EScriptVal_None;
 	}
 }

@@ -1,0 +1,132 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="资源文件">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="code">
+      <UniqueIdentifier>{c8e40ca2-7d47-4577-9077-c4902780ac6a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="main">
+      <UniqueIdentifier>{3a9b9edb-60eb-4e03-8fcb-39f053c89800}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\class\EMicroCodeType.h">
+      <Filter>code</Filter>
+    </ClInclude>
+    <ClInclude Include="..\class\EScriptSentenceType.h">
+      <Filter>code</Filter>
+    </ClInclude>
+    <ClInclude Include="..\class\EScriptVariableType.h">
+      <Filter>code</Filter>
+    </ClInclude>
+    <ClInclude Include="..\class\ScriptCallBackFunion.h">
+      <Filter>code</Filter>
+    </ClInclude>
+    <ClInclude Include="..\class\ScriptCodeLoader.h">
+      <Filter>code</Filter>
+    </ClInclude>
+    <ClInclude Include="..\class\scriptcommon.h">
+      <Filter>code</Filter>
+    </ClInclude>
+    <ClInclude Include="..\class\ScriptDataMgr.h">
+      <Filter>code</Filter>
+    </ClInclude>
+    <ClInclude Include="..\class\ScriptEventMgr.h">
+      <Filter>code</Filter>
+    </ClInclude>
+    <ClInclude Include="..\class\ScriptExecBlock.h">
+      <Filter>code</Filter>
+    </ClInclude>
+    <ClInclude Include="..\class\ScriptStack.h">
+      <Filter>code</Filter>
+    </ClInclude>
+    <ClInclude Include="..\class\ScriptSuperPointer.h">
+      <Filter>code</Filter>
+    </ClInclude>
+    <ClInclude Include="..\class\ScriptVirtualMachine.h">
+      <Filter>code</Filter>
+    </ClInclude>
+    <ClInclude Include="..\class\zStringBuffer.h">
+      <Filter>code</Filter>
+    </ClInclude>
+    <ClInclude Include="..\class\zByteArray.h">
+      <Filter>code</Filter>
+    </ClInclude>
+    <ClInclude Include="..\class\ZLScript.h">
+      <Filter>code</Filter>
+    </ClInclude>
+    <ClInclude Include="..\class\ScriptDebugPrint.h">
+      <Filter>code</Filter>
+    </ClInclude>
+    <ClInclude Include="..\class\ScriptTriggerMgr.h">
+      <Filter>code</Filter>
+    </ClInclude>
+    <ClInclude Include="..\class\ScriptClassMgr.h">
+      <Filter>code</Filter>
+    </ClInclude>
+    <ClInclude Include="..\class\ScriptPointInterface.h">
+      <Filter>code</Filter>
+    </ClInclude>
+    <ClInclude Include="..\class\ScriptIntermediateCode.h">
+      <Filter>code</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\class\ScriptCallBackFunion.cpp">
+      <Filter>code</Filter>
+    </ClCompile>
+    <ClCompile Include="..\class\ScriptCodeLoader.cpp">
+      <Filter>code</Filter>
+    </ClCompile>
+    <ClCompile Include="..\class\ScriptDataMgr.cpp">
+      <Filter>code</Filter>
+    </ClCompile>
+    <ClCompile Include="..\class\ScriptEventMgr.cpp">
+      <Filter>code</Filter>
+    </ClCompile>
+    <ClCompile Include="..\class\ScriptExecBlock.cpp">
+      <Filter>code</Filter>
+    </ClCompile>
+    <ClCompile Include="..\class\ScriptStack.cpp">
+      <Filter>code</Filter>
+    </ClCompile>
+    <ClCompile Include="..\class\ScriptSuperPointer.cpp">
+      <Filter>code</Filter>
+    </ClCompile>
+    <ClCompile Include="..\class\ScriptVirtualMachine.cpp">
+      <Filter>code</Filter>
+    </ClCompile>
+    <ClCompile Include="..\class\zStringBuffer.cpp">
+      <Filter>code</Filter>
+    </ClCompile>
+    <ClCompile Include="main.cpp">
+      <Filter>main</Filter>
+    </ClCompile>
+    <ClCompile Include="..\class\ScriptDebugPrint.cpp">
+      <Filter>code</Filter>
+    </ClCompile>
+    <ClCompile Include="..\class\ScriptTriggerMg.cpp">
+      <Filter>code</Filter>
+    </ClCompile>
+    <ClCompile Include="..\class\ScriptClassMgr.cpp">
+      <Filter>code</Filter>
+    </ClCompile>
+    <ClCompile Include="..\class\ScriptPointInterface.cpp">
+      <Filter>code</Filter>
+    </ClCompile>
+    <ClCompile Include="..\class\scriptcommon.cpp">
+      <Filter>code</Filter>
+    </ClCompile>
+    <ClCompile Include="..\class\ScriptIntermediateCode.cpp">
+      <Filter>code</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="test.script">
+      <Filter>资源文件</Filter>
+    </None>
+  </ItemGroup>
+</Project>

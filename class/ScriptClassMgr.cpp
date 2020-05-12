@@ -18,7 +18,7 @@ namespace zlscript
 		{
 			if (pPoint->IsInitScriptPointIndex())
 			{
-				RemoveClassObject(pPoint->GetScriptPointIndex());
+				CScriptSuperPointerMgr::GetInstance()->RemoveClassPoint(pPoint->GetScriptPointIndex());
 				pPoint->ClearScriptPointIndex();
 			}
 		}

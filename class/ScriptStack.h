@@ -375,4 +375,12 @@ namespace zlscript
 		if (val)
 			Stack.push(*val);
 	}
+
+	inline void ScriptVector_PushEmptyVar(CScriptStack& Stack)
+	{
+		StackVarInfo var;
+		var.cType = EScriptVal_None;
+		var.Int64 = 0;
+		Stack.push(var);
+	}
 }

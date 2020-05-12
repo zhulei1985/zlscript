@@ -23,6 +23,7 @@
 #include <functional> 
 #include <string>
 #include <vector>
+#include <set>
 
 namespace zlscript
 {
@@ -74,6 +75,7 @@ namespace zlscript
 		std::vector<tagParameterInfo> vParmeterInfo;
 		virtual int RunFun(CScriptRunState* pState) = 0;
 		virtual CScriptBaseClassFunInfo* Copy() = 0;
+		virtual const char* GetFunName() = 0;
 	};
 
 	class CScriptPointInterface
@@ -89,27 +91,27 @@ namespace zlscript
 		__int64 GetScriptPointIndex();
 		void ClearScriptPointIndex();
 
-		void SetID(__int64 nID);
-		__int64 GetID();
-
 		void SetFun(int id, CScriptBaseClassFunInfo* pInfo);
 		int RunFun(int id, CScriptRunState* pState);
 
 		CScriptPointInterface(const CScriptPointInterface& val);
-		CScriptPointInterface& operator=(const CScriptPointInterface& val);
+		virtual CScriptPointInterface& operator=(const CScriptPointInterface& val);
 
-	private:
+
+	protected:
+		bool m_bInit;//是否初始化了
 		//用于所有脚本可用的类实例索引，作用范围是本地
 		__int64 m_nScriptPointIndex;
 		static __int64 s_nScriptPointIndexCount;
 
-		//用于本类所有实例的索引ID，作用范围是全体
-		__int64 m_nID;
+
+
 
 		std::map<int, CScriptBaseClassFunInfo*> m_mapScriptClassFun;
 
 		std::mutex m_FunLock;
 		//std::shared_ptr<std::mutex> m_FunLock;
+
 	};
 
 }

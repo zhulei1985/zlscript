@@ -33,6 +33,8 @@ namespace zlscript
 			}
 			listEvent.clear();
 		}
+
+		isBlocking = false;
 	}
 
 
@@ -74,6 +76,29 @@ namespace zlscript
 		Unlock();
 	}
 
+	void CScriptEventMgr::RemoveEvent(int nEventType, int nChannelID)
+	{
+		auto& MapChannel = m_mapEvent[nEventType];
+
+		auto it = MapChannel.m_mapEventChannel.find(nChannelID);
+		if (it != MapChannel.m_mapEventChannel.end())
+		{
+			MapChannel.m_mapEventChannel.erase(it);
+		}
+	}
+
+	void CScriptEventMgr::SetEventBlock(int nEventType, int nID, bool IsBlock)
+	{
+		auto& MapChannel = m_mapEvent[nEventType];
+
+		auto it = MapChannel.m_mapEventChannel.find(nID);
+		if (it != MapChannel.m_mapEventChannel.end())
+		{
+			it->second.isBlocking = IsBlock;
+		}
+	}
+
+
 	bool CScriptEventMgr::SendEvent(int nEventType, int nSendID, CScriptStack& vIn, int nRecvID)
 	{
 		Lock();
@@ -86,9 +111,13 @@ namespace zlscript
 			for (auto it = mapChannel.m_mapEventChannel.begin(); it != mapChannel.m_mapEventChannel.end(); it++)
 			{
 				auto pCur = &it->second;
-				if (pCur->listEvent.size() < nAmend)
+				if (!pCur->isBlocking && pCur->listEvent.size() < nAmend)
 				{
 					nAmend = pCur->listEvent.size();
+					pChannel = pCur;
+				}
+				if (pChannel == nullptr)
+				{
 					pChannel = pCur;
 				}
 			}

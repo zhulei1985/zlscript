@@ -58,4 +58,6 @@ namespace zlscript
 		ScriptVector_PushVar(vRetrunVars, pName);
 		CScriptEventMgr::GetInstance()->SendEvent(E_SCRIPT_EVENT_RUNSCRIPT,0, vRetrunVars);
 	}
+
+
 }

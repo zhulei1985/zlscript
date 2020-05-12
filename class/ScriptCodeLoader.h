@@ -25,6 +25,9 @@
 #include <stack>
 #include <functional> 
  //#include "scriptcommon.h"
+#include "ScriptIntermediateCode.h"
+#include "ScriptStack.h"
+
 namespace zlscript
 {
 	class CScriptCodeLoader
@@ -65,95 +68,47 @@ namespace zlscript
 		std::map<std::string, unsigned short> m_mapDicFunToICode;
 
 		void initDic();
-	public:
-#if _SCRIPT_DEBUG
-		struct CodeStyle
-		{
-			union
-			{
-				__int64 qwCode;
-				struct
-				{
-					unsigned char cSign;//标志
-					unsigned char cExtend;//扩展标志
-					unsigned short wInstruct;//指令ID
-					unsigned int dwPos;//变量地址
-				};
-			};
-			unsigned int nSourseWordIndex;
-		};
-#else
-		union CodeStyle
-		{
-			__int64 qwCode;
-			struct
-			{
-				unsigned char cSign;//标志
-				unsigned char cExtend;//扩展标志
-				unsigned short wInstruct;//指令ID
-				unsigned int dwPos;//变量地址
-			};
-		};
-#endif
-		union VarInfo
-		{
-			__int64 nVarInfo;
-			struct
-			{
-				unsigned char cType; // 1,整数,2 浮点 3,字符 4 类指针
-				unsigned char cGlobal;// 1 表示全局变量
-				unsigned short wSize; // 大于1表示是数组下标
-				unsigned int dwPos;//位置ID
-			};
-		};
-		//全局变量字典
-		std::map<std::string, __int64> m_mapDicGlobalVar;
 
-
-
-		////脚本定义的函数索引
-		//map<string,WORD> m_mapDicScriptFun;
-		////脚本定义的函数总数
-		//WORD wScriptFunAmount;
-
-		////临时变量字典
-		//map<string,VarInfo> m_mapDicTempVar;
-		////临时变量总数
-		//map<unsigned char,unsigned int> wTempVarAmonut;
 	public:
 		//*****************代码*******************//
 
 		//typedef	vector<CodeStyle> tagCodeData;
 
-		struct VarPoint
-		{
-			unsigned char cType;
-			unsigned short unArraySize;
-			union
-			{
-				double* pDouble;
-				__int64* pInt64;
-				char* pStr;
-				unsigned int nClassPointIndex;
-			};
-		};
+		//2020/5/5 不再直接做成数组的形式,与堆栈的数据类型统一
+		//struct VarPoint
+		//{
+		//	unsigned char cType;
+		//	
+		//	//unsigned short unArraySize;
+		//	union
+		//	{
+		//		double* pDouble;
+		//		__int64* pInt64;
+		//		char* pStr;
+		//		unsigned int nClassPointIndex;
+		//	};
+		//};
 
 		struct tagCodeData
 		{
 			tagCodeData();
 			int nType;
 			std::vector<std::string> vStrConst;//字符常量
-			std::vector<VarPoint> vNumVar;//临时变量
+			std::vector<StackVarInfo> vNumVar;//临时变量
 			std::vector<CodeStyle> vCodeData;
 			std::vector<double> vFloatConst;//浮点常量
 
 			std::string filename;
 			std::string funname;
+
+			int nDefaultReturnType;//默认返回值类型
 		};
 
 	private:
+		//全局变量字典
+		std::map<std::string, VarInfo> m_mapDicGlobalVar;
 		//全局变量库
-		std::vector<VarPoint> vGlobalNumVar;//变量
+		std::vector<StackVarInfo> vGlobalNumVar;//变量
 
 		//代码库
 		std::vector<tagCodeData> m_vecCodeData;
@@ -161,7 +116,7 @@ namespace zlscript
 
 		std::map<std::string, int> m_mapString2CodeIndex;
 	public:
-		void GetGlobalVar(std::vector<VarPoint>& vOut);
+		void GetGlobalVar(std::vector<StackVarInfo>& vOut);
 		int GetCodeSize()
 		{
 			return (int)m_vecCodeData.size();
@@ -207,24 +162,7 @@ namespace zlscript
 		//返回true表示该字符处理完毕
 		bool RunLexical(std::string& strOut, char ch, unsigned int nSourceIndex);
 	private:
-		//一句源码
-		enum E_SOURCE_WORD_FLAG
-		{
-			E_WORD_FLAG_NORMAL,
-			E_WORD_FLAG_STRING,
-		};
-		struct tagSourceWord
-		{
-			tagSourceWord()
-			{
-				nFlag = E_WORD_FLAG_NORMAL;
-				nSourceWordsIndex = -1;
-			}
-			int nFlag;
-			std::string word;
-			unsigned int nSourceWordsIndex;
-		};
-		typedef std::vector<tagSourceWord> SentenceSourceCode;
+
 		std::stack<int> m_stackLexical;//词法分析机的状态堆栈
 		SentenceSourceCode m_vCurSourceSentence;
 		//vector<SentenceSourceCode> m_vLexicalData;//存放词法分析机的生成结果
@@ -234,50 +172,42 @@ namespace zlscript
 
 		//检查变量名是否合法
 		bool CheckVarName(std::string varName);
-		////定义临时变量
-		int DefineTempVar(SentenceSourceCode& vIn, unsigned int& pos/*,vector<CodeStyle>  &vOut*/);
 		//查询临时变量的index
-		int QueryTempVar(std::string varName);
-		//生成一个向堆栈压数值的代码
-		int LoadAndPushVar(SentenceSourceCode& vIn, unsigned int& pos, std::vector<CodeStyle>& vOut);
-		int LoadAndPushNumVar(SentenceSourceCode& vIn, unsigned int& pos, std::vector<CodeStyle>& vOut);
-		int LoadAndPushClassPoint(SentenceSourceCode& vIn, unsigned int& pos, std::vector<CodeStyle>& vOut);
-		int LoadCallClassFunn(SentenceSourceCode& vIn, unsigned int& pos, std::vector<CodeStyle>& vOut);
-		int LoadAndPushStrVar(SentenceSourceCode& vIn, unsigned int& pos, std::vector<CodeStyle>& vOut);
-
-		//给全局变量设置默认值
-		int SetVarDefaultValue(SentenceSourceCode& vIn, unsigned int& pos, __int64 info);
-		//读取函数调用
-		int LoadCallFunState(SentenceSourceCode& vIn, unsigned int& pos, std::vector<CodeStyle>& vOut);
-		//读取if语句
-		int LoadIfSentence(SentenceSourceCode& vIn, unsigned int& pos, std::vector<CodeStyle>& vOut);
-		//读取for语句
-		int LoadForSentence(SentenceSourceCode& vIn, unsigned int& pos, std::vector<CodeStyle>& vOut);
-		//读取while语句
-		int LoadWhileSentence(SentenceSourceCode& vIn, unsigned int& pos, std::vector<CodeStyle>& vOut);
-		//读取switch语句
-		int LoadSwitchSentence(SentenceSourceCode& vIn, unsigned int& pos, std::vector<CodeStyle>& vOut);
-
-		////读取算式的状态机
-		int LoadFormulaSentence(SentenceSourceCode& vIn, unsigned int& pos, std::vector<CodeStyle>& vOut);
-		///////////////分解算式函数//////////////////
-		//TODO 优先级缺陷，修正待测试
-		int LoadFormulaRecursion(SentenceSourceCode& vIn, unsigned int& pos, std::vector<CodeStyle>& vOut, int nVarType, int nLevel = 1);//读取数值运算
-
-		int LoadReturnFormulaRecursion(SentenceSourceCode& vIn, unsigned int& pos, std::vector<CodeStyle>& vOut);//读取数值运算
-
-		//int LoadAddAndSum(vector<string> &vIn,unsigned int &pos,vector<CodeStyle> &vOut);//读取加减
-		//int LoadMulAndDivAndMod(vector<string> &vIn,unsigned int &pos,vector<CodeStyle> &vOut);//读取乘除求余
-		int LoadBracket(SentenceSourceCode& vIn, unsigned int& pos, std::vector<CodeStyle>& vOut);//读取括号内
+		int QueryTempVar(std::string varName, CBaseICode *pICode);
 		/////////////////////////////////////////////
 
-		////定义函数的状态
-		int LoadDefineFunState(SentenceSourceCode& vIn, unsigned int& pos);
-		////读取{}块的状态机
-		int LoadBlockState(SentenceSourceCode& vIn, unsigned int& pos, std::vector<CodeStyle>& vOut, std::vector<CodeStyle> vBackCode);
+		bool RunCompileState(SentenceSourceCode& vIn);
 
-		bool RunCompileState(SentenceSourceCode& vIn, unsigned int& pos);
+		int LoadDefineFunctionParameter(SentenceSourceCode& vIn, CBaseICode *pCode);
+		int LoadDefineTempVar(SentenceSourceCode& vIn, CBaseICode* pCode);
 
+		int LoadDefineFunState(SentenceSourceCode& vIn);
+		//读取{}块的状态机
+		int LoadBlockState(SentenceSourceCode& vIn, CBaseICode* pCode, int nType);
+		//读取if语句
+		int LoadIfSentence(SentenceSourceCode& vIn, CBaseICode* pCode, int nType);
+		//读取for语句
+		int LoadForSentence(SentenceSourceCode& vIn, CBaseICode* pCode, int nType);
+		//读取while语句
+		int LoadWhileSentence(SentenceSourceCode& vIn, CBaseICode* pCode, int nType);
+		//读取switch语句
+		int LoadSwitchSentence(SentenceSourceCode& vIn, CBaseICode* pCode, int nType);
+		//读取switch语句
+		int LoadReturnSentence(SentenceSourceCode& vIn, CBaseICode* pCode, int nType);
+
+		//读取一条语句
+		int LoadOneSentence(SentenceSourceCode& vIn, CBaseICode* pCode, int nType, std::string endFlag=";");
+
+		//读取函数调用
+		int LoadCallFunState(SentenceSourceCode& vIn, CBaseICode* pCode, std::vector<CodeStyle>& vOut);
+		//读取类函数调用
+		int LoadCallClassFun(SentenceSourceCode& vIn, CBaseICode* pCode, std::vector<CodeStyle>& vOut);
+		////读取算式的状态机
+		int LoadFormulaSentence(SentenceSourceCode& vIn, CBaseICode* pCode, std::vector<CodeStyle>& vOut);
+		//生成一个向堆栈压数值的代码
+		int LoadAndPushNumVar(SentenceSourceCode& vIn, CBaseICode* pCode, std::vector<CodeStyle>& vOut);
+		//读取括号内
+		int LoadBracket(SentenceSourceCode& vIn, CBaseICode* pCode,  std::vector<CodeStyle>& vOut);
 	private:
 		//编译时的中间指令
 		enum EICodeType
@@ -310,24 +240,20 @@ namespace zlscript
 		typedef std::vector<CodeStyle> tagCodeSection;
 
 		int m_nCurFunVarType;
-		tagCodeData m_vTempCodeData;
+
 		//vector<CodeStyle> m_vICodeData;
 
-
+		CFunICode* m_pFun_ICode;
 		//临时变量管理
 	protected:
-		void ClearStackTempVarInfo();
-		void NewTempVarLayer();
-		void RemoveTempVarLayer();
-		bool CheckDefTempVar(const char* pStr);
-		unsigned int GetTempVarIndex(const char* pStr);
-		bool NewTempVarIndex(const char* pStr, unsigned int nIndex);
+
 	protected:
 		typedef std::map<std::string, int> tagVarName2Pos;
 		std::list<tagVarName2Pos> m_ListTempVarInfo;;
-		const unsigned int m_nTempVarIndexError = -1;
 
 		std::stack<char> m_stackBlockLayer;
+
+		tagCodeData m_vTempCodeData;
 	public:
 		void SaveToBin();
 		void LoadFormBin();
