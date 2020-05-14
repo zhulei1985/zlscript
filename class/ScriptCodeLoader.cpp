@@ -610,6 +610,8 @@ namespace zlscript
 		{
 			RevertWord(nextWord);
 			RevertWord(strName);
+
+			return ECompile_Next;
 		}
 		return ECompile_Return;
 	}
@@ -739,6 +741,7 @@ namespace zlscript
 		{
 			m_vTempCodeData.vCodeData.clear();
 			m_vTempCodeData.vNumVar.clear();
+			m_vTempCodeData.vStrConst.clear();
 			//一个新函数
 			m_pFun_ICode = CICodeMgr::GetInstance()->New<CFunICode>();
 
@@ -848,6 +851,7 @@ namespace zlscript
 			}
 			else if (nextWord.word == "{")
 			{
+				RevertWord(nextWord);
 				nReturn = LoadBlockState(vIn, pBlockICode, 0);
 			}
 			else if (nextWord.word == "if")
@@ -880,7 +884,7 @@ namespace zlscript
 			{
 				RevertWord(nextWord);
 				nReturn = LoadDefineTempVar(vIn, pBlockICode);
-				if (nReturn != ECompile_ERROR)
+				if (nReturn == ECompile_Next)
 					nReturn = LoadOneSentence(vIn, pBlockICode, 0);
 			}
 			else
@@ -1098,6 +1102,10 @@ namespace zlscript
 		pCode->AddICode(nType, pSentenceICode);
 
 		GetNewWord(nextWord);
+		if (nextWord.word == ";")
+		{
+			return ECompile_Return;
+		}
 		if (nextWord.word == "delete")
 		{
 			GetWord(nextWord);
@@ -1251,9 +1259,6 @@ namespace zlscript
 		CodeStyle callCode;
 		callCode.qwCode = 0;
 		callCode.wInstruct = ECODE_CALL;
-#if _SCRIPT_DEBUG
-		callCode.nSourseWordIndex = GetSourceLineIndex(vIn, curPos);
-#endif
 
 		int nCallFunIndex = CScriptCallBackFunion::GetFunIndex(FunName.word);
 		if (nCallFunIndex >= 0)
@@ -1550,9 +1555,7 @@ namespace zlscript
 			}
 			unsigned short unSign;
 			int nLevel;
-#if _SCRIPT_DEBUG
-			unsigned int nSourseWordIndex;
-#endif
+
 			void addCode(vector<CodeStyle>& vOut)
 			{
 				CBaseNode::addCode(vOut);
@@ -1560,9 +1563,7 @@ namespace zlscript
 				CodeStyle code;
 				code.qwCode = 0;
 				code.wInstruct = unSign;
-#if _SCRIPT_DEBUG
-				code.nSourseWordIndex = nSourseWordIndex;
-#endif
+
 				vOut.push_back(code);
 			}
 		};
@@ -2316,15 +2317,16 @@ namespace zlscript
 	}
 	unsigned int CScriptCodeLoader::GetSourceLineIndex(SentenceSourceCode& vIn, unsigned int pos)
 	{
-		if (vIn.size() <= 0)
-		{
-			return 0;
-		}
-		if (pos < vIn.size())
-		{
-			return vIn[pos].nSourceWordsIndex;
-		}
-		return vIn[vIn.size() - 1].nSourceWordsIndex;
+		//if (vIn.size() <= 0)
+		//{
+		//	return 0;
+		//}
+		//if (pos < vIn.size())
+		//{
+		//	return vIn[pos].nSourceWordsIndex;
+		//}
+		//return vIn[vIn.size() - 1].nSourceWordsIndex;
+		return 0;
 	}
 #endif
 

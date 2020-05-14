@@ -836,9 +836,7 @@ namespace zlscript
 		if (m_nCodePoint < m_pCodeData->vCodeData.size())
 		{
 			CodeStyle& code = m_pCodeData->vCodeData[m_nCodePoint];
-#if _SCRIPT_DEBUG
-			return CScriptCodeLoader::GetInstance()->GetSourceWords(code.nSourseWordIndex);
-#endif
+
 		}
 		return std::string();
 	}
