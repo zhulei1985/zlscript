@@ -65,12 +65,12 @@
            可以将指定格式的c++类，注册后交与脚本使用。
            首先，c++类必须继承CScriptPointInterface，例:
            c++代码:
-              class CTest : public 类必须继承CScriptPointInterface
+              class CTest : public CScriptPointInterface
               {
               };
            然后，需要声明和定义，脚本可以调用的类函数,格式为int [函数名](CScriptRunState* pState) ,例:
            c++代码:
-              class CTest : public 类必须继承CScriptPointInterface
+              class CTest : public CScriptPointInterface
               {
               public:
                 int Fun2Script(CScriptRunState* pState)
@@ -89,17 +89,17 @@
               };
             在编译脚本的代码前，必须要注册类名和类的函数名以便编译器识别:
             c++代码:
-              RegisterClassType("CTest", CTest);
-	            RegisterClassFun1("Fun", CTest);
+              RegisterClassType("CTest", CTest);//注册类
+	      RegisterClassFun1("Fun", CTest);//注册类函数
             最后，在类实例化的时候，需要将类实例的指针和函数指针传给脚本执行器,可以写在类的构造函数里:
             c++代码:
-              class CTest : public 类必须继承CScriptPointInterface
+              class CTest : public CScriptPointInterface
               {
               public:
                 CTest()
                 {
-                  AddClassObject(CScriptPointInterface::GetScriptPointIndex(), this);
-		              RegisterClassFun(Fun, this, &CTest::Fun2Script);
+                  AddClassObject(CScriptPointInterface::GetScriptPointIndex(), this);//注册类实例指针
+		  RegisterClassFun(Fun, this, &CTest::Fun2Script);//注册类函数指针
                 }
               public:
                 int Fun2Script(CScriptRunState* pState);
