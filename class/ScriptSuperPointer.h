@@ -25,7 +25,6 @@
 #include <vector>
 
 #include "ScriptPointInterface.h"
-#include "ScriptClassMgr.h"
 
 namespace zlscript
 {
@@ -235,7 +234,7 @@ namespace zlscript
 
 			CScriptSuperPointer<T>::s_strClassName = classname;
 
-			m_mapClassMgr[nClassTypeCount] = CScriptClassMgr<T>::GetInstance();
+			m_mapClassMgr[nClassTypeCount] = GetScriptClassMgr<T>();//CScriptClassMgr<T>::GetInstance();
 			m_MutexTypeLock.unlock();
 			return true;
 		}

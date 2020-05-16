@@ -23,6 +23,7 @@
 #include <string>
 #include "ScriptStack.h"
 #include "ScriptSuperPointer.h"
+#include "ScriptClassMgr.h"
 
 namespace zlscript
 {
@@ -35,6 +36,7 @@ namespace zlscript
 	public:
 		int GetVal2Script(CScriptRunState* pState);
 		int GetValByIndex2Script(CScriptRunState* pState);
+		int GetNameByIndex2Script(CScriptRunState* pState);
 		int GetSize2Script(CScriptRunState* pState);
 		int SetVal2Script(CScriptRunState* pState);
 		int DelVal2Script(CScriptRunState* pState);
@@ -47,7 +49,8 @@ namespace zlscript
 			return m_vecVars;
 		}
 	private:
-		std::map<std::string, unsigned int> m_mapDic;
+		std::map<std::string, unsigned int> m_mapDicName2Index;
+		std::map<unsigned int,std::string> m_mapDicIndex2Name;
 		std::vector<StackVarInfo> m_vecVars;
 	};
 	class CScriptSubData

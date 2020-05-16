@@ -26,6 +26,7 @@ namespace zlscript
 
 		RegisterClassFun(GetVal, this, &CScriptArray::GetVal2Script);
 		RegisterClassFun(GetValByIndex, this, &CScriptArray::GetValByIndex2Script);
+		RegisterClassFun(GetNameByIndex, this, &CScriptArray::GetNameByIndex2Script);
 		RegisterClassFun(GetSize, this, &CScriptArray::GetSize2Script);
 		RegisterClassFun(SetVal, this, &CScriptArray::SetVal2Script);
 		RegisterClassFun(DelVal, this, &CScriptArray::DelVal2Script);
@@ -44,6 +45,7 @@ namespace zlscript
 
 		RegisterClassFun1("GetVal", CScriptArray);
 		RegisterClassFun1("GetValByIndex", CScriptArray);
+		RegisterClassFun1("GetNameByIndex", CScriptArray);
 		RegisterClassFun1("GetSize", CScriptArray);
 		RegisterClassFun1("SetVal", CScriptArray);
 		RegisterClassFun1("DelVal", CScriptArray);
@@ -60,8 +62,8 @@ namespace zlscript
 		std::string str = pState->PopCharVarFormStack();
 
 		pState->ClearFunParam();
-		auto it = m_mapDic.find(str);
-		if (it != m_mapDic.end())
+		auto it = m_mapDicName2Index.find(str);
+		if (it != m_mapDicName2Index.end())
 		{
 			if (it->second < m_vecVars.size())
 			{
@@ -90,6 +92,26 @@ namespace zlscript
 		return ECALLBACK_FINISH;
 	}
 
+	int CScriptArray::GetNameByIndex2Script(CScriptRunState* pState)
+	{
+		if (pState == nullptr)
+		{
+			return ECALLBACK_ERROR;
+		}
+		unsigned int index = pState->PopIntVarFormStack();
+		pState->ClearFunParam();
+		auto it = m_mapDicIndex2Name.find(index);
+		if (it != m_mapDicIndex2Name.end())
+		{
+			pState->PushVarToStack(it->second.c_str());
+		}
+		else
+		{
+			pState->PushEmptyVarToStack();
+		}
+		return ECALLBACK_FINISH;
+	}
+
 	int CScriptArray::GetSize2Script(CScriptRunState* pState)
 	{
 		if (pState == nullptr)
@@ -109,8 +131,8 @@ namespace zlscript
 			return ECALLBACK_ERROR;
 		}
 		std::string str = pState->PopCharVarFormStack();
-		auto it = m_mapDic.find(str);
-		if (it != m_mapDic.end())
+		auto it = m_mapDicName2Index.find(str);
+		if (it != m_mapDicName2Index.end())
 		{
 			if (it->second < m_vecVars.size())
 			{
@@ -121,7 +143,8 @@ namespace zlscript
 		}
 
 		m_vecVars.push_back(pState->PopVarFormStack());
-		m_mapDic[str] = m_vecVars.size() - 1;
+		m_mapDicName2Index[str] = m_vecVars.size() - 1;
+		m_mapDicIndex2Name[m_vecVars.size() - 1] = str;
 		pState->ClearFunParam();
 		return ECALLBACK_FINISH;
 	}
@@ -134,13 +157,22 @@ namespace zlscript
 		}
 		std::string str = pState->PopCharVarFormStack();
 		unsigned int index = -1;
-		auto it = m_mapDic.find(str);
-		if (it != m_mapDic.end())
 		{
-			if (it->second < m_vecVars.size())
+			auto it = m_mapDicName2Index.find(str);
+			if (it != m_mapDicName2Index.end())
 			{
-				index = it->second;
-				m_mapDic.erase(it);
+				if (it->second < m_vecVars.size())
+				{
+					index = it->second;
+					m_mapDicName2Index.erase(it);
+				}
+			}
+		}
+		{
+			auto it = m_mapDicIndex2Name.find(index);
+			if (it != m_mapDicIndex2Name.end())
+			{
+				m_mapDicIndex2Name.erase(it);
 			}
 		}
 		if (index >= 0)
@@ -152,8 +184,8 @@ namespace zlscript
 			}
 			m_vecVars.erase(itDel);
 
-			it = m_mapDic.begin();
-			for (; it != m_mapDic.end(); it++)
+			auto it = m_mapDicName2Index.begin();
+			for (; it != m_mapDicName2Index.end(); it++)
 			{
 				if (it->second > index)
 				{
@@ -172,7 +204,7 @@ namespace zlscript
 			return ECALLBACK_ERROR;
 		}
 		m_vecVars.clear();
-		m_mapDic.clear();
+		m_mapDicName2Index.clear();
 		pState->ClearFunParam();
 		return ECALLBACK_FINISH;
 	}

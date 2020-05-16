@@ -20,6 +20,7 @@
 #include <unordered_map>
 #include "ScriptPointInterface.h"
 #include "ScriptSuperPointer.h"
+
 namespace zlscript
 {
 	class CScriptPointInterface;
@@ -65,7 +66,7 @@ namespace zlscript
 		}
 	private:
 		__int64 m_nIDCount;
-		//������ʵ��
+		//本地类实例
 		std::unordered_map<__int64, T*> m_mapLocalClassPoint;
 
 
@@ -81,6 +82,7 @@ namespace zlscript
 	inline CScriptPointInterface* CScriptClassMgr<T>::New()
 	{
 		std::lock_guard<std::mutex> Lock(m_MutexLock);
+		//TODO 以后做缓存优化
 		T* pPoint = new T;
 		if (pPoint)
 		{
@@ -91,22 +93,6 @@ namespace zlscript
 		return pPoint;
 	}
 
-	//template<class T>
-	//inline CScriptPointInterface* CScriptClassMgr<T>::New(__int64 nID)
-	//{
-	//	std::lock_guard<std::mutex> Lock(m_MutexLock);
-	//	T* pPoint = dynamic_cast<T*>(Get(nID));
-	//	if (pPoint == nullptr)
-	//	{
-	//		pPoint = new T;
-	//		if (pPoint)
-	//		{
-	//			pPoint->CScriptPointInterface::SetType(CScriptPointInterface::E_TYPE_IMAGE);
-	//			m_mapImageClassPoint[pPoint->GetScriptPointIndex()] = pPoint;
-	//		}
-	//	}
-	//	return pPoint;
-	//}
 
 	template<class T>
 	inline CScriptPointInterface* CScriptClassMgr<T>::Get(__int64 nID)
@@ -120,17 +106,6 @@ namespace zlscript
 		return nullptr;
 	}
 
-	//template<class T>
-	//inline CScriptPointInterface* CScriptClassMgr<T>::GetImage(__int64 nID)
-	//{
-	//	std::lock_guard<std::mutex> Lock(m_MutexLock);
-	//	auto it = m_mapImageClassPoint.find(nID);
-	//	if (it != m_mapImageClassPoint.end())
-	//	{
-	//		return it->second;
-	//	}
-	//	return nullptr;
-	//}
 
 	template<class T>
 	inline void CScriptClassMgr<T>::Release(CScriptPointInterface* pPoint)
@@ -145,8 +120,15 @@ namespace zlscript
 		//	m_mapImageClassPoint.erase(pPoint->GetID());
 		//}
 		CBaseScriptClassMgr::Release(pPoint);
+		//TODO 以后做缓存优化
 		if (pPoint)
 			delete pPoint;
+	}
+
+	template<class T>
+	inline CBaseScriptClassMgr* GetScriptClassMgr()
+	{
+		return CScriptClassMgr<T>::GetInstance();
 	}
 
 }

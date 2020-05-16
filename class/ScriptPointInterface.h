@@ -31,6 +31,8 @@ namespace zlscript
 
 	template<class T>
 	class CScriptClassMgr;
+	template<class T>
+	CBaseScriptClassMgr* GetScriptClassMgr();
 
 	enum
 	{
