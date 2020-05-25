@@ -650,9 +650,10 @@ namespace zlscript
 									StackVarInfo var;
 									pCurBlock->PushVar(var);
 								}
-								SAFE_DELETE(pBlock);
+
 							}
 						}
+						SAFE_DELETE(pBlock);
 						bBreak = true;
 						break;
 					}
@@ -1118,10 +1119,27 @@ namespace zlscript
 
 	unsigned int CScriptVirtualMachine::Exec(unsigned int nDelay,unsigned int unTimeRes)
 	{
+		std::vector<tagScriptEvent*> vEvent;
+		CScriptEventMgr::GetInstance()->GetEventByChannel(m_nEventListIndex, vEvent);
 		for (auto it = m_mapEventProcess.begin(); it != m_mapEventProcess.end(); it++)
 		{
-			CScriptEventMgr::GetInstance()->ProcessEvent(it->first, m_nEventListIndex, it->second);
+			CScriptEventMgr::GetInstance()->GetEventByType(it->first, vEvent);
 		}
+
+		for (size_t i = 0; i < vEvent.size(); i++)
+		{
+			tagScriptEvent* pEvent = vEvent[i];
+			if (pEvent)
+			{
+				auto it = m_mapEventProcess.find(pEvent->nEventType);
+				if (it != m_mapEventProcess.end())
+				{
+					it->second(pEvent->nSendID, pEvent->m_Parm);
+				}
+			}
+			CScriptEventMgr::GetInstance()->ReleaseEvent(pEvent);
+		}
+		vEvent.clear();
 
 		listRunState::iterator it = m_RunStateList.begin();
 		for (;it != m_RunStateList.end(); )
@@ -1347,7 +1365,7 @@ namespace zlscript
 	{
 		m_mapEventProcess[nEventType] = fun;
 
-		CScriptEventMgr::GetInstance()->RegisterEvent(nEventType, m_nEventListIndex);
+		//CScriptEventMgr::GetInstance()->RegisterEvent(nEventType, m_nEventListIndex);
 	}
 	void CScriptVirtualMachine::EventReturnFun(int nSendID, CScriptStack& ParmInfo)
 	{

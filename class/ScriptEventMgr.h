@@ -38,7 +38,7 @@ namespace zlscript
 	{
 	public:
 		int nSendID;//发送ID
-		int nRecvID;//接收ID
+		int nEventType;//事件类型
 
 		//传递参数
 		CScriptStack m_Parm;
@@ -75,6 +75,9 @@ namespace zlscript
 	public:
 		std::map<int, tagEventChannel> m_mapEventChannel;
 	};
+	//2020.5.24 新的修改计划：
+	//频道ID依然需要各个部分自己注册，但是不限事件类型了
+	//事件分为指定频道和不指定两种，指定频道会直接发给对应频道，不指定的话会根据事件分别保存，等待频道自己取
 	class CScriptEventMgr
 	{
 	public:
@@ -83,24 +86,33 @@ namespace zlscript
 	public:
 		int AssignID();
 
-		void RegisterEvent(int nEventType, int nChannelID);
-		void RemoveEvent(int nEventType, int nChannelID);
+		//void RegisterEvent(int nEventType, int nChannelID);
+		//void RemoveEvent(int nEventType, int nChannelID);
 
-		void SetEventBlock(int nEventType, int nID, bool IsBlock);
+		//void SetEventBlock(int nEventType, int nID, bool IsBlock);
 
 		bool SendEvent(int nEventType, int nSendID, CScriptStack& vIn, int nRecvID = 0);
-		void GetEvent(int nEventType, int nChannelID,std::vector<tagScriptEvent> &vOut);
+		void GetEventByType(int nEventType, std::vector<tagScriptEvent*> &vOut, int nSize = 10);
+		void GetEventByChannel(int nChannelID, std::vector<tagScriptEvent*>& vOut);
 
 
-		void ProcessEvent(int nEventType, int nID, EventProcessFun const& fun);
+		//void ProcessEvent(int nEventType, int nID, EventProcessFun const& fun);
 
 		void Lock();
 		void Unlock();
-	protected:
-		std::map<int, tagMapEventChannel> m_mapEvent;
-		int m_nEventListCount;
-		std::mutex m_Lock;
 
+		//TODO 日后加上缓存
+		tagScriptEvent* NewEvent();
+		void ReleaseEvent(tagScriptEvent *pPoint);
+	protected:
+		typedef std::list<tagScriptEvent*> tagListEvents;
+
+		std::map<int, tagListEvents> m_mapEventByChannel;
+		int m_nEventListCount;
+		std::mutex m_LockEventChannel;
+
+		std::map<int, tagListEvents> m_mapEventsByType;
+		std::mutex m_LockEventType;
 	public:
 		static CScriptEventMgr* GetInstance()
 		{

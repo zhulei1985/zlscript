@@ -741,6 +741,7 @@ namespace zlscript
 		{
 			m_vTempCodeData.vCodeData.clear();
 			m_vTempCodeData.vNumVar.clear();
+			m_vTempCodeData.vFloatConst.clear();
 			m_vTempCodeData.vStrConst.clear();
 			//一个新函数
 			m_pFun_ICode = CICodeMgr::GetInstance()->New<CFunICode>();
@@ -1269,7 +1270,8 @@ namespace zlscript
 		else if (m_mapString2CodeIndex.find(FunName.word) != m_mapString2CodeIndex.end())
 		{
 			callCode.cSign = 1;
-			callCode.dwPos = m_mapString2CodeIndex[FunName.word];
+			callCode.dwPos = m_vTempCodeData.vCallFunName.size();
+			m_vTempCodeData.vCallFunName.push_back(FunName.word);
 		}
 		else
 		{
@@ -1911,6 +1913,16 @@ namespace zlscript
 		}
 
 		return ECompile_Return;
+	}
+
+	unsigned int CScriptCodeLoader::GetCodeIndex(const char* pStr)
+	{
+		map<string, int>::iterator it = m_mapString2CodeIndex.find(pStr);
+		if (it == m_mapString2CodeIndex.end())
+		{
+			return -1;
+		}
+		return it->second;
 	}
 
 	void CScriptCodeLoader::GetGlobalVar(vector<StackVarInfo>& vOut)

@@ -26,6 +26,7 @@
 #include "ScriptDataMgr.h"
 
 #include <math.h>
+#include <chrono>
 
 #include "ScriptCallBackFunion.h"
 //#include "tagTime.h"
@@ -60,6 +61,8 @@ namespace zlscript
 
 		RegisterFun("CheckScriptRun", (C_CallBackScriptFunion)CheckScriptRun);
 		RegisterFun("checkscriptrun", (C_CallBackScriptFunion)CheckScriptRun);
+
+		RegisterFun("GetMsTime", (C_CallBackScriptFunion)GetMsTime);
 
 		RegisterFun("print", (C_CallBackScriptFunion)print);
 		RegisterFun("printf", (C_CallBackScriptFunion)Printf);
@@ -282,6 +285,23 @@ namespace zlscript
 		int nResult = pMachine->CheckRun(nId) ? 1 : 0;
 		pState->ClearFunParam();
 		pState->PushVarToStack(nResult);
+		return ECALLBACK_FINISH;
+	}
+	int CScriptCallBackFunion::GetMsTime(CScriptVirtualMachine* pMachine, CScriptRunState* pState)
+	{
+		if (pState == nullptr)
+		{
+			return ECALLBACK_ERROR;
+		}
+
+		if (pMachine == nullptr)
+		{
+			return ECALLBACK_ERROR;
+		}
+		auto nowTime = std::chrono::steady_clock::now();
+		auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(nowTime.time_since_epoch());
+		pState->ClearFunParam();
+		pState->PushVarToStack(duration.count());
 		return ECALLBACK_FINISH;
 	}
 	int CScriptCallBackFunion::print(CScriptVirtualMachine* pMachine, CScriptRunState* pState)

@@ -63,7 +63,8 @@ namespace zlscript
 			return ERESULT_ERROR;
 		}
 		int nResult = ERESULT_CONTINUE;
-		if (m_nCodePoint < m_pCodeData->vCodeData.size())
+		auto oldTime = std::chrono::steady_clock::now();
+		while (m_nCodePoint < m_pCodeData->vCodeData.size())
 		{
 			CodeStyle& code = m_pCodeData->vCodeData[m_nCodePoint];
 			switch (code.wInstruct)
@@ -79,7 +80,7 @@ namespace zlscript
 				{
 					__int64 nVal1 = GetInt_StackVar(&var1);
 					__int64 nVal2 = GetInt_StackVar(&var2);
-					ScriptVector_PushVar(m_varRegister,nVal2 + nVal1);
+					ScriptVector_PushVar(m_varRegister, nVal2 + nVal1);
 				}
 				break;
 				case EScriptVal_Double:
@@ -135,14 +136,14 @@ namespace zlscript
 				{
 					__int64 nVal1 = GetInt_StackVar(&var1);
 					__int64 nVal2 = GetInt_StackVar(&var2);
-					ScriptVector_PushVar(m_varRegister,nVal2 * nVal1);
+					ScriptVector_PushVar(m_varRegister, nVal2 * nVal1);
 				}
 				break;
 				case EScriptVal_Double:
 				{
 					double dVal1 = GetFloat_StackVar(&var1);
 					double dVal2 = GetFloat_StackVar(&var2);
-					ScriptVector_PushVar(m_varRegister,dVal2 * dVal1);
+					ScriptVector_PushVar(m_varRegister, dVal2 * dVal1);
 				}
 				break;
 				}
@@ -161,11 +162,11 @@ namespace zlscript
 					__int64 nVal2 = GetInt_StackVar(&var2);
 					if (nVal1 == 0)
 					{
-						ScriptVector_PushVar(m_varRegister,(__int64)0xffffffff);
+						ScriptVector_PushVar(m_varRegister, (__int64)0xffffffff);
 					}
 					else
 					{
-						ScriptVector_PushVar(m_varRegister,nVal2 / nVal1);
+						ScriptVector_PushVar(m_varRegister, nVal2 / nVal1);
 					}
 				}
 				break;
@@ -175,11 +176,11 @@ namespace zlscript
 					double dVal2 = GetFloat_StackVar(&var2);
 					if (dVal1 <= 0.00000001f && dVal1 >= -0.00000001f)
 					{
-						ScriptVector_PushVar(m_varRegister,(double)1.7976931348623158e+308);
+						ScriptVector_PushVar(m_varRegister, (double)1.7976931348623158e+308);
 					}
 					else
 					{
-						ScriptVector_PushVar(m_varRegister,dVal2 / dVal1);
+						ScriptVector_PushVar(m_varRegister, dVal2 / dVal1);
 					}
 				}
 				break;
@@ -197,11 +198,11 @@ namespace zlscript
 				__int64 nVal2 = ScriptStack_GetInt(m_varRegister);
 				if (nVal1 == 0)
 				{
-					ScriptVector_PushVar(m_varRegister,(__int64)0);
+					ScriptVector_PushVar(m_varRegister, (__int64)0);
 				}
 				else
 				{
-					ScriptVector_PushVar(m_varRegister,nVal2 % nVal1);
+					ScriptVector_PushVar(m_varRegister, nVal2 % nVal1);
 				}
 				//	}
 				//	break;
@@ -218,7 +219,7 @@ namespace zlscript
 				{
 					__int64 nVal1 = GetInt_StackVar(&var1);
 
-					ScriptVector_PushVar(m_varRegister,-nVal1);
+					ScriptVector_PushVar(m_varRegister, -nVal1);
 
 				}
 				break;
@@ -226,7 +227,7 @@ namespace zlscript
 				{
 					double dVal1 = GetFloat_StackVar(&var1);
 
-					ScriptVector_PushVar(m_varRegister,-dVal1);
+					ScriptVector_PushVar(m_varRegister, -dVal1);
 				}
 				break;
 				}
@@ -243,7 +244,7 @@ namespace zlscript
 				{
 					__int64 nVal1 = GetInt_StackVar(&var1);
 					__int64 nVal2 = GetInt_StackVar(&var2);
-					ScriptVector_PushVar(m_varRegister,(__int64)(nVal2 == nVal1 ? 1 : 0));
+					ScriptVector_PushVar(m_varRegister, (__int64)(nVal2 == nVal1 ? 1 : 0));
 				}
 				break;
 				case EScriptVal_Double:
@@ -415,7 +416,7 @@ namespace zlscript
 				{
 					__int64 nVal1 = GetInt_StackVar(&var1);
 					__int64 nVal2 = GetInt_StackVar(&var2);
-					ScriptVector_PushVar(m_varRegister,nVal2 & nVal1);
+					ScriptVector_PushVar(m_varRegister, nVal2 & nVal1);
 				}
 				break;
 				}
@@ -432,7 +433,7 @@ namespace zlscript
 				{
 					__int64 nVal1 = GetInt_StackVar(&var1);
 					__int64 nVal2 = GetInt_StackVar(&var2);
-					ScriptVector_PushVar(m_varRegister,nVal2 | nVal1);
+					ScriptVector_PushVar(m_varRegister, nVal2 | nVal1);
 				}
 				break;
 				}
@@ -449,7 +450,7 @@ namespace zlscript
 				{
 					__int64 nVal1 = GetInt_StackVar(&var1);
 					__int64 nVal2 = GetInt_StackVar(&var2);
-					ScriptVector_PushVar(m_varRegister,nVal2 ^ nVal1);
+					ScriptVector_PushVar(m_varRegister, nVal2 ^ nVal1);
 				}
 				break;
 				}
@@ -464,7 +465,7 @@ namespace zlscript
 				case 0://数值常量
 				{
 					m_cVarType = EScriptVal_Int;
-					ScriptVector_PushVar(m_varRegister,(__int64)code.dwPos);
+					ScriptVector_PushVar(m_varRegister, (__int64)code.dwPos);
 				}
 				break;
 				case 1://全局变量
@@ -476,7 +477,7 @@ namespace zlscript
 					}
 					else
 					{
-						ScriptVector_PushVar(m_varRegister,(__int64)0);
+						ScriptVector_PushVar(m_varRegister, (__int64)0);
 					}
 				}
 				break;
@@ -489,14 +490,14 @@ namespace zlscript
 				case 3:
 				{
 					m_cVarType = EScriptVal_String;
-					ScriptVector_PushVar(m_varRegister,(char*)m_pCodeData->vStrConst[code.dwPos].c_str());
+					ScriptVector_PushVar(m_varRegister, (char*)m_pCodeData->vStrConst[code.dwPos].c_str());
 				}
 				break;
 				case 4:
 				{
 					//浮点常量
 					m_cVarType = EScriptVal_Double;
-					ScriptVector_PushVar(m_varRegister,m_pCodeData->vFloatConst[code.dwPos]);
+					ScriptVector_PushVar(m_varRegister, m_pCodeData->vFloatConst[code.dwPos]);
 				}
 				break;
 				}
@@ -551,8 +552,22 @@ namespace zlscript
 					nParmNum = m_varRegister.size() - m_sCurStackSizeWithoutFunParam.top();
 					m_sCurStackSizeWithoutFunParam.pop();
 				}
-				
-				switch (m_pMaster->CallFun(pMachine, this,code.cSign, code.dwPos, nParmNum))
+				unsigned int nCodeIndex = code.dwPos;
+				if (code.cSign == 1)
+				{
+					if (m_pCodeData->vCallFunName.size() > code.dwPos)
+					{
+						std::string& funname = m_pCodeData->vCallFunName[code.dwPos];
+						unsigned int nCodeIndex = CScriptCodeLoader::GetInstance()->GetCodeIndex(funname.c_str());
+					}
+					else
+					{
+						nResult = ECALLBACK_ERROR;
+						break;
+					}
+				}
+
+				switch (m_pMaster->CallFun(pMachine, this, code.cSign, nCodeIndex, nParmNum))
 				{
 				case ECALLBACK_ERROR:
 					nResult = ERESULT_ERROR;
@@ -568,6 +583,7 @@ namespace zlscript
 					nResult = ERESULT_NEXTCONTINUE;
 					break;
 				}
+
 				m_nCodePoint++;
 			}
 			break;
@@ -771,11 +787,15 @@ namespace zlscript
 			}
 			break;
 			}
+			if (nResult != ERESULT_CONTINUE)
+			{	
+				break;
+			}
 		}
-		else
-		{
-			return ERESULT_END;
-		}
+
+		auto nowTime = std::chrono::steady_clock::now();
+		auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(nowTime - oldTime);
+		m_msRunningTime += duration;
 		return nResult;
 	}
 

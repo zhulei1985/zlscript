@@ -60,6 +60,8 @@ namespace zlscript
 		static int StopScript(CScriptVirtualMachine* pMachine, CScriptRunState* pState);
 		static int CheckScriptRun(CScriptVirtualMachine* pMachine, CScriptRunState* pState);
 
+		static int GetMsTime(CScriptVirtualMachine* pMachine, CScriptRunState* pState);
+
 		static int print(CScriptVirtualMachine* pMachine, CScriptRunState* pState);
 		static int Printf(CScriptVirtualMachine* pMachine, CScriptRunState* pState);
 

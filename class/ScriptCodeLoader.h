@@ -97,6 +97,7 @@ namespace zlscript
 			std::vector<StackVarInfo> vNumVar;//临时变量
 			std::vector<CodeStyle> vCodeData;
 			std::vector<double> vFloatConst;//浮点常量
+			std::vector<std::string> vCallFunName;//会调用的函数的名称
 
 			std::string filename;
 			std::string funname;
@@ -104,6 +105,7 @@ namespace zlscript
 			int nDefaultReturnType;//默认返回值类型
 		};
 
+		unsigned int GetCodeIndex(const char* pStr);
 	private:
 		//全局变量字典
 		std::map<std::string, VarInfo> m_mapDicGlobalVar;

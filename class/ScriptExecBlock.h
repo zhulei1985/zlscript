@@ -20,6 +20,7 @@
 #include <vector>
 #include "ScriptCodeLoader.h"
 #include "ScriptStack.h"
+#include <chrono>
 //////////////////////////////////////////////////////////////////////////////
 //                              脚本执行块                                  //
 //////////////////////////////////////////////////////////////////////////////
@@ -98,6 +99,10 @@ namespace zlscript
 
 		int CurCallFunParamNum;//当前调用函数的参数数量
 		int CurStackSizeWithoutFunParam;//除了函数参数，堆栈的大小
+
+	//性能监控
+
+		std::chrono::milliseconds m_msRunningTime;//运行时间
 	public:
 		friend class CScriptVirtualMachine;
 	};
