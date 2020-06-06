@@ -126,6 +126,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>../class/;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -136,6 +137,7 @@
   <ItemGroup>
     <ClInclude Include="..\class\ScriptClassMgr.h" />
     <ClInclude Include="..\class\ScriptDebugPrint.h" />
+    <ClInclude Include="..\class\ScriptExecCodeMgr.h" />
     <ClInclude Include="..\class\ScriptIntermediateCode.h" />
     <ClInclude Include="..\class\ScriptPointInterface.h" />
     <ClInclude Include="..\class\ScriptTriggerMgr.h" />
@@ -164,6 +166,7 @@
     <ClCompile Include="..\class\ScriptDebugPrint.cpp" />
     <ClCompile Include="..\class\ScriptEventMgr.cpp" />
     <ClCompile Include="..\class\ScriptExecBlock.cpp" />
+    <ClCompile Include="..\class\ScriptExecCodeMgr.cpp" />
     <ClCompile Include="..\class\ScriptIntermediateCode.cpp" />
     <ClCompile Include="..\class\ScriptPointInterface.cpp" />
     <ClCompile Include="..\class\ScriptStack.cpp" />

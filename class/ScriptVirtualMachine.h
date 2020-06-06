@@ -223,7 +223,7 @@ namespace zlscript
 	public:
 		friend class CScriptExecBlock;
 
-		int m_nEventListIndex;
+		__int64 m_nEventListIndex;
 
 	public:
 		void InitEvent(int nEventType, EventProcessFun fun);

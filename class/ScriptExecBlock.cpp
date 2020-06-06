@@ -5,7 +5,7 @@
 #include "ScriptVirtualMachine.h"
 #include "EScriptVariableType.h"
 #include "ScriptCallBackFunion.h"
-
+#include "ScriptExecCodeMgr.h"
 #include "ScriptExecBlock.h"
 #include "ScriptSuperPointer.h"
 #include "ScriptClassMgr.h"
@@ -558,11 +558,18 @@ namespace zlscript
 					if (m_pCodeData->vCallFunName.size() > code.dwPos)
 					{
 						std::string& funname = m_pCodeData->vCallFunName[code.dwPos];
-						unsigned int nCodeIndex = CScriptCodeLoader::GetInstance()->GetCodeIndex(funname.c_str());
+						if (CScriptExecCodeMgr::GetInstance()->RemoteFunctionCall(funname, m_pMaster, nParmNum))
+						{
+							m_nCodePoint++;
+							nResult = ERESULT_WAITING;
+							break;
+						}
+
+						nCodeIndex = CScriptCodeLoader::GetInstance()->GetCodeIndex(funname.c_str());
 					}
 					else
 					{
-						nResult = ECALLBACK_ERROR;
+						nResult = ERESULT_ERROR;
 						break;
 					}
 				}

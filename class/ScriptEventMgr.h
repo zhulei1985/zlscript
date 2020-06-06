@@ -37,7 +37,7 @@ namespace zlscript
 	class tagScriptEvent
 	{
 	public:
-		int nSendID;//发送ID
+		__int64 nSendID;//发送ID
 		int nEventType;//事件类型
 
 		//传递参数
@@ -57,7 +57,7 @@ namespace zlscript
 		}
 		void clear();
 	public:
-		int nChannelID;
+		__int64 nChannelID;
 		bool isBlocking;
 		std::list<tagScriptEvent*> listEvent;
 	};
@@ -73,7 +73,7 @@ namespace zlscript
 
 		}
 	public:
-		std::map<int, tagEventChannel> m_mapEventChannel;
+		std::map<__int64, tagEventChannel> m_mapEventChannel;
 	};
 	//2020.5.24 新的修改计划：
 	//频道ID依然需要各个部分自己注册，但是不限事件类型了
@@ -84,16 +84,16 @@ namespace zlscript
 		CScriptEventMgr();
 		~CScriptEventMgr();
 	public:
-		int AssignID();
+		__int64 AssignID();
 
 		//void RegisterEvent(int nEventType, int nChannelID);
 		//void RemoveEvent(int nEventType, int nChannelID);
 
 		//void SetEventBlock(int nEventType, int nID, bool IsBlock);
 
-		bool SendEvent(int nEventType, int nSendID, CScriptStack& vIn, int nRecvID = 0);
+		bool SendEvent(int nEventType, __int64 nSendID, CScriptStack& vIn, __int64 nRecvID = 0);
 		void GetEventByType(int nEventType, std::vector<tagScriptEvent*> &vOut, int nSize = 10);
-		void GetEventByChannel(int nChannelID, std::vector<tagScriptEvent*>& vOut);
+		void GetEventByChannel(__int64 nChannelID, std::vector<tagScriptEvent*>& vOut);
 
 
 		//void ProcessEvent(int nEventType, int nID, EventProcessFun const& fun);
@@ -107,8 +107,8 @@ namespace zlscript
 	protected:
 		typedef std::list<tagScriptEvent*> tagListEvents;
 
-		std::map<int, tagListEvents> m_mapEventByChannel;
-		int m_nEventListCount;
+		std::map<__int64, tagListEvents> m_mapEventByChannel;
+		__int64 m_nEventListCount;
 		std::mutex m_LockEventChannel;
 
 		std::map<int, tagListEvents> m_mapEventsByType;

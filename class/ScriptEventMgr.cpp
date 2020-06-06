@@ -57,9 +57,9 @@ namespace zlscript
 		//Unlock();
 	}
 
-	int CScriptEventMgr::AssignID()
+	__int64 CScriptEventMgr::AssignID()
 	{
-		int nResult = 0;
+		__int64 nResult = 0;
 		Lock();
 		m_nEventListCount++;
 		nResult = m_nEventListCount;
@@ -99,7 +99,7 @@ namespace zlscript
 	//}
 
 
-	bool CScriptEventMgr::SendEvent(int nEventType, int nSendID, CScriptStack& vIn, int nRecvID)
+	bool CScriptEventMgr::SendEvent(int nEventType, __int64 nSendID, CScriptStack& vIn, __int64 nRecvID)
 	{
 		//查找一个合适的频道
 		if (nRecvID == 0)
@@ -162,7 +162,7 @@ namespace zlscript
 		}
 	}
 
-	void CScriptEventMgr::GetEventByChannel(int nChannelID, std::vector<tagScriptEvent*>& vOut)
+	void CScriptEventMgr::GetEventByChannel(__int64 nChannelID, std::vector<tagScriptEvent*>& vOut)
 	{
 		std::lock_guard<std::mutex> Lock(m_LockEventChannel);
 

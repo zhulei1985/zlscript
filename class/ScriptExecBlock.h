@@ -29,6 +29,7 @@ namespace zlscript
 	class CScriptRunState;
 	class CScriptVirtualMachine;
 
+
 	class CScriptExecBlock
 	{
 	public:
