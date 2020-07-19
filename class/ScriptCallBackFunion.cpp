@@ -224,27 +224,18 @@ namespace zlscript
 		int nParmNum = pState->GetParamNum();
 		CScriptStack vRetrunVars;
 		int nIsWaiting = pState->PopIntVarFormStack();//是否等待调用函数完成
-		//ScriptVector_PushVar(vRetrunVars, (__int64)E_SCRIPT_EVENT_RUNSCRIPT);
-		if (nIsWaiting > 0)
-			ScriptVector_PushVar(vRetrunVars, (__int64)pState->GetId());
-		else
-			ScriptVector_PushVar(vRetrunVars, (__int64)0);
-		ScriptVector_PushVar(vRetrunVars, pState->PopCharVarFormStack());
-		//ScriptVector_PushVar(vRetrunVars, this);
+		std::string name = pState->PopCharVarFormStack();
+
 		nParmNum -= 2;
-		//CScriptStack vTemp;
+		CScriptStack scriptParm;
 		for (int i = 0; i < nParmNum; i++)
 		{
-			//ScriptVector_PushVar(vTemp, &pState->PopVarFormStack());
+
 			ScriptVector_PushVar(vRetrunVars, &pState->PopVarFormStack());
 		}
 
-		//while (vTemp.size() > 0)
-		//{
-		//	ScriptVector_PushVar(vRetrunVars, &vTemp.top());
-		//	vTemp.pop();
-		//}
-		CScriptEventMgr::GetInstance()->SendEvent(E_SCRIPT_EVENT_RUNSCRIPT,pMachine->m_nEventListIndex, vRetrunVars);
+		pMachine->RunTo(name, scriptParm, nIsWaiting>0? pState->GetId():0, 0);
+		
 
 		pState->ClearFunParam();
 		if (nIsWaiting)
@@ -459,7 +450,7 @@ namespace zlscript
 		{
 			ScriptVector_PushVar(vParmVars, &pState->PopVarFormStack());
 		}
-		CScriptTriggerMgr::GetInstance()->SetEventTrigger(strEvent, nClassPoint, strFlag, pMachine->m_nEventListIndex, strScript, vParmVars);
+		CScriptTriggerMgr::GetInstance()->SetEventTrigger(strEvent, nClassPoint, strFlag, pMachine->GetEventIndex(), strScript, vParmVars);
 		pState->ClearFunParam();
 		return ECALLBACK_FINISH;
 	}

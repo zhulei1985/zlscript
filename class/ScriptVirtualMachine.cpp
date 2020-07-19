@@ -35,9 +35,9 @@ namespace zlscript
 		//_intUntilTime = 0;
 		m_WatingTime = 0;
 
-		nNetworkID = 0;
+		//nNetworkID = 0;
 		nCallEventIndex = -1;
-		m_CallStateId = 0;
+		m_CallReturnId = 0;
 		nRunCount = 0;
 		//m_pBattle = nullptr;
 		//m_pShape = nullptr;
@@ -564,7 +564,7 @@ namespace zlscript
 		ClearStack();
 		ClearFunParam();
 		nCallEventIndex = -1;
-		m_CallStateId = 0;
+		m_CallReturnId = 0;
 		FunName = "";
 		nRunCount = 0;
 		m_WatingTime = 0;
@@ -968,8 +968,8 @@ namespace zlscript
 		clear();
 
 		CScriptCodeLoader::GetInstance()->GetGlobalVar(vGlobalNumVar);
-		
-		m_nEventListIndex = CScriptEventMgr::GetInstance()->AssignID();
+
+		CScriptExecFrame::OnInit();
 	}
 
 	void CScriptVirtualMachine::clear()
@@ -1119,27 +1119,7 @@ namespace zlscript
 
 	unsigned int CScriptVirtualMachine::Exec(unsigned int nDelay,unsigned int unTimeRes)
 	{
-		std::vector<tagScriptEvent*> vEvent;
-		CScriptEventMgr::GetInstance()->GetEventByChannel(m_nEventListIndex, vEvent);
-		for (auto it = m_mapEventProcess.begin(); it != m_mapEventProcess.end(); it++)
-		{
-			CScriptEventMgr::GetInstance()->GetEventByType(it->first, vEvent);
-		}
-
-		for (size_t i = 0; i < vEvent.size(); i++)
-		{
-			tagScriptEvent* pEvent = vEvent[i];
-			if (pEvent)
-			{
-				auto it = m_mapEventProcess.find(pEvent->nEventType);
-				if (it != m_mapEventProcess.end())
-				{
-					it->second(pEvent->nSendID, pEvent->m_Parm);
-				}
-			}
-			CScriptEventMgr::GetInstance()->ReleaseEvent(pEvent);
-		}
-		vEvent.clear();
+		CScriptExecFrame::OnUpdate();
 
 		listRunState::iterator it = m_RunStateList.begin();
 		for (;it != m_RunStateList.end(); )
@@ -1161,25 +1141,11 @@ namespace zlscript
 					case ERunTime_Complete:
 						{
 						
-							if (pState->m_CallStateId != 0)
+							if (pState->m_CallReturnId != 0)
 							{
-								if (pState->nNetworkID > 0)
-								{
-									//网络返回
-									CScriptStack vRetrunVars;
-									ScriptVector_PushVar(vRetrunVars, (__int64)pState->nCallEventIndex);
-									ScriptVector_PushVar(vRetrunVars, (__int64)pState->m_CallStateId);
-									ScriptVector_PushVar(vRetrunVars, &pState->PopVarFormStack());
-									CScriptEventMgr::GetInstance()->SendEvent(E_SCRIPT_EVENT_NEWTWORK_RETURN, m_nEventListIndex, vRetrunVars, pState->nNetworkID);
-								}
-								else
-								{
-									//本地返回
-									CScriptStack vRetrunVars;
-									ScriptVector_PushVar(vRetrunVars, (__int64)pState->m_CallStateId);
-									ScriptVector_PushVar(vRetrunVars, &pState->PopVarFormStack());
-									CScriptEventMgr::GetInstance()->SendEvent(E_SCRIPT_EVENT_RETURN,m_nEventListIndex, vRetrunVars, pState->nCallEventIndex);
-								}
+								CScriptStack vRetrunVars;
+								ScriptVector_PushVar(vRetrunVars, &pState->PopVarFormStack());
+								ResultTo(vRetrunVars, pState->m_CallReturnId, pState->nCallEventIndex);
 
 							}
 							//char cbuff[1024];
@@ -1361,12 +1327,7 @@ namespace zlscript
 		}
 		return nullptr;
 	}
-	void CScriptVirtualMachine::InitEvent(int nEventType, EventProcessFun fun)
-	{
-		m_mapEventProcess[nEventType] = fun;
 
-		//CScriptEventMgr::GetInstance()->RegisterEvent(nEventType, m_nEventListIndex);
-	}
 	void CScriptVirtualMachine::EventReturnFun(int nSendID, CScriptStack& ParmInfo)
 	{
 		__int64 nScriptStateID = ScriptStack_GetInt(ParmInfo);
@@ -1396,30 +1357,37 @@ namespace zlscript
 			if (nScriptStateID != 0)
 			{
 				m_pScriptState->nCallEventIndex = nSendID;
-				m_pScriptState->m_CallStateId = nScriptStateID;
+				m_pScriptState->m_CallReturnId = nScriptStateID;
 			}
 			RunFun(m_pScriptState, strScript, ParmInfo);
 		}
 	}
-	void CScriptVirtualMachine::EventNetworkRunScriptFun(int nSendID, CScriptStack& ParmInfo)
+
+	void CScriptVirtualMachine::RunTo(std::string funName, CScriptStack& pram, __int64 nReturnID, __int64 nEventIndex)
 	{
-		int nEventID = ScriptStack_GetInt(ParmInfo);
-		__int64 nScriptStateID = ScriptStack_GetInt(ParmInfo);
+		CScriptStack m_scriptParm;
 
-		CScriptRunState* m_pScriptState = new CScriptRunState;
-		if (m_pScriptState)
+		//ScriptVector_PushVar(m_scriptParm, GetEventIndex());
+		ScriptVector_PushVar(m_scriptParm, nReturnID);
+
+
+		ScriptVector_PushVar(m_scriptParm, funName.c_str());
+		for (unsigned int i = 0; i < pram.size(); i++)
 		{
-			//__int64 nCallStateID = ScriptStack_GetInt(ParmInfo);
-			std::string strScript = ScriptStack_GetString(ParmInfo);
-			m_pScriptState->nNetworkID = nSendID;
 
-			//printf("network run script : %s\n", strScript.c_str());
-			if (nScriptStateID != 0)
-			{
-				m_pScriptState->nCallEventIndex = nEventID;
-				m_pScriptState->m_CallStateId = nScriptStateID;
-			}
-			RunFun(m_pScriptState, strScript, ParmInfo);
+			ScriptVector_PushVar(m_scriptParm, pram.GetVal(i));
 		}
+		CScriptEventMgr::GetInstance()->SendEvent(E_SCRIPT_EVENT_RUNSCRIPT, GetEventIndex(), m_scriptParm, nEventIndex);
+	}
+	void CScriptVirtualMachine::ResultTo(CScriptStack& pram, __int64 nReturnID, __int64 nEventIndex)
+	{
+		CScriptStack vRetrunVars;
+
+		ScriptVector_PushVar(vRetrunVars, nReturnID);
+		for (unsigned int i = 0; i < pram.size(); i++)
+		{
+			ScriptVector_PushVar(vRetrunVars, pram.GetVal(i));
+		}
+		CScriptEventMgr::GetInstance()->SendEvent(E_SCRIPT_EVENT_RETURN, GetEventIndex(), vRetrunVars, nEventIndex);
 	}
 }

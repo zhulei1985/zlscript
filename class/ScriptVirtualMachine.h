@@ -27,6 +27,7 @@
 #include "ScriptCodeLoader.h"
 #include "ScriptSuperPointer.h"
 #include "ScriptEventMgr.h"
+#include "ScriptExecFrame.h"
 #include <vector>
 #include <string>
 #include <map>
@@ -43,9 +44,9 @@ namespace zlscript
 	{
 		E_SCRIPT_EVENT_NONE,
 		E_SCRIPT_EVENT_RETURN,//本地返回值
-		E_SCRIPT_EVENT_NEWTWORK_RETURN,//网络返回值
+		//E_SCRIPT_EVENT_NEWTWORK_RETURN,//网络返回值
 		E_SCRIPT_EVENT_RUNSCRIPT,//本地运行脚本
-		E_SCRIPT_EVENT_NETWORK_RUNSCRIPT,//网络运行脚本
+		//E_SCRIPT_EVENT_NETWORK_RUNSCRIPT,//网络运行脚本
 	};
 
 	enum EScript_Channel
@@ -69,9 +70,9 @@ namespace zlscript
 
 		CScriptVirtualMachine* m_pMachine;
 	public:
-		__int64 nNetworkID;//如果是网络调用，网络连接的ID
-		int nCallEventIndex;//被调用的事件频道ID
-		unsigned long m_CallStateId;//被调用的事件频道ID
+		//__int64 nNetworkID;//如果是网络调用，网络连接的ID
+		__int64 nCallEventIndex;//被调用的事件频道ID
+		__int64 m_CallReturnId;//被调用的事件频道ID
 		std::string FunName;
 
 		unsigned int nRunCount;
@@ -178,7 +179,7 @@ namespace zlscript
 		ERunTime_Waiting,
 		ERunTime_CallScriptFun,
 	};
-	class CScriptVirtualMachine
+	class CScriptVirtualMachine : public CScriptExecFrame
 	{
 	public:
 		CScriptVirtualMachine();
@@ -223,16 +224,18 @@ namespace zlscript
 	public:
 		friend class CScriptExecBlock;
 
-		__int64 m_nEventListIndex;
-
-	public:
-		void InitEvent(int nEventType, EventProcessFun fun);
 
 		void EventReturnFun(int nSendID, CScriptStack& ParmInfo);
 		void EventRunScriptFun(int nSendID, CScriptStack& ParmInfo);
-		void EventNetworkRunScriptFun(int nSendID, CScriptStack& ParmInfo);
-	protected:
-		std::map<int, EventProcessFun> m_mapEventProcess;
+
+		//"我"要求"别人"执行脚本
+		virtual void RunTo(std::string funName, CScriptStack& pram, __int64 nReturnID, __int64 nEventIndex);
+		//"我"向"别人"返回执行脚本的结果
+		virtual void ResultTo(CScriptStack& pram, __int64 nReturnID, __int64 nEventIndex);
+		////"别人"要求"我"执行脚本
+		//virtual void RunFrom(std::string funName, CScriptStack& pram, __int64 nReturnID, __int64 nEventIndex);
+		////"别人"向"我"返回执行脚本的结果
+		//virtual void ResultFrom(CScriptStack& pram, __int64 nReturnID);
 	};
 
 }

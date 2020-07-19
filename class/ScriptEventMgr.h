@@ -20,11 +20,10 @@
 #include <list>
 #include <map>
 #include <mutex>
-#include <functional>
+//#include <functional>
 
 #include "ScriptStack.h"
 
-typedef std::function<void(int, zlscript::CScriptStack&)> EventProcessFun;
 
 namespace zlscript
 {

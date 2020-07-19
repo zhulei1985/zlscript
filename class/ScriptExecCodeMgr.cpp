@@ -28,18 +28,18 @@ namespace zlscript
 		}
 
 		__int64 nEventIndex = it->second.vScriptEventIndexs[it->second.unIndex];
-		CScriptStack m_scriptParm;
-		if (pState->m_pMachine)
-			ScriptVector_PushVar(m_scriptParm, pState->m_pMachine->m_nEventListIndex);
-		else
-			ScriptVector_PushVar(m_scriptParm, (__int64)0);
-		ScriptVector_PushVar(m_scriptParm, (__int64)pState->GetId());
-		ScriptVector_PushVar(m_scriptParm, name.c_str());
+		CScriptStack scriptParm;
+	
+		//ScriptVector_PushVar(scriptParm, name.c_str());
 		for (int i = 0; i < nParmNum; i++)
 		{
-			ScriptVector_PushVar(m_scriptParm, &pState->PopVarFormStack());
+			ScriptVector_PushVar(scriptParm, &pState->PopVarFormStack());
 		}
-		CScriptEventMgr::GetInstance()->SendEvent(E_SCRIPT_EVENT_NETWORK_RUNSCRIPT, 0, m_scriptParm, nEventIndex);
+		if (pState->m_pMachine)
+		{
+			pState->m_pMachine->RunTo(name, scriptParm, pState->GetId(), nEventIndex);
+		}
+		//CScriptEventMgr::GetInstance()->SendEvent(E_SCRIPT_EVENT_NETWORK_RUNSCRIPT, 0, m_scriptParm, nEventIndex);
 
 		it->second.unIndex++;
 		return true;
