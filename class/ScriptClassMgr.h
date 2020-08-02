@@ -18,6 +18,7 @@
  ****************************************************************************/
 #include <mutex>
 #include <unordered_map>
+#include <type_traits>
 #include "ScriptPointInterface.h"
 #include "ScriptSuperPointer.h"
 
@@ -66,6 +67,7 @@ namespace zlscript
 		}
 	private:
 		__int64 m_nIDCount;
+
 		//本地类实例
 		std::unordered_map<__int64, T*> m_mapLocalClassPoint;
 
@@ -83,14 +85,15 @@ namespace zlscript
 	{
 		std::lock_guard<std::mutex> Lock(m_MutexLock);
 		//TODO 以后做缓存优化
-		T* pPoint = new T;
-		if (pPoint)
-		{
-			//pPoint->SetID(++m_nIDCount);
-			CScriptSuperPointerMgr::GetInstance()->SetClassPoint(pPoint->GetScriptPointIndex(), pPoint);
-			m_mapLocalClassPoint[pPoint->GetScriptPointIndex()] = pPoint;
-		}
-		return pPoint;
+
+			T* pPoint = new T;
+			if (pPoint)
+			{
+				//pPoint->SetID(++m_nIDCount);
+				CScriptSuperPointerMgr::GetInstance()->SetClassPoint(pPoint->GetScriptPointIndex(), pPoint);
+				m_mapLocalClassPoint[pPoint->GetScriptPointIndex()] = pPoint;
+			}
+			return pPoint;
 	}
 
 
@@ -126,9 +129,87 @@ namespace zlscript
 	}
 
 	template<class T>
+	class CScriptAbstractClassMgr : public CBaseScriptClassMgr
+	{
+	public:
+		CScriptAbstractClassMgr()
+		{
+			m_nIDCount = 0;
+		}
+		~CScriptAbstractClassMgr()
+		{
+
+		}
+
+		virtual CScriptPointInterface* New();
+		//virtual CScriptPointInterface* New(__int64 nID);
+		virtual CScriptPointInterface* Get(__int64 nID);
+
+		virtual void Release(CScriptPointInterface* pPoint);
+	public:
+		static CBaseScriptClassMgr* GetInstance()
+		{
+			return &s_Instance;
+		}
+	private:
+		__int64 m_nIDCount;
+
+		//本地类实例
+		std::unordered_map<__int64, T*> m_mapLocalClassPoint;
+
+
+		std::mutex m_MutexLock;
+
+		static CScriptAbstractClassMgr s_Instance;
+	};
+
+	template<class T>
+	CScriptAbstractClassMgr<T> CScriptAbstractClassMgr<T>::s_Instance;
+
+	template<class T>
+	inline CScriptPointInterface* CScriptAbstractClassMgr<T>::New()
+	{
+
+		return nullptr;
+	}
+
+
+	template<class T>
+	inline CScriptPointInterface* CScriptAbstractClassMgr<T>::Get(__int64 nID)
+	{
+		std::lock_guard<std::mutex> Lock(m_MutexLock);
+		auto it = m_mapLocalClassPoint.find(nID);
+		if (it != m_mapLocalClassPoint.end())
+		{
+			return it->second;
+		}
+		return nullptr;
+	}
+
+
+	template<class T>
+	inline void CScriptAbstractClassMgr<T>::Release(CScriptPointInterface* pPoint)
+	{
+		std::lock_guard<std::mutex> Lock(m_MutexLock);
+		//if (pPoint->GetType() == CScriptPointInterface::E_TYPE_LOCAL)
+		//{
+		m_mapLocalClassPoint.erase(pPoint->GetScriptPointIndex());
+		//}
+		//else if(pPoint->GetType() == CScriptPointInterface::E_TYPE_IMAGE)
+		//{
+		//	m_mapImageClassPoint.erase(pPoint->GetID());
+		//}
+		CBaseScriptClassMgr::Release(pPoint);
+		//TODO 以后做缓存优化
+		if (pPoint)
+			delete pPoint;
+	}
+
+	template<class T>
 	inline CBaseScriptClassMgr* GetScriptClassMgr()
 	{
-		return CScriptClassMgr<T>::GetInstance();
+		typedef std::conditional<std::is_abstract<T>::value, CScriptAbstractClassMgr<T>, CScriptClassMgr<T>>::type ClassMgr;
+		return ClassMgr::GetInstance();
 	}
 
 }

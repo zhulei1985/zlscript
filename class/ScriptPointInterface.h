@@ -30,6 +30,8 @@ namespace zlscript
 	class CBaseScriptClassMgr;
 
 	template<class T>
+	class CScriptAbstractClassMgr;
+	template<class T>
 	class CScriptClassMgr;
 	template<class T>
 	CBaseScriptClassMgr* GetScriptClassMgr();

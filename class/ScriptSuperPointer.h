@@ -235,6 +235,7 @@ namespace zlscript
 			CScriptSuperPointer<T>::s_strClassName = classname;
 
 			m_mapClassMgr[nClassTypeCount] = GetScriptClassMgr<T>();//CScriptClassMgr<T>::GetInstance();
+			
 			m_MutexTypeLock.unlock();
 			return true;
 		}
