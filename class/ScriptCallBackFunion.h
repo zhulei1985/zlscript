@@ -55,10 +55,10 @@ namespace zlscript
 
 	public:
 		static int SetProcessID(CScriptVirtualMachine* pMachine, CScriptRunState* pState);
-		static int RunScript(CScriptVirtualMachine* pMachine, CScriptRunState* pState);
+		//static int RunScript(CScriptVirtualMachine* pMachine, CScriptRunState* pState);
 		static int RunScriptToChannel(CScriptVirtualMachine* pMachine, CScriptRunState* pState);
-		static int StopScript(CScriptVirtualMachine* pMachine, CScriptRunState* pState);
-		static int CheckScriptRun(CScriptVirtualMachine* pMachine, CScriptRunState* pState);
+		//static int StopScript(CScriptVirtualMachine* pMachine, CScriptRunState* pState);
+		//static int CheckScriptRun(CScriptVirtualMachine* pMachine, CScriptRunState* pState);
 
 		static int GetMsTime(CScriptVirtualMachine* pMachine, CScriptRunState* pState);
 

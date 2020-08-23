@@ -141,6 +141,7 @@
     <ClInclude Include="..\class\ScriptExecFrame.h" />
     <ClInclude Include="..\class\ScriptIntermediateCode.h" />
     <ClInclude Include="..\class\ScriptPointInterface.h" />
+    <ClInclude Include="..\class\ScriptRunState.h" />
     <ClInclude Include="..\class\ScriptTriggerMgr.h" />
     <ClInclude Include="..\class\zByteArray.h" />
     <ClInclude Include="..\class\EMicroCodeType.h" />
@@ -171,6 +172,7 @@
     <ClCompile Include="..\class\ScriptExecFrame.cpp" />
     <ClCompile Include="..\class\ScriptIntermediateCode.cpp" />
     <ClCompile Include="..\class\ScriptPointInterface.cpp" />
+    <ClCompile Include="..\class\ScriptRunState.cpp" />
     <ClCompile Include="..\class\ScriptStack.cpp" />
     <ClCompile Include="..\class\ScriptSuperPointer.cpp" />
     <ClCompile Include="..\class\ScriptTriggerMg.cpp" />

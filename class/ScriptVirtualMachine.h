@@ -28,11 +28,12 @@
 #include "ScriptSuperPointer.h"
 #include "ScriptEventMgr.h"
 #include "ScriptExecFrame.h"
+#include "ScriptRunState.h"
 #include <vector>
 #include <string>
 #include <map>
 #include <list>
-
+#include <mutex>
 namespace zlscript
 {
 	class CScriptStack;
@@ -40,14 +41,7 @@ namespace zlscript
 	class CCriticalSection;
 	class CScriptVirtualMachine;
 
-	enum E_SCRIPT_EVENT_TYPE
-	{
-		E_SCRIPT_EVENT_NONE,
-		E_SCRIPT_EVENT_RETURN,//本地返回值
-		//E_SCRIPT_EVENT_NEWTWORK_RETURN,//网络返回值
-		E_SCRIPT_EVENT_RUNSCRIPT,//本地运行脚本
-		//E_SCRIPT_EVENT_NETWORK_RUNSCRIPT,//网络运行脚本
-	};
+
 
 	enum EScript_Channel
 	{
@@ -55,170 +49,81 @@ namespace zlscript
 		EScript_Channel_User_Alone,//玩家一次只能运行一个,后请求的脚本将不能执行
 		Escript_Channel_User_NoOverlap//玩家一次只能运行一个同名脚本
 	};
-	class CScriptVirtualMachine;
-	class CScriptRunState
-	{
-	public:
-		CScriptRunState();
-		virtual ~CScriptRunState();
-	protected:
-		unsigned long m_id;
 
-		static unsigned long s_nIDSum;
 
-	public:
 
-		CScriptVirtualMachine* m_pMachine;
-	public:
-		//__int64 nNetworkID;//如果是网络调用，网络连接的ID
-		__int64 nCallEventIndex;//被调用的事件频道ID
-		__int64 m_CallReturnId;//被调用的事件频道ID
-		std::string FunName;
-
-		unsigned int nRunCount;
-
-	public:
-		virtual void WatingTime(unsigned int nTime);
-		unsigned int m_WatingTime;
-
-	public:
-		StackVarInfo m_varReturn;
-		std::stack<CScriptExecBlock*> m_BlockStack;
-
-		//int CurCallFunParamNum;//当前调用函数的参数数量
-		//int CurStackSizeWithoutFunParam;//除了函数参数，堆栈的大小
-	public:
-		virtual bool PushEmptyVarToStack();
-		virtual bool PushVarToStack(int nVal);
-		virtual bool PushVarToStack(__int64 nVal);
-		virtual bool PushVarToStack(double Double);
-		virtual bool PushVarToStack(const char* pstr);
-		virtual bool PushClassPointToStack(__int64 nIndex);
-
-		virtual bool PushVarToStack(StackVarInfo& Val);
-
-		template<class T>
-		bool PushClassPointToStack(T* pVal);
-
-		virtual __int64 PopIntVarFormStack();
-		virtual double PopDoubleVarFormStack();
-		virtual char* PopCharVarFormStack();
-		virtual __int64 PopClassPointFormStack();
-		virtual StackVarInfo PopVarFormStack();
-
-		virtual int GetParamNum();
-
-		//void SetParamNum(int val)
-		//{
-		//	CurCallFunParamNum = val;
-
-		//}
-		//void CopyToRegister(CScriptRunState* pState, int nNum);
-
-		virtual void CopyToStack(CScriptStack* pStack, int nNum);
-		virtual void CopyFromStack(CScriptStack* pStack);
-
-		//获取函数变量
-		virtual void ClearFunParam();
-		//void ClearFunParam(int nKeepNum);
-
-		void ClearStack();
-		void ClearExecBlock(bool bPrint = false);
-
-		void PrintExecBlock();
-		void ClearAll();
-
-		int CallFun(CScriptVirtualMachine* pMachine, CScriptExecBlock* pCurBlock, int nType, int FunIndex, int nParmNum,bool bIsBreak=false);
-		int CallFun(CScriptVirtualMachine* pMachine, int nType, int FunIndex, CScriptStack& ParmStack, bool bIsBreak = false);
-		int CallFun(CScriptVirtualMachine* pMachine, const char* pFunName, CScriptStack& ParmStack, bool bIsBreak = false);
-		unsigned int Exec(unsigned int unTimeRes, CScriptVirtualMachine* pMachine);
-
-		unsigned long GetId() const
-		{
-			return m_id;
-		}
-		void SetId(unsigned long val)
-		{
-			m_id = val;
-		}
-
-	public:
-		void SetEnd(bool val)
-		{
-			IsEnd = val;
-		}
-		bool GetEnd()
-		{
-			return IsEnd;
-		}
-	protected:
-		bool IsEnd;
-
-		char strbuff[2048];
-	};
-	template<class T>
-	inline bool CScriptRunState::PushClassPointToStack(T* pVal)
-	{
-		if (pVal)
-		{
-			PushClassPointToStack(pVal->GetScriptPointIndex());
-			return true;
-		}
-		else
-		{
-			PushClassPointToStack(-1);
-		}
-		return false;
-	}
-
-	enum
-	{
-		ERunTime_Error,
-		ERunTime_Continue,
-		ERunTime_Complete,
-		ERunTime_Waiting,
-		ERunTime_CallScriptFun,
-	};
 	class CScriptVirtualMachine : public CScriptExecFrame
 	{
 	public:
 		CScriptVirtualMachine();
+		CScriptVirtualMachine(int nThread);
 
 		virtual ~CScriptVirtualMachine(void);
 
 		static CScriptVirtualMachine* CreateNew();
 
-		virtual void init();
+		virtual void init(int nThread);
 
 		virtual void clear();
 
 		void SetEventIndex(int val);
+
+
+
+		//这个函数会一直尝试从执行队列里取出状态执行，即使队列为空
+		void RunningThreadFun();
+		//这个函数也会尝试从执行队列里取出状态执行，但队列为空时返回
+		void RunningThreadFun2();
 	public:
 		//nDelay, 与上一次执行的间隔时间 毫秒
 		//unTimeRes, 本次一共执行多少步脚本
 		virtual unsigned int Exec(unsigned int nDelay, unsigned int unTimeRes = 1);
+
+		//主要用于初始化等需要立即执行的脚本，不能异步执行，不要有异步调用的函数什么的，也不要有wait什么的
+		bool RunFunImmediately(std::string name, CScriptStack& ParmStack);
 
 		bool RunFun(CScriptRunState* pState, std::string funname, const char* sFormat, ...);
 		bool RunFun(CScriptRunState* pState, std::string funname, CScriptStack& ParmStack, bool bIsBreak = false);
 
 		bool HasWaitingScript(unsigned long id);
 
-		bool RemoveRunState(unsigned long id);
-		bool RemoveRunStateByShape(int id);
-		bool CheckRun(__int64 id);
-		CScriptRunState* GetRunState(unsigned long id);
-		CScriptRunState* PopRunState(unsigned long id);
+		//bool RemoveRunState(unsigned long id);
+		//bool RemoveRunStateByShape(int id);
+		//bool CheckRun(__int64 id);
+		//CScriptRunState* GetRunState(unsigned long id);
+		//CScriptRunState* PopRunState(unsigned long id);
 		StackVarInfo* GetGlobalVar(unsigned int pos);
 	protected:
 
 		std::vector<StackVarInfo> vGlobalNumVar;
 
 		//****************运行管理******************//
+		bool bNoThread;
+		std::atomic_int m_nThreadRunState = 0;//0 退出 1 运行 2 暂停
 		typedef std::list<CScriptRunState*> listRunState;
-		//vector<ListRunState> m_vRunStateList;
-		listRunState m_RunStateList;
+	protected:
+		CScriptRunState* PopStateFormRunList();
+		void PushStateToRunList(CScriptRunState* pState);
 
-		std::map<unsigned long, CScriptRunState*> m_mapWaiting;
+
+		CScriptRunState* PopStateFormWaitingReturnMap(__int64 nID);
+		bool PushStateToWaitingReturnMap(CScriptRunState* pState);
+
+		//弹出一个已经到期的等待状态
+		CScriptRunState* PopStateFormWaitingTimeList(unsigned int nowTime);
+		void PushStateToWaitingTimeList(CScriptRunState* pState);
+	protected:
+		int nMaxTimeRes;
+		//等待执行的脚本
+		listRunState m_RunStateList;
+		std::mutex m_RunStateLock;
+
+		//等待返回的脚本
+		std::map<unsigned long, CScriptRunState*> m_mapWaitingForReturn;
+		std::mutex m_WaitReturnLock;
+		//需要延时执行的脚本
+		listRunState m_ListWaitingForTime;
+		std::mutex m_WaitTimeLock;
 
 		std::list<unsigned long> m_listDel;
 	public:
