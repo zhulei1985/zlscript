@@ -49,38 +49,7 @@ namespace zlscript
 		//传递参数
 		CScriptStack m_Parm;
 	};
-	class tagEventChannel
-	{
-	public:
-		tagEventChannel()
-		{
-			nChannelID = 0;
-			isBlocking = false;
-		}
-		~tagEventChannel()
-		{
-			clear();
-		}
-		void clear();
-	public:
-		__int64 nChannelID;
-		bool isBlocking;
-		std::list<tagScriptEvent*> listEvent;
-	};
-	class tagMapEventChannel
-	{
-	public:
-		tagMapEventChannel()
-		{
 
-		}
-		~tagMapEventChannel()
-		{
-
-		}
-	public:
-		std::map<__int64, tagEventChannel> m_mapEventChannel;
-	};
 	//2020.5.24 新的修改计划：
 	//频道ID依然需要各个部分自己注册，但是不限事件类型了
 	//事件分为指定频道和不指定两种，指定频道会直接发给对应频道，不指定的话会根据事件分别保存，等待频道自己取
@@ -96,8 +65,10 @@ namespace zlscript
 		//void RemoveEvent(int nEventType, int nChannelID);
 
 		//void SetEventBlock(int nEventType, int nID, bool IsBlock);
-
+		//压入事件，如果事件频道长期无人处理，返回失败
 		bool SendEvent(int nEventType, __int64 nSendID, CScriptStack& vIn, __int64 nRecvID = 0);
+		//强制压入事件
+		void SendEventForce(int nEventType, __int64 nSendID, CScriptStack& vIn, __int64 nRecvID = 0);
 		void GetEventByType(int nEventType, std::vector<tagScriptEvent*> &vOut, int nSize = 10);
 		void GetEventByChannel(__int64 nChannelID, std::vector<tagScriptEvent*>& vOut);
 
@@ -111,7 +82,16 @@ namespace zlscript
 		tagScriptEvent* NewEvent();
 		void ReleaseEvent(tagScriptEvent *pPoint);
 	protected:
-		typedef std::list<tagScriptEvent*> tagListEvents;
+		typedef struct tagListEvents
+		{
+			tagListEvents()
+			{
+				lastTime = std::chrono::steady_clock::now();
+			}
+			std::list<tagScriptEvent*> list;
+			std::chrono::steady_clock::time_point lastTime;//最后获取事件的时间
+		};
+		//typedef std::list<tagScriptEvent*> tagListEvents;
 
 		std::map<__int64, tagListEvents> m_mapEventByChannel;
 		__int64 m_nEventListCount;
@@ -119,6 +99,8 @@ namespace zlscript
 
 		std::map<int, tagListEvents> m_mapEventsByType;
 		std::mutex m_LockEventType;
+
+		unsigned int m_MaxDurationTime;
 	public:
 		static CScriptEventMgr* GetInstance()
 		{

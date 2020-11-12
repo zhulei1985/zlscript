@@ -14,34 +14,16 @@
 	See the License for the specific language governing permissions and
 	limitations under the License.
  ****************************************************************************/
-
 #include "ScriptEventMgr.h"
 #include "ScriptVirtualMachine.h"
 namespace zlscript
 {
-	void tagEventChannel::clear()
-	{
-		{
-			auto it = listEvent.begin();
-			for (; it != listEvent.end(); it++)
-			{
-				tagScriptEvent* pEvent = *it;
-				if (pEvent)
-				{
-					delete pEvent;
-				}
-			}
-			listEvent.clear();
-		}
-
-		isBlocking = false;
-	}
-
 
 	CScriptEventMgr CScriptEventMgr::s_Instance;
 	CScriptEventMgr::CScriptEventMgr()
 	{
 		m_nEventListCount = E_SCRIPT_EVENT_CHANNEL_ASSIGN;
+		m_MaxDurationTime = 1000 * 60 * 10;
 	}
 
 	CScriptEventMgr::~CScriptEventMgr()
@@ -101,13 +83,18 @@ namespace zlscript
 
 	bool CScriptEventMgr::SendEvent(int nEventType, __int64 nSendID, CScriptStack& vIn, __int64 nRecvID)
 	{
+		auto nowTime = std::chrono::steady_clock::now();
 		//查找一个合适的频道
 		if (nRecvID == 0)
 		{
 			std::lock_guard<std::mutex> Lock(m_LockEventType);
 
 			auto& eList = m_mapEventsByType[nEventType];
-
+			auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(nowTime - eList.lastTime);
+			if (duration.count() >= m_MaxDurationTime)
+			{
+				return false;
+			}
 			tagScriptEvent* pEvent = NewEvent();
 			pEvent->nSendID = nSendID;
 			pEvent->nEventType = nEventType;
@@ -116,7 +103,48 @@ namespace zlscript
 				pEvent->m_Parm.push(vIn.top());
 				vIn.pop();
 			}
-			eList.push_back(pEvent);
+			eList.list.push_back(pEvent);
+		}
+		else
+		{
+			std::lock_guard<std::mutex> Lock(m_LockEventChannel);
+
+			auto& channel = m_mapEventByChannel[nRecvID];
+			auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(nowTime - channel.lastTime);
+			if (duration.count() >= m_MaxDurationTime)
+			{
+				return false;
+			}
+			tagScriptEvent* pEvent = NewEvent();
+			pEvent->nSendID = nSendID;
+			pEvent->nEventType = nEventType;
+			while (vIn.size() > 0)
+			{
+				pEvent->m_Parm.push(vIn.top());
+				vIn.pop();
+			}
+			channel.list.push_back(pEvent);
+		}
+
+		return true;
+	}
+
+	void CScriptEventMgr::SendEventForce(int nEventType, __int64 nSendID, CScriptStack& vIn, __int64 nRecvID)
+	{
+		if (nRecvID == 0)
+		{
+			std::lock_guard<std::mutex> Lock(m_LockEventType);
+
+			auto& eList = m_mapEventsByType[nEventType];
+			tagScriptEvent* pEvent = NewEvent();
+			pEvent->nSendID = nSendID;
+			pEvent->nEventType = nEventType;
+			while (vIn.size() > 0)
+			{
+				pEvent->m_Parm.push(vIn.top());
+				vIn.pop();
+			}
+			eList.list.push_back(pEvent);
 		}
 		else
 		{
@@ -132,10 +160,8 @@ namespace zlscript
 				pEvent->m_Parm.push(vIn.top());
 				vIn.pop();
 			}
-			channel.push_back(pEvent);
+			channel.list.push_back(pEvent);
 		}
-
-		return true;
 	}
 
 	void CScriptEventMgr::GetEventByType(int nEventType, std::vector<tagScriptEvent*>& vOut, int nSize)
@@ -146,18 +172,19 @@ namespace zlscript
 		if (itChannel != m_mapEventsByType.end())
 		{
 			tagListEvents& eventChannel = itChannel->second;
+			eventChannel.lastTime = std::chrono::steady_clock::now();
 			for (int i = 0; i < nSize; i++)
 			{
-				if (eventChannel.empty())
+				if (eventChannel.list.empty())
 				{
 					break;
 				}
-				tagScriptEvent* pEvent = eventChannel.front();
+				tagScriptEvent* pEvent = eventChannel.list.front();
 				if (pEvent)
 				{
 					vOut.push_back(pEvent);
 				}
-				eventChannel.pop_front();
+				eventChannel.list.pop_front();
 			}
 		}
 	}
@@ -170,7 +197,8 @@ namespace zlscript
 		if (itChannel != m_mapEventByChannel.end())
 		{
 			tagListEvents& eventChannel = itChannel->second;
-			for (auto it = eventChannel.begin(); it != eventChannel.end(); it++)
+			eventChannel.lastTime = std::chrono::steady_clock::now();
+			for (auto it = eventChannel.list.begin(); it != eventChannel.list.end(); it++)
 			{
 				tagScriptEvent* pEvent = *it;
 				if (pEvent)
@@ -178,7 +206,7 @@ namespace zlscript
 					vOut.push_back(pEvent);
 				}
 			}
-			eventChannel.clear();
+			eventChannel.list.clear();
 		}
 	}
 

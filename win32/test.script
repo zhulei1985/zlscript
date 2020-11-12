@@ -5,13 +5,8 @@ void init()
 	print("init.....");
 
 }
-void main()
+void CalculationTest()
 {
-	CTest test = new CTest;
-	int nVal = test->Add(1,2);
-	print(nVal);
-	delete test;
-
 	int t1 = GetMsTime();
 
 	int sum = 0;
@@ -28,6 +23,17 @@ void main()
 	}
 
 	int t2 = GetMsTime() - t1;
+	print("Calculation result:" + sum);
+	print("Calculation time:" + t2 +"ms");
+}
+void main()
+{
+	CTest test = new CTest;
+	int nVal = test->Add(1,2);
+	print(nVal);
+	delete test;
 
-	print("Calculation time:" + t2);
+	//CalculationTest();
+
+	RunScript(0,"CalculationTest");
 }
