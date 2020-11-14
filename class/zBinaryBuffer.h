@@ -1,5 +1,4 @@
-﻿#pragma once
-/****************************************************************************
+﻿/****************************************************************************
 	Copyright (c) 2019 ZhuLei
 	Email:zhulei1985@foxmail.com
 
@@ -15,15 +14,37 @@
 	See the License for the specific language governing permissions and
 	limitations under the License.
  ****************************************************************************/
+
+#pragma once
+#include "scriptcommon.h"
+#include <map>
+#include <vector>
+#include <mutex>
 namespace zlscript
 {
-	enum
+	class CBinaryPool
 	{
-		EScriptVal_None,
-		EScriptVal_Int,
-		EScriptVal_Double,
-		EScriptVal_String,
-		EScriptVal_ClassPointIndex,
-		EScriptVal_Binary,
+	public:
+		CBinaryPool();
+		~CBinaryPool();
+
+		__int64 NewBinary(const char* pStr, unsigned int size);
+
+		void UseBinary(__int64 nIndex);
+		void ReleaseBinary(__int64 nIndex);
+
+		const char* GetBinary(__int64 nIndex, unsigned int& size);
+
+		struct tagInfo
+		{
+			std::vector<char> data;
+			int nCount;
+		};
+	protected:
+		std::map<__int64, tagInfo> m_BinaryPool;
+		__int64 m_IndexCount;
+
+		std::mutex m_Lock;
 	};
 }
+ 

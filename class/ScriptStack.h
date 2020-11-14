@@ -21,6 +21,7 @@
 #include <stack>
 #include <string>
 #include "zStringBuffer.h"
+#include "zBinaryBuffer.h"
 #include "EScriptVariableType.h"
 #include "ScriptSuperPointer.h"
 
@@ -49,6 +50,7 @@ namespace zlscript
 		StackVarInfo& operator=(const StackVarInfo& cls);
 
 		static zlscript::CStringPool s_strPool;
+		static zlscript::CBinaryPool s_binPool;
 	};
 
 	class CScriptStack
@@ -348,6 +350,14 @@ namespace zlscript
 		StackVarInfo var;
 		var.cType = EScriptVal_String;
 		var.Int64 = StackVarInfo::s_strPool.NewString(pVal);
+		Stack.push(var);
+	}
+
+	inline void ScriptVector_PushVar(CScriptStack& Stack, const char* pVal, unsigned int size)
+	{
+		StackVarInfo var;
+		var.cType = EScriptVal_Binary;
+		var.Int64 = StackVarInfo::s_binPool.NewBinary(pVal, size);
 		Stack.push(var);
 	}
 

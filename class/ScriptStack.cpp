@@ -21,6 +21,7 @@
 namespace zlscript
 {
 	zlscript::CStringPool StackVarInfo::s_strPool;
+	zlscript::CBinaryPool StackVarInfo::s_binPool;
 	StackVarInfo::StackVarInfo()
 	{
 		cType = 0;
@@ -41,13 +42,19 @@ namespace zlscript
 			Double = cls.Double;
 			break;
 		case EScriptVal_String:
-		{
-			Int64 = cls.Int64;
-			s_strPool.UseString(Int64);
-		}
-		break;
+			{
+				Int64 = cls.Int64;
+				s_strPool.UseString(Int64);
+			}
+			break;
 		case EScriptVal_ClassPointIndex:
 			Int64 = cls.Int64;
+			break;
+		case EScriptVal_Binary:
+			{
+				Int64 = cls.Int64;
+				s_binPool.UseBinary(Int64);
+			}
 			break;
 		}
 
@@ -62,6 +69,10 @@ namespace zlscript
 		if (cType == EScriptVal_String)
 		{
 			s_strPool.ReleaseString(Int64);
+		}
+		else if (cType == EScriptVal_Binary)
+		{
+			s_binPool.ReleaseBinary(Int64);
 		}
 		cType = EScriptVal_None;
 		Int64 = 0;
@@ -82,13 +93,19 @@ namespace zlscript
 			Double = cls.Double;
 			break;
 		case EScriptVal_String:
-		{
-			Int64 = cls.Int64;
-			s_strPool.UseString(Int64);
-		}
-		break;
+			{
+				Int64 = cls.Int64;
+				s_strPool.UseString(Int64);
+			}
+			break;
 		case EScriptVal_ClassPointIndex:
 			Int64 = cls.Int64;
+			break;
+		case EScriptVal_Binary:
+			{
+				Int64 = cls.Int64;
+				s_binPool.UseBinary(Int64);
+			}
 			break;
 		}
 
