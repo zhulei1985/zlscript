@@ -32,6 +32,13 @@ namespace zlscript
 	class CScriptBasePointer
 	{
 	public:
+		CScriptBasePointer(){
+			m_ID = 0;
+			m_nCount = 0;
+			m_nUseCount = 0;
+		}
+		virtual ~CScriptBasePointer(){}
+	public:
 		virtual const char* GetClassName() = 0;
 		virtual int GetType() = 0;
 		virtual __int64 GetID();
@@ -73,8 +80,8 @@ namespace zlscript
 		CScriptSuperPointer()
 		{
 			m_pPointer = nullptr;
-			m_nCount = 0;
-			m_nUseCount = 0;
+			//m_nCount = 0;
+			//m_nUseCount = 0;
 		}
 
 		int RunFun(unsigned int nIndex, CScriptRunState*);

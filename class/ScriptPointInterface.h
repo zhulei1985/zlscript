@@ -89,7 +89,7 @@ namespace zlscript
 		//{
 		//	m_nID = 0;
 		//}
-		~CScriptPointInterface();
+		virtual ~CScriptPointInterface();
 		virtual void InitScriptPointIndex();
 		bool IsInitScriptPointIndex();
 		__int64 GetScriptPointIndex();
