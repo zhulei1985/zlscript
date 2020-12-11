@@ -92,9 +92,10 @@ namespace zlscript
 		//bool CheckRun(__int64 id);
 		//CScriptRunState* GetRunState(unsigned long id);
 		//CScriptRunState* PopRunState(unsigned long id);
-		StackVarInfo* GetGlobalVar(unsigned int pos);
+		StackVarInfo GetGlobalVar(unsigned int pos);
+		void SetGlobalVar(unsigned int pos, StackVarInfo& val);
 	protected:
-
+		std::mutex m_GlobalVarLock;
 		std::vector<StackVarInfo> vGlobalNumVar;
 
 		//****************运行管理******************//

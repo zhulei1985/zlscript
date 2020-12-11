@@ -222,7 +222,7 @@ namespace zlscript
 			return ECALLBACK_ERROR;
 		}
 		int nParmNum = pState->GetParamNum();
-		CScriptStack vRetrunVars;
+		//CScriptStack vRetrunVars;
 		int nIsWaiting = pState->PopIntVarFormStack();//是否等待调用函数完成
 		std::string name = pState->PopCharVarFormStack();
 
@@ -231,7 +231,7 @@ namespace zlscript
 		for (int i = 0; i < nParmNum; i++)
 		{
 
-			ScriptVector_PushVar(vRetrunVars, &pState->PopVarFormStack());
+			ScriptVector_PushVar(scriptParm, &pState->PopVarFormStack());
 		}
 
 		pMachine->RunTo(name, scriptParm, nIsWaiting>0? pState->GetId():0, 0);

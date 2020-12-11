@@ -504,13 +504,21 @@ namespace zlscript
 	//	}
 	//	return nullptr;
 	//}
-	StackVarInfo*CScriptVirtualMachine::GetGlobalVar(unsigned int pos)
+	StackVarInfo CScriptVirtualMachine::GetGlobalVar(unsigned int pos)
 	{
 		if (pos < vGlobalNumVar.size())
 		{
-			return &vGlobalNumVar[pos];
+			return vGlobalNumVar[pos];
 		}
-		return nullptr;
+		return StackVarInfo();
+	}
+
+	void CScriptVirtualMachine::SetGlobalVar(unsigned int pos, StackVarInfo& val)
+	{
+		if (pos < vGlobalNumVar.size())
+		{
+			vGlobalNumVar[pos] = val;
+		}
 	}
 
 	CScriptRunState* CScriptVirtualMachine::PopStateFormRunList()

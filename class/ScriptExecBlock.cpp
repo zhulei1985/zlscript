@@ -470,15 +470,9 @@ namespace zlscript
 				break;
 				case 1://全局变量
 				{
-					StackVarInfo* var = pMachine->GetGlobalVar(code.dwPos);
-					if (var)
-					{
-						ScriptVector_PushVar(m_varRegister, var);
-					}
-					else
-					{
-						ScriptVector_PushVar(m_varRegister, (__int64)0);
-					}
+					StackVarInfo var = pMachine->GetGlobalVar(code.dwPos);
+	
+					ScriptVector_PushVar(m_varRegister, &var);
 				}
 				break;
 				case 2:
@@ -516,15 +510,9 @@ namespace zlscript
 				{
 				case 0://全局变量
 				{
-					StackVarInfo* var = pMachine->GetGlobalVar(code.dwPos);
-					if (var)
-					{
-						*var = ScriptStack_GetVar(m_varRegister);
-					}
-					else
-					{
-						ScriptStack_GetInt(m_varRegister);
-					}
+					auto var = ScriptStack_GetVar(m_varRegister);
+					pMachine->SetGlobalVar(code.dwPos, var);
+
 				}
 				break;
 				case 1:

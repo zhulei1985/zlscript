@@ -686,7 +686,7 @@ namespace zlscript
 		//如果语句结束，说明只是定义了一个全局变量
 		if (nextWord.word != "(")
 		{
-			GetWord(nextWord);
+			//GetWord(nextWord);
 			StackVarInfo defVar;//默认值
 			defVar.cType = nVarType;
 			if (nextWord.word == "=")
@@ -728,7 +728,7 @@ namespace zlscript
 				VarInfo info;
 				info.cType = nVarType;
 				info.cGlobal = 1;
-				info.wExtend = 1;
+				info.wExtend = m_nCurFunVarType;
 				info.dwPos = vGlobalNumVar.size();
 				m_mapDicGlobalVar[wordFunName.word] = info;
 
@@ -1206,6 +1206,15 @@ namespace zlscript
 							code.cSign = 1;
 							code.cExtend = 0;
 							code.dwPos = nVarIndex;
+						}
+						else if(m_mapDicGlobalVar.find(nextWord.word) != m_mapDicGlobalVar.end())
+						{
+							VarInfo info = m_mapDicGlobalVar[nextWord.word];
+							code.qwCode = 0;
+							code.wInstruct = ECODE_EVALUATE;
+							code.cSign = 0;
+							code.cExtend = 0;
+							code.dwPos = info.dwPos;
 						}
 					}
 					else
