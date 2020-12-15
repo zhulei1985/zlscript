@@ -12,7 +12,7 @@
 #include <string>
 namespace zlscript
 {
-	CScriptExecBlock::CScriptExecBlock(CScriptCodeLoader::tagCodeData* pData, CScriptRunState* pMaster)
+	CScriptExecBlock::CScriptExecBlock(CScriptCodeLoader::tagCodeData* pData, CScriptRunState* pMaster):m_varRegister(256)
 	{
 		CurCallFunParamNum = 0;
 		m_nCodePoint = 0;

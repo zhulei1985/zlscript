@@ -56,12 +56,12 @@ namespace zlscript
 	class CScriptStack
 	{
 	public:
-		CScriptStack();
+		CScriptStack(unsigned int Size = 16);
 		CScriptStack(const CScriptStack& info);
 		~CScriptStack();
 	public:
-		void pop();
-		void push(StackVarInfo& val);
+		bool pop();
+		bool push(StackVarInfo& val);
 		StackVarInfo& top();
 		unsigned int size();
 		bool empty();
@@ -69,9 +69,9 @@ namespace zlscript
 		CScriptStack& operator =(const CScriptStack& info);
 		StackVarInfo* GetVal(int index);
 	private:
-		std::vector<StackVarInfo*> m_vData;
+		std::vector<StackVarInfo> m_vData;
 
-		std::list<StackVarInfo*> m_Pool;
+		//std::list<StackVarInfo*> m_Pool;
 		unsigned int nIndex;
 
 		StackVarInfo emptyinfo;

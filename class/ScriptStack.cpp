@@ -42,20 +42,20 @@ namespace zlscript
 			Double = cls.Double;
 			break;
 		case EScriptVal_String:
-			{
-				Int64 = cls.Int64;
-				s_strPool.UseString(Int64);
-			}
-			break;
+		{
+			Int64 = cls.Int64;
+			s_strPool.UseString(Int64);
+		}
+		break;
 		case EScriptVal_ClassPointIndex:
 			Int64 = cls.Int64;
 			break;
 		case EScriptVal_Binary:
-			{
-				Int64 = cls.Int64;
-				s_binPool.UseBinary(Int64);
-			}
-			break;
+		{
+			Int64 = cls.Int64;
+			s_binPool.UseBinary(Int64);
+		}
+		break;
 		}
 
 	}
@@ -93,120 +93,94 @@ namespace zlscript
 			Double = cls.Double;
 			break;
 		case EScriptVal_String:
-			{
-				Int64 = cls.Int64;
-				s_strPool.UseString(Int64);
-			}
-			break;
+		{
+			Int64 = cls.Int64;
+			s_strPool.UseString(Int64);
+		}
+		break;
 		case EScriptVal_ClassPointIndex:
 			Int64 = cls.Int64;
 			break;
 		case EScriptVal_Binary:
-			{
-				Int64 = cls.Int64;
-				s_binPool.UseBinary(Int64);
-			}
-			break;
+		{
+			Int64 = cls.Int64;
+			s_binPool.UseBinary(Int64);
+		}
+		break;
 		}
 
 		// TODO: 在此处插入 return 语句
 		return *this;
 	}
 
-	CScriptStack::CScriptStack()
+	CScriptStack::CScriptStack(unsigned int Size)
 	{
+		m_vData.resize(Size);
 		nIndex = 0;
 	}
 	CScriptStack::CScriptStack(const CScriptStack& info)
 	{
 		//先清空，再赋值
-		while (this->size() > 0)
+		for (unsigned int i = 0; i < this->nIndex; i++)
 		{
-			this->pop();
+			this->m_vData[i].Clear();
 		}
-		auto it = info.m_vData.begin();
-		for (; it != info.m_vData.end(); it++)
+		this->nIndex = 0;
+		if (info.m_vData.size() == 0)
 		{
-			StackVarInfo* info = *it;
-			this->push(*info);
+			//错误
+			return;
+		}
+		this->m_vData.resize(info.m_vData.size());
+		this->nIndex = info.nIndex;
+
+		for (unsigned int i = 0; i < info.nIndex; i++)
+		{
+			this->m_vData[i] = info.m_vData[i];
 		}
 		//return *this;
 	}
 	CScriptStack::~CScriptStack()
 	{
-		while (size() > 0)
-		{
-			pop();
-		}
-
-		auto it = m_Pool.begin();
-		while (it != m_Pool.end())
-		{
-			StackVarInfo* pInfo = *it;
-			if (pInfo)
-			{
-				delete pInfo;
-			}
-			it = m_Pool.erase(it);
-		}
+		nIndex = 0;
+		m_vData.clear();
 	}
-	void CScriptStack::pop()
+	bool CScriptStack::pop()
 	{
-		if (m_vData.size() > 0)
+		if (nIndex > 0)
 		{
-			auto pInfo = m_vData.back();
-			if (pInfo)
-			{
-				pInfo->Clear();
-				m_Pool.push_back(pInfo);
-			}
-			m_vData.pop_back();
+			nIndex--;
+			m_vData[nIndex].Clear();
+			return true;
 		}
+		return false;
 	}
-	void CScriptStack::push(StackVarInfo& val)
+	bool CScriptStack::push(StackVarInfo& val)
 	{
-		StackVarInfo* pInfo = nullptr;
-		auto it = m_Pool.begin();
-		if (it != m_Pool.end())
+		if (nIndex < m_vData.size())
 		{
-			pInfo = *it;
-			m_Pool.erase(it);
+			m_vData[nIndex] = val;
+			nIndex++;
+			return true;
 		}
-		if (pInfo == nullptr)
-		{
-			pInfo = new StackVarInfo;
-		}
-		if (pInfo)
-		{
-			*pInfo = val;
-			m_vData.push_back(pInfo);
-		}
-		//if (nIndex >= m_vData.size())
-		//{
-		//	StackVarInfo val;
-		//	val.cType = EScriptVal_Int;
-		//	val.Int64 = 0;
-		//	m_vData.resize((nIndex / 8 + 1) * 8, val);
-		//}
-		//m_vData[nIndex++] = val;
+		return false;
 	}
 	StackVarInfo& CScriptStack::top()
 	{
-		auto pInfo = m_vData.back();
-		if (pInfo)
+		if (nIndex > 0)
 		{
-			return *pInfo;
+			return m_vData[nIndex - 1];
 		}
 
 		return emptyinfo;
 	}
 	unsigned int CScriptStack::size()
 	{
-		return m_vData.size();
+		return nIndex;
 	}
 	bool CScriptStack::empty()
 	{
-		if (m_vData.empty())
+		if (nIndex == 0)
 		{
 			return true;
 		}
@@ -216,15 +190,22 @@ namespace zlscript
 	CScriptStack& CScriptStack::operator=(const CScriptStack& info)
 	{
 		//先清空，再赋值
-		while (this->size() > 0)
+		for (unsigned int i = 0; i < this->nIndex; i++)
 		{
-			this->pop();
+			this->m_vData[i].Clear();
 		}
-		auto it = info.m_vData.begin();
-		for (; it != info.m_vData.end(); it++)
+		this->nIndex = 0;
+		if (info.m_vData.size() == 0)
 		{
-			StackVarInfo* info = *it;
-			this->push(*info);
+			//错误
+			return *this;
+		}
+		this->m_vData.resize(info.m_vData.size());
+		this->nIndex = info.nIndex;
+
+		for (unsigned int i = 0; i < info.nIndex; i++)
+		{
+			this->m_vData[i] = info.m_vData[i];
 		}
 		return *this;
 	}
@@ -233,7 +214,7 @@ namespace zlscript
 	{
 		if (index >= 0 && index < m_vData.size())
 		{
-			return m_vData[index];
+			return &m_vData[index];
 		}
 		return nullptr;
 	}
