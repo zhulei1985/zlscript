@@ -131,7 +131,10 @@ namespace zlscript
 			//错误
 			return;
 		}
-		this->m_vData.resize(info.m_vData.size());
+		if (this->m_vData.size() < info.nIndex)
+		{
+			this->m_vData.resize(info.m_vData.size());
+		}
 		this->nIndex = info.nIndex;
 
 		for (unsigned int i = 0; i < info.nIndex; i++)
@@ -200,7 +203,11 @@ namespace zlscript
 			//错误
 			return *this;
 		}
-		this->m_vData.resize(info.m_vData.size());
+		if (this->m_vData.size() < info.nIndex)
+		{
+			this->m_vData.resize(info.m_vData.size());
+		}
+
 		this->nIndex = info.nIndex;
 
 		for (unsigned int i = 0; i < info.nIndex; i++)
