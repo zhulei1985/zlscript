@@ -500,7 +500,8 @@ namespace zlscript
 			break;
 			case ECODE_STATEMENT_END:
 			{
-				m_pMaster->ClearStack();
+				ClearStack();
+				//m_pMaster->ClearStack();
 				m_nCodePoint++;
 			}
 			break;
