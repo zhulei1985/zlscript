@@ -98,11 +98,23 @@ namespace zlscript
 			tagScriptEvent* pEvent = NewEvent();
 			pEvent->nSendID = nSendID;
 			pEvent->nEventType = nEventType;
-			while (vIn.size() > 0)
+
+			for (int i = vIn.size() - 1; i >= 0; i--)
 			{
-				pEvent->m_Parm.push(vIn.top());
-				vIn.pop();
+				StackVarInfo* pVar = vIn.GetVal(i);
+				if (pVar)
+					pEvent->m_Parm.push(*pVar);
+				else
+				{
+					StackVarInfo emtpy;
+					pEvent->m_Parm.push(emtpy);
+				}
 			}
+			//while (vIn.size() > 0)
+			//{
+			//	pEvent->m_Parm.push(vIn.top());
+			//	vIn.pop();
+			//}
 			eList.list.push_back(pEvent);
 		}
 		else
@@ -118,11 +130,22 @@ namespace zlscript
 			tagScriptEvent* pEvent = NewEvent();
 			pEvent->nSendID = nSendID;
 			pEvent->nEventType = nEventType;
-			while (vIn.size() > 0)
+			for (int i = vIn.size() - 1; i >= 0; i--)
 			{
-				pEvent->m_Parm.push(vIn.top());
-				vIn.pop();
+				StackVarInfo* pVar = vIn.GetVal(i);
+				if (pVar)
+					pEvent->m_Parm.push(*pVar);
+				else
+				{
+					StackVarInfo emtpy;
+					pEvent->m_Parm.push(emtpy);
+				}
 			}
+			//while (vIn.size() > 0)
+			//{
+			//	pEvent->m_Parm.push(vIn.top());
+			//	vIn.pop();
+			//}
 			channel.list.push_back(pEvent);
 		}
 
