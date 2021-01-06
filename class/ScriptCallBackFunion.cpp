@@ -230,8 +230,8 @@ namespace zlscript
 		CScriptStack scriptParm;
 		for (int i = 0; i < nParmNum; i++)
 		{
-
-			ScriptVector_PushVar(scriptParm, &pState->PopVarFormStack());
+			auto var = pState->PopVarFormStack();
+			ScriptVector_PushVar(scriptParm, &var);
 		}
 
 		pMachine->RunTo(name, scriptParm, nIsWaiting>0? pState->GetId():0, 0);
@@ -448,7 +448,8 @@ namespace zlscript
 		CScriptStack vParmVars;
 		for (int i = 0; i < nParmNum; i++)
 		{
-			ScriptVector_PushVar(vParmVars, &pState->PopVarFormStack());
+			auto var = pState->PopVarFormStack();
+			ScriptVector_PushVar(vParmVars, &var);
 		}
 		CScriptTriggerMgr::GetInstance()->SetEventTrigger(strEvent, nClassPoint, strFlag, pMachine->GetEventIndex(), strScript, vParmVars);
 		pState->ClearFunParam();
