@@ -80,14 +80,14 @@ namespace zlscript
 		RegisterFun("RemoveEventTrigger", (C_CallBackScriptFunion)RemoveEventTrigger);
 
 
-		RegisterFun("NewArray", (C_CallBackScriptFunion)NewArray);
-		RegisterFun("newarray", (C_CallBackScriptFunion)NewArray);
+		//RegisterFun("NewArray", (C_CallBackScriptFunion)NewArray);
+		//RegisterFun("newarray", (C_CallBackScriptFunion)NewArray);
 
-		RegisterFun("ReleaseArray", (C_CallBackScriptFunion)ReleaseArray);
-		RegisterFun("releasearray", (C_CallBackScriptFunion)ReleaseArray);
+		//RegisterFun("ReleaseArray", (C_CallBackScriptFunion)ReleaseArray);
+		//RegisterFun("releasearray", (C_CallBackScriptFunion)ReleaseArray);
 
-		RegisterFun("GetData", (C_CallBackScriptFunion)GetData);
-		RegisterFun("getdata", (C_CallBackScriptFunion)GetData);
+		RegisterFun("InitData", (C_CallBackScriptFunion)InitData);
+		RegisterFun("initdata", (C_CallBackScriptFunion)InitData);
 
 		RegisterFun("ReleaseData", (C_CallBackScriptFunion)ReleaseData);
 		RegisterFun("releasedata", (C_CallBackScriptFunion)ReleaseData);
@@ -484,43 +484,43 @@ namespace zlscript
 	}
 
 
-	int CScriptCallBackFunion::NewArray(CScriptVirtualMachine* pMachine, CScriptRunState* pState)
-	{
-		if (pState == nullptr)
-		{
-			return ECALLBACK_ERROR;
-		}
+	//int CScriptCallBackFunion::NewArray(CScriptVirtualMachine* pMachine, CScriptRunState* pState)
+	//{
+	//	if (pState == nullptr)
+	//	{
+	//		return ECALLBACK_ERROR;
+	//	}
 
-		auto pArray = CScriptDataMgr::GetInstance()->NewArray();
-		pState->ClearFunParam();
-		pState->PushClassPointToStack(pArray);
-		return ECALLBACK_FINISH;
-	}
+	//	auto pArray = CScriptDataMgr::GetInstance()->NewArray();
+	//	pState->ClearFunParam();
+	//	pState->PushClassPointToStack(pArray);
+	//	return ECALLBACK_FINISH;
+	//}
 
-	int CScriptCallBackFunion::ReleaseArray(CScriptVirtualMachine* pMachine, CScriptRunState* pState)
-	{
-		if (pState == nullptr)
-		{
-			return ECALLBACK_ERROR;
-		}
-		__int64 nIndex = pState->PopClassPointFormStack();
-		auto pPoint = CScriptSuperPointerMgr::GetInstance()->PickupPointer(nIndex);
-		if (pPoint)
-		{
-			pPoint->Lock();
-			auto pMaster = dynamic_cast<CScriptArray*>(pPoint->GetPoint());
-			if (pMaster)
-			{
-				delete pMaster;
-			}
-			pPoint->Unlock();
-		}
-		CScriptSuperPointerMgr::GetInstance()->ReturnPointer(pPoint);
-		pState->ClearFunParam();
-		return ECALLBACK_FINISH;
-	}
+	//int CScriptCallBackFunion::ReleaseArray(CScriptVirtualMachine* pMachine, CScriptRunState* pState)
+	//{
+	//	if (pState == nullptr)
+	//	{
+	//		return ECALLBACK_ERROR;
+	//	}
+	//	__int64 nIndex = pState->PopClassPointFormStack();
+	//	auto pPoint = CScriptSuperPointerMgr::GetInstance()->PickupPointer(nIndex);
+	//	if (pPoint)
+	//	{
+	//		pPoint->Lock();
+	//		auto pMaster = dynamic_cast<CScriptArray*>(pPoint->GetPoint());
+	//		if (pMaster)
+	//		{
+	//			delete pMaster;
+	//		}
+	//		pPoint->Unlock();
+	//	}
+	//	CScriptSuperPointerMgr::GetInstance()->ReturnPointer(pPoint);
+	//	pState->ClearFunParam();
+	//	return ECALLBACK_FINISH;
+	//}
 
-	int CScriptCallBackFunion::GetData(CScriptVirtualMachine* pMachine, CScriptRunState* pState)
+	int CScriptCallBackFunion::InitData(CScriptVirtualMachine* pMachine, CScriptRunState* pState)
 	{
 		if (pState == nullptr)
 		{

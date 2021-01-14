@@ -667,12 +667,12 @@ namespace zlscript
 
 		//判断变量名是否重复
 
-		if (m_mapDicGlobalVar.find(wordFunName.word) != m_mapDicGlobalVar.end())
-		{
-			nErrorWordPos = wordFunName.nSourceWordsIndex;
-			strError = "LoadDefineFunState(Variable name already exists)";
-			return ECompile_ERROR;
-		}
+		//if (m_mapDicGlobalVar.find(wordFunName.word) != m_mapDicGlobalVar.end())
+		//{
+		//	nErrorWordPos = wordFunName.nSourceWordsIndex;
+		//	strError = "LoadDefineFunState(Variable name already exists)";
+		//	return ECompile_ERROR;
+		//}
 
 		if (CScriptCallBackFunion::GetFunIndex(wordFunName.word) >= 0)
 		{
@@ -683,61 +683,97 @@ namespace zlscript
 
 		GetNewWord(nextWord);
 
-		//如果语句结束，说明只是定义了一个全局变量
-		if (nextWord.word != "(")
+		//如果语句结束，说明只是声明了一个全局变量
+		if (nextWord.word == ";")
 		{
-			//GetWord(nextWord);
-			StackVarInfo defVar;//默认值
-			defVar.cType = nVarType;
-			if (nextWord.word == "=")
+			if (m_mapDicGlobalVar.find(wordFunName.word) != m_mapDicGlobalVar.end())
 			{
-				//有初始化值，只支持常量赋值
-				GetWord(nextWord);
-				switch (nVarType)
-				{
-				case EScriptVal_Int:
-				{
-					defVar.Int64 = atoi(nextWord.word.c_str());
-				}
-				break;
-				case EScriptVal_Double:
-				{
-					defVar.Double = atof(nextWord.word.c_str());
-				}
-				break;
-				case EScriptVal_String:
-				{
-					defVar.Int64 = StackVarInfo::s_strPool.NewString(nextWord.word.c_str());
-				}
-				break;
-				case EScriptVal_ClassPointIndex:
-				{
-					if (nextWord.word == "nullptr")
-					{
-						defVar.Int64 = 0;
-					}
-				}
-				GetWord(nextWord);
-				}
-				if (nextWord.word != ";")
+				if ((int)m_mapDicGlobalVar[wordFunName.word].cType != nVarType)
 				{
 					nErrorWordPos = wordFunName.nFlag;
-					strError = "Format error defining global variable";
+					strError = "LoadDefineFunState(Global var type error)";
 					return ECompile_ERROR;
 				}
+			}
+			else
+			{
 				VarInfo info;
 				info.cType = nVarType;
 				info.cGlobal = 1;
 				info.wExtend = m_nCurFunVarType;
 				info.dwPos = vGlobalNumVar.size();
 				m_mapDicGlobalVar[wordFunName.word] = info;
-
+				StackVarInfo defVar;//默认值
+				defVar.cType = nVarType;
 				vGlobalNumVar.push_back(defVar);
+			}
+		}
+		//说明初始化了一个全局变量
+		else if (nextWord.word == "=")
+		{
+			//GetWord(nextWord);
+			StackVarInfo defVar;//默认值
+			defVar.cType = nVarType;
 
+			//有初始化值，只支持常量赋值
+			GetWord(nextWord);
+			switch (nVarType)
+			{
+			case EScriptVal_Int:
+			{
+				defVar.Int64 = atoi(nextWord.word.c_str());
+			}
+			break;
+			case EScriptVal_Double:
+			{
+				defVar.Double = atof(nextWord.word.c_str());
+			}
+			break;
+			case EScriptVal_String:
+			{
+				defVar.Int64 = StackVarInfo::s_strPool.NewString(nextWord.word.c_str());
+			}
+			break;
+			case EScriptVal_ClassPointIndex:
+			{
+				if (nextWord.word == "nullptr")
+				{
+					defVar.Int64 = 0;
+				}
+			}
+			GetWord(nextWord);
+			}
+			if (nextWord.word != ";")
+			{
+				nErrorWordPos = wordFunName.nFlag;
+				strError = "Format error defining global variable";
+				return ECompile_ERROR;
+			}
+			if (m_mapDicGlobalVar.find(wordFunName.word) == m_mapDicGlobalVar.end())
+			{
+				VarInfo info;
+				info.cType = nVarType;
+				info.cGlobal = 1;
+				info.wExtend = m_nCurFunVarType;
+				info.dwPos = vGlobalNumVar.size();
+				m_mapDicGlobalVar[wordFunName.word] = info;
+				vGlobalNumVar.push_back(defVar);
+			}
+			else
+			{
+				VarInfo &info = m_mapDicGlobalVar[wordFunName.word];
+				if (info.cType != defVar.cType)
+				{
+					nErrorWordPos = wordFunName.nFlag;
+					strError = "LoadDefineFunState(Global var type error)";
+					return ECompile_ERROR;
+				}
+				if (info.dwPos < vGlobalNumVar.size())
+					vGlobalNumVar[info.dwPos] = defVar;
 			}
 		}
 		//如果接下来的是括号，说明是函数定义
-		else
+		else if (nextWord.word == "(")
 		{
 			m_vTempCodeData.vCodeData.clear();
 			m_vTempCodeData.vNumVar.clear();
@@ -817,10 +853,14 @@ namespace zlscript
 				m_vecCodeData.push_back(m_vTempCodeData);
 			}
 
-
-
 		}
-
+		else
+		{
+			//错误
+			nErrorWordPos = wordFunName.nFlag;
+			strError = "LoadDefineFunState(format error)";
+			return ECompile_ERROR;
+		}
 
 
 		return ECompile_Return;
@@ -941,7 +981,7 @@ namespace zlscript
 			}
 			vCondCode.push_back(nextWord);
 		}
-		if (LoadOneSentence(vCondCode, pIfICode, 0,"") == ECompile_ERROR)
+		if (LoadOneSentence(vCondCode, pIfICode, 0, "") == ECompile_ERROR)
 		{
 			return ECompile_ERROR;
 		}
@@ -1041,7 +1081,7 @@ namespace zlscript
 			}
 			vCondCode.push_back(nextWord);
 		}
-		if (LoadOneSentence(vCondCode, pWhileICode, 0,"") == ECompile_ERROR)
+		if (LoadOneSentence(vCondCode, pWhileICode, 0, "") == ECompile_ERROR)
 		{
 			return ECompile_ERROR;
 		}
@@ -1207,7 +1247,7 @@ namespace zlscript
 							code.cExtend = 0;
 							code.dwPos = nVarIndex;
 						}
-						else if(m_mapDicGlobalVar.find(nextWord.word) != m_mapDicGlobalVar.end())
+						else if (m_mapDicGlobalVar.find(nextWord.word) != m_mapDicGlobalVar.end())
 						{
 							VarInfo info = m_mapDicGlobalVar[nextWord.word];
 							code.qwCode = 0;
@@ -1637,13 +1677,13 @@ namespace zlscript
 				CVarNode* pVarNode = new CVarNode;
 				nLastNodeType = E_NODE_VAR;
 
-					RevertWord(nextWord);
-					if (LoadAndPushNumVar(vIn, pCode, pVarNode->vTempCode) == ECompile_ERROR)
-					{
-						//生成压值进堆栈的代码失败
-						nResult = ECompile_ERROR;
-						break;
-					}
+				RevertWord(nextWord);
+				if (LoadAndPushNumVar(vIn, pCode, pVarNode->vTempCode) == ECompile_ERROR)
+				{
+					//生成压值进堆栈的代码失败
+					nResult = ECompile_ERROR;
+					break;
+				}
 				//}
 				pNode = pVarNode;
 			}
@@ -1926,7 +1966,7 @@ namespace zlscript
 
 	unsigned int CScriptCodeLoader::GetCodeIndex(const char* pStr)
 	{
-		map<string, int>::iterator it = m_mapString2CodeIndex.find(pStr);
+		auto it = m_mapString2CodeIndex.find(pStr);
 		if (it == m_mapString2CodeIndex.end())
 		{
 			return -1;
@@ -1940,7 +1980,7 @@ namespace zlscript
 	}
 	CScriptCodeLoader::tagCodeData* CScriptCodeLoader::GetCode(const char* pName)
 	{
-		map<string, int>::iterator it = m_mapString2CodeIndex.find(pName);
+		auto it = m_mapString2CodeIndex.find(pName);
 		if (it == m_mapString2CodeIndex.end())
 		{
 			return nullptr;

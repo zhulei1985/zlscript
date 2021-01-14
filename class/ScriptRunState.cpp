@@ -355,24 +355,27 @@ namespace zlscript
 		{
 			return;
 		}
-		std::vector<StackVarInfo> vVars;
-		while (!pStack->empty())
-		{
-			vVars.push_back(pStack->top());
-			pStack->pop();
-		}
+		//std::vector<StackVarInfo> vVars;
+		//while (!pStack->empty())
+		//{
+		//	vVars.push_back(pStack->top());
+		//	pStack->pop();
+		//}
 		if (m_BlockStack.size() > 0)
 		{
 			CScriptExecBlock* pBlock = m_BlockStack.top();
 			if (pBlock)
 			{
-				for (unsigned int i = 0; i < vVars.size(); i++)
+				for (unsigned int i = 0; i < pStack->size(); i++)
 				{
-					pBlock->PushVar(vVars[i]);
+					pBlock->PushVar(*pStack->GetVal(i));
 				}
 			}
 		}
-
+		while (!pStack->empty())
+		{
+			pStack->pop();
+		}
 	}
 	//__int64 CScriptRunState::GetIntParamVar(int index)
 	//{

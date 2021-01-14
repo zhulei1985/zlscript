@@ -75,10 +75,10 @@ namespace zlscript
 		static int TriggerEvent(CScriptVirtualMachine* pMachine, CScriptRunState* pState);
 		static int RemoveEventTrigger(CScriptVirtualMachine* pMachine, CScriptRunState* pState);
 
-		static int NewArray(CScriptVirtualMachine* pMachine, CScriptRunState* pState);
-		static int ReleaseArray(CScriptVirtualMachine* pMachine, CScriptRunState* pState);
+		//static int NewArray(CScriptVirtualMachine* pMachine, CScriptRunState* pState);
+		//static int ReleaseArray(CScriptVirtualMachine* pMachine, CScriptRunState* pState);
 
-		static int GetData(CScriptVirtualMachine* pMachine, CScriptRunState* pState);
+		static int InitData(CScriptVirtualMachine* pMachine, CScriptRunState* pState);
 		static int ReleaseData(CScriptVirtualMachine* pMachine, CScriptRunState* pState);
 		static int GetVal4Data(CScriptVirtualMachine* pMachine, CScriptRunState* pState);
 		static int SetVal2Data(CScriptVirtualMachine* pMachine, CScriptRunState* pState);

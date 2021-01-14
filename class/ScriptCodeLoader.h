@@ -24,6 +24,7 @@
 #include <vector>
 #include <stack>
 #include <functional> 
+#include <unordered_map>
  //#include "scriptcommon.h"
 #include "ScriptIntermediateCode.h"
 #include "ScriptStack.h"
@@ -115,8 +116,7 @@ namespace zlscript
 		//代码库
 		std::vector<tagCodeData> m_vecCodeData;
 
-
-		std::map<std::string, int> m_mapString2CodeIndex;
+		std::unordered_map<std::string, int> m_mapString2CodeIndex;
 	public:
 		void GetGlobalVar(std::vector<StackVarInfo>& vOut);
 		int GetCodeSize()

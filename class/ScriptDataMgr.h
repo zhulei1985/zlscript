@@ -17,6 +17,7 @@
 
 #pragma once
 #include <map>
+#include <unordered_map>
 #include <mutex>
 #include <set>
 #include <atomic>
@@ -27,6 +28,21 @@
 
 namespace zlscript
 {
+	class CScriptHashMap : public CScriptPointInterface
+	{
+	public:
+		CScriptHashMap();
+		~CScriptHashMap();
+
+		static void Init2Script();
+	public:
+		int GetVal2Script(CScriptRunState* pState);
+		int SetVal2Script(CScriptRunState* pState);
+		int DelVal2Script(CScriptRunState* pState);
+		int Clear2Script(CScriptRunState* pState);
+	private:
+		std::unordered_map<std::string, StackVarInfo> m_mapData;
+	};
 	class CScriptArray : public CScriptPointInterface
 	{
 	public:
@@ -34,14 +50,12 @@ namespace zlscript
 		~CScriptArray();
 		static void Init2Script();
 	public:
-		int GetVal2Script(CScriptRunState* pState);
-		int GetValByIndex2Script(CScriptRunState* pState);
-		int GetNameByIndex2Script(CScriptRunState* pState);
+		int Add2Script(CScriptRunState* pState);
+		int Get2Script(CScriptRunState* pState);
 		int GetSize2Script(CScriptRunState* pState);
-		int SetVal2Script(CScriptRunState* pState);
-		int DelVal2Script(CScriptRunState* pState);
+		int Set2Script(CScriptRunState* pState);
+		int Remove2Script(CScriptRunState* pState);
 
-		int DelValByIndex2Script(CScriptRunState* pState);
 		int Clear2Script(CScriptRunState* pState);
 	public:
 		std::vector<StackVarInfo>& GetVars()
@@ -49,8 +63,7 @@ namespace zlscript
 			return m_vecVars;
 		}
 	private:
-		std::map<std::string, unsigned int> m_mapDicName2Index;
-		std::map<unsigned int,std::string> m_mapDicIndex2Name;
+		//std::map<std::string, unsigned int> m_mapDicName2Index;
 		std::vector<StackVarInfo> m_vecVars;
 	};
 	class CScriptSubData

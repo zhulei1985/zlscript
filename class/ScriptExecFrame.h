@@ -42,7 +42,10 @@ namespace zlscript
 		void InitEvent(int nEventType, EventProcessFun fun, bool bActive=true);
 	protected:
 		__int64 m_nEventListIndex;
+		std::vector<__int64> m_vecEventIndexs;
+		//处理事件的函数
 		std::map<int, EventProcessFun> m_mapEventProcess;
+		//主动去处理的事件
 		std::vector<int> m_vecActiveEvent;
 	public:
 		//"我"要求"别人"执行脚本

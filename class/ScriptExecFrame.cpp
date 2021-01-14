@@ -17,7 +17,10 @@ namespace zlscript
 	{
 		std::vector<tagScriptEvent*> vEvent;
 		CScriptEventMgr::GetInstance()->GetEventByChannel(m_nEventListIndex, vEvent);
-
+		for (unsigned int i = 0; i < m_vecEventIndexs.size(); i++)
+		{
+			CScriptEventMgr::GetInstance()->GetEventByChannel(m_vecEventIndexs[i], vEvent);
+		}
 
 		for (auto it = m_vecActiveEvent.begin(); it != m_vecActiveEvent.end(); it++)
 		{
