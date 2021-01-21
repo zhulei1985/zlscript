@@ -18,6 +18,7 @@
 #pragma once
 #include "scriptcommon.h"
 #include <map>
+#include <unordered_map>
 #include <string>
 #include <mutex>
 namespace zlscript
@@ -41,6 +42,7 @@ namespace zlscript
 			int nCount;
 		};
 	protected:
+		std::unordered_map<std::string, __int64> m_String2Index;
 		std::map<__int64, tagInfo> m_StringPool;
 		__int64 m_IndexCount;
 

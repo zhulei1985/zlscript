@@ -1,4 +1,4 @@
-#include "ScriptRunState.h"
+ï»¿#include "ScriptRunState.h"
 #include "ScriptCallBackFunion.h"
 #include "ScriptDebugPrint.h"
 #include "EScriptSentenceType.h"
@@ -22,7 +22,7 @@ namespace zlscript
 		//m_pShape = nullptr;
 		if (s_nIDSum == 0)
 		{
-			s_nIDSum++;//Ìø¹ı0
+			s_nIDSum++;//è·³è¿‡0
 		}
 		m_id = s_nIDSum++;
 
@@ -559,7 +559,7 @@ namespace zlscript
 
 			if (pBlock)
 			{
-				//×¢Èë²ÎÊı
+				//æ³¨å…¥å‚æ•°
 				for (int i = 0; i < ParmStack.size(); i++)
 				{
 					StackVarInfo* pVar = ParmStack.GetVal(i);
@@ -642,10 +642,10 @@ namespace zlscript
 				}
 				case CScriptExecBlock::ERESULT_ERROR:
 				{
-					//2020/4/23 Ö´ĞĞ´íÎóºó²»ÔÙÍË³öÕû¸ö¶ÑÕ»£¬¶øÊÇÖ»ÖÕ½áµ±Ç°´úÂë¿é²¢ÇÒ·µ»ØÄ¬ÈÏÖµ
+					//2020/4/23 æ‰§è¡Œé”™è¯¯åä¸å†é€€å‡ºæ•´ä¸ªå †æ ˆï¼Œè€Œæ˜¯åªç»ˆç»“å½“å‰ä»£ç å—å¹¶ä¸”è¿”å›é»˜è®¤å€¼
 						//ClearExecBlock(true);
-					SCRIPT_PRINT("script", "Error script Ö´ĞĞ´íÎó: %s", FunName.c_str());
-					//ÍË³ö±¾´úÂë¿é£¬·µ»ØÄ¬ÈÏ·µ»ØÖµ
+					SCRIPT_PRINT("script", "Error script æ‰§è¡Œé”™è¯¯: %s", FunName.c_str());
+					//é€€å‡ºæœ¬ä»£ç å—ï¼Œè¿”å›é»˜è®¤è¿”å›å€¼
 					m_BlockStack.pop();
 					if (pBlock->GetDefaultReturnType() != EScriptVal_None)
 					{
@@ -676,7 +676,7 @@ namespace zlscript
 				}
 				case CScriptExecBlock::ERESULT_CALLSCRIPTFUN:
 				{
-					//¼ì²éÊÇ·ñÓĞ±»´ò¶ÏµÄº¯Êı
+					//æ£€æŸ¥æ˜¯å¦æœ‰è¢«æ‰“æ–­çš„å‡½æ•°
 					bBreak = true;
 				}
 				break;
@@ -711,7 +711,7 @@ namespace zlscript
 		//if (nRunCount > 50000)
 		//{
 		//	ClearExecBlock();
-		//	PrintDebug("script","Error script Ö´ĞĞ²½Öè¹ı³¤: %s",FunName.c_str());
+		//	PrintDebug("script","Error script æ‰§è¡Œæ­¥éª¤è¿‡é•¿: %s",FunName.c_str());
 		//	return ERunTime_Error;
 		//}
 		return ERunTime_Continue;
@@ -749,7 +749,7 @@ namespace zlscript
 
 				if (pBlock)
 				{
-					//ÌáÈ¡²ÎÊı
+					//æå–å‚æ•°
 					if (pCurBlock)
 					{
 
@@ -798,7 +798,7 @@ namespace zlscript
 		{
 		case 0:
 		{
-			//×¢Èë²ÎÊı
+			//æ³¨å…¥å‚æ•°
 			if (m_BlockStack.size() > 0)
 			{
 				CScriptExecBlock* pBlock = m_BlockStack.top();
@@ -836,7 +836,7 @@ namespace zlscript
 
 				if (pBlock)
 				{
-					//×¢Èë²ÎÊı
+					//æ³¨å…¥å‚æ•°
 					for (int i = 0; i < ParmStack.size(); i++)
 					{
 						StackVarInfo* pVar = ParmStack.GetVal(i);
@@ -884,7 +884,7 @@ namespace zlscript
 
 			if (pBlock)
 			{
-				//×¢Èë²ÎÊı
+				//æ³¨å…¥å‚æ•°
 				for (int i = 0; i < ParmStack.size(); i++)
 				{
 					StackVarInfo* pVar = ParmStack.GetVal(i);
@@ -912,7 +912,7 @@ namespace zlscript
 		}
 		else
 		{
-			//×¢Èë²ÎÊı
+			//æ³¨å…¥å‚æ•°
 			if (m_BlockStack.size() > 0)
 			{
 				CScriptExecBlock* pBlock = m_BlockStack.top();

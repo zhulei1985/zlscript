@@ -1,4 +1,4 @@
-#include "ScriptEventMgr.h"
+﻿#include "ScriptEventMgr.h"
 #include "ScriptExecFrame.h"
 
 namespace zlscript

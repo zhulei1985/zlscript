@@ -113,6 +113,11 @@ namespace zlscript
 		return *this;
 	}
 
+	bool StackVarInfo::operator==(const StackVarInfo& cls) const
+	{
+		return cType==cls.cType && cExtend==cls.cExtend && Int64 == cls.Int64;
+	}
+
 	CScriptStack::CScriptStack(unsigned int Size)
 	{
 		m_vData.resize(Size);

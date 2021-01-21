@@ -1,4 +1,4 @@
-/****************************************************************************
+ï»¿/****************************************************************************
 	Copyright (c) 2019 ZhuLei
 	Email:zhulei1985@foxmail.com
 
@@ -21,7 +21,7 @@ namespace zlscript
 {
 	typedef std::function<void(int, zlscript::CScriptStack&)> EventProcessFun;
 
-	//ÓÃÓÚ½Å±¾Ö´ĞĞ£¬·µ»ØÈ·ÈÏ,ÊÂ¼ş½ÓÊÕ´¦ÀíµÄ½Ó¿Ú
+	//ç”¨äºè„šæœ¬æ‰§è¡Œï¼Œè¿”å›ç¡®è®¤,äº‹ä»¶æ¥æ”¶å¤„ç†çš„æ¥å£
 	class CScriptExecFrame
 	{
 	public:
@@ -38,26 +38,26 @@ namespace zlscript
 		{
 			return m_nEventListIndex;
 		}
-		//º¯Êı²ÎÊı : nEventTypeÎªE_SCRIPT_EVENT_TYPEÃ¶¾Ù,funÎª´¦ÀíÓÃµÄº¯ÊıÖ¸Õë,bActiveÎªÊÇ·ñÖ÷¶¯»ñÈ¡¶ÔÓ¦ÊÂ¼ş
+		//å‡½æ•°å‚æ•° : nEventTypeä¸ºE_SCRIPT_EVENT_TYPEæšä¸¾,funä¸ºå¤„ç†ç”¨çš„å‡½æ•°æŒ‡é’ˆ,bActiveä¸ºæ˜¯å¦ä¸»åŠ¨è·å–å¯¹åº”äº‹ä»¶
 		void InitEvent(int nEventType, EventProcessFun fun, bool bActive=true);
 	protected:
 		__int64 m_nEventListIndex;
 		std::vector<__int64> m_vecEventIndexs;
-		//´¦ÀíÊÂ¼şµÄº¯Êı
+		//å¤„ç†äº‹ä»¶çš„å‡½æ•°
 		std::map<int, EventProcessFun> m_mapEventProcess;
-		//Ö÷¶¯È¥´¦ÀíµÄÊÂ¼ş
+		//ä¸»åŠ¨å»å¤„ç†çš„äº‹ä»¶
 		std::vector<int> m_vecActiveEvent;
 	public:
-		//"ÎÒ"ÒªÇó"±ğÈË"Ö´ĞĞ½Å±¾
+		//"æˆ‘"è¦æ±‚"åˆ«äºº"æ‰§è¡Œè„šæœ¬
 		virtual void RunTo(std::string funName, CScriptStack& pram, __int64 nReturnID, __int64 nEventIndex) = 0;
-		//"ÎÒ"Ïò"±ğÈË"·µ»ØÖ´ĞĞ½Å±¾µÄ½á¹û
+		//"æˆ‘"å‘"åˆ«äºº"è¿”å›æ‰§è¡Œè„šæœ¬çš„ç»“æœ
 		virtual void ResultTo(CScriptStack& pram, __int64 nReturnID, __int64 nEventIndex) = 0;
 
-		//"±ğÈË"ÒªÇó"ÎÒ"Ö´ĞĞ½Å±¾
+		//"åˆ«äºº"è¦æ±‚"æˆ‘"æ‰§è¡Œè„šæœ¬
 		virtual void RunFrom(std::string funName, CScriptStack& pram, __int64 nReturnID, __int64 nEventIndex)
 		{
 		}
-		//"±ğÈË"Ïò"ÎÒ"·µ»ØÖ´ĞĞ½Å±¾µÄ½á¹û
+		//"åˆ«äºº"å‘"æˆ‘"è¿”å›æ‰§è¡Œè„šæœ¬çš„ç»“æœ
 		virtual void ResultFrom(CScriptStack& pram, __int64 nReturnID)
 		{
 

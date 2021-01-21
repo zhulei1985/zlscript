@@ -1,4 +1,4 @@
-#include "ScriptExecCodeMgr.h"
+﻿#include "ScriptExecCodeMgr.h"
 #include "ScriptEventMgr.h"
 #include "ScriptVirtualMachine.h"
 #include "ScriptStack.h"

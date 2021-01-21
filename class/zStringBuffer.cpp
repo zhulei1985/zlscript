@@ -32,12 +32,33 @@ namespace zlscript
 		{
 			return 0;
 		}
-		m_Lock.lock();
-		m_IndexCount++;
-		auto &info = m_StringPool[m_IndexCount];
-		info.str = pStr;
-		info.nCount = 1;
-		m_Lock.unlock();
+		std::lock_guard<std::mutex> Lock(m_Lock);
+
+		auto itDic = m_String2Index.find(pStr);
+		if (itDic == m_String2Index.end())
+		{
+			m_IndexCount++;
+			auto &info = m_StringPool[m_IndexCount];
+			info.str = pStr;
+			info.nCount = 1;
+			m_String2Index[pStr] = m_IndexCount;
+		}
+		else
+		{
+			auto it = m_StringPool.find(itDic->second);
+			if (it != m_StringPool.end())
+			{
+				it->second.nCount++;
+			}
+			else
+			{
+				auto& info = m_StringPool[itDic->second];
+				info.str = pStr;
+				info.nCount = 1;
+			}
+			return itDic->second;
+		}
+
 		return m_IndexCount;
 	}
 	void CStringPool::UseString(__int64 nIndex)
@@ -59,6 +80,7 @@ namespace zlscript
 			it->second.nCount--;
 			if (it->second.nCount <= 0)
 			{
+				m_String2Index.erase(it->second.str);
 				m_StringPool.erase(it);
 			}
 		}

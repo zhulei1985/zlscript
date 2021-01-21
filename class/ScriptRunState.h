@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 /****************************************************************************
 	Copyright (c) 2020 ZhuLei
 	Email:zhulei1985@foxmail.com
@@ -20,7 +20,7 @@
 #include "ScriptExecBlock.h"
 
  //*************************************************************************************//
- //									½Å±¾µÄÔËĞĞ×´Ì¬							   //
+ //									è„šæœ¬çš„è¿è¡ŒçŠ¶æ€							   //
  //*************************************************************************************//
 
 namespace zlscript
@@ -49,9 +49,9 @@ namespace zlscript
 
 		CScriptVirtualMachine* m_pMachine;
 	public:
-		//__int64 nNetworkID;//Èç¹ûÊÇÍøÂçµ÷ÓÃ£¬ÍøÂçÁ¬½ÓµÄID
-		__int64 nCallEventIndex;//±»µ÷ÓÃµÄÊÂ¼şÆµµÀID
-		__int64 m_CallReturnId;//±»µ÷ÓÃµÄÊÂ¼şÆµµÀID
+		//__int64 nNetworkID;//å¦‚æœæ˜¯ç½‘ç»œè°ƒç”¨ï¼Œç½‘ç»œè¿æ¥çš„ID
+		__int64 nCallEventIndex;//è¢«è°ƒç”¨çš„äº‹ä»¶é¢‘é“ID
+		__int64 m_CallReturnId;//è¢«è°ƒç”¨çš„äº‹ä»¶é¢‘é“ID
 		std::string FunName;
 
 		unsigned int nRunCount;
@@ -62,13 +62,13 @@ namespace zlscript
 		unsigned int m_WatingTime;
 
 	public:
-		//×îºóÒ»´ÎÔËĞĞµÄÊ±¼ä
+		//æœ€åä¸€æ¬¡è¿è¡Œçš„æ—¶é—´
 		std::chrono::steady_clock::time_point m_timeLastRunTime;
 		StackVarInfo m_varReturn;
 		std::stack<CScriptExecBlock*> m_BlockStack;
 
-		//int CurCallFunParamNum;//µ±Ç°µ÷ÓÃº¯ÊıµÄ²ÎÊıÊıÁ¿
-		//int CurStackSizeWithoutFunParam;//³ıÁËº¯Êı²ÎÊı£¬¶ÑÕ»µÄ´óĞ¡
+		//int CurCallFunParamNum;//å½“å‰è°ƒç”¨å‡½æ•°çš„å‚æ•°æ•°é‡
+		//int CurStackSizeWithoutFunParam;//é™¤äº†å‡½æ•°å‚æ•°ï¼Œå †æ ˆçš„å¤§å°
 	public:
 		virtual bool PushEmptyVarToStack();
 		virtual bool PushVarToStack(int nVal);
@@ -94,7 +94,7 @@ namespace zlscript
 		virtual void CopyToStack(CScriptStack* pStack, int nNum);
 		virtual void CopyFromStack(CScriptStack* pStack);
 
-		//»ñÈ¡º¯Êı±äÁ¿
+		//è·å–å‡½æ•°å˜é‡
 		virtual void ClearFunParam();
 		//void ClearFunParam(int nKeepNum);
 

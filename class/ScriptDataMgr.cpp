@@ -26,7 +26,7 @@ namespace zlscript
 
 		RegisterClassFun(GetVal, this, &CScriptHashMap::GetVal2Script);
 		RegisterClassFun(SetVal, this, &CScriptHashMap::SetVal2Script);
-		RegisterClassFun(DelVal, this, &CScriptHashMap::DelVal2Script);
+		RegisterClassFun(Remove, this, &CScriptHashMap::Remove2Script);
 		RegisterClassFun(Clear, this, &CScriptHashMap::Clear2Script);
 	}
 	CScriptHashMap::~CScriptHashMap()
@@ -38,7 +38,7 @@ namespace zlscript
 
 		RegisterClassFun1("GetVal", CScriptHashMap);
 		RegisterClassFun1("SetVal", CScriptHashMap);
-		RegisterClassFun1("DelVal", CScriptHashMap);
+		RegisterClassFun1("Remove", CScriptHashMap);
 
 		RegisterClassFun1("Clear", CScriptHashMap);
 	}
@@ -48,10 +48,10 @@ namespace zlscript
 		{
 			return ECALLBACK_ERROR;
 		}
-		std::string str = pState->PopCharVarFormStack();
+		auto key = pState->PopVarFormStack();
 
 		pState->ClearFunParam();
-		auto it = m_mapData.find(str);
+		auto it = m_mapData.find(key);
 		if (it != m_mapData.end())
 		{
 			pState->PushVarToStack(it->second);
@@ -67,22 +67,22 @@ namespace zlscript
 		{
 			return ECALLBACK_ERROR;
 		}
-		std::string str = pState->PopCharVarFormStack();
-		m_mapData[str] = pState->PopVarFormStack();
+		auto key = pState->PopVarFormStack();
+		m_mapData[key] = pState->PopVarFormStack();
 
 		pState->ClearFunParam();
 		return ECALLBACK_FINISH;
 	}
 
-	int CScriptHashMap::DelVal2Script(CScriptRunState* pState)
+	int CScriptHashMap::Remove2Script(CScriptRunState* pState)
 	{
 		if (pState == nullptr)
 		{
 			return ECALLBACK_ERROR;
 		}
-		std::string str = pState->PopCharVarFormStack();
+		auto key = pState->PopVarFormStack();
 		{
-			auto it = m_mapData.find(str);
+			auto it = m_mapData.find(key);
 			if (it != m_mapData.end())
 			{
 				m_mapData.erase(it);

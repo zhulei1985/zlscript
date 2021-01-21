@@ -1,4 +1,4 @@
-/****************************************************************************
+ï»¿/****************************************************************************
 	Copyright (c) 2019 ZhuLei
 	Email:zhulei1985@foxmail.com
 
@@ -21,10 +21,10 @@
 #include <vector>
 #include <map>
 #include <set>
-//±àÒëÊ±µÄÖĞ¼ä´úÂë
+//ç¼–è¯‘æ—¶çš„ä¸­é—´ä»£ç 
 namespace zlscript
 {
-	//Ò»¾äÔ´Âë
+	//ä¸€å¥æºç 
 	enum E_SOURCE_WORD_FLAG
 	{
 		E_WORD_FLAG_NORMAL,
@@ -41,10 +41,10 @@ namespace zlscript
 		}
 		//__int64 nVarInfo;
 
-		unsigned char cType; // 1,ÕûÊı,2 ¸¡µã 3,×Ö·û 4 ÀàÖ¸Õë
-		unsigned char cGlobal;// 1 ±íÊ¾È«¾Ö±äÁ¿
-		unsigned short wExtend; // ´óÓÚ1±íÊ¾ÊÇÊı×éÏÂ±ê,²»ÔÙÊ¹ÓÃ
-		unsigned int dwPos;//Î»ÖÃID
+		unsigned char cType; // 1,æ•´æ•°,2 æµ®ç‚¹ 3,å­—ç¬¦ 4 ç±»æŒ‡é’ˆ
+		unsigned char cGlobal;// 1 è¡¨ç¤ºå…¨å±€å˜é‡
+		unsigned short wExtend; // å¤§äº1è¡¨ç¤ºæ˜¯æ•°ç»„ä¸‹æ ‡,ä¸å†ä½¿ç”¨
+		unsigned int dwPos;//ä½ç½®ID
 		
 	};
 	struct tagSourceWord
@@ -65,10 +65,10 @@ namespace zlscript
 		__int64 qwCode;
 		struct
 		{
-			unsigned char cSign;//±êÖ¾
-			unsigned char cExtend;//À©Õ¹±êÖ¾
-			unsigned short wInstruct;//Ö¸ÁîID
-			unsigned int dwPos;//±äÁ¿µØÖ·
+			unsigned char cSign;//æ ‡å¿—
+			unsigned char cExtend;//æ‰©å±•æ ‡å¿—
+			unsigned short wInstruct;//æŒ‡ä»¤ID
+			unsigned int dwPos;//å˜é‡åœ°å€
 		};
 	};
 	const unsigned int g_nTempVarIndexError = -1;
@@ -77,7 +77,7 @@ namespace zlscript
 	{
 
 	};
-	//±àÒëµÄÖĞ¼ä×´Ì¬
+	//ç¼–è¯‘çš„ä¸­é—´çŠ¶æ€
 	class CBaseICode
 	{
 	public:

@@ -48,6 +48,7 @@ namespace zlscript
 
 		//赋值重载
 		StackVarInfo& operator=(const StackVarInfo& cls);
+		bool operator==(const StackVarInfo& cls) const;
 
 		static zlscript::CStringPool s_strPool;
 		static zlscript::CBinaryPool s_binPool;

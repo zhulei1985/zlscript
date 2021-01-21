@@ -28,6 +28,16 @@
 
 namespace zlscript
 {
+	struct hash_SV
+	{
+		size_t operator() (const zlscript::StackVarInfo& cls) const
+		{
+			std::size_t h1 = std::hash<char>()(cls.cType);
+			std::size_t h2 = std::hash<char>()(cls.cExtend);
+			std::size_t h3 = std::hash<__int64>()(cls.Int64);
+			return h1 ^ h2 ^ h3;
+		}
+	};
 	class CScriptHashMap : public CScriptPointInterface
 	{
 	public:
@@ -38,10 +48,10 @@ namespace zlscript
 	public:
 		int GetVal2Script(CScriptRunState* pState);
 		int SetVal2Script(CScriptRunState* pState);
-		int DelVal2Script(CScriptRunState* pState);
+		int Remove2Script(CScriptRunState* pState);
 		int Clear2Script(CScriptRunState* pState);
 	private:
-		std::unordered_map<std::string, StackVarInfo> m_mapData;
+		std::unordered_map<StackVarInfo, StackVarInfo, hash_SV> m_mapData;
 	};
 	class CScriptArray : public CScriptPointInterface
 	{

@@ -1,4 +1,4 @@
-/****************************************************************************
+ï»¿/****************************************************************************
 	Copyright (c) 2019 ZhuLei
 	Email:zhulei1985@foxmail.com
 
@@ -75,7 +75,7 @@ namespace zlscript
 		if (m_mapTempVarIndex.find(pVarName) == m_mapTempVarIndex.end())
 		{
 			auto& var = m_mapTempVarIndex[pVarName];
-			var.cGlobal = 0;//¾Ö²¿±äÁ¿
+			var.cGlobal = 0;//å±€éƒ¨å˜é‡
 			var.cType = nType;
 			var.dwPos = nIndex;
 			var.wExtend = ClassIndex;
@@ -105,7 +105,7 @@ namespace zlscript
 
 	void CFunICode::MakeExeCode(std::vector<CodeStyle>& vOut)
 	{
-		//Ê×ÏÈÊÇ²ÎÊıµÄ¸³Öµ
+		//é¦–å…ˆæ˜¯å‚æ•°çš„èµ‹å€¼
 		for (int i = 0; i < m_vecTempVarOrder.size(); i++)
 		{
 
@@ -148,7 +148,7 @@ namespace zlscript
 		if (m_mapTempVarIndex.find(pVarName) == m_mapTempVarIndex.end())
 		{
 			auto &var = m_mapTempVarIndex[pVarName];
-			var.cGlobal = 0;//¾Ö²¿±äÁ¿
+			var.cGlobal = 0;//å±€éƒ¨å˜é‡
 			var.cType = nType;
 			var.dwPos = nIndex;
 			var.wExtend = ClassIndex;
@@ -210,7 +210,7 @@ namespace zlscript
 
 		if (bClearParm)
 		{
-			//Ã¿¾ä½áÊøºó¶¼Çå³ı¶ÑÕ»
+			//æ¯å¥ç»“æŸåéƒ½æ¸…é™¤å †æ ˆ
 			CodeStyle clearcode;
 			clearcode.qwCode = 0;
 			clearcode.wInstruct = ECODE_CLEAR_PARAM;
@@ -229,7 +229,7 @@ namespace zlscript
 
 	void CIfICode::MakeExeCode(std::vector<CodeStyle>& vOut)
 	{
-		//ÏÈÑ¹ÈëÌõ¼ş
+		//å…ˆå‹å…¥æ¡ä»¶
 		if (pCondCode)
 			pCondCode->MakeExeCode(vOut);
 
@@ -295,7 +295,7 @@ namespace zlscript
 		if (pBodyCode)
 			pBodyCode->MakeExeCode(vBlockData);
 
-		//ÒªÔÚ¿éÎ²¼ÓÈë·µ»Ø¿éÍ·µÄÖ¸Áî
+		//è¦åœ¨å—å°¾åŠ å…¥è¿”å›å—å¤´çš„æŒ‡ä»¤
 		CodeStyle backcode;
 		backcode.qwCode = 0;
 		backcode.wInstruct = ECODE_BLOCK_CYC;
