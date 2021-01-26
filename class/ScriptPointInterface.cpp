@@ -158,4 +158,12 @@ namespace zlscript
 		return *this;
 	}
 
+	void CScriptPointInterface::ChangeScriptAttribute(short flag, CBaseScriptClassAttribute* pAttr)
+	{
+		if (flag & CBaseScriptClassAttribute::E_FLAG_DB)
+		{
+
+		}
+	}
+
 }

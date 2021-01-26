@@ -135,6 +135,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\class\ScriptClassAttributes.h" />
     <ClInclude Include="..\class\ScriptClassMgr.h" />
     <ClInclude Include="..\class\ScriptDebugPrint.h" />
     <ClInclude Include="..\class\ScriptExecCodeMgr.h" />
@@ -162,6 +163,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\class\ScriptCallBackFunion.cpp" />
+    <ClCompile Include="..\class\ScriptClassAttributes.cpp" />
     <ClCompile Include="..\class\ScriptClassMgr.cpp" />
     <ClCompile Include="..\class\ScriptCodeLoader.cpp" />
     <ClCompile Include="..\class\scriptcommon.cpp" />

@@ -24,6 +24,7 @@
 #include <string>
 #include <vector>
 #include <set>
+#include "ScriptClassAttributes.h"
 
 namespace zlscript
 {
@@ -82,6 +83,15 @@ namespace zlscript
 		virtual const char* GetFunName() = 0;
 	};
 
+#define ATTR_INT(val) CScriptIntAttribute val;
+#define ATTR_INT64(val) CScriptInt64Attribute val;
+#define ATTR_STR(val) CScriptStringAttribute val;
+#define INIT_DB_ATTRIBUTE(index,val) \
+	m_mapDBAttributes[#val] = &val; \
+	val.init(CBaseScriptClassAttribute::E_FLAG_DB,index,this);
+#define INIT_DB_ATTRIBUTE_PRIMARY(index,val) \
+	m_mapDBAttributes[#val] = &val; \
+	val.init(CBaseScriptClassAttribute::E_FLAG_DB|CBaseScriptClassAttribute::E_FLAG_DB_PRIMARY,index,this);
 	class CScriptPointInterface
 	{
 	public:
@@ -101,7 +111,11 @@ namespace zlscript
 		CScriptPointInterface(const CScriptPointInterface& val);
 		virtual CScriptPointInterface& operator=(const CScriptPointInterface& val);
 
-
+		virtual const std::map<std::string, CBaseScriptClassAttribute*>& GetDBAttributes()
+		{
+			return m_mapDBAttributes;
+		}
+		virtual void ChangeScriptAttribute(short flag, CBaseScriptClassAttribute* pAttr);
 	protected:
 		bool m_bInit;//是否初始化了
 		//用于所有脚本可用的类实例索引，作用范围是本地
@@ -109,7 +123,7 @@ namespace zlscript
 		static __int64 s_nScriptPointIndexCount;
 
 
-
+		std::map<std::string, CBaseScriptClassAttribute*> m_mapDBAttributes;
 
 		std::map<int, CScriptBaseClassFunInfo*> m_mapScriptClassFun;
 

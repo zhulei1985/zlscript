@@ -36,7 +36,7 @@ namespace zlscript
 #else
 
 #define __int64 long long
-
+#define _atoi64(val) strtoll(val,nullptr,10);
 #endif
 
 

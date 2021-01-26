@@ -39,7 +39,7 @@ namespace zlscript
 		}
 		virtual ~CScriptBasePointer(){}
 	public:
-		virtual const char* GetClassName() = 0;
+		virtual const char* ClassName() = 0;
 		virtual int GetType() = 0;
 		virtual __int64 GetID();
 		virtual void SetID(__int64 id);
@@ -66,7 +66,7 @@ namespace zlscript
 	class CScriptSuperPointer : public CScriptBasePointer
 	{
 	public:
-		virtual const char* GetClassName()
+		virtual const char* ClassName()
 		{
 			return s_strClassName.c_str();
 		}

@@ -721,7 +721,7 @@ namespace zlscript
 			{
 			case EScriptVal_Int:
 			{
-				defVar.Int64 = atoi(nextWord.word.c_str());
+				defVar.Int64 = _atoi64(nextWord.word.c_str());
 			}
 			break;
 			case EScriptVal_Double:
@@ -1923,7 +1923,7 @@ namespace zlscript
 						code.wInstruct = ECODE_PUSH;
 						code.cSign = 0;
 						code.cExtend = 0;
-						code.dwPos = atoi(varName.word.c_str());
+						code.dwPos = _atoi64(varName.word.c_str());
 						vOut.push_back(code);
 					}
 				}

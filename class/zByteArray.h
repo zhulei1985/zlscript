@@ -522,7 +522,7 @@ inline bool AddDouble2Bytes(tagByteArray& vBuff, double Val)
 	vBuff.push_back(result.c1);
 	return true;
 }
-inline bool AddData2Bytes(tagByteArray& vBuff, char* pVal, int charlen)
+inline bool AddData2Bytes(tagByteArray& vBuff, const char* pVal, int charlen)
 {
 	if (vBuff.size() + charlen >= vBuff.max_size())
 	{
@@ -556,7 +556,7 @@ inline bool AddData2Bytes(tagByteArray& vBuff, std::vector<char>& vIn)
 
 	return true;
 }
-inline bool AddString2Bytes(tagByteArray& vBuff, char* pStr)
+inline bool AddString2Bytes(tagByteArray& vBuff, const char* pStr)
 {
 	if (pStr == nullptr)
 	{
