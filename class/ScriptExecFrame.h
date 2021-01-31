@@ -26,7 +26,7 @@ namespace zlscript
 	{
 	public:
 		CScriptExecFrame();
-		~CScriptExecFrame();
+		virtual ~CScriptExecFrame();
 
 	public:
 		void OnInit();

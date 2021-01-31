@@ -61,19 +61,14 @@ namespace zlscript
 	public:
 		__int64 AssignID();
 
-		//void RegisterEvent(int nEventType, int nChannelID);
-		//void RemoveEvent(int nEventType, int nChannelID);
+		void RegisterChannel(__int64 nChannel);
+		void RemoveChannel(__int64 nChannel);
 
-		//void SetEventBlock(int nEventType, int nID, bool IsBlock);
-		//压入事件，如果事件频道长期无人处理，返回失败
+		//压入事件，如果事件频道无人处理，返回失败
 		bool SendEvent(int nEventType, __int64 nSendID, CScriptStack& vIn, __int64 nRecvID = 0);
-		//强制压入事件
-		void SendEventForce(int nEventType, __int64 nSendID, CScriptStack& vIn, __int64 nRecvID = 0);
+
 		void GetEventByType(int nEventType, std::vector<tagScriptEvent*> &vOut, int nSize = 10);
 		void GetEventByChannel(__int64 nChannelID, std::vector<tagScriptEvent*>& vOut);
-
-
-		//void ProcessEvent(int nEventType, int nID, EventProcessFun const& fun);
 
 		void Lock();
 		void Unlock();

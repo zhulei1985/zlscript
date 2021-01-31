@@ -8,10 +8,12 @@ namespace zlscript
 	}
 	CScriptExecFrame::~CScriptExecFrame()
 	{
+		Clear();
 	}
 	void CScriptExecFrame::OnInit()
 	{
 		m_nEventListIndex = CScriptEventMgr::GetInstance()->AssignID();
+		CScriptEventMgr::GetInstance()->RegisterChannel(m_nEventListIndex);
 	}
 	void CScriptExecFrame::OnUpdate()
 	{
@@ -44,7 +46,13 @@ namespace zlscript
 	}
 	void CScriptExecFrame::Clear()
 	{
+		CScriptEventMgr::GetInstance()->RemoveChannel(m_nEventListIndex);
+		for (unsigned int i = 0; i < m_vecEventIndexs.size(); i++)
+		{
+			CScriptEventMgr::GetInstance()->RemoveChannel(m_vecEventIndexs[i]);
+		}
 		m_nEventListIndex = 0;
+		m_vecEventIndexs.clear();
 		m_mapEventProcess.clear();
 		m_vecActiveEvent.clear();
 	}

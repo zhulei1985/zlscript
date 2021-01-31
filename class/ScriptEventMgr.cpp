@@ -49,37 +49,21 @@ namespace zlscript
 		return nResult;
 	}
 
-	//void CScriptEventMgr::RegisterEvent(int nEventType, int nChannelID)
-	//{
-	//	Lock();
-	//	auto& MapChannel = m_mapEventByChannel[nEventType];
-	//	auto& channel = MapChannel.m_mapEventChannel[nChannelID];
-	//	channel.nChannelID = nChannelID;
-	//	Unlock();
-	//}
+	void CScriptEventMgr::RegisterChannel(__int64 nChannel)
+	{
+		std::lock_guard<std::mutex> Lock(m_LockEventChannel);
+		auto &channel = m_mapEventByChannel[nChannel];
+	}
 
-	//void CScriptEventMgr::RemoveEvent(int nEventType, int nChannelID)
-	//{
-	//	auto& MapChannel = m_mapEventByChannel[nEventType];
-
-	//	auto it = MapChannel.m_mapEventChannel.find(nChannelID);
-	//	if (it != MapChannel.m_mapEventChannel.end())
-	//	{
-	//		MapChannel.m_mapEventChannel.erase(it);
-	//	}
-	//}
-
-	//void CScriptEventMgr::SetEventBlock(int nEventType, int nID, bool IsBlock)
-	//{
-	//	auto& MapChannel = m_mapEventByChannel[nEventType];
-
-	//	auto it = MapChannel.m_mapEventChannel.find(nID);
-	//	if (it != MapChannel.m_mapEventChannel.end())
-	//	{
-	//		it->second.isBlocking = IsBlock;
-	//	}
-	//}
-
+	void CScriptEventMgr::RemoveChannel(__int64 nChannel)
+	{
+		std::lock_guard<std::mutex> Lock(m_LockEventChannel);
+		auto it = m_mapEventByChannel.find(nChannel);
+		if (it != m_mapEventByChannel.end())
+		{
+			m_mapEventByChannel.erase(it);
+		}
+	}
 
 	bool CScriptEventMgr::SendEvent(int nEventType, __int64 nSendID, CScriptStack& vIn, __int64 nRecvID)
 	{
@@ -120,72 +104,39 @@ namespace zlscript
 		else
 		{
 			std::lock_guard<std::mutex> Lock(m_LockEventChannel);
-
-			auto& channel = m_mapEventByChannel[nRecvID];
-			auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(nowTime - channel.lastTime);
-			if (duration.count() >= m_MaxDurationTime)
+			auto it = m_mapEventByChannel.find(nRecvID);
+			if (it != m_mapEventByChannel.end())
+			{
+				auto& channel = it->second;
+				//auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(nowTime - channel.lastTime);
+				//if (duration.count() >= m_MaxDurationTime)
+				//{
+				//	return false;
+				//}
+				tagScriptEvent* pEvent = NewEvent();
+				pEvent->nSendID = nSendID;
+				pEvent->nEventType = nEventType;
+				for (int i = vIn.size() - 1; i >= 0; i--)
+				{
+					StackVarInfo* pVar = vIn.GetVal(i);
+					if (pVar)
+						pEvent->m_Parm.push(*pVar);
+					else
+					{
+						StackVarInfo emtpy;
+						pEvent->m_Parm.push(emtpy);
+					}
+				}
+				channel.list.push_back(pEvent);
+			}
+			else
 			{
 				return false;
 			}
-			tagScriptEvent* pEvent = NewEvent();
-			pEvent->nSendID = nSendID;
-			pEvent->nEventType = nEventType;
-			for (int i = vIn.size() - 1; i >= 0; i--)
-			{
-				StackVarInfo* pVar = vIn.GetVal(i);
-				if (pVar)
-					pEvent->m_Parm.push(*pVar);
-				else
-				{
-					StackVarInfo emtpy;
-					pEvent->m_Parm.push(emtpy);
-				}
-			}
-			//while (vIn.size() > 0)
-			//{
-			//	pEvent->m_Parm.push(vIn.top());
-			//	vIn.pop();
-			//}
-			channel.list.push_back(pEvent);
 		}
-
 		return true;
 	}
 
-	void CScriptEventMgr::SendEventForce(int nEventType, __int64 nSendID, CScriptStack& vIn, __int64 nRecvID)
-	{
-		if (nRecvID == 0)
-		{
-			std::lock_guard<std::mutex> Lock(m_LockEventType);
-
-			auto& eList = m_mapEventsByType[nEventType];
-			tagScriptEvent* pEvent = NewEvent();
-			pEvent->nSendID = nSendID;
-			pEvent->nEventType = nEventType;
-			while (vIn.size() > 0)
-			{
-				pEvent->m_Parm.push(vIn.top());
-				vIn.pop();
-			}
-			eList.list.push_back(pEvent);
-		}
-		else
-		{
-			std::lock_guard<std::mutex> Lock(m_LockEventChannel);
-
-			auto& channel = m_mapEventByChannel[nRecvID];
-
-			tagScriptEvent* pEvent = NewEvent();
-			pEvent->nSendID = nSendID;
-			pEvent->nEventType = nEventType;
-			while (vIn.size() > 0)
-			{
-				pEvent->m_Parm.push(vIn.top());
-				vIn.pop();
-			}
-			channel.list.push_back(pEvent);
-		}
-	}
 
 	void CScriptEventMgr::GetEventByType(int nEventType, std::vector<tagScriptEvent*>& vOut, int nSize)
 	{
@@ -232,22 +183,6 @@ namespace zlscript
 			eventChannel.list.clear();
 		}
 	}
-
-
-
-	//void CScriptEventMgr::ProcessEvent(int nEventType, int nID, EventProcessFun const& fun)
-	//{
-	//	std::vector<tagScriptEvent> vEvent;
-
-	//	//获取所有对应事件
-	//	GetEvent(nEventType, nID, vEvent);
-
-
-	//	for (int i = 0; i < vEvent.size(); i++)
-	//	{
-	//		fun(vEvent[i].nSendID, vEvent[i].m_Parm);
-	//	}
-	//}
 
 	void CScriptEventMgr::Lock()
 	{
