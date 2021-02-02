@@ -58,10 +58,15 @@ public:
 		return ECALLBACK_FINISH;
 	}
 };
+void DebugPrint(const char* pStr)
+{
+	if (pStr)
+		printf("%s\n", pStr);
+}
 int main()
 {
 	zlscript::InitScript();
-
+	zlscript::CScriptDebugPrintMgr::GetInstance()->RegisterCallBack_PrintFun(DebugPrint);
 	//注册类和类函数
 	RegisterClassType("CTest", CTest);
 	RegisterClassFun1("Add", CTest);
@@ -69,17 +74,22 @@ int main()
 	zlscript::LoadFile("test.script");
 	g_nThreadRunState = 1;
 
-	//auto t1 = std::chrono::steady_clock::now();
-	//int i = 0;
-	//int sum = 0;
-	//while (i < 100000)
-	//{
-	//	sum = sum + i;
-	//	i = i + 1;
-	//}
-	//auto t2 = std::chrono::steady_clock::now();
-	//auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1);
-	//printf("Calculation time : %d\n", duration.count());
+	auto t1 = std::chrono::steady_clock::now();
+	int sum = 0;
+	int i = 1;
+	while (i <= 100)
+	{
+		int j = 1;
+		while (j <= 100)
+		{
+			sum = sum + i * j;
+			j = j + 1;
+		}
+		i = i + 1;
+	}
+	auto t2 = std::chrono::steady_clock::now();
+	auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1);
+	printf("Calculation time : %d\n", duration.count());
 
 	//for (int i = 0; i < 10; i++)
 	//{

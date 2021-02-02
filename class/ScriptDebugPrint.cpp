@@ -16,7 +16,7 @@
  ****************************************************************************/
 
 #include "ScriptDebugPrint.h"
-
+#include <stdarg.h>
 namespace zlscript
 {
 	CScriptDebugPrintMgr CScriptDebugPrintMgr::s_Instance;
@@ -27,6 +27,17 @@ namespace zlscript
 	CScriptDebugPrintMgr::~CScriptDebugPrintMgr()
 	{
 
+	}
+	void CScriptDebugPrintMgr::Print(std::string flag, const char* str, ...)
+	{
+		flag += " : ";
+		char strbuff[1024];
+		va_list args;
+		va_start(args, str);
+		vsnprintf(strbuff,sizeof(strbuff),str, args);
+		va_end(args);
+
+		Print(flag+strbuff);
 	}
 	void CScriptDebugPrintMgr::Print(std::string str)
 	{

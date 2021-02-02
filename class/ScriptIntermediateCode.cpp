@@ -109,7 +109,7 @@ namespace zlscript
 		for (int i = 0; i < m_vecTempVarOrder.size(); i++)
 		{
 
-			CodeStyle code;
+			CodeStyle code(m_unBeginSoureIndex);
 			code.qwCode = 0;
 			code.cSign = 1;
 			code.wInstruct = ECODE_EVALUATE;
@@ -211,7 +211,7 @@ namespace zlscript
 		if (bClearParm)
 		{
 			//每句结束后都清除堆栈
-			CodeStyle clearcode;
+			CodeStyle clearcode(m_unBeginSoureIndex);
 			clearcode.qwCode = 0;
 			clearcode.wInstruct = ECODE_CLEAR_PARAM;
 			clearcode.cSign = 0;
@@ -237,7 +237,7 @@ namespace zlscript
 		if (pTureCode)
 			pTureCode->MakeExeCode(vTrueData);
 
-		CodeStyle ifcode;
+		CodeStyle ifcode(m_unBeginSoureIndex);
 		ifcode.qwCode = 0;
 		ifcode.wInstruct = ECODE_BRANCH_IF;
 		ifcode.cSign = 0;
@@ -254,7 +254,7 @@ namespace zlscript
 			std::vector<CodeStyle> vFalseData;
 			pFalseCode->MakeExeCode(vFalseData);
 
-			CodeStyle elsecode;
+			CodeStyle elsecode(m_unElseSoureIndex);
 			elsecode.qwCode = 0;
 			elsecode.wInstruct = ECODE_BRANCH_ELSE;
 			elsecode.cSign = 0;
@@ -296,13 +296,13 @@ namespace zlscript
 			pBodyCode->MakeExeCode(vBlockData);
 
 		//要在块尾加入返回块头的指令
-		CodeStyle backcode;
+		CodeStyle backcode(m_unBeginSoureIndex);
 		backcode.qwCode = 0;
 		backcode.wInstruct = ECODE_BLOCK_CYC;
 		backcode.dwPos = vCondData.size() + vBlockData.size() + 1;
 		vBlockData.push_back(backcode);
 
-		CodeStyle code;
+		CodeStyle code(m_unBeginSoureIndex);
 		code.qwCode = 0;
 		code.wInstruct = ECODE_CYC_IF;
 		code.dwPos = vBlockData.size()+1;
@@ -340,7 +340,7 @@ namespace zlscript
 			pBodyCode->MakeExeCode(vOut);
 		}
 
-		CodeStyle backcode;
+		CodeStyle backcode(m_unBeginSoureIndex);
 		backcode.qwCode = 0;
 		backcode.wInstruct = ECODE_RETURN;
 		if (pBodyCode)

@@ -29,6 +29,7 @@ namespace zlscript
 		~CScriptDebugPrintMgr();
 
 	public:
+		void Print(std::string flag, const char*, ...);
 		void Print(std::string str);
 		void RegisterCallBack_PrintFun(std::function<void(const char*)>);
 	private:

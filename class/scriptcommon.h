@@ -41,7 +41,7 @@ namespace zlscript
 
 
 #if _SCRIPT_DEBUG
-#define SCRIPT_PRINT
+#define SCRIPT_PRINT zlscript::CScriptDebugPrintMgr::GetInstance()->Print
 #else
 #define SCRIPT_PRINT 
 #endif

@@ -98,7 +98,9 @@ namespace zlscript
 				zlscript::CScriptDebugPrintMgr::GetInstance()->Print("ScriptLoad Error:");
 				zlscript::CScriptDebugPrintMgr::GetInstance()->Print(strCurFileName + ":" + strError);
 #ifdef  _SCRIPT_DEBUG
-				zlscript::CScriptDebugPrintMgr::GetInstance()->Print(GetSourceWords(GetSourceLineIndex(m_vCurSourceSentence, nErrorWordPos)));
+				auto souceInfo = GetSourceWords(nErrorWordPos);
+				zlscript::CScriptDebugPrintMgr::GetInstance()->Print("Debug","file:%s,line:%d,word:%s",
+					souceInfo.strCurFileName.c_str(), souceInfo.nLineNum, souceInfo.strLineWords.c_str());
 #endif //  _SCRIPT_DEBUG
 				break;
 			}
@@ -676,7 +678,7 @@ namespace zlscript
 
 		if (CScriptCallBackFunion::GetFunIndex(wordFunName.word) >= 0)
 		{
-			nErrorWordPos = wordFunName.nFlag;
+			nErrorWordPos = wordFunName.nSourceWordsIndex;
 			strError = "LoadDefineFunState(Callback Function name already exists)";
 			return ECompile_ERROR;
 		}
@@ -690,7 +692,7 @@ namespace zlscript
 			{
 				if ((int)m_mapDicGlobalVar[wordFunName.word].cType != nVarType)
 				{
-					nErrorWordPos = wordFunName.nFlag;
+					nErrorWordPos = wordFunName.nSourceWordsIndex;
 					strError = "LoadDefineFunState(Global var type error)";
 					return ECompile_ERROR;
 				}
@@ -745,7 +747,7 @@ namespace zlscript
 			}
 			if (nextWord.word != ";")
 			{
-				nErrorWordPos = wordFunName.nFlag;
+				nErrorWordPos = wordFunName.nSourceWordsIndex;
 				strError = "Format error defining global variable";
 				return ECompile_ERROR;
 			}
@@ -764,7 +766,7 @@ namespace zlscript
 				VarInfo &info = m_mapDicGlobalVar[wordFunName.word];
 				if (info.cType != defVar.cType)
 				{
-					nErrorWordPos = wordFunName.nFlag;
+					nErrorWordPos = wordFunName.nSourceWordsIndex;
 					strError = "LoadDefineFunState(Global var type error)";
 					return ECompile_ERROR;
 				}
@@ -780,7 +782,7 @@ namespace zlscript
 			m_vTempCodeData.vFloatConst.clear();
 			m_vTempCodeData.vStrConst.clear();
 			//一个新函数
-			m_pFun_ICode = CICodeMgr::GetInstance()->New<CFunICode>();
+			m_pFun_ICode = CICodeMgr::GetInstance()->New<CFunICode>(wordFunName.nSourceWordsIndex);
 
 			int VarIndex = 0;
 			while (true)
@@ -857,7 +859,7 @@ namespace zlscript
 		else
 		{
 			//错误
-			nErrorWordPos = wordFunName.nFlag;
+			nErrorWordPos = wordFunName.nSourceWordsIndex;
 			strError = "LoadDefineFunState(format error)";
 			return ECompile_ERROR;
 		}
@@ -867,17 +869,17 @@ namespace zlscript
 	}
 	int CScriptCodeLoader::LoadBlockState(SentenceSourceCode& vIn, CBaseICode* pCode, int nType)
 	{
-		CBlockICode* pBlockICode = CICodeMgr::GetInstance()->New<CBlockICode>();
+		GetNewWord(nextWord);
+		CBlockICode* pBlockICode = CICodeMgr::GetInstance()->New<CBlockICode>(nextWord.nSourceWordsIndex);
 		if (pBlockICode == nullptr)
 		{
 			return ECompile_ERROR;
 		}
 		pCode->AddICode(nType, pBlockICode);
 
-		GetNewWord(nextWord);
 		if (nextWord.word != "{")
 		{
-			nErrorWordPos = nextWord.nFlag;
+			nErrorWordPos = nextWord.nSourceWordsIndex;
 			strError = "LoadBlockState(Block format error)";
 			return ECompile_ERROR;
 		}
@@ -939,17 +941,18 @@ namespace zlscript
 	}
 	int CScriptCodeLoader::LoadIfSentence(SentenceSourceCode& vIn, CBaseICode* pCode, int nType)
 	{
-		CIfICode* pIfICode = CICodeMgr::GetInstance()->New<CIfICode>();
+		GetNewWord(nextWord);
+		CIfICode* pIfICode = CICodeMgr::GetInstance()->New<CIfICode>(nextWord.nSourceWordsIndex);
 		if (pIfICode == nullptr)
 		{
 			return ECompile_ERROR;
 		}
 		pCode->AddICode(nType, pIfICode);
 
-		GetNewWord(nextWord);
+
 		if (nextWord.word != "if")
 		{
-			nErrorWordPos = nextWord.nFlag;
+			nErrorWordPos = nextWord.nSourceWordsIndex;
 			strError = "LoadIfSentence(Block format error)";
 			return ECompile_ERROR;
 		}
@@ -957,7 +960,7 @@ namespace zlscript
 		GetWord(nextWord);
 		if (nextWord.word != "(")
 		{
-			nErrorWordPos = nextWord.nFlag;
+			nErrorWordPos = nextWord.nSourceWordsIndex;
 			strError = "LoadIfSentence(Block format error)";
 			return ECompile_ERROR;
 		}
@@ -989,7 +992,7 @@ namespace zlscript
 		GetWord(nextWord);
 		if (nextWord.word != "{")
 		{
-			nErrorWordPos = nextWord.nFlag;
+			nErrorWordPos = nextWord.nSourceWordsIndex;
 			strError = "LoadIfSentence(Block format error)";
 			return ECompile_ERROR;
 		}
@@ -1002,6 +1005,7 @@ namespace zlscript
 		if (nextWord.word == "else")
 		{
 			GetWord(nextWord);
+			pIfICode->m_unElseSoureIndex = nextWord.nSourceWordsIndex;
 			if (nextWord.word == "if")
 			{
 				RevertWord(nextWord);
@@ -1020,7 +1024,7 @@ namespace zlscript
 			}
 			else
 			{
-				nErrorWordPos = nextWord.nFlag;
+				nErrorWordPos = nextWord.nSourceWordsIndex;
 				strError = "LoadIfSentence(Block format error)";
 				return ECompile_ERROR;
 			}
@@ -1038,17 +1042,18 @@ namespace zlscript
 	}
 	int CScriptCodeLoader::LoadWhileSentence(SentenceSourceCode& vIn, CBaseICode* pCode, int nType)
 	{
-		CWhileICode* pWhileICode = CICodeMgr::GetInstance()->New<CWhileICode>();
+		GetNewWord(nextWord);
+		CWhileICode* pWhileICode = CICodeMgr::GetInstance()->New<CWhileICode>(nextWord.nSourceWordsIndex);
 		if (pWhileICode == nullptr)
 		{
 			return ECompile_ERROR;
 		}
 		pCode->AddICode(nType, pWhileICode);
 
-		GetNewWord(nextWord);
+
 		if (nextWord.word != "while")
 		{
-			nErrorWordPos = nextWord.nFlag;
+			nErrorWordPos = nextWord.nSourceWordsIndex;
 			strError = "LoadWhileSentence(Block format error)";
 			return ECompile_ERROR;
 		}
@@ -1056,7 +1061,7 @@ namespace zlscript
 		GetWord(nextWord);
 		if (nextWord.word != "(")
 		{
-			nErrorWordPos = nextWord.nFlag;
+			nErrorWordPos = nextWord.nSourceWordsIndex;
 			strError = "LoadWhileSentence(Block format error)";
 			return ECompile_ERROR;
 		}
@@ -1088,7 +1093,7 @@ namespace zlscript
 		GetWord(nextWord);
 		if (nextWord.word != "{")
 		{
-			nErrorWordPos = nextWord.nFlag;
+			nErrorWordPos = nextWord.nSourceWordsIndex;
 			strError = "LoadIfSentence(Block format error)";
 			return ECompile_ERROR;
 		}
@@ -1105,16 +1110,17 @@ namespace zlscript
 	}
 	int CScriptCodeLoader::LoadReturnSentence(SentenceSourceCode& vIn, CBaseICode* pCode, int nType)
 	{
-		CReturnICode* pReturnICode = CICodeMgr::GetInstance()->New<CReturnICode>();
+		GetNewWord(nextWord);
+		CReturnICode* pReturnICode = CICodeMgr::GetInstance()->New<CReturnICode>(nextWord.nSourceWordsIndex);
 		if (pReturnICode == nullptr)
 		{
 			return ECompile_ERROR;
 		}
 		pCode->AddICode(nType, pReturnICode);
-		GetNewWord(nextWord);
+
 		if (nextWord.word != "return")
 		{
-			nErrorWordPos = nextWord.nFlag;
+			nErrorWordPos = nextWord.nSourceWordsIndex;
 			strError = "LoadReturnSentence:format error)";
 			return ECompile_ERROR;
 		}
@@ -1135,14 +1141,15 @@ namespace zlscript
 
 	int CScriptCodeLoader::LoadOneSentence(SentenceSourceCode& vIn, CBaseICode* pCode, int nType, std::string endFlag)
 	{
-		CSentenceICode* pSentenceICode = CICodeMgr::GetInstance()->New<CSentenceICode>();
+		GetNewWord(nextWord);
+		CSentenceICode* pSentenceICode = CICodeMgr::GetInstance()->New<CSentenceICode>(nextWord.nSourceWordsIndex);
 		if (pSentenceICode == nullptr)
 		{
 			return ECompile_ERROR;
 		}
 		pCode->AddICode(nType, pSentenceICode);
 
-		GetNewWord(nextWord);
+
 		if (nextWord.word == ";")
 		{
 			return ECompile_Return;
@@ -1167,22 +1174,23 @@ namespace zlscript
 			}
 			if (pVar && pVar->cType == EScriptVal_ClassPointIndex)
 			{
-				CodeStyle code;
+				CodeStyle code(nextWord.nSourceWordsIndex);
 				code.qwCode = 0;
 				code.wInstruct = ECODE_PUSH;
 				code.cSign = cSign;
 				code.cExtend = 0;
 				code.dwPos = nClassIndex;
+
 				pSentenceICode->AddExeCode(code);
 			}
 			else
 			{
 				//不是类指针，错误
-				nErrorWordPos = nextWord.nFlag;
+				nErrorWordPos = nextWord.nSourceWordsIndex;
 				strError = "delete: no class point";
 				return ECompile_ERROR;
 			}
-			CodeStyle deleteCode;
+			CodeStyle deleteCode(nextWord.nSourceWordsIndex);
 			deleteCode.qwCode = 0;
 			deleteCode.wInstruct = ECODE_RELEASE_CLASS;
 			pSentenceICode->AddExeCode(deleteCode);
@@ -1190,7 +1198,7 @@ namespace zlscript
 			GetWord(nextWord);
 			if (nextWord.word != ";")
 			{
-				nErrorWordPos = nextWord.nFlag;
+				nErrorWordPos = nextWord.nSourceWordsIndex;
 				strError = "delete: format error";
 				return ECompile_ERROR;
 			}
@@ -1201,11 +1209,11 @@ namespace zlscript
 
 			if (nextWord.word != ";")
 			{
-				nErrorWordPos = nextWord.nFlag;
+				nErrorWordPos = nextWord.nSourceWordsIndex;
 				strError = "break: format error";
 				return ECompile_ERROR;
 			}
-			CodeStyle breakCode;
+			CodeStyle breakCode(nextWord.nSourceWordsIndex);
 			breakCode.qwCode = 0;
 			breakCode.wInstruct = ECODE_BREAK;
 			pSentenceICode->AddExeCode(breakCode);
@@ -1229,7 +1237,7 @@ namespace zlscript
 			//else
 			{
 				bool isEvaluate = false;
-				CodeStyle code;
+				CodeStyle code(nextWord.nSourceWordsIndex);
 				if (vIn.size() > 0)
 				{
 					GetNewWord(flagWord);
@@ -1280,7 +1288,7 @@ namespace zlscript
 				GetWord(nextWord);
 				if (nextWord.word != endFlag)
 				{
-					nErrorWordPos = nextWord.nFlag;
+					nErrorWordPos = nextWord.nSourceWordsIndex;
 					strError = "Sentence format error";
 					return ECompile_ERROR;
 				}
@@ -1302,11 +1310,11 @@ namespace zlscript
 	{
 		GetNewWord(FunName);
 
-		CodeStyle begincode;
+		CodeStyle begincode(FunName.nSourceWordsIndex);
 		begincode.qwCode = 0;
 		begincode.wInstruct = ECODE_BEGIN_CALL;
 
-		CodeStyle callCode;
+		CodeStyle callCode(FunName.nSourceWordsIndex);
 		callCode.qwCode = 0;
 		callCode.wInstruct = ECODE_CALL;
 
@@ -1331,7 +1339,7 @@ namespace zlscript
 		GetNewWord(nextWord);
 		if (nextWord.word != "(")
 		{
-			nErrorWordPos = nextWord.nFlag;
+			nErrorWordPos = nextWord.nSourceWordsIndex;
 			strError = "LoadCallFunState(Block format error)";
 			return ECompile_ERROR;
 		}
@@ -1403,19 +1411,20 @@ namespace zlscript
 
 	int CScriptCodeLoader::LoadCallClassFun(SentenceSourceCode& vIn, CBaseICode* pCode, std::vector<CodeStyle>& vOut)
 	{
-		CodeStyle begincode;
+		GetNewWord(FunName);
+		CodeStyle begincode(FunName.nSourceWordsIndex);
 		begincode.qwCode = 0;
 		begincode.wInstruct = ECODE_BEGIN_CALL;
 
-		CodeStyle classcode;
+		CodeStyle classcode(FunName.nSourceWordsIndex);
 		classcode.qwCode = 0;
 		classcode.wInstruct = ECODE_PUSH;
 
-		CodeStyle callCode;
+		CodeStyle callCode(FunName.nSourceWordsIndex);
 		callCode.qwCode = 0;
 		callCode.wInstruct = ECODE_CALL_CLASS_FUN;
 
-		GetNewWord(FunName);
+
 		int nClassIndex = QueryTempVar(FunName.word, pCode);
 		int nClassType = 0;
 		VarInfo info;
@@ -1544,7 +1553,7 @@ namespace zlscript
 		if (nextWord.word == "new")
 		{
 			GetNewWord(ClassName);
-			CodeStyle newCode;
+			CodeStyle newCode(ClassName.nSourceWordsIndex);
 			newCode.qwCode = 0;
 			newCode.wInstruct = ECODE_NEW_CLASS;
 			newCode.dwPos = CScriptSuperPointerMgr::GetInstance()->GetClassType(ClassName.word);
@@ -1600,10 +1609,15 @@ namespace zlscript
 		};
 		struct CSignNode : public CBaseNode
 		{
+			CSignNode(unsigned int unIndex)
+			{
+				unSoureIndex = unIndex;
+			}
 			int GetType()
 			{
 				return E_NODE_SIGN;
 			}
+			unsigned int unSoureIndex;
 			unsigned short unSign;
 			int nLevel;
 
@@ -1611,7 +1625,7 @@ namespace zlscript
 			{
 				CBaseNode::addCode(vOut);
 
-				CodeStyle code;
+				CodeStyle code(unSoureIndex);
 				code.qwCode = 0;
 				code.wInstruct = unSign;
 
@@ -1695,7 +1709,7 @@ namespace zlscript
 					break;
 				}
 				nState = 2;
-				CSignNode* pSignNode = new CSignNode;
+				CSignNode* pSignNode = new CSignNode(nextWord.nSourceWordsIndex);
 				if (nLastNodeType != E_NODE_VAR)
 				{
 					pSignNode->nLevel = 0;
@@ -1858,7 +1872,7 @@ namespace zlscript
 			if (varName.nFlag == E_WORD_FLAG_STRING)
 			{
 				//字符串
-				CodeStyle code;
+				CodeStyle code(varName.nSourceWordsIndex);
 				m_vTempCodeData.vStrConst.push_back(varName.word);
 				code.wInstruct = ECODE_PUSH;
 				code.cSign = 3;
@@ -1868,7 +1882,7 @@ namespace zlscript
 			}
 			else
 			{
-				CodeStyle code;
+				CodeStyle code(varName.nSourceWordsIndex);
 				code.qwCode = 0;
 				int nIndexVar = QueryTempVar(varName.word, pCode);
 				if (nIndexVar >= 0)//临时变量
@@ -2285,7 +2299,7 @@ namespace zlscript
 #if _SCRIPT_DEBUG
 	void CScriptCodeLoader::PartitionSourceWords(std::vector<char>& vSource)
 	{
-		m_vSourceWords.clear();
+		m_vCharIndex2LineIndex.resize(vSource.size(),0);
 		unsigned int nLineIndex = 1;
 		char ch[2] = { 0,0 };
 		std::string strCurWord;
@@ -2309,11 +2323,8 @@ namespace zlscript
 			}
 			if (bNewLine)
 			{
-				tagSourceWordInfo wordsinfo;
-				wordsinfo.nEndIndex = i;
-				wordsinfo.nSourceLineIndex = m_vScoureLines.size();
-				m_vSourceWords.push_back(wordsinfo);
 				tagSourceLineInfo info;
+				info.strCurFileName = strCurFileName;
 				info.nLineNum = nLineIndex++;
 				info.strLineWords = strCurWord;
 				m_vScoureLines.push_back(info);
@@ -2323,83 +2334,42 @@ namespace zlscript
 			{
 				ch[0] = vSource[i];
 				strCurWord += ch;
+				m_vCharIndex2LineIndex[i] = m_vScoureLines.size();
 			}
 
 		}
-		if (m_vScoureLines.size() > 0)
+		if (strCurWord.size() > 0)
 		{
-			tagSourceWordInfo wordsinfo;
-			wordsinfo.nEndIndex = vSource.size();
-			wordsinfo.nSourceLineIndex = m_vScoureLines.size();
-			m_vSourceWords.push_back(wordsinfo);
 			tagSourceLineInfo info;
-			info.nLineNum = nLineIndex++;
+			info.strCurFileName = strCurFileName;
 			info.nLineNum = nLineIndex++;
 			info.strLineWords = strCurWord;
 			m_vScoureLines.push_back(info);
 			strCurWord.clear();
 		}
 	}
+
 	unsigned int CScriptCodeLoader::GetSourceWordsIndex(unsigned int nIndex)
 	{
-		std::function<unsigned int(unsigned int, unsigned int)> fun;
-		fun = [&](unsigned int BeginPos, unsigned int EndPos) {
-			if (EndPos - BeginPos > 1)
-			{
-				unsigned int nMidPos = BeginPos + (EndPos - BeginPos) / 2;
-				if (m_vSourceWords[nMidPos].nEndIndex == nIndex)
-				{
-					return m_vSourceWords[nMidPos].nSourceLineIndex;
-				}
-				else if (m_vSourceWords[nMidPos].nEndIndex > nIndex)
-				{
-					return fun(BeginPos, nMidPos);
-				}
-				else
-				{
-					return fun(nMidPos, EndPos);
-				}
-			}
-			else
-			{
-				if (m_vSourceWords[EndPos].nEndIndex >= nIndex)
-				{
-					return m_vSourceWords[EndPos].nSourceLineIndex;
-				}
-				else
-				{
-					return m_vSourceWords[BeginPos].nSourceLineIndex;
-				}
-			}
-			return  m_vScoureLines.size();
-		};
-
-		return fun(0, m_vSourceWords.size() - 1);
-	}
-	unsigned int CScriptCodeLoader::GetSourceLineIndex(SentenceSourceCode& vIn, unsigned int pos)
-	{
-		//if (vIn.size() <= 0)
-		//{
-		//	return 0;
-		//}
-		//if (pos < vIn.size())
-		//{
-		//	return vIn[pos].nSourceWordsIndex;
-		//}
-		//return vIn[vIn.size() - 1].nSourceWordsIndex;
+		if (m_vCharIndex2LineIndex.size() > nIndex)
+		{
+			return m_vCharIndex2LineIndex[nIndex];
+		}
 		return 0;
 	}
+
 #endif
 
-	std::string CScriptCodeLoader::GetSourceWords(unsigned int nIndex)
+	const CScriptCodeLoader::tagSourceLineInfo &CScriptCodeLoader::GetSourceWords(unsigned int nIndex)
 	{
 #if _SCRIPT_DEBUG
 		if (m_vScoureLines.size() > nIndex)
 		{
-			return m_vScoureLines[nIndex].strLineWords;
+			return m_vScoureLines[nIndex];
 		}
 #endif
-		return std::string();
+		struct tagSourceLineInfo emtpy;
+		return emtpy;
 	}
 
 	CScriptCodeLoader::tagCodeData::tagCodeData()

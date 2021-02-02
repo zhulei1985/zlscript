@@ -65,7 +65,7 @@ namespace zlscript
 			ERESULT_CALLSCRIPTFUN,
 			ERESULT_NEXTCONTINUE
 		};
-
+		CodeStyle GetCurCode();
 		unsigned int ExecBlock(CScriptVirtualMachine* pMachine);
 
 		void SetCallFunParamNum(int nVal)
@@ -106,5 +106,24 @@ namespace zlscript
 		std::chrono::milliseconds m_msRunningTime;//运行时间
 	public:
 		friend class CScriptVirtualMachine;
+	};
+
+	class CScriptExecBlockStack
+	{
+	public:
+		CScriptExecBlockStack();
+		~CScriptExecBlockStack();
+	public:
+		unsigned int size();
+		bool empty();
+
+		void push(CScriptExecBlock* pBlock);
+		CScriptExecBlock* top();
+		void pop();
+
+		CScriptExecBlock* get(unsigned int i);
+	protected:
+		unsigned int unIndex;
+		std::vector<CScriptExecBlock*> m_Vec;
 	};
 }

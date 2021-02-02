@@ -56,6 +56,15 @@ namespace zlscript
 		return 0;
 	}
 
+	CodeStyle CScriptExecBlock::GetCurCode()
+	{
+		if (m_pCodeData)
+		{
+			return m_pCodeData->vCodeData[m_nCodePoint];
+		}
+		return CodeStyle(0);
+	}
+
 	unsigned int CScriptExecBlock::ExecBlock(CScriptVirtualMachine* pMachine)
 	{
 		if (m_pMaster == nullptr || m_pCodeData == nullptr || pMachine == nullptr)
@@ -859,5 +868,62 @@ namespace zlscript
 
 		}
 		return std::string();
+	}
+	CScriptExecBlockStack::CScriptExecBlockStack()
+	{
+		unIndex = 0;
+		m_Vec.resize(32);
+	}
+	CScriptExecBlockStack::~CScriptExecBlockStack()
+	{
+	}
+	unsigned int CScriptExecBlockStack::size()
+	{
+		return unIndex;
+	}
+	bool CScriptExecBlockStack::empty()
+	{
+		return unIndex == 0;
+	}
+	void CScriptExecBlockStack::push(CScriptExecBlock* pBlock)
+	{
+		if (pBlock)
+		{
+			if (unIndex >= m_Vec.size())
+			{
+				m_Vec.push_back(pBlock);
+				unIndex = m_Vec.size();
+			}
+			else
+			{
+				m_Vec[unIndex] = pBlock;
+				unIndex++;
+			}
+
+		}
+	}
+	CScriptExecBlock* CScriptExecBlockStack::top()
+	{
+		if (unIndex > 0)
+		{
+			return m_Vec[unIndex - 1];
+		}
+		return nullptr;
+	}
+	void CScriptExecBlockStack::pop()
+	{
+		if (unIndex > 0)
+		{
+			m_Vec[unIndex - 1] = nullptr;
+			unIndex--;
+		}
+	}
+	CScriptExecBlock* CScriptExecBlockStack::get(unsigned int i)
+	{
+		if (unIndex > i)
+		{
+			return m_Vec[i];
+		}
+		return nullptr;
 	}
 }

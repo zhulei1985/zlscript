@@ -270,28 +270,30 @@ namespace zlscript
 		std::string strCurFileName;
 		std::string strCurFunName;
 		unsigned int nErrorWordPos;
-#if _SCRIPT_DEBUG
 
-		struct tagSourceWordInfo
-		{
-			unsigned int nEndIndex;
-			unsigned int nSourceLineIndex;
-		};
-		std::vector<tagSourceWordInfo> m_vSourceWords;
+	public:
 		struct tagSourceLineInfo
 		{
+			tagSourceLineInfo()
+			{
+				nLineNum = 0;
+			}
 			std::string strCurFileName;
 			unsigned int nLineNum;
 			std::string strLineWords;
 		};
+	private:
+#if _SCRIPT_DEBUG
+		std::vector<unsigned int> m_vCharIndex2LineIndex;
+
 		std::vector<tagSourceLineInfo> m_vScoureLines;
 
 		void PartitionSourceWords(std::vector<char> &vSource);
 		unsigned int GetSourceWordsIndex(unsigned int nIndex);
-		unsigned int GetSourceLineIndex(SentenceSourceCode& vIn, unsigned int pos);
 #endif
 	public:
-		std::string GetSourceWords(unsigned int nIndex);
+		
+		const tagSourceLineInfo& GetSourceWords(unsigned int nIndex);
 		//struct tagDebugInfo
 		//{
 		//	std::string strFileName;

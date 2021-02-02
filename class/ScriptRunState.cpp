@@ -645,6 +645,15 @@ namespace zlscript
 					//2020/4/23 执行错误后不再退出整个堆栈，而是只终结当前代码块并且返回默认值
 						//ClearExecBlock(true);
 					SCRIPT_PRINT("script", "Error script 执行错误: %s", FunName.c_str());
+#ifdef  _SCRIPT_DEBUG
+					for (unsigned int i = 0; i < m_BlockStack.size(); i++)
+					{
+						auto pBlock = m_BlockStack.get(i);
+						auto souceInfo = CScriptCodeLoader::GetInstance()->GetSourceWords(pBlock->GetCurCode().nSoureWordIndex);
+						SCRIPT_PRINT("script", "Stack %d|file:%s,line:%d,word:%s", i, souceInfo.strCurFileName.c_str(),
+							souceInfo.nLineNum, souceInfo.strLineWords.c_str());
+					}
+#endif
 					//退出本代码块，返回默认返回值
 					m_BlockStack.pop();
 					if (pBlock->GetDefaultReturnType() != EScriptVal_None)

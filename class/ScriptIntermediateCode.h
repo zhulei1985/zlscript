@@ -45,7 +45,7 @@ namespace zlscript
 		unsigned char cGlobal;// 1 表示全局变量
 		unsigned short wExtend; // 大于1表示是数组下标,不再使用
 		unsigned int dwPos;//位置ID
-		
+
 	};
 	struct tagSourceWord
 	{
@@ -59,18 +59,45 @@ namespace zlscript
 		unsigned int nSourceWordsIndex;
 	};
 	typedef std::list<tagSourceWord> SentenceSourceCode;
-
-	union CodeStyle
+#ifdef  _SCRIPT_DEBUG
+	struct CodeStyle
 	{
-		__int64 qwCode;
-		struct
+		CodeStyle(unsigned int index)
 		{
-			unsigned char cSign;//标志
-			unsigned char cExtend;//扩展标志
-			unsigned short wInstruct;//指令ID
-			unsigned int dwPos;//变量地址
+			nSoureWordIndex = index;
+		}
+		union
+		{
+			__int64 qwCode;
+			struct
+			{
+				unsigned char cSign;//标志
+				unsigned char cExtend;//扩展标志
+				unsigned short wInstruct;//指令ID
+				unsigned int dwPos;//变量地址
+			};
 		};
+		unsigned int nSoureWordIndex;
 	};
+#else
+	struct CodeStyle
+	{
+		CodeStyle(unsigned int index)
+		{
+		}
+		union
+		{
+			__int64 qwCode;
+			struct
+			{
+				unsigned char cSign;//标志
+				unsigned char cExtend;//扩展标志
+				unsigned short wInstruct;//指令ID
+				unsigned int dwPos;//变量地址
+			};
+		};
+}
+#endif
 	const unsigned int g_nTempVarIndexError = -1;
 
 	enum E_ICODE_TYPE
@@ -99,6 +126,8 @@ namespace zlscript
 		virtual void AddICode(int nType, CBaseICode* pCode);
 	private:
 		CBaseICode* m_pFather;
+	public:
+		unsigned int m_unBeginSoureIndex;
 	};
 	class CBlockICode;
 	class CFunICode : public CBaseICode
@@ -168,6 +197,7 @@ namespace zlscript
 			pTureCode = nullptr;
 			pFalseCode = nullptr;
 		}
+		unsigned int m_unElseSoureIndex;
 	public:
 		virtual void MakeExeCode(std::vector<CodeStyle>& vOut);
 		virtual void AddICode(int nType, CBaseICode* pCode);
@@ -216,7 +246,7 @@ namespace zlscript
 		~CICodeMgr();
 
 		template<class T>
-		T* New();
+		T* New(unsigned int index);
 
 		void Release(CBaseICode* pPoint);
 
@@ -233,12 +263,13 @@ namespace zlscript
 	};
 
 	template<class T>
-	inline T* CICodeMgr::New()
+	inline T* CICodeMgr::New(unsigned int index)
 	{
 		T* pResult = new T;
 		CBaseICode* pCode = dynamic_cast<CBaseICode*>(pResult);
 		if (pCode)
 		{
+			pCode->m_unBeginSoureIndex = index;
 			m_setICode.insert(pCode);
 		}
 		else if (pResult)

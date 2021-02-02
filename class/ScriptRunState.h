@@ -65,7 +65,7 @@ namespace zlscript
 		//最后一次运行的时间
 		std::chrono::steady_clock::time_point m_timeLastRunTime;
 		StackVarInfo m_varReturn;
-		std::stack<CScriptExecBlock*> m_BlockStack;
+		CScriptExecBlockStack m_BlockStack;
 
 		//int CurCallFunParamNum;//当前调用函数的参数数量
 		//int CurStackSizeWithoutFunParam;//除了函数参数，堆栈的大小
