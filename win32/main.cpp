@@ -74,13 +74,14 @@ int main()
 	zlscript::LoadFile("test.script");
 	g_nThreadRunState = 1;
 
+	//zlscript::CScriptStack stackParm;
 	auto t1 = std::chrono::steady_clock::now();
 	int sum = 0;
 	int i = 1;
-	while (i <= 100)
+	while (i <= 1000)
 	{
 		int j = 1;
-		while (j <= 100)
+		while (j <= 1000)
 		{
 			sum = sum + i * j;
 			j = j + 1;

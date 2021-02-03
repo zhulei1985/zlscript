@@ -420,7 +420,7 @@ namespace zlscript
 		__int64 index = pState->PopClassPointFormStack();
 		CScriptBasePointer* pPoint = CScriptSuperPointerMgr::GetInstance()->PickupPointer(index);
 		pState->ClearFunParam();
-		if (pPoint)
+		if (pPoint && pPoint->GetPoint())
 		{
 			pState->PushVarToStack(1);
 			CScriptSuperPointerMgr::GetInstance()->ReturnPointer(pPoint);

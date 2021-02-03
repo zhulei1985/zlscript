@@ -31,6 +31,16 @@ namespace zlscript
 		m_ID = id;
 	}
 
+	void CScriptBasePointer::SetAutoRelease(bool val)
+	{
+		m_bAutoRelease = val;
+	}
+
+	bool CScriptBasePointer::IsAutoRelease()
+	{
+		return m_bAutoRelease;
+	}
+
 	CScriptSuperPointerMgr CScriptSuperPointerMgr::s_Instance;
 
 	void CScriptSuperPointerMgr::Init()
@@ -84,6 +94,57 @@ namespace zlscript
 			}
 		}
 		m_MutexLock.unlock();
+	}
+
+	void CScriptSuperPointerMgr::ReleaseAutoPoint()
+	{
+		std::lock_guard<std::mutex> Lock(m_MutexLock);
+		auto itId = m_autoReleaseIds.begin();
+		for (; itId != m_autoReleaseIds.end();)
+		{
+			std::map<__int64, CScriptBasePointer*>::iterator it = m_mapPointer.find(*itId);
+			if (it != m_mapPointer.end())
+			{
+				CScriptBasePointer* pPoint = it->second;
+				if (pPoint->m_nUseCount > 0)
+				{
+					itId++;
+					//TODO 应该删除的指针，还有地方引用，不应该
+					continue;
+				}
+				CBaseScriptClassMgr* pMgr = CScriptSuperPointerMgr::GetInstance()->GetClassMgr(pPoint->GetType());
+				if (pPoint->GetPoint())
+				{
+					pPoint->GetPoint()->ClearScriptPointIndex();
+					delete pPoint->GetPoint();
+				}
+
+				pPoint->SetPointer(nullptr);
+
+				m_mapPointer.erase(it);
+				if (pPoint->m_nUseCount <= 0)
+				{
+					delete pPoint;
+				}
+			}
+			itId = m_autoReleaseIds.erase(itId);
+		}
+	}
+
+	bool CScriptSuperPointerMgr::SetPointAutoRelease(__int64 nID, bool autorelease)
+	{
+		std::lock_guard<std::mutex> Lock(m_MutexLock);
+		std::map<__int64, CScriptBasePointer*>::iterator it = m_mapPointer.find(nID);
+		if (it != m_mapPointer.end())
+		{
+			auto pPoint = it->second;
+			if (pPoint)
+			{
+				pPoint->SetAutoRelease(autorelease);
+				return true;
+			}
+		}
+		return false;
 	}
 
 	bool CScriptSuperPointerMgr::RemoveClassPoint(__int64 nID)
@@ -152,6 +213,59 @@ namespace zlscript
 			}
 		}
 		m_MutexLock.unlock();
+	}
+
+	bool CScriptSuperPointerMgr::ScriptUsePointer(__int64 id)
+	{
+		if (id == 0)
+		{
+			return false;
+		}
+		std::lock_guard<std::mutex> Lock(m_MutexLock);
+		std::map<__int64, CScriptBasePointer*>::iterator it = m_mapPointer.find(id);
+		if (it != m_mapPointer.end())
+		{
+			auto pPoint = it->second;
+			if (pPoint)
+			{
+				pPoint->m_nScriptUseCount++;
+			}
+			return true;
+		}
+		return false;
+	}
+
+	bool CScriptSuperPointerMgr::ScriptReleasePointer(__int64 id)
+	{
+		if (id == 0)
+		{
+			return false;
+		}
+		std::lock_guard<std::mutex> Lock(m_MutexLock);
+
+		std::map<__int64, CScriptBasePointer*>::iterator it = m_mapPointer.find(id);
+		if (it != m_mapPointer.end())
+		{
+			auto pPoint = it->second;
+			if (pPoint)
+			{
+				if (pPoint->m_nScriptUseCount < 1)
+				{
+					pPoint->m_nScriptUseCount = 0;
+					//标记是否可以释放
+					if (pPoint->IsAutoRelease())
+					{
+						m_autoReleaseIds.insert(pPoint->GetID());
+					}
+				}
+				else
+				{
+					pPoint->m_nScriptUseCount--;
+				}
+			}
+			return true;
+		}
+		return false;
 	}
 
 	int CScriptSuperPointerMgr::GetClassFunIndex(int classindex, std::string funname)

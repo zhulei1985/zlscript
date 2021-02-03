@@ -372,6 +372,8 @@ namespace zlscript
 	{
 		CScriptExecFrame::OnUpdate();
 
+		CScriptSuperPointerMgr::GetInstance()->ReleaseAutoPoint();
+
 		auto nowTime = std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now());
 		unsigned int nNowTime = nowTime.time_since_epoch().count();
 		auto pState = PopStateFormWaitingTimeList(nNowTime);

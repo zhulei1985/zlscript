@@ -734,7 +734,7 @@ namespace zlscript
 				CBaseScriptClassMgr* pMgr = CScriptSuperPointerMgr::GetInstance()->GetClassMgr(code.dwPos);
 				if (pMgr)
 				{
-					auto pNewPoint = pMgr->New();
+					auto pNewPoint = pMgr->New(true);
 					ScriptVector_PushVar(m_varRegister, pNewPoint);
 				}
 				else

@@ -34,8 +34,9 @@ namespace zlscript
 	public:
 		CScriptBasePointer(){
 			m_ID = 0;
-			m_nCount = 0;
 			m_nUseCount = 0;
+			m_nScriptUseCount = 0;
+			m_bAutoRelease = false;
 		}
 		virtual ~CScriptBasePointer(){}
 	public:
@@ -43,6 +44,8 @@ namespace zlscript
 		virtual int GetType() = 0;
 		virtual __int64 GetID();
 		virtual void SetID(__int64 id);
+		void SetAutoRelease(bool val);
+		bool IsAutoRelease();
 
 		virtual int RunFun(unsigned int nIndex, CScriptRunState*) = 0;
 		virtual int GetFunIndex(std::string name) = 0;
@@ -56,10 +59,10 @@ namespace zlscript
 		virtual void Unlock() = 0;
 	protected:
 		long m_ID;
-		int m_nCount;
-
+		bool m_bAutoRelease;
 	public:
 		std::atomic_int m_nUseCount;
+		std::atomic_int m_nScriptUseCount;
 	};
 
 	template<class T>
@@ -185,12 +188,16 @@ namespace zlscript
 		void Init();
 		void Clear();
 		void ClearPointer();
+
+		void ReleaseAutoPoint();
 	public:
 		template<class T>
 		bool RegisterClassType(std::string classname, T* p);
 
 		template<class T>
-		bool SetClassPoint(__int64 nID, T* pVal);
+		bool SetClassPoint(__int64 nID, T* pVal, bool autorelease);
+
+		bool SetPointAutoRelease(__int64 nID, bool autorelease);
 
 		bool RemoveClassPoint(__int64 nID);
 
@@ -202,9 +209,12 @@ namespace zlscript
 		template<class T>
 		bool SetClassFun(std::string funName, T* pPoint);
 
-		//注意，pickup后必须return
+		//c++代码中，取一个指针进行操作 注意，pickup后必须return
 		CScriptBasePointer* PickupPointer(__int64 id);
 		void ReturnPointer(CScriptBasePointer* pPointer);
+		//脚本代码中，用于标记是否被脚本变量引用
+		bool ScriptUsePointer(__int64 id);
+		bool ScriptReleasePointer(__int64 id);
 
 		int GetClassFunIndex(int classindex, std::string funname);
 
@@ -220,6 +230,8 @@ namespace zlscript
 
 		std::mutex m_MutexLock;
 		std::mutex m_MutexTypeLock;
+
+		std::set<__int64> m_autoReleaseIds;
 	public:
 		static CScriptSuperPointerMgr* GetInstance()
 		{
@@ -282,38 +294,36 @@ namespace zlscript
 	}
 
 	template<class T>
-	inline bool CScriptSuperPointerMgr::SetClassPoint(__int64 nID, T* pVal)
+	inline bool CScriptSuperPointerMgr::SetClassPoint(__int64 nID, T* pVal, bool autorelease)
 	{
 		if (pVal == nullptr)
 		{
 			return false;
 		}
-		m_MutexLock.lock();
+		std::lock_guard<std::mutex> Lock(m_MutexLock);
 		std::map<__int64, CScriptBasePointer*>::iterator it = m_mapPointer.find(nID);
 		if (it != m_mapPointer.end())
 		{
-			m_MutexLock.unlock();
-			return false;
+			if (it->second)
+				return false;
 		}
-		else
+		
 		{
 			CScriptSuperPointer<T>* pPoint = new CScriptSuperPointer<T>;
 			if (pPoint == nullptr)
 			{
-				m_MutexLock.unlock();
 				return false;
 			}
 			if (pPoint->GetType() <= 0)
 			{
 				delete pPoint;
-				m_MutexLock.unlock();
 				return false;
 			}
+			pPoint->SetAutoRelease(autorelease);
 			pPoint->SetID(nID);
 			pPoint->SetPointer(pVal);
 			m_mapPointer[nID] = pPoint;
 		}
-		m_MutexLock.unlock();
 		return true;
 	}
 
@@ -323,7 +333,7 @@ namespace zlscript
 	CScriptSuperPointerMgr::GetInstance()->RegisterClassType(name, pPoint); \
 }
 
-#define AddClassObject(id,point) CScriptSuperPointerMgr::GetInstance()->SetClassPoint(id,point);
+#define AddClassObject(id,point) CScriptSuperPointerMgr::GetInstance()->SetClassPoint(id,point,false);
 #define RemoveClassObject(id) CScriptSuperPointerMgr::GetInstance()->RemoveClassPoint(id);
 	typedef std::function<int(CScriptRunState*)> Script_ClassFun;
 

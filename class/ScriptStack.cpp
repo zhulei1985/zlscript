@@ -49,6 +49,7 @@ namespace zlscript
 		break;
 		case EScriptVal_ClassPointIndex:
 			Int64 = cls.Int64;
+			CScriptSuperPointerMgr::GetInstance()->ScriptUsePointer(Int64);
 			break;
 		case EScriptVal_Binary:
 		{
@@ -73,6 +74,10 @@ namespace zlscript
 		else if (cType == EScriptVal_Binary)
 		{
 			s_binPool.ReleaseBinary(Int64);
+		}
+		else if (cType == EScriptVal_ClassPointIndex)
+		{
+			CScriptSuperPointerMgr::GetInstance()->ScriptReleasePointer(Int64);
 		}
 		cType = EScriptVal_None;
 		Int64 = 0;
@@ -100,6 +105,7 @@ namespace zlscript
 		break;
 		case EScriptVal_ClassPointIndex:
 			Int64 = cls.Int64;
+			CScriptSuperPointerMgr::GetInstance()->ScriptUsePointer(Int64);
 			break;
 		case EScriptVal_Binary:
 		{

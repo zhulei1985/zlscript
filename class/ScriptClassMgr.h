@@ -32,7 +32,7 @@ namespace zlscript
 		CBaseScriptClassMgr();
 		~CBaseScriptClassMgr();
 
-		virtual CScriptPointInterface* New() = 0;
+		virtual CScriptPointInterface* New(bool autorelease) = 0;
 		//virtual CScriptPointInterface* NewImage(__int64 nID) = 0;
 		virtual CScriptPointInterface* Get(__int64 nID) = 0;
 		//virtual CScriptPointInterface* GetImage(__int64 nID) = 0;
@@ -55,7 +55,7 @@ namespace zlscript
 
 		}
 
-		virtual CScriptPointInterface* New();
+		virtual CScriptPointInterface* New(bool autorelease);
 		//virtual CScriptPointInterface* New(__int64 nID);
 		virtual CScriptPointInterface* Get(__int64 nID);
 
@@ -81,7 +81,7 @@ namespace zlscript
 	CScriptClassMgr<T> CScriptClassMgr<T>::s_Instance;
 
 	template<class T>
-	inline CScriptPointInterface* CScriptClassMgr<T>::New()
+	inline CScriptPointInterface* CScriptClassMgr<T>::New(bool autorelease)
 	{
 		std::lock_guard<std::mutex> Lock(m_MutexLock);
 		//TODO 以后做缓存优化
@@ -90,7 +90,10 @@ namespace zlscript
 			if (pPoint)
 			{
 				//pPoint->SetID(++m_nIDCount);
-				CScriptSuperPointerMgr::GetInstance()->SetClassPoint(pPoint->GetScriptPointIndex(), pPoint);
+				if (!CScriptSuperPointerMgr::GetInstance()->SetPointAutoRelease(pPoint->GetScriptPointIndex(), autorelease))
+				{
+					CScriptSuperPointerMgr::GetInstance()->SetClassPoint(pPoint->GetScriptPointIndex(), pPoint, autorelease);
+				}
 				m_mapLocalClassPoint[pPoint->GetScriptPointIndex()] = pPoint;
 			}
 			return pPoint;
@@ -141,7 +144,7 @@ namespace zlscript
 
 		}
 
-		virtual CScriptPointInterface* New();
+		virtual CScriptPointInterface* New(bool autorelease);
 		//virtual CScriptPointInterface* New(__int64 nID);
 		virtual CScriptPointInterface* Get(__int64 nID);
 
@@ -167,7 +170,7 @@ namespace zlscript
 	CScriptAbstractClassMgr<T> CScriptAbstractClassMgr<T>::s_Instance;
 
 	template<class T>
-	inline CScriptPointInterface* CScriptAbstractClassMgr<T>::New()
+	inline CScriptPointInterface* CScriptAbstractClassMgr<T>::New(bool autorelease)
 	{
 
 		return nullptr;
