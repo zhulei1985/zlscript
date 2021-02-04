@@ -31,14 +31,14 @@ namespace zlscript
 		m_ID = id;
 	}
 
-	void CScriptBasePointer::SetAutoRelease(bool val)
+	void CScriptBasePointer::SetAutoReleaseMode(int val)
 	{
-		m_bAutoRelease = val;
+		m_nAutoReleaseMode = val;
 	}
 
-	bool CScriptBasePointer::IsAutoRelease()
+	int CScriptBasePointer::GetAutoReleaseMode()
 	{
-		return m_bAutoRelease;
+		return m_nAutoReleaseMode;
 	}
 
 	CScriptSuperPointerMgr CScriptSuperPointerMgr::s_Instance;
@@ -131,7 +131,7 @@ namespace zlscript
 		}
 	}
 
-	bool CScriptSuperPointerMgr::SetPointAutoRelease(__int64 nID, bool autorelease)
+	bool CScriptSuperPointerMgr::SetPointAutoRelease(__int64 nID, int autorelease)
 	{
 		std::lock_guard<std::mutex> Lock(m_MutexLock);
 		std::map<__int64, CScriptBasePointer*>::iterator it = m_mapPointer.find(nID);
@@ -140,7 +140,7 @@ namespace zlscript
 			auto pPoint = it->second;
 			if (pPoint)
 			{
-				pPoint->SetAutoRelease(autorelease);
+				pPoint->SetAutoReleaseMode(autorelease);
 				return true;
 			}
 		}
@@ -229,6 +229,12 @@ namespace zlscript
 			if (pPoint)
 			{
 				pPoint->m_nScriptUseCount++;
+				pPoint->Lock();
+				if (pPoint->GetPoint() && !pPoint->GetPoint()->IsScriptUsed())
+				{
+					pPoint->GetPoint()->SetScriptUsed(true);
+				}
+				pPoint->Unlock();
 			}
 			return true;
 		}
@@ -253,10 +259,16 @@ namespace zlscript
 				{
 					pPoint->m_nScriptUseCount = 0;
 					//标记是否可以释放
-					if (pPoint->IsAutoRelease())
+					if (pPoint->GetAutoReleaseMode() | SCRIPT_NO_USED_AUTO_RELEASE)
 					{
 						m_autoReleaseIds.insert(pPoint->GetID());
 					}
+					pPoint->Lock();
+					if (pPoint->GetPoint() && pPoint->GetPoint()->IsScriptUsed())
+					{
+						pPoint->GetPoint()->SetScriptUsed(false);
+					}
+					pPoint->Unlock();
 				}
 				else
 				{

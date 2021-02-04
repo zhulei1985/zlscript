@@ -25,7 +25,7 @@
 #include <vector>
 
 #include "ScriptPointInterface.h"
-
+#define SCRIPT_NO_USED_AUTO_RELEASE 1
 namespace zlscript
 {
 
@@ -36,7 +36,7 @@ namespace zlscript
 			m_ID = 0;
 			m_nUseCount = 0;
 			m_nScriptUseCount = 0;
-			m_bAutoRelease = false;
+			m_nAutoReleaseMode = false;
 		}
 		virtual ~CScriptBasePointer(){}
 	public:
@@ -44,8 +44,8 @@ namespace zlscript
 		virtual int GetType() = 0;
 		virtual __int64 GetID();
 		virtual void SetID(__int64 id);
-		void SetAutoRelease(bool val);
-		bool IsAutoRelease();
+		void SetAutoReleaseMode(int val);
+		int GetAutoReleaseMode();
 
 		virtual int RunFun(unsigned int nIndex, CScriptRunState*) = 0;
 		virtual int GetFunIndex(std::string name) = 0;
@@ -59,7 +59,7 @@ namespace zlscript
 		virtual void Unlock() = 0;
 	protected:
 		long m_ID;
-		bool m_bAutoRelease;
+		int m_nAutoReleaseMode;
 	public:
 		std::atomic_int m_nUseCount;
 		std::atomic_int m_nScriptUseCount;
@@ -197,7 +197,7 @@ namespace zlscript
 		template<class T>
 		bool SetClassPoint(__int64 nID, T* pVal, bool autorelease);
 
-		bool SetPointAutoRelease(__int64 nID, bool autorelease);
+		bool SetPointAutoRelease(__int64 nID, int autorelease);
 
 		bool RemoveClassPoint(__int64 nID);
 
@@ -319,7 +319,7 @@ namespace zlscript
 				delete pPoint;
 				return false;
 			}
-			pPoint->SetAutoRelease(autorelease);
+			pPoint->SetAutoReleaseMode(autorelease);
 			pPoint->SetID(nID);
 			pPoint->SetPointer(pVal);
 			m_mapPointer[nID] = pPoint;
