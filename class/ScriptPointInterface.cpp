@@ -24,7 +24,6 @@ namespace zlscript
 	__int64 CScriptPointInterface::s_nScriptPointIndexCount = 0;
 	CScriptPointInterface::CScriptPointInterface()
 	{
-		m_bScriptUsed = false;
 		m_nScriptPointIndex = 0;
 	}
 	CScriptPointInterface::~CScriptPointInterface()

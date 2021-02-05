@@ -31,6 +31,7 @@ namespace zlscript
 		CScriptCallBackFunion::GetInstance()->init();
 		CScriptSuperPointerMgr::GetInstance()->Init();
 		CScriptData::Init2Script();
+		CScriptHashMap::Init2Script();
 		CScriptArray::Init2Script();
 	}
 	inline void LoadFile(const char * filename)

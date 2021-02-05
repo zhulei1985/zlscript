@@ -96,9 +96,16 @@ namespace zlscript
 		m_MutexLock.unlock();
 	}
 
+	void CScriptSuperPointerMgr::AddPoint2Release(__int64 id)
+	{
+		m_autoReleaseIds.insert(id);
+	}
+
 	void CScriptSuperPointerMgr::ReleaseAutoPoint()
 	{
-		std::lock_guard<std::mutex> Lock(m_MutexLock);
+		std::vector<CScriptPointInterface*> vPoints;
+		//std::lock_guard<std::mutex> Lock(m_MutexLock);
+		m_MutexLock.lock();
 		auto itId = m_autoReleaseIds.begin();
 		for (; itId != m_autoReleaseIds.end();)
 		{
@@ -116,7 +123,8 @@ namespace zlscript
 				if (pPoint->GetPoint())
 				{
 					pPoint->GetPoint()->ClearScriptPointIndex();
-					delete pPoint->GetPoint();
+					vPoints.push_back(pPoint->GetPoint());
+					//delete pPoint->GetPoint();
 				}
 
 				pPoint->SetPointer(nullptr);
@@ -128,6 +136,12 @@ namespace zlscript
 				}
 			}
 			itId = m_autoReleaseIds.erase(itId);
+		}
+		m_MutexLock.unlock();
+
+		for (unsigned int i = 0; i < vPoints.size(); i++)
+		{
+			delete vPoints[i];
 		}
 	}
 
@@ -229,12 +243,6 @@ namespace zlscript
 			if (pPoint)
 			{
 				pPoint->m_nScriptUseCount++;
-				pPoint->Lock();
-				if (pPoint->GetPoint() && !pPoint->GetPoint()->IsScriptUsed())
-				{
-					pPoint->GetPoint()->SetScriptUsed(true);
-				}
-				pPoint->Unlock();
 			}
 			return true;
 		}
@@ -259,16 +267,18 @@ namespace zlscript
 				{
 					pPoint->m_nScriptUseCount = 0;
 					//标记是否可以释放
-					if (pPoint->GetAutoReleaseMode() | SCRIPT_NO_USED_AUTO_RELEASE)
+					if (pPoint->GetAutoReleaseMode() & SCRIPT_NO_USED_AUTO_RELEASE)
 					{
-						m_autoReleaseIds.insert(pPoint->GetID());
+						bool bRelease = true;
+						pPoint->Lock();
+						if (pPoint->GetPoint() && !pPoint->GetPoint()->CanRelease())
+						{
+							bRelease = false;
+						}
+						pPoint->Unlock();
+						if (bRelease)
+							m_autoReleaseIds.insert(pPoint->GetID());
 					}
-					pPoint->Lock();
-					if (pPoint->GetPoint() && pPoint->GetPoint()->IsScriptUsed())
-					{
-						pPoint->GetPoint()->SetScriptUsed(false);
-					}
-					pPoint->Unlock();
 				}
 				else
 				{

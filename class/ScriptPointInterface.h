@@ -104,13 +104,9 @@ namespace zlscript
 		bool IsInitScriptPointIndex();
 		__int64 GetScriptPointIndex();
 		void ClearScriptPointIndex();
-		bool IsScriptUsed()
+		virtual bool CanRelease()
 		{
-			return m_bScriptUsed;
-		}
-		void SetScriptUsed(bool val)
-		{
-			m_bScriptUsed = val;
+			return true;
 		}
 
 		void SetFun(int id, CScriptBaseClassFunInfo* pInfo);
@@ -125,7 +121,6 @@ namespace zlscript
 		}
 		virtual void ChangeScriptAttribute(short flag, CBaseScriptClassAttribute* pAttr);
 	protected:
-		bool m_bScriptUsed;//脚本是否在引用
 		//用于所有脚本可用的类实例索引，作用范围是本地
 		__int64 m_nScriptPointIndex;
 		static __int64 s_nScriptPointIndexCount;

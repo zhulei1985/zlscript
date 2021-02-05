@@ -395,7 +395,10 @@ namespace zlscript
 		StackVarInfo var;
 		var.cType = EScriptVal_ClassPointIndex;
 		if (pVal)
+		{
 			var.Int64 = pVal->GetScriptPointIndex();
+			CScriptSuperPointerMgr::GetInstance()->ScriptUsePointer(var.Int64);
+		}
 		else
 			var.Int64 = 0;
 		Stack.push(var);

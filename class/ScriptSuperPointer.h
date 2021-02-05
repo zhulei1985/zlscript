@@ -189,6 +189,7 @@ namespace zlscript
 		void Clear();
 		void ClearPointer();
 
+		void AddPoint2Release(__int64 id);
 		void ReleaseAutoPoint();
 	public:
 		template<class T>

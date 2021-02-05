@@ -130,7 +130,7 @@ namespace zlscript
 		StackVarInfo var;
 		var.cType = EScriptVal_ClassPointIndex;
 		var.Int64 = nIndex;
-
+		CScriptSuperPointerMgr::GetInstance()->ScriptUsePointer(var.Int64);
 		if (m_BlockStack.size() > 0)
 		{
 			CScriptExecBlock* pBlock = m_BlockStack.top();

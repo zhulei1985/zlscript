@@ -640,11 +640,11 @@ namespace zlscript
 		{
 			strVarType = strHeadCheck.word;
 		}
-
+		int nClassType = 0;
 		int nVarType = m_mapDicVarTypeToICode[strVarType];
 		if (nVarType == EICode_NONE)
 		{
-			int nClassType = CScriptSuperPointerMgr::GetInstance()->GetClassType(strVarType);
+			nClassType = CScriptSuperPointerMgr::GetInstance()->GetClassType(strVarType);
 			if (nClassType > 0)
 			{
 				nVarType = EScriptVal_ClassPointIndex;
@@ -702,7 +702,8 @@ namespace zlscript
 				VarInfo info;
 				info.cType = nVarType;
 				info.cGlobal = 1;
-				info.wExtend = m_nCurFunVarType;
+				info.cType = m_nCurFunVarType;
+				info.wExtend = nClassType;
 				info.dwPos = vGlobalNumVar.size();
 				m_mapDicGlobalVar[wordFunName.word] = info;
 				StackVarInfo defVar;//默认值
@@ -756,7 +757,8 @@ namespace zlscript
 				VarInfo info;
 				info.cType = nVarType;
 				info.cGlobal = 1;
-				info.wExtend = m_nCurFunVarType;
+				info.cType = m_nCurFunVarType;
+				info.wExtend = nClassType;
 				info.dwPos = vGlobalNumVar.size();
 				m_mapDicGlobalVar[wordFunName.word] = info;
 				vGlobalNumVar.push_back(defVar);
