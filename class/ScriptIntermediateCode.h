@@ -96,7 +96,8 @@ namespace zlscript
 				unsigned int dwPos;//变量地址
 			};
 		};
-}
+	};
+
 #endif
 	const unsigned int g_nTempVarIndexError = -1;
 
