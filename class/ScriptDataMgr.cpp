@@ -142,6 +142,7 @@ namespace zlscript
 		m_vecVars.push_back(pState->PopVarFormStack());
 
 		pState->ClearFunParam();
+		pState->PushVarToStack((int)(m_vecVars.size() - 1));
 		return ECALLBACK_FINISH;
 	}
 
