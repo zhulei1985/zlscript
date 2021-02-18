@@ -218,6 +218,14 @@ namespace zlscript
 
 	std::string CScriptStringAttribute::ToType()
 	{
+		if (m_flag & E_FLAG_DB_PRIMARY)
+		{
+			return  "VARCHAR(128)";
+		}
+		if (m_flag & E_FLAG_DB_UNIQUE)
+		{
+			return  "VARCHAR(128)";
+		}
 		return "TEXT";
 	}
 

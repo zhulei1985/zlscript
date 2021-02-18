@@ -497,7 +497,12 @@ namespace zlscript
 		}
 		return g_nTempVarIndexError;
 	}
-
+#define SignToPos \
+	if (vIn.size() != 0) \
+	{ \
+		tagSourceWord word = vIn.front(); \
+		nErrorWordPos = word.nSourceWordsIndex; \
+	}
 
 #define GetNewWord(word) \
 	if (vIn.size() == 0) \
@@ -531,6 +536,7 @@ namespace zlscript
 
 	int CScriptCodeLoader::LoadDefineFunctionParameter(SentenceSourceCode& vIn, CBaseICode* pCode)
 	{
+		SignToPos;
 		GetNewWord(strType);
 		GetNewWord(strName);
 
@@ -571,6 +577,7 @@ namespace zlscript
 
 	int CScriptCodeLoader::LoadDefineTempVar(SentenceSourceCode& vIn, CBaseICode* pCode)
 	{
+		SignToPos;
 		GetNewWord(strType);
 		GetNewWord(strName);
 
@@ -620,6 +627,7 @@ namespace zlscript
 
 	int CScriptCodeLoader::LoadDefineFunState(SentenceSourceCode& vIn)
 	{
+		SignToPos;
 		GetNewWord(strHeadCheck);
 
 		int nFunType = EICODE_FUN_DEFAULT;
@@ -871,6 +879,7 @@ namespace zlscript
 	}
 	int CScriptCodeLoader::LoadBlockState(SentenceSourceCode& vIn, CBaseICode* pCode, int nType)
 	{
+		SignToPos;
 		GetNewWord(nextWord);
 		CBlockICode* pBlockICode = CICodeMgr::GetInstance()->New<CBlockICode>(nextWord.nSourceWordsIndex);
 		if (pBlockICode == nullptr)
@@ -943,6 +952,7 @@ namespace zlscript
 	}
 	int CScriptCodeLoader::LoadIfSentence(SentenceSourceCode& vIn, CBaseICode* pCode, int nType)
 	{
+		SignToPos;
 		GetNewWord(nextWord);
 		CIfICode* pIfICode = CICodeMgr::GetInstance()->New<CIfICode>(nextWord.nSourceWordsIndex);
 		if (pIfICode == nullptr)
@@ -1040,10 +1050,12 @@ namespace zlscript
 	}
 	int CScriptCodeLoader::LoadForSentence(SentenceSourceCode& vIn, CBaseICode* pCode, int nType)
 	{
+		SignToPos;
 		return 0;
 	}
 	int CScriptCodeLoader::LoadWhileSentence(SentenceSourceCode& vIn, CBaseICode* pCode, int nType)
 	{
+		SignToPos;
 		GetNewWord(nextWord);
 		CWhileICode* pWhileICode = CICodeMgr::GetInstance()->New<CWhileICode>(nextWord.nSourceWordsIndex);
 		if (pWhileICode == nullptr)
@@ -1108,10 +1120,12 @@ namespace zlscript
 	}
 	int CScriptCodeLoader::LoadSwitchSentence(SentenceSourceCode& vIn, CBaseICode* pCode, int nType)
 	{
+		SignToPos;
 		return 0;
 	}
 	int CScriptCodeLoader::LoadReturnSentence(SentenceSourceCode& vIn, CBaseICode* pCode, int nType)
 	{
+		SignToPos;
 		GetNewWord(nextWord);
 		CReturnICode* pReturnICode = CICodeMgr::GetInstance()->New<CReturnICode>(nextWord.nSourceWordsIndex);
 		if (pReturnICode == nullptr)
@@ -1143,6 +1157,7 @@ namespace zlscript
 
 	int CScriptCodeLoader::LoadOneSentence(SentenceSourceCode& vIn, CBaseICode* pCode, int nType, std::string endFlag)
 	{
+		SignToPos;
 		GetNewWord(nextWord);
 		CSentenceICode* pSentenceICode = CICodeMgr::GetInstance()->New<CSentenceICode>(nextWord.nSourceWordsIndex);
 		if (pSentenceICode == nullptr)
@@ -1310,6 +1325,7 @@ namespace zlscript
 	}
 	int CScriptCodeLoader::LoadCallFunState(SentenceSourceCode& vIn, CBaseICode* pCode, std::vector<CodeStyle>& vOut)
 	{
+		SignToPos;
 		GetNewWord(FunName);
 
 		CodeStyle begincode(FunName.nSourceWordsIndex);
@@ -1413,6 +1429,7 @@ namespace zlscript
 
 	int CScriptCodeLoader::LoadCallClassFun(SentenceSourceCode& vIn, CBaseICode* pCode, std::vector<CodeStyle>& vOut)
 	{
+		SignToPos;
 		GetNewWord(FunName);
 		CodeStyle begincode(FunName.nSourceWordsIndex);
 		begincode.qwCode = 0;
@@ -1551,6 +1568,7 @@ namespace zlscript
 
 	int CScriptCodeLoader::LoadFormulaSentence(SentenceSourceCode& vIn, CBaseICode* pCode, std::vector<CodeStyle>& vOut)
 	{
+		SignToPos;
 		GetNewWord(nextWord);
 		if (nextWord.word == "new")
 		{
@@ -1815,6 +1833,7 @@ namespace zlscript
 
 	int CScriptCodeLoader::LoadAndPushNumVar(SentenceSourceCode& vIn, CBaseICode* pCode, std::vector<CodeStyle>& vOut)
 	{
+		SignToPos;
 		GetNewWord(varName);
 		if (vIn.size() > 0)
 		{
@@ -1951,6 +1970,7 @@ namespace zlscript
 
 	int CScriptCodeLoader::LoadBracket(SentenceSourceCode& vIn, CBaseICode* pCode, std::vector<CodeStyle>& vOut)
 	{
+		SignToPos;
 		GetNewWord(nextWord);
 		if (nextWord.word != "(")
 		{
