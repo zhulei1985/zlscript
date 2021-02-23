@@ -193,6 +193,27 @@ namespace zlscript
 		return 0;
 	}
 
+	CScriptBasePointer* CScriptSuperPointerMgr::PickupPointer(__int64 id, std::string className)
+	{
+		CScriptBasePointer* pResult = nullptr;
+		m_MutexLock.lock();
+		std::map<__int64, CScriptBasePointer*>::iterator it = m_mapPointer.find(id);
+		if (it != m_mapPointer.end())
+		{
+			pResult = it->second;
+			if (className != pResult->ClassName())
+			{
+				pResult = nullptr;
+			}
+		}
+		if (pResult)
+		{
+			pResult->m_nUseCount++;
+		}
+		m_MutexLock.unlock();
+		return pResult;
+	}
+
 	CScriptBasePointer* CScriptSuperPointerMgr::PickupPointer(__int64 id)
 	{
 		CScriptBasePointer* pResult = nullptr;

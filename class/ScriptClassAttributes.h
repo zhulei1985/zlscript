@@ -39,6 +39,7 @@ namespace zlscript
 	{
 		char* pPoint;
 		operator char();
+		char operator =(char val);
 		char operator =(char& val);
 		virtual void AddData2Bytes(std::vector<char>& vBuff);
 		virtual bool DecodeData4Bytes(char* pBuff, int& pos, unsigned int len);
@@ -55,7 +56,7 @@ namespace zlscript
 	{
 		int m_val;
 		operator int();
-		int operator =(int& val);
+		int operator =(int val);
 		virtual std::string ToType();
 		virtual std::string ToString();
 		bool SetVal(std::string str);
@@ -66,7 +67,7 @@ namespace zlscript
 	{
 		__int64 m_val;
 		operator __int64();
-		__int64 operator =(__int64& val);
+		__int64 operator =(__int64 val);
 		virtual std::string ToType();
 		virtual std::string ToString();
 		bool SetVal(std::string str);
@@ -77,7 +78,7 @@ namespace zlscript
 	{
 		float m_val;
 		operator float();
-		float operator =(float& val);
+		float operator =(float val);
 		virtual std::string ToType();
 		virtual std::string ToString();
 		bool SetVal(std::string str);
@@ -88,7 +89,7 @@ namespace zlscript
 	{
 		double m_val;
 		operator double();
-		double operator =(double& val);
+		double operator =(double val);
 		virtual std::string ToType();
 		virtual std::string ToString();
 		bool SetVal(std::string str);

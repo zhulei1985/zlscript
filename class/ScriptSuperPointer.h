@@ -211,6 +211,7 @@ namespace zlscript
 		bool SetClassFun(std::string funName, T* pPoint);
 
 		//c++代码中，取一个指针进行操作 注意，pickup后必须return
+		CScriptBasePointer* PickupPointer(__int64 id, std::string className);
 		CScriptBasePointer* PickupPointer(__int64 id);
 		void ReturnPointer(CScriptBasePointer* pPointer);
 		//脚本代码中，用于标记是否被脚本变量引用

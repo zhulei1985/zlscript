@@ -14,15 +14,16 @@ namespace zlscript
 	{
 		return m_val;
 	}
-	int CScriptIntAttribute::operator =(int& val)
+	int CScriptIntAttribute::operator=(int val)
 	{
-		m_val = val;
-		if (m_master)
+		if (m_master && m_val != val)
 		{
-			m_master->ChangeScriptAttribute(m_flag,this);
+			m_master->ChangeScriptAttribute(m_flag, this);
 		}
+		m_val = val;
 		return m_val;
 	}
+
 	std::string CScriptIntAttribute::ToType()
 	{
 		return "INT(11)";
@@ -53,13 +54,13 @@ namespace zlscript
 		return m_val;
 	}
 
-	__int64 CScriptInt64Attribute::operator=(__int64& val)
+	__int64 CScriptInt64Attribute::operator=(__int64 val)
 	{
-		m_val = val;
-		if (m_master)
+		if (m_master && m_val != val)
 		{
 			m_master->ChangeScriptAttribute(m_flag, this);
 		}
+		m_val = val;
 		return m_val;
 	}
 
@@ -97,13 +98,13 @@ namespace zlscript
 		return m_val;
 	}
 
-	float CScriptFloatAttribute::operator=(float& val)
+	float CScriptFloatAttribute::operator=(float val)
 	{
-		m_val = val;
-		if (m_master)
+		if (m_master && m_val != val)
 		{
 			m_master->ChangeScriptAttribute(m_flag, this);
 		}
+		m_val = val;
 		return m_val;
 	}
 
@@ -141,13 +142,13 @@ namespace zlscript
 		return m_val;
 	}
 
-	double CScriptDoubleAttribute::operator=(double& val)
+	double CScriptDoubleAttribute::operator=(double val)
 	{
-		m_val = val;
-		if (m_master)
+		if (m_master && m_val != val)
 		{
 			m_master->ChangeScriptAttribute(m_flag, this);
 		}
+		m_val = val;
 		return m_val;
 	}
 
