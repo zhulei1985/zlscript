@@ -95,10 +95,9 @@ namespace zlscript
 	int CScriptPointInterface::RunFun(int id, CScriptRunState* pState)
 	{
 		int nResult = 0;
-		//std::lock_guard<std::mutex> _lock{ *m_FunLock };
-		m_FunLock.lock();
-		std::map<int, CScriptBaseClassFunInfo*>::iterator it = m_mapScriptClassFun.find(id);
-		if (it != m_mapScriptClassFun.end())
+		//m_FunLock.lock();
+		auto it = m_mapScriptClassFun.find(id);
+		if (it != m_mapScriptClassFun.cend())
 		{
 			CScriptBaseClassFunInfo* pOld = it->second;
 			if (pOld)
@@ -106,8 +105,7 @@ namespace zlscript
 				nResult = pOld->RunFun(pState);
 			}
 		}
-		//std::lock_guard<std::mutex> _unlock{ *m_FunLock };
-		m_FunLock.unlock();
+		//m_FunLock.unlock();
 		return nResult;
 	}
 	CScriptPointInterface::CScriptPointInterface(const CScriptPointInterface& val)
