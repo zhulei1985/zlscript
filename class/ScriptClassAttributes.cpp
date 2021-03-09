@@ -4,11 +4,16 @@
 
 namespace zlscript
 {
-	void CBaseScriptClassAttribute::init(unsigned short flag, unsigned short index, CScriptPointInterface* master)
+	void CBaseScriptClassAttribute::init(const char* pName, unsigned short flag, unsigned short index, CScriptPointInterface* master)
 	{
+		if (pName)
+		{
+			m_strAttrName = pName;
+		}
 		m_flag = flag;
 		m_index = index;
 		m_master = master;
+		master->RegisterScriptClassAttr(m_flag,this);
 	}
 	CScriptIntAttribute::operator int()
 	{

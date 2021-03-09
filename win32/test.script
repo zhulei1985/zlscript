@@ -1,5 +1,5 @@
 //注释为两个'/'，当前只支持这一种注释方法
-
+//int g_a = 0;
 void init()
 {
 	print("init.....");
@@ -26,14 +26,71 @@ void CalculationTest()
 	print("Calculation result:" + sum);
 	print("Calculation time:" + t2 +"ms");
 }
+void CalculationTest2()
+{
+	int t1 = GetMsTime();
+	CTest test = new CTest;
+	int sum = 0;
+	int i = 1;
+	while (i <= 100)
+	{
+		int j = 1;
+		while (j <= 100)
+		{
+			sum = test->Add(sum , i*j);
+			j = j + 1;
+		}
+		i = i + 1;
+	}
+
+	int t2 = GetMsTime() - t1;
+	print("Calculation 2 result:" + sum);
+	print("Calculation 2 time:" + t2 +"ms");
+}
+void CalculationTest3(CTest test)
+{
+	int t1 = GetMsTime();
+	int sum = 0;
+	int i = 1;
+	while (i <= 100)
+	{
+		int j = 1;
+		while (j <= 100)
+		{
+			sum = test->Add(sum , i*j);
+			j = j + 1;
+		}
+		i = i + 1;
+	}
+
+	int t2 = GetMsTime() - t1;
+	print("Calculation 2 result:" + sum);
+	print("Calculation 2 time:" + t2 +"ms");
+}
 void main()
 {
+	print("begin");
 	CTest test = new CTest;
 	int nVal = test->Add(1,2);
 	print(nVal);
-	delete test;
-
+	//delete test;
+	RunScript(0,"CalculationTest3",test);
+	RunScript(0,"CalculationTest3",test);
+	RunScript(0,"CalculationTest3",test);
+	RunScript(0,"CalculationTest3",test);
+	RunScript(0,"CalculationTest3",test);
+	RunScript(0,"CalculationTest3",test);
+	//int nVal2 = test->Add(1,2);
+	print(nVal2);
+	//CalculationTest2();
 	//CalculationTest();
-
-	RunScript(0,"CalculationTest");
+	//RunScript(0,"CalculationTest");
+	//RunScript(0,"CalculationTest2");
+	//RunScript(0,"CalculationTest");
+	//RunScript(0,"CalculationTest2");
+	//RunScript(0,"CalculationTest");
+	//RunScript(0,"CalculationTest2");
+	//RunScript(0,"CalculationTest");
+	//RunScript(0,"CalculationTest2");
+	//RunScript(0,"CalculationTest");
 }

@@ -24,6 +24,8 @@
 #include "ScriptEventMgr.h"
 #include "ScriptDebugPrint.h"
 #include "ScriptClassMgr.h"
+#include "ScriptClassAttributes.h"
+#include "ScriptPointInterface.h"
 namespace zlscript
 {
 	inline void InitScript()

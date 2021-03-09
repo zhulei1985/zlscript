@@ -28,7 +28,20 @@
 #define SCRIPT_NO_USED_AUTO_RELEASE 1
 namespace zlscript
 {
-
+	struct stScriptClassInfo
+	{
+		stScriptClassInfo()
+		{
+			nFunSize = 0;
+			nClassType = 0;
+			nDB_Id_Count = 0;
+		}
+		std::map<std::string, int> mapDicString2Index;
+		std::atomic_int nFunSize;
+		std::atomic_int nClassType;
+		std::string strClassName;
+		std::atomic_int64_t nDB_Id_Count;
+	};
 	class CScriptBasePointer
 	{
 	public:
@@ -71,7 +84,7 @@ namespace zlscript
 	public:
 		virtual const char* ClassName()
 		{
-			return s_strClassName.c_str();
+			return s_Info.strClassName.c_str();
 		}
 		int GetType();
 		//typedef int (T::*ClassFun)(CScriptRunState *);
@@ -99,28 +112,21 @@ namespace zlscript
 
 		std::recursive_mutex m_MutexLock;
 	public:
-		static std::map<std::string, int> m_mapDicString2Index;
-		static std::atomic_int s_nFunSize;
-		static std::atomic_int s_nClassType;
-		static std::string s_strClassName;
+		static stScriptClassInfo s_Info;
+		//static std::map<std::string, int> m_mapDicString2Index;
+		//static std::atomic_int s_nFunSize;
+		//static std::atomic_int s_nClassType;
+		//static std::string s_strClassName;
+		//static std::atomic_int64_t s_DB_Id_Count;
 	};
 
 	template<class T>
-	std::atomic_int CScriptSuperPointer<T>::s_nFunSize = 0;
-
-	template<class T>
-	std::atomic_int CScriptSuperPointer<T>::s_nClassType = 0;
-
-	template<class T>
-	std::map<std::string, int> CScriptSuperPointer<T>::m_mapDicString2Index;
-
-	template<class T>
-	std::string CScriptSuperPointer<T>::s_strClassName;
+	stScriptClassInfo CScriptSuperPointer<T>::s_Info;
 
 	template<class T>
 	inline int CScriptSuperPointer<T>::GetType()
 	{
-		return s_nClassType;
+		return s_Info.nClassType;
 	}
 
 	template<class T>
@@ -138,17 +144,18 @@ namespace zlscript
 	template<class T>
 	inline int CScriptSuperPointer<T>::GetFunIndex(std::string name)
 	{
-		if (CScriptSuperPointer<T>::m_mapDicString2Index.find(name) != CScriptSuperPointer<T>::m_mapDicString2Index.end())
+		auto it = s_Info.mapDicString2Index.find(name);
+		if (it != CScriptSuperPointer<T>::s_Info.mapDicString2Index.cend())
 		{
-			return CScriptSuperPointer<T>::m_mapDicString2Index[name];
+			return it->second;
 		}
 		else
 		{
-			s_nFunSize++;
-			CScriptSuperPointer<T>::m_mapDicString2Index[name] = s_nFunSize;
-			return s_nFunSize;
+			int index = s_Info.nFunSize++;
+			CScriptSuperPointer<T>::s_Info.mapDicString2Index[name] = index;
+			return index;
 		}
-		return 0;
+		return -1;
 	}
 
 	template<class T>
@@ -196,16 +203,20 @@ namespace zlscript
 		bool RegisterClassType(std::string classname, T* p);
 
 		template<class T>
-		bool SetClassPoint(__int64 nID, T* pVal, bool autorelease);
+		bool SetClassPoint(__int64 nID, T* pVal, int autorelease);
 
 		bool SetPointAutoRelease(__int64 nID, int autorelease);
 
 		bool RemoveClassPoint(__int64 nID);
 
 		int GetClassType(std::string funName);
+		void SetClassDBIdCount(std::string funName, __int64 val);
 
 		template<class T>
-		int GetClassType(T* pVal);
+		static int GetClassType(T* pVal);
+
+		template<class T>
+		static std::string GetClassName(T* pVal);
 
 		template<class T>
 		bool SetClassFun(std::string funName, T* pPoint);
@@ -251,9 +262,9 @@ namespace zlscript
 		{
 			nClassTypeCount++;
 			m_mapString2ClassType[classname] = nClassTypeCount;
-			CScriptSuperPointer<T>::s_nClassType = nClassTypeCount;
+			CScriptSuperPointer<T>::s_Info.nClassType = nClassTypeCount;
 
-			CScriptSuperPointer<T>::s_strClassName = classname;
+			CScriptSuperPointer<T>::s_Info.strClassName = classname;
 
 			m_mapClassMgr[nClassTypeCount] = GetScriptClassMgr<T>();//CScriptClassMgr<T>::GetInstance();
 			
@@ -268,22 +279,21 @@ namespace zlscript
 	inline bool CScriptSuperPointerMgr::SetClassFun(std::string funName, T* pPoint)
 	{
 		m_MutexTypeLock.lock();
-		CScriptSuperPointer<T>::s_nFunSize++;
-		int nIndex = CScriptSuperPointer<T>::s_nFunSize;
-		std::map<std::string, int>::iterator it = CScriptSuperPointer<T>::m_mapDicString2Index.find(funName);
-		if (it != CScriptSuperPointer<T>::m_mapDicString2Index.end())
+		int nIndex = -1;
+		auto it = CScriptSuperPointer<T>::s_Info.mapDicString2Index.find(funName);
+		if (it != CScriptSuperPointer<T>::s_Info.mapDicString2Index.end())
 		{
 			nIndex = it->second;
 		}
 		else
 		{
-			CScriptSuperPointer<T>::m_mapDicString2Index[funName] = nIndex;
-
+			CScriptSuperPointer<T>::s_Info.mapDicString2Index[funName] = CScriptSuperPointer<T>::s_Info.nFunSize;
+			CScriptSuperPointer<T>::s_Info.nFunSize++;
 		}
 
-		if (m_mapTypePointer[CScriptSuperPointer<T>::s_nClassType] == nullptr)
+		if (m_mapTypePointer[CScriptSuperPointer<T>::s_Info.nClassType] == nullptr)
 		{
-			m_mapTypePointer[CScriptSuperPointer<T>::s_nClassType] = new CScriptSuperPointer<T>;
+			m_mapTypePointer[CScriptSuperPointer<T>::s_Info.nClassType] = new CScriptSuperPointer<T>;
 		}
 		m_MutexTypeLock.unlock();
 		return true;
@@ -292,11 +302,17 @@ namespace zlscript
 	template<class T>
 	inline int CScriptSuperPointerMgr::GetClassType(T* pVal)
 	{
-		return CScriptSuperPointer<T>::s_nClassType;
+		return CScriptSuperPointer<T>::s_Info.nClassType;
 	}
 
 	template<class T>
-	inline bool CScriptSuperPointerMgr::SetClassPoint(__int64 nID, T* pVal, bool autorelease)
+	inline std::string CScriptSuperPointerMgr::GetClassName(T* pVal)
+	{
+		return CScriptSuperPointer<T>::s_Info.strClassName;
+	}
+
+	template<class T>
+	inline bool CScriptSuperPointerMgr::SetClassPoint(__int64 nID, T* pVal, int autorelease)
 	{
 		if (pVal == nullptr)
 		{
@@ -309,7 +325,7 @@ namespace zlscript
 			if (it->second)
 				return false;
 		}
-		
+
 		{
 			CScriptSuperPointer<T>* pPoint = new CScriptSuperPointer<T>;
 			if (pPoint == nullptr)
@@ -321,6 +337,7 @@ namespace zlscript
 				delete pPoint;
 				return false;
 			}
+			pVal->SetClassInfo(&CScriptSuperPointer<T>::s_Info);
 			pPoint->SetAutoReleaseMode(autorelease);
 			pPoint->SetID(nID);
 			pPoint->SetPointer(pVal);
@@ -335,7 +352,7 @@ namespace zlscript
 	CScriptSuperPointerMgr::GetInstance()->RegisterClassType(name, pPoint); \
 }
 
-#define AddClassObject(id,point) CScriptSuperPointerMgr::GetInstance()->SetClassPoint(id,point,false);
+#define AddClassObject(id,point) CScriptSuperPointerMgr::GetInstance()->SetClassPoint(id,point,0);
 #define RemoveClassObject(id) CScriptSuperPointerMgr::GetInstance()->RemoveClassPoint(id);
 	typedef std::function<int(CScriptRunState*)> Script_ClassFun;
 
@@ -344,6 +361,12 @@ namespace zlscript
 { \
 	T *pPoint = nullptr; \
 	CScriptSuperPointerMgr::GetInstance()->SetClassFun(name, pPoint); \
+}
+//代替RegisterClassFun1
+#define RegisterClassFunName(name,T) \
+{ \
+	T *pPoint = nullptr; \
+	CScriptSuperPointerMgr::GetInstance()->SetClassFun(#name, pPoint); \
 }
 
 #define RegisterClassFun(name, p, fun) \
@@ -371,7 +394,7 @@ namespace zlscript
 		}; \
 		CScript_##name##_ClassFunInfo *pInfo = new CScript_##name##_ClassFunInfo; \
 		pInfo->m_fun = std::bind(fun,p,std::placeholders::_1); \
-		int nClassType = CScriptSuperPointerMgr::GetInstance()->GetClassType(p); \
+		int nClassType = CScriptSuperPointerMgr::GetClassType(p); \
 		int index = CScriptSuperPointerMgr::GetInstance()->GetClassFunIndex(nClassType,#name); \
 		p->SetFun(index,pInfo); \
 	}

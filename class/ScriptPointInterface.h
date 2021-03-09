@@ -29,6 +29,7 @@
 namespace zlscript
 {
 	class CBaseScriptClassMgr;
+	struct stScriptClassInfo;
 
 	template<class T>
 	class CScriptAbstractClassMgr;
@@ -83,15 +84,27 @@ namespace zlscript
 		virtual const char* GetFunName() = 0;
 	};
 
-#define ATTR_INT(val) CScriptIntAttribute val;
-#define ATTR_INT64(val) CScriptInt64Attribute val;
-#define ATTR_STR(val) CScriptStringAttribute val;
-#define INIT_DB_ATTRIBUTE(index,val) \
-	m_mapDBAttributes[#val] = &val; \
-	val.init(CBaseScriptClassAttribute::E_FLAG_DB,index,this);
-#define INIT_DB_ATTRIBUTE_PRIMARY(index,val) \
-	m_mapDBAttributes[#val] = &val; \
-	val.init(CBaseScriptClassAttribute::E_FLAG_DB|CBaseScriptClassAttribute::E_FLAG_DB_PRIMARY,index,this);
+#define ATTR_BASE_INT(val,flag,index) CScriptIntAttribute val{#val,flag,index,this};
+#define ATTR_BASE_INT64(val,flag,index) CScriptInt64Attribute val{#val,flag,index,this};
+#define ATTR_BASE_FLOAT(val,flag,index) CScriptFloatAttribute val{#val,flag,index,this};
+#define ATTR_BASE_DOUBLE(val,flag,index) CScriptDoubleAttribute val{#val,flag,index,this};
+#define ATTR_BASE_STR(val,flag,index) CScriptStringAttribute val{#val,flag,index,this};
+#define ATTR_BASE_INT64_ARRAY(val,flag,index) CScriptInt64ArrayAttribute val{#val,flag,index,this};
+
+#define ATTR_INT(val,index) ATTR_BASE_INT(val,CBaseScriptClassAttribute::E_FLAG_NONE,index);
+#define ATTR_INT64(val,index) ATTR_BASE_INT64(val,CBaseScriptClassAttribute::E_FLAG_NONE,index);
+#define ATTR_FLOAT(val,index) ATTR_BASE_FLOAT(val,CBaseScriptClassAttribute::E_FLAG_NONE,index);
+#define ATTR_DOUBLE(val,index) ATTR_BASE_DOUBLE(val,CBaseScriptClassAttribute::E_FLAG_NONE,index);
+#define ATTR_STR(val,index) ATTR_BASE_STR(val,CBaseScriptClassAttribute::E_FLAG_NONE,index);
+#define ATTR_INT64_ARRAY(val,index) ATTR_BASE_INT64_ARRAY(val,CBaseScriptClassAttribute::E_FLAG_NONE,index);
+
+#define ATTR_DB_INT(val,index) ATTR_BASE_INT(val,CBaseScriptClassAttribute::E_FLAG_DB,index);
+#define ATTR_DB_INT64(val,index) ATTR_BASE_INT64(val,CBaseScriptClassAttribute::E_FLAG_DB,index);
+#define ATTR_DB_FLOAT(val,index) ATTR_BASE_FLOAT(val,CBaseScriptClassAttribute::E_FLAG_DB,index);
+#define ATTR_DB_DOUBLE(val,index) ATTR_BASE_DOUBLE(val,CBaseScriptClassAttribute::E_FLAG_DB,index);
+#define ATTR_DB_STR(val,index) ATTR_BASE_STR(val,CBaseScriptClassAttribute::E_FLAG_DB,index);
+#define ATTR_DB_INT64_ARRAY(val,index) ATTR_BASE_INT64_ARRAY(val,CBaseScriptClassAttribute::E_FLAG_DB,index);
+
 	class CScriptPointInterface
 	{
 	public:
@@ -108,6 +121,14 @@ namespace zlscript
 		{
 			return true;
 		}
+		void SetClassInfo(stScriptClassInfo* pInfo)
+		{
+			m_pClassInfo = pInfo;
+		}
+		stScriptClassInfo* getClassInfo()
+		{
+			return m_pClassInfo;
+		}
 
 		void SetFun(int id, CScriptBaseClassFunInfo* pInfo);
 		int RunFun(int id, CScriptRunState* pState);
@@ -120,11 +141,13 @@ namespace zlscript
 			return m_mapDBAttributes;
 		}
 		virtual void ChangeScriptAttribute(short flag, CBaseScriptClassAttribute* pAttr);
+		virtual void RegisterScriptClassAttr(short flag, CBaseScriptClassAttribute* pAttr);
 	protected:
 		//用于所有脚本可用的类实例索引，作用范围是本地
 		__int64 m_nScriptPointIndex;
 		static __int64 s_nScriptPointIndexCount;
 
+		stScriptClassInfo* m_pClassInfo;
 
 		std::map<std::string, CBaseScriptClassAttribute*> m_mapDBAttributes;
 

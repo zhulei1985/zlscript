@@ -32,7 +32,7 @@ namespace zlscript
 		CBaseScriptClassMgr();
 		~CBaseScriptClassMgr();
 
-		virtual CScriptPointInterface* New(bool autorelease) = 0;
+		virtual CScriptPointInterface* New(int autorelease) = 0;
 		//virtual CScriptPointInterface* NewImage(__int64 nID) = 0;
 		virtual CScriptPointInterface* Get(__int64 nID) = 0;
 		//virtual CScriptPointInterface* GetImage(__int64 nID) = 0;
@@ -40,6 +40,7 @@ namespace zlscript
 
 		virtual void Release(CScriptBasePointer* pPoint);
 
+		virtual void SetDBIdCount(__int64 val) = 0;
 	};
 
 	template<class T>
@@ -55,11 +56,13 @@ namespace zlscript
 
 		}
 
-		virtual CScriptPointInterface* New(bool autorelease);
+		virtual CScriptPointInterface* New(int autorelease);
 		//virtual CScriptPointInterface* New(__int64 nID);
 		virtual CScriptPointInterface* Get(__int64 nID);
 
 		virtual void Release(CScriptPointInterface* pPoint);
+
+		virtual void SetDBIdCount(__int64 val);
 	public:
 		static CBaseScriptClassMgr* GetInstance()
 		{
@@ -81,7 +84,7 @@ namespace zlscript
 	CScriptClassMgr<T> CScriptClassMgr<T>::s_Instance;
 
 	template<class T>
-	inline CScriptPointInterface* CScriptClassMgr<T>::New(bool autorelease)
+	inline CScriptPointInterface* CScriptClassMgr<T>::New(int autorelease)
 	{
 		std::lock_guard<std::mutex> Lock(m_MutexLock);
 		//TODO 以后做缓存优化
@@ -132,6 +135,12 @@ namespace zlscript
 	}
 
 	template<class T>
+	inline void CScriptClassMgr<T>::SetDBIdCount(__int64 val)
+	{
+		CScriptSuperPointer<T>::s_Info.nDB_Id_Count = val;
+	}
+
+	template<class T>
 	class CScriptAbstractClassMgr : public CBaseScriptClassMgr
 	{
 	public:
@@ -144,11 +153,13 @@ namespace zlscript
 
 		}
 
-		virtual CScriptPointInterface* New(bool autorelease);
+		virtual CScriptPointInterface* New(int autorelease);
 		//virtual CScriptPointInterface* New(__int64 nID);
 		virtual CScriptPointInterface* Get(__int64 nID);
 
 		virtual void Release(CScriptPointInterface* pPoint);
+
+		void SetDBIdCount(__int64 val);
 	public:
 		static CBaseScriptClassMgr* GetInstance()
 		{
@@ -170,7 +181,7 @@ namespace zlscript
 	CScriptAbstractClassMgr<T> CScriptAbstractClassMgr<T>::s_Instance;
 
 	template<class T>
-	inline CScriptPointInterface* CScriptAbstractClassMgr<T>::New(bool autorelease)
+	inline CScriptPointInterface* CScriptAbstractClassMgr<T>::New(int autorelease)
 	{
 
 		return nullptr;
@@ -206,6 +217,12 @@ namespace zlscript
 		//TODO 以后做缓存优化
 		if (pPoint)
 			delete pPoint;
+	}
+
+	template<class T>
+	inline void CScriptAbstractClassMgr<T>::SetDBIdCount(__int64 val)
+	{
+		CScriptSuperPointer<T>::s_Info.nDB_Id_Count = val;
 	}
 
 	template<class T>

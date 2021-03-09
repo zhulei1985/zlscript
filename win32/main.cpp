@@ -43,6 +43,7 @@ public:
 	{
 
 	}
+	ATTR_INT(aaa,1);
 
 	int Add2Script(CScriptRunState* pState)
 	{
@@ -52,9 +53,10 @@ public:
 		}
 		int nVal1 = pState->PopIntVarFormStack();
 		int nVal2 = pState->PopIntVarFormStack();
-
+		aaa = nVal1 + nVal2;
+		//printf("event %d\n", pState->m_pMachine->GetEventIndex());
 		pState->ClearFunParam();
-		pState->PushVarToStack(nVal1 + nVal2);
+		pState->PushVarToStack(aaa);
 		return ECALLBACK_FINISH;
 	}
 };

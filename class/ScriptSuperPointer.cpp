@@ -193,6 +193,16 @@ namespace zlscript
 		return 0;
 	}
 
+	void CScriptSuperPointerMgr::SetClassDBIdCount(std::string funName, __int64 val)
+	{
+		int nType = GetClassType(funName);
+		auto it = m_mapClassMgr.find(nType);
+		if (it != m_mapClassMgr.end())
+		{
+			it->second->SetDBIdCount(val);
+		}
+	}
+
 	CScriptBasePointer* CScriptSuperPointerMgr::PickupPointer(__int64 id, std::string className)
 	{
 		CScriptBasePointer* pResult = nullptr;

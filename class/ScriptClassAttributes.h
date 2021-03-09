@@ -15,18 +15,23 @@ namespace zlscript
 			m_index = 0;
 			m_master = nullptr;
 		}
+		CBaseScriptClassAttribute(const char *pName,unsigned short flag, unsigned short index, CScriptPointInterface* master)
+		{
+			init(pName,flag, index, master);
+		}
 		virtual ~CBaseScriptClassAttribute()
 		{
 
 		}
 		enum
 		{
+			E_FLAG_NONE = 0,
 			E_FLAG_SYNC = 1,
 			E_FLAG_DB = 2,
 			E_FLAG_DB_PRIMARY = 4,
 			E_FLAG_DB_UNIQUE = 8,
 		};
-		void init(unsigned short flag, unsigned short index, CScriptPointInterface* master);
+		void init(const char* pName, unsigned short flag, unsigned short index, CScriptPointInterface* master);
 		virtual void AddData2Bytes(std::vector<char>& vBuff) = 0;
 		virtual bool DecodeData4Bytes(char* pBuff, int& pos, unsigned int len) = 0;
 		virtual void AddChangeData2Bytes(std::vector<char>& vBuff)
@@ -43,6 +48,7 @@ namespace zlscript
 		virtual void ClearChangeFlag(){}
 		unsigned short m_flag;
 		unsigned short m_index;
+		std::string m_strAttrName;
 		CScriptPointInterface* m_master;
 	
 	};
@@ -65,6 +71,11 @@ namespace zlscript
 	};
 	struct CScriptIntAttribute : public CBaseScriptClassAttribute
 	{
+		CScriptIntAttribute(const char* pName, unsigned short flag, unsigned short index, CScriptPointInterface* master):
+			CBaseScriptClassAttribute(pName, flag, index, master)
+		{
+			m_val = 0;
+		}
 		std::atomic_int m_val;
 		operator int();
 		int operator =(int val);
@@ -76,6 +87,11 @@ namespace zlscript
 	};
 	struct CScriptInt64Attribute : public CBaseScriptClassAttribute
 	{
+		CScriptInt64Attribute(const char* pName, unsigned short flag, unsigned short index, CScriptPointInterface* master) :
+			CBaseScriptClassAttribute(pName, flag, index, master)
+		{
+			m_val = 0;
+		}
 		std::atomic_int64_t m_val;
 		operator __int64();
 		__int64 operator =(__int64 val);
@@ -87,6 +103,11 @@ namespace zlscript
 	};
 	struct CScriptFloatAttribute : public CBaseScriptClassAttribute
 	{
+		CScriptFloatAttribute(const char* pName, unsigned short flag, unsigned short index, CScriptPointInterface* master) :
+			CBaseScriptClassAttribute(pName, flag, index, master)
+		{
+			m_val = 0;
+		}
 		float m_val;
 		std::mutex m_lock;
 		operator float();
@@ -99,6 +120,11 @@ namespace zlscript
 	};
 	struct CScriptDoubleAttribute : public CBaseScriptClassAttribute
 	{
+		CScriptDoubleAttribute(const char* pName, unsigned short flag, unsigned short index, CScriptPointInterface* master) :
+			CBaseScriptClassAttribute(pName, flag, index, master)
+		{
+			m_val = 0;
+		}
 		double m_val;
 		std::mutex m_lock;
 		operator double();
@@ -111,6 +137,11 @@ namespace zlscript
 	};
 	struct CScriptStringAttribute : public CBaseScriptClassAttribute
 	{
+		CScriptStringAttribute(const char* pName, unsigned short flag, unsigned short index, CScriptPointInterface* master) :
+			CBaseScriptClassAttribute(pName, flag, index, master)
+		{
+			//m_val = 0;
+		}
 		static const int s_maxStrLen;
 		std::string m_val;
 		std::mutex m_lock;
@@ -128,6 +159,11 @@ namespace zlscript
 
 	struct CScriptInt64ArrayAttribute : public CBaseScriptClassAttribute
 	{
+		CScriptInt64ArrayAttribute(const char* pName, unsigned short flag, unsigned short index, CScriptPointInterface* master) :
+			CBaseScriptClassAttribute(pName, flag, index, master)
+		{
+			//m_val = 0;
+		}
 		std::vector<__int64> m_vecVal;
 		std::set<unsigned int> m_setFlag;
 		std::mutex m_lock;
@@ -135,6 +171,30 @@ namespace zlscript
 		unsigned int GetSize();
 		bool SetVal(unsigned int index, __int64 nVal);
 		__int64 GetVal(unsigned int index);
+		void clear();
+		virtual std::string ToType();
+		virtual std::string ToString();
+		bool SetVal(std::string str);
+		virtual void ClearChangeFlag();
+		virtual void AddData2Bytes(std::vector<char>& vBuff);
+		virtual void AddChangeData2Bytes(std::vector<char>& vBuff);
+		virtual bool DecodeData4Bytes(char* pBuff, int& pos, unsigned int len);
+	};
+	struct CScriptInt64toInt64MapAttribute : public CBaseScriptClassAttribute
+	{
+		CScriptInt64toInt64MapAttribute(const char* pName, unsigned short flag, unsigned short index, CScriptPointInterface* master) :
+			CBaseScriptClassAttribute(pName, flag, index, master)
+		{
+			//m_val = 0;
+		}
+		std::map<__int64, __int64> m_mapVal;
+		std::set<__int64> m_setFlag;
+		std::mutex m_lock;
+		unsigned int GetSize();
+		bool SetVal(__int64 index, __int64 nVal);
+		__int64 GetVal(__int64 index);
+		bool Remove(__int64 index);
+
 		void clear();
 		virtual std::string ToType();
 		virtual std::string ToString();
