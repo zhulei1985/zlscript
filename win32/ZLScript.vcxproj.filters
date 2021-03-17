@@ -88,6 +88,12 @@
     <ClInclude Include="..\class\ScriptClassAttributes.h">
       <Filter>code</Filter>
     </ClInclude>
+    <ClInclude Include="..\class\TempScriptRunState.h">
+      <Filter>code</Filter>
+    </ClInclude>
+    <ClInclude Include="..\class\StackVarInfo.h">
+      <Filter>code</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\class\ScriptCallBackFunion.cpp">
@@ -151,6 +157,12 @@
       <Filter>code</Filter>
     </ClCompile>
     <ClCompile Include="..\class\ScriptClassAttributes.cpp">
+      <Filter>code</Filter>
+    </ClCompile>
+    <ClCompile Include="..\class\TempScriptRunState.cpp">
+      <Filter>code</Filter>
+    </ClCompile>
+    <ClCompile Include="..\class\StackVarInfo.cpp">
       <Filter>code</Filter>
     </ClCompile>
   </ItemGroup>

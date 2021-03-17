@@ -54,7 +54,7 @@ namespace zlscript
 	{
 		m_MutexLock.lock();
 		{
-			std::map<__int64, CScriptBasePointer*>::iterator it = m_mapPointer.begin();
+			auto it = m_mapPointer.begin();
 			for (; it != m_mapPointer.end(); it++)
 			{
 				CScriptBasePointer* pPoint = it->second;
@@ -84,7 +84,7 @@ namespace zlscript
 	void CScriptSuperPointerMgr::ClearPointer()
 	{
 		m_MutexLock.lock();
-		std::map<__int64, CScriptBasePointer*>::iterator it = m_mapPointer.begin();
+		auto it = m_mapPointer.begin();
 		for (; it != m_mapPointer.end(); it++)
 		{
 			CScriptBasePointer* pPoint = it->second;
@@ -109,7 +109,7 @@ namespace zlscript
 		auto itId = m_autoReleaseIds.begin();
 		for (; itId != m_autoReleaseIds.end();)
 		{
-			std::map<__int64, CScriptBasePointer*>::iterator it = m_mapPointer.find(*itId);
+			auto it = m_mapPointer.find(*itId);
 			if (it != m_mapPointer.end())
 			{
 				CScriptBasePointer* pPoint = it->second;
@@ -148,7 +148,7 @@ namespace zlscript
 	bool CScriptSuperPointerMgr::SetPointAutoRelease(__int64 nID, int autorelease)
 	{
 		std::lock_guard<std::mutex> Lock(m_MutexLock);
-		std::map<__int64, CScriptBasePointer*>::iterator it = m_mapPointer.find(nID);
+		auto it = m_mapPointer.find(nID);
 		if (it != m_mapPointer.end())
 		{
 			auto pPoint = it->second;
@@ -165,7 +165,7 @@ namespace zlscript
 	{
 		m_MutexLock.lock();
 		bool bResult = false;
-		std::map<__int64, CScriptBasePointer*>::iterator it = m_mapPointer.find(nID);
+		auto it = m_mapPointer.find(nID);
 		if (it != m_mapPointer.end())
 		{
 			CScriptBasePointer* pPoint = it->second;
@@ -207,7 +207,7 @@ namespace zlscript
 	{
 		CScriptBasePointer* pResult = nullptr;
 		m_MutexLock.lock();
-		std::map<__int64, CScriptBasePointer*>::iterator it = m_mapPointer.find(id);
+		auto it = m_mapPointer.find(id);
 		if (it != m_mapPointer.end())
 		{
 			pResult = it->second;
@@ -228,7 +228,7 @@ namespace zlscript
 	{
 		CScriptBasePointer* pResult = nullptr;
 		m_MutexLock.lock();
-		std::map<__int64, CScriptBasePointer*>::iterator it = m_mapPointer.find(id);
+		auto it = m_mapPointer.find(id);
 		if (it != m_mapPointer.end())
 		{
 			pResult = it->second;
@@ -249,7 +249,7 @@ namespace zlscript
 			pPointer->m_nUseCount--;
 			if (pPointer->m_nUseCount <= 0 && pPointer->GetPoint() == nullptr)
 			{
-				std::map<__int64, CScriptBasePointer*>::iterator it = m_mapPointer.find(pPointer->GetID());
+				auto it = m_mapPointer.find(pPointer->GetID());
 				if (it != m_mapPointer.end())
 				{
 					m_mapPointer.erase(it);
@@ -267,7 +267,7 @@ namespace zlscript
 			return false;
 		}
 		std::lock_guard<std::mutex> Lock(m_MutexLock);
-		std::map<__int64, CScriptBasePointer*>::iterator it = m_mapPointer.find(id);
+		auto it = m_mapPointer.find(id);
 		if (it != m_mapPointer.end())
 		{
 			auto pPoint = it->second;
@@ -288,7 +288,7 @@ namespace zlscript
 		}
 		std::lock_guard<std::mutex> Lock(m_MutexLock);
 
-		std::map<__int64, CScriptBasePointer*>::iterator it = m_mapPointer.find(id);
+		auto it = m_mapPointer.find(id);
 		if (it != m_mapPointer.end())
 		{
 			auto pPoint = it->second;

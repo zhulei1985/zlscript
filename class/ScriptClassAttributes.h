@@ -4,6 +4,7 @@
 #include "scriptcommon.h"
 #include <atomic>
 #include <mutex>
+#include "StackVarInfo.h"
 namespace zlscript
 {
 	class CScriptPointInterface;
@@ -188,6 +189,84 @@ namespace zlscript
 			//m_val = 0;
 		}
 		std::map<__int64, __int64> m_mapVal;
+		std::set<__int64> m_setFlag;
+		std::mutex m_lock;
+		unsigned int GetSize();
+		bool SetVal(__int64 index, __int64 nVal);
+		__int64 GetVal(__int64 index);
+		bool Remove(__int64 index);
+
+		void clear();
+		virtual std::string ToType();
+		virtual std::string ToString();
+		bool SetVal(std::string str);
+		virtual void ClearChangeFlag();
+		virtual void AddData2Bytes(std::vector<char>& vBuff);
+		virtual void AddChangeData2Bytes(std::vector<char>& vBuff);
+		virtual bool DecodeData4Bytes(char* pBuff, int& pos, unsigned int len);
+	};
+
+	//指针不能用于存档，只能用于同步
+	struct CScriptClassPointAttribute : public CBaseScriptClassAttribute
+	{
+		CScriptClassPointAttribute(const char* pName, unsigned short flag, unsigned short index, CScriptPointInterface* master) :
+			CBaseScriptClassAttribute(pName, flag, index, master)
+		{
+			//m_val = 0;
+			unsigned short noflag = ~(E_FLAG_DB | E_FLAG_DB_PRIMARY | E_FLAG_DB_UNIQUE);
+			m_flag = m_flag & noflag;
+		}
+		StackVarInfo m_val;
+		std::mutex m_lock;
+		operator __int64&();
+		__int64& operator =(CScriptPointInterface* pPoint);
+		__int64& operator =(__int64 val);
+
+		virtual std::string ToType();
+		virtual std::string ToString();
+		bool SetVal(std::string str);
+		virtual void AddData2Bytes(std::vector<char>& vBuff);
+		virtual bool DecodeData4Bytes(char* pBuff, int& pos, unsigned int len);
+	};
+
+	struct CScriptClassPointArrayAttribute : public CBaseScriptClassAttribute
+	{
+		CScriptClassPointArrayAttribute(const char* pName, unsigned short flag, unsigned short index, CScriptPointInterface* master) :
+			CBaseScriptClassAttribute(pName, flag, index, master)
+		{
+			//m_val = 0;
+			//指针不能用于存档，只能用于同步
+			unsigned short noflag = ~(E_FLAG_DB | E_FLAG_DB_PRIMARY | E_FLAG_DB_UNIQUE);
+			m_flag = m_flag & noflag;
+		}
+		std::vector<StackVarInfo> m_vecVal;
+		std::set<unsigned int> m_setFlag;
+		std::mutex m_lock;
+		void SetSize(unsigned int size);
+		unsigned int GetSize();
+		bool SetVal(unsigned int index, __int64 nVal);
+		__int64 GetVal(unsigned int index);
+		void clear();
+		virtual std::string ToType();
+		virtual std::string ToString();
+		bool SetVal(std::string str);
+		virtual void ClearChangeFlag();
+		virtual void AddData2Bytes(std::vector<char>& vBuff);
+		virtual void AddChangeData2Bytes(std::vector<char>& vBuff);
+		virtual bool DecodeData4Bytes(char* pBuff, int& pos, unsigned int len);
+	};
+	struct CScriptInt64toClassPointMapAttribute : public CBaseScriptClassAttribute
+	{
+		CScriptInt64toClassPointMapAttribute(const char* pName, unsigned short flag, unsigned short index, CScriptPointInterface* master) :
+			CBaseScriptClassAttribute(pName, flag, index, master)
+		{
+			//m_val = 0;
+			//指针不能用于存档，只能用于同步
+			unsigned short noflag = ~(E_FLAG_DB | E_FLAG_DB_PRIMARY | E_FLAG_DB_UNIQUE);
+			m_flag = m_flag & noflag;
+		}
+
+		std::map<__int64, StackVarInfo> m_val;
 		std::set<__int64> m_setFlag;
 		std::mutex m_lock;
 		unsigned int GetSize();

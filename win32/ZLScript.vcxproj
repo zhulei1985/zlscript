@@ -144,6 +144,8 @@
     <ClInclude Include="..\class\ScriptPointInterface.h" />
     <ClInclude Include="..\class\ScriptRunState.h" />
     <ClInclude Include="..\class\ScriptTriggerMgr.h" />
+    <ClInclude Include="..\class\StackVarInfo.h" />
+    <ClInclude Include="..\class\TempScriptRunState.h" />
     <ClInclude Include="..\class\zBinaryBuffer.h" />
     <ClInclude Include="..\class\zByteArray.h" />
     <ClInclude Include="..\class\EMicroCodeType.h" />
@@ -180,6 +182,8 @@
     <ClCompile Include="..\class\ScriptSuperPointer.cpp" />
     <ClCompile Include="..\class\ScriptTriggerMg.cpp" />
     <ClCompile Include="..\class\ScriptVirtualMachine.cpp" />
+    <ClCompile Include="..\class\StackVarInfo.cpp" />
+    <ClCompile Include="..\class\TempScriptRunState.cpp" />
     <ClCompile Include="..\class\zBinaryBuffer.cpp" />
     <ClCompile Include="..\class\zStringBuffer.cpp" />
     <ClCompile Include="main.cpp" />

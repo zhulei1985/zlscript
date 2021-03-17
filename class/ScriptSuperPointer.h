@@ -23,6 +23,7 @@
 #include <functional> 
 #include <string>
 #include <vector>
+#include <unordered_map>
 
 #include "ScriptPointInterface.h"
 #define SCRIPT_NO_USED_AUTO_RELEASE 1
@@ -235,7 +236,7 @@ namespace zlscript
 	private:
 		int nClassTypeCount;
 		std::map<std::string, int> m_mapString2ClassType;
-		std::map<__int64, CScriptBasePointer*> m_mapPointer;
+		std::unordered_map<__int64, CScriptBasePointer*> m_mapPointer;
 
 		std::map<__int64, CScriptBasePointer*> m_mapTypePointer;
 
@@ -319,7 +320,7 @@ namespace zlscript
 			return false;
 		}
 		std::lock_guard<std::mutex> Lock(m_MutexLock);
-		std::map<__int64, CScriptBasePointer*>::iterator it = m_mapPointer.find(nID);
+		auto it = m_mapPointer.find(nID);
 		if (it != m_mapPointer.end())
 		{
 			if (it->second)
