@@ -65,10 +65,23 @@ void DebugPrint(const char* pStr)
 	if (pStr)
 		printf("%s\n", pStr);
 }
+void DebugPrintToFile(const char* pStr)
+{
+	if (pStr)
+	{
+		FILE* fp = fopen("testlog.txt", "a");
+		if (fp)
+		{
+			fprintf(fp, "%s\n", pStr);
+			fclose(fp);
+		}
+	}
+}
 int main()
 {
 	zlscript::InitScript();
 	zlscript::CScriptDebugPrintMgr::GetInstance()->RegisterCallBack_PrintFun(DebugPrint);
+	//zlscript::CScriptDebugPrintMgr::GetInstance()->RegisterCallBack_PrintFun(DebugPrintToFile);
 	//注册类和类函数
 	RegisterClassType("CTest", CTest);
 	RegisterClassFun1("Add", CTest);

@@ -1,6 +1,7 @@
 ﻿#include "EScriptVariableType.h"
 #include "ScriptSuperPointer.h"
 #include "StackVarInfo.h"
+
 namespace zlscript
 {
 	zlscript::CStringPool StackVarInfo::s_strPool;
@@ -122,6 +123,11 @@ namespace zlscript
 	{
 		pPoint = nullptr;
 	}
+	PointVarInfo::PointVarInfo(const PointVarInfo& info)
+	{
+		this->pPoint = info.pPoint;
+		CScriptSuperPointerMgr::GetInstance()->PickupPointer(info.pPoint);
+	}
 	PointVarInfo::PointVarInfo(__int64 nPointIndex)
 	{
 		pPoint = CScriptSuperPointerMgr::GetInstance()->PickupPointer(nPointIndex);
@@ -144,7 +150,6 @@ namespace zlscript
 	{
 		Clear();
 		pPoint = CScriptSuperPointerMgr::GetInstance()->PickupPointer(nPointIndex);
-		// TODO: 在此处插入 return 语句
 		return *this;
 	}
 	PointVarInfo& PointVarInfo::operator=(CScriptBasePointer* pPoint)
@@ -152,7 +157,6 @@ namespace zlscript
 		Clear();
 		this->pPoint = pPoint;
 		CScriptSuperPointerMgr::GetInstance()->PickupPointer(pPoint);
-		// TODO: 在此处插入 return 语句
 		return *this;
 	}
 }

@@ -34,6 +34,7 @@ namespace zlscript
 	struct PointVarInfo
 	{
 		PointVarInfo();
+		PointVarInfo(const PointVarInfo& info);
 		PointVarInfo(__int64 nPointIndex);
 		PointVarInfo(CScriptBasePointer *pPoint);
 		~PointVarInfo();

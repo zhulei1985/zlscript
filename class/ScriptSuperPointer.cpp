@@ -18,6 +18,7 @@
 #include "ScriptSuperPointer.h"
 #include "ScriptDataMgr.h"
 
+#include "ScriptDebugPrint.h"
 
 namespace zlscript
 {
@@ -98,7 +99,9 @@ namespace zlscript
 
 	void CScriptSuperPointerMgr::AddPoint2Release(__int64 id)
 	{
+		m_MutexLock.lock();
 		m_autoReleaseIds.insert(id);
+		m_MutexLock.unlock();
 	}
 
 	void CScriptSuperPointerMgr::ReleaseAutoPoint()

@@ -446,6 +446,7 @@ namespace zlscript
 		if (pVal)
 		{
 			var.pPoint = pVal;
+
 			CScriptSuperPointerMgr::GetInstance()->PickupPointer(pVal);
 		}
 		else
