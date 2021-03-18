@@ -465,40 +465,44 @@ namespace zlscript
 		return false;
 	}
 
-	CScriptClassPointAttribute::operator __int64& ()
+	CScriptClassPointAttribute::operator PointVarInfo& ()
 	{
 		std::lock_guard<std::mutex> Lock(m_lock);
-		static __int64 i=0;
-		return m_val.Int64;
+		return m_val;
 	}
 
-	__int64& CScriptClassPointAttribute::operator=(CScriptPointInterface* pPoint)
+	PointVarInfo& CScriptClassPointAttribute::operator=(CScriptPointInterface* pPoint)
 	{
 		// TODO: 在此处插入 return 语句
 		std::lock_guard<std::mutex> Lock(m_lock);
-		m_val.Clear();
 		if (pPoint)
 		{
-			m_val.cType = EScriptVal_ClassPointIndex;
-			m_val.Int64 = pPoint->GetScriptPointIndex();
-			CScriptSuperPointerMgr::GetInstance()->ScriptUsePointer(m_val.Int64);
+			m_val = pPoint->GetScriptPointIndex();
 		}
-		
-		return m_val.Int64;
+		else
+		{
+			m_val.Clear();
+		}
+		return m_val;
 	}
 
-	__int64& CScriptClassPointAttribute::operator=(__int64 val)
+	PointVarInfo& CScriptClassPointAttribute::operator=(CScriptBasePointer* pPoint)
+	{
+		std::lock_guard<std::mutex> Lock(m_lock);
+
+		m_val = pPoint;
+
+		return m_val;
+	}
+
+	PointVarInfo& CScriptClassPointAttribute::operator=(__int64 val)
 	{
 		// TODO: 在此处插入 return 语句
 		std::lock_guard<std::mutex> Lock(m_lock);
 
-		m_val.Clear();
-
-		m_val.cType = EScriptVal_ClassPointIndex;
-		m_val.Int64 = val;
-		CScriptSuperPointerMgr::GetInstance()->ScriptUsePointer(m_val.Int64);
+		m_val = val;
 		
-		return m_val.Int64;
+		return m_val;
 	}
 
 	std::string CScriptClassPointAttribute::ToType()
@@ -521,7 +525,10 @@ namespace zlscript
 		std::lock_guard<std::mutex> Lock(m_lock);
 		if (m_master)
 		{
-			AddInt2Bytes(vBuff, m_master->GetSyncInfo_ClassPoint2Index(m_val.Int64));
+			if (m_val.pPoint)
+				AddInt2Bytes(vBuff, m_master->GetSyncInfo_ClassPoint2Index(m_val.pPoint->GetID()));
+			else
+				AddInt2Bytes(vBuff, m_master->GetSyncInfo_ClassPoint2Index(0));
 		}
 	}
 
@@ -530,11 +537,9 @@ namespace zlscript
 		std::lock_guard<std::mutex> Lock(m_lock);
 		if (m_master)
 		{
-			m_val.Clear();
-			m_val.cType = EScriptVal_ClassPointIndex;
 			int index = DecodeBytes2Int(pBuff, pos, len);
-			m_val.Int64 = m_master->GetSyncInfo_Index2ClassPoint(index);
-			CScriptSuperPointerMgr::GetInstance()->ScriptUsePointer(m_val.Int64);
+			m_val = m_master->GetSyncInfo_Index2ClassPoint(index);
+
 			return true;
 		}
 		return false;
@@ -552,33 +557,192 @@ namespace zlscript
 		return m_vecVal.size();
 	}
 
+	bool CScriptClassPointArrayAttribute::SetVal(unsigned int index, CScriptPointInterface* pPoint)
+	{
+		std::lock_guard<std::mutex> Lock(m_lock);
+		if (index < m_vecVal.size())
+		{
+			m_setFlag.insert(index);
+			m_vecVal[index] = pPoint->GetScriptPointIndex();
+			return true;
+		}
+		return false;
+	}
+
+	bool CScriptClassPointArrayAttribute::SetVal(unsigned int index, CScriptBasePointer* pPoint)
+	{
+		std::lock_guard<std::mutex> Lock(m_lock);
+		if (index < m_vecVal.size())
+		{
+			m_setFlag.insert(index);
+			m_vecVal[index] = pPoint;
+			return true;
+		}
+		return false;
+	}
+
+	bool CScriptClassPointArrayAttribute::SetVal(unsigned int index, __int64 nVal)
+	{
+		std::lock_guard<std::mutex> Lock(m_lock);
+		if (index < m_vecVal.size())
+		{
+			m_setFlag.insert(index);
+			m_vecVal[index] = nVal;
+			return true;
+		}
+		return false;
+	}
+
+	PointVarInfo CScriptClassPointArrayAttribute::GetVal(unsigned int index)
+	{
+		if (index < m_vecVal.size())
+		{
+			return m_vecVal[index];
+		}
+		return PointVarInfo();
+	}
+
+	void CScriptClassPointArrayAttribute::clear()
+	{
+		for (unsigned int i = 0; i < m_vecVal.size(); i++)
+		{
+			if (m_vecVal[i].pPoint)
+			{
+				m_setFlag.insert(i);
+			}
+			m_vecVal[i].Clear();
+		}
+	}
+
+	std::string CScriptClassPointArrayAttribute::ToType()
+	{
+		return std::string();
+	}
+
+	std::string CScriptClassPointArrayAttribute::ToString()
+	{
+		return std::string();
+	}
+
+	bool CScriptClassPointArrayAttribute::SetVal(std::string str)
+	{
+		return false;
+	}
+
+	void CScriptClassPointArrayAttribute::ClearChangeFlag()
+	{
+		m_setFlag.clear();
+	}
+
+	void CScriptClassPointArrayAttribute::AddData2Bytes(std::vector<char>& vBuff)
+	{
+		std::lock_guard<std::mutex> Lock(m_lock);
+		AddUInt2Bytes(vBuff, m_vecVal.size());//第一个是数组大小
+		AddUInt2Bytes(vBuff, m_vecVal.size());//第二个是要更新多少数据
+		for (unsigned int i = 0; i < m_vecVal.size(); i++)
+		{
+			AddUInt2Bytes(vBuff, i);
+			if (m_vecVal[i].pPoint)
+				AddInt2Bytes(vBuff, m_master->GetSyncInfo_ClassPoint2Index(m_vecVal[i].pPoint->GetID()));
+			else
+				AddInt2Bytes(vBuff, m_master->GetSyncInfo_ClassPoint2Index(0));
+		}
+	}
+
+	void CScriptClassPointArrayAttribute::AddChangeData2Bytes(std::vector<char>& vBuff)
+	{
+		std::lock_guard<std::mutex> Lock(m_lock);
+		AddUInt2Bytes(vBuff, m_vecVal.size());
+		AddUInt2Bytes(vBuff, m_setFlag.size());
+		auto it = m_setFlag.begin();
+		for (; it != m_setFlag.end(); it++)
+		{
+			unsigned int index = *it;
+			if (index < m_vecVal.size())
+			{
+				AddUInt2Bytes(vBuff, index);
+				if (m_vecVal[index].pPoint)
+					AddInt2Bytes(vBuff, m_master->GetSyncInfo_ClassPoint2Index(m_vecVal[index].pPoint->GetID()));
+				else
+					AddInt2Bytes(vBuff, m_master->GetSyncInfo_ClassPoint2Index(0));
+			}
+			else
+			{
+				AddUInt2Bytes(vBuff, index);
+				AddInt2Bytes(vBuff, 0);
+			}
+		}
+	}
+
+	bool CScriptClassPointArrayAttribute::DecodeData4Bytes(char* pBuff, int& pos, unsigned int len)
+	{
+		std::lock_guard<std::mutex> Lock(m_lock);
+		unsigned int nArraySize = DecodeBytes2Int(pBuff, pos, len);
+		if (m_vecVal.size() != nArraySize)
+		{
+			m_vecVal.resize(nArraySize);
+		}
+		unsigned int nSize = DecodeBytes2Int(pBuff, pos, len);
+		for (unsigned int i = 0; i < nSize; i++)
+		{
+			unsigned int index = DecodeBytes2Int(pBuff, pos, len);
+			int val = DecodeBytes2Int(pBuff, pos, len);
+			if (index < m_vecVal.size())
+			{
+				m_vecVal[index] = m_master->GetSyncInfo_Index2ClassPoint(val);
+			}
+		}
+		return true;
+	}
+
 	unsigned int CScriptInt64toClassPointMapAttribute::GetSize()
 	{
 		std::lock_guard<std::mutex> Lock(m_lock);
 		return m_val.size();
 	}
 
-	bool CScriptInt64toClassPointMapAttribute::SetVal(__int64 index, __int64 nVal)
+	bool CScriptInt64toClassPointMapAttribute::SetVal(unsigned int index, CScriptPointInterface* pPoint)
 	{
 		std::lock_guard<std::mutex> Lock(m_lock);
-		StackVarInfo val;
-		val.cType = EScriptVal_ClassPointIndex;
-		val.Int64 = nVal;
-		CScriptSuperPointerMgr::GetInstance()->ScriptUsePointer(val.Int64);
-		m_val[index] = val;
-		m_setFlag.insert(index);
+		if (pPoint)
+		{
+			m_val[index] = pPoint->GetScriptPointIndex();
+			m_setFlag.insert(index);
+			return true;
+		}
 		return false;
 	}
 
-	__int64 CScriptInt64toClassPointMapAttribute::GetVal(__int64 index)
+	bool CScriptInt64toClassPointMapAttribute::SetVal(unsigned int index, CScriptBasePointer* pPoint)
+	{
+		std::lock_guard<std::mutex> Lock(m_lock);
+		if (pPoint)
+		{
+			m_val[index] = pPoint;
+			m_setFlag.insert(index);
+			return true;
+		}
+		return false;
+	}
+
+	bool CScriptInt64toClassPointMapAttribute::SetVal(__int64 index, __int64 nVal)
+	{
+		std::lock_guard<std::mutex> Lock(m_lock);
+
+		m_val[index] = nVal;
+		m_setFlag.insert(index);
+		return true;
+	}
+
+	PointVarInfo CScriptInt64toClassPointMapAttribute::GetVal(__int64 index)
 	{
 		std::lock_guard<std::mutex> Lock(m_lock);
 		auto it = m_val.find(index);
 		if (it != m_val.end())
 		{
-			return it->second.Int64;
+			return it->second;
 		}
-		return 0;
+		return PointVarInfo();
 	}
 
 	bool CScriptInt64toClassPointMapAttribute::Remove(__int64 index)
@@ -630,7 +794,14 @@ namespace zlscript
 		for (;it != m_val.end();it++)
 		{
 			AddInt642Bytes(vBuff, it->first);
-			AddInt2Bytes(vBuff, m_master->GetSyncInfo_ClassPoint2Index(it->second.Int64));
+			if (it->second.pPoint)
+			{
+				AddInt2Bytes(vBuff, m_master->GetSyncInfo_ClassPoint2Index(it->second.pPoint->GetID()));
+			}
+			else
+			{
+				AddInt2Bytes(vBuff, m_master->GetSyncInfo_ClassPoint2Index(0));
+			}
 		}
 	}
 
@@ -646,7 +817,14 @@ namespace zlscript
 			if (it != m_val.end())
 			{
 				AddInt642Bytes(vBuff, it->first);
-				AddInt2Bytes(vBuff, m_master->GetSyncInfo_ClassPoint2Index(it->second.Int64));
+				if (it->second.pPoint)
+				{
+					AddInt2Bytes(vBuff, m_master->GetSyncInfo_ClassPoint2Index(it->second.pPoint->GetID()));
+				}
+				else
+				{
+					AddInt2Bytes(vBuff, m_master->GetSyncInfo_ClassPoint2Index(0));
+				}
 			}
 			else
 			{
@@ -669,11 +847,8 @@ namespace zlscript
 				__int64 nIndex = DecodeBytes2Int64(pBuff, pos, len);
 				int nPointIndex = DecodeBytes2Int(pBuff, pos, len);
 				__int64 nClassPoint = m_master->GetSyncInfo_Index2ClassPoint(nPointIndex);
-				StackVarInfo val;
-				val.cType = EScriptVal_ClassPointIndex;
-				val.Int64 = nClassPoint;
-				CScriptSuperPointerMgr::GetInstance()->ScriptUsePointer(val.Int64);
-				m_val[nIndex] = val;
+
+				m_val[nIndex] = nClassPoint;
 			}
 		}
 		else
@@ -685,11 +860,7 @@ namespace zlscript
 				if (nPointIndex != -1)
 				{
 					__int64 nClassPoint = m_master->GetSyncInfo_Index2ClassPoint(nPointIndex);
-					StackVarInfo val;
-					val.cType = EScriptVal_ClassPointIndex;
-					val.Int64 = nClassPoint;
-					CScriptSuperPointerMgr::GetInstance()->ScriptUsePointer(val.Int64);
-					m_val[nIndex] = val;
+					m_val[nIndex] = nClassPoint;
 				}
 				else
 				{

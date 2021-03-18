@@ -5,6 +5,7 @@
 
 namespace zlscript
 {
+	class CScriptBasePointer;
 	struct StackVarInfo
 	{
 		unsigned char cType;
@@ -14,6 +15,7 @@ namespace zlscript
 			double Double;
 			__int64 Int64;
 			//const char *pStr;
+			CScriptBasePointer* pPoint;
 		};
 
 		StackVarInfo();
@@ -28,5 +30,19 @@ namespace zlscript
 
 		static zlscript::CStringPool s_strPool;
 		static zlscript::CBinaryPool s_binPool;
+	};
+	struct PointVarInfo
+	{
+		PointVarInfo();
+		PointVarInfo(__int64 nPointIndex);
+		PointVarInfo(CScriptBasePointer *pPoint);
+		~PointVarInfo();
+
+		void Clear();
+
+		PointVarInfo& operator=(__int64 nPointIndex);
+		PointVarInfo& operator=(CScriptBasePointer* pPoint);
+
+		CScriptBasePointer* pPoint;
 	};
 }

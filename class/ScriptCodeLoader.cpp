@@ -551,7 +551,7 @@ namespace zlscript
 				strError = "DefineTempVar(Class type error when defining temporary variable)";
 				return ECompile_ERROR;
 			}
-			nParameterType = EScriptVal_ClassPointIndex;
+			nParameterType = EScriptVal_ClassPoint;
 		}
 		if (!CheckVarName(strName.word))
 		{
@@ -592,7 +592,7 @@ namespace zlscript
 				strError = "DefineTempVar(Class type error when defining temporary variable)";
 				return ECompile_ERROR;
 			}
-			nParameterType = EScriptVal_ClassPointIndex;
+			nParameterType = EScriptVal_ClassPoint;
 		}
 
 		if (!CheckVarName(strName.word))
@@ -655,7 +655,7 @@ namespace zlscript
 			nClassType = CScriptSuperPointerMgr::GetInstance()->GetClassType(strVarType);
 			if (nClassType > 0)
 			{
-				nVarType = EScriptVal_ClassPointIndex;
+				nVarType = EScriptVal_ClassPoint;
 			}
 		}
 		m_nCurFunVarType = nVarType;
@@ -745,7 +745,7 @@ namespace zlscript
 				defVar.Int64 = StackVarInfo::s_strPool.NewString(nextWord.word.c_str());
 			}
 			break;
-			case EScriptVal_ClassPointIndex:
+			case EScriptVal_ClassPoint:
 			{
 				if (nextWord.word == "nullptr")
 				{
@@ -1189,7 +1189,7 @@ namespace zlscript
 				pVar = &vGlobalNumVar[nClassIndex];
 				cSign = 1;
 			}
-			if (pVar && pVar->cType == EScriptVal_ClassPointIndex)
+			if (pVar && pVar->cType == EScriptVal_ClassPoint)
 			{
 				CodeStyle code(nextWord.nSourceWordsIndex);
 				code.qwCode = 0;
@@ -1465,7 +1465,7 @@ namespace zlscript
 			classcode.cExtend = 0;
 			classcode.dwPos = nClassIndex;
 		}
-		if (pVar && pVar->cType == EScriptVal_ClassPointIndex)
+		if (pVar && pVar->cType == EScriptVal_ClassPoint)
 		{
 			callCode.dwPos = info.wExtend;
 		}

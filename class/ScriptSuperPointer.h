@@ -49,7 +49,7 @@ namespace zlscript
 		CScriptBasePointer(){
 			m_ID = 0;
 			m_nUseCount = 0;
-			m_nScriptUseCount = 0;
+			//m_nScriptUseCount = 0;
 			m_nAutoReleaseMode = false;
 		}
 		virtual ~CScriptBasePointer(){}
@@ -76,7 +76,7 @@ namespace zlscript
 		int m_nAutoReleaseMode;
 	public:
 		std::atomic_int m_nUseCount;
-		std::atomic_int m_nScriptUseCount;
+		//std::atomic_int m_nScriptUseCount;
 	};
 
 	template<class T>
@@ -114,11 +114,6 @@ namespace zlscript
 		std::recursive_mutex m_MutexLock;
 	public:
 		static stScriptClassInfo s_Info;
-		//static std::map<std::string, int> m_mapDicString2Index;
-		//static std::atomic_int s_nFunSize;
-		//static std::atomic_int s_nClassType;
-		//static std::string s_strClassName;
-		//static std::atomic_int64_t s_DB_Id_Count;
 	};
 
 	template<class T>
@@ -225,10 +220,11 @@ namespace zlscript
 		//c++代码中，取一个指针进行操作 注意，pickup后必须return
 		CScriptBasePointer* PickupPointer(__int64 id, std::string className);
 		CScriptBasePointer* PickupPointer(__int64 id);
+		void PickupPointer(CScriptBasePointer *pPoint);
 		void ReturnPointer(CScriptBasePointer* pPointer);
 		//脚本代码中，用于标记是否被脚本变量引用
-		bool ScriptUsePointer(__int64 id);
-		bool ScriptReleasePointer(__int64 id);
+		//bool ScriptUsePointer(__int64 id);
+		//bool ScriptReleasePointer(__int64 id);
 
 		int GetClassFunIndex(int classindex, std::string funname);
 

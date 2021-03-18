@@ -30,9 +30,13 @@ namespace zlscript
 			s_strPool.UseString(Int64);
 		}
 		break;
-		case EScriptVal_ClassPointIndex:
-			Int64 = cls.Int64;
-			CScriptSuperPointerMgr::GetInstance()->ScriptUsePointer(Int64);
+		//case EScriptVal_ClassPointIndex:
+		//	Int64 = cls.Int64;
+		//	CScriptSuperPointerMgr::GetInstance()->ScriptUsePointer(Int64);
+		//	break;
+		case EScriptVal_ClassPoint:
+			pPoint = cls.pPoint;
+			CScriptSuperPointerMgr::GetInstance()->PickupPointer(pPoint);
 			break;
 		case EScriptVal_Binary:
 		{
@@ -58,9 +62,13 @@ namespace zlscript
 		{
 			s_binPool.ReleaseBinary(Int64);
 		}
-		else if (cType == EScriptVal_ClassPointIndex)
+		//else if (cType == EScriptVal_ClassPointIndex)
+		//{
+		//	CScriptSuperPointerMgr::GetInstance()->ScriptReleasePointer(Int64);
+		//}
+		else if (cType == EScriptVal_ClassPoint)
 		{
-			CScriptSuperPointerMgr::GetInstance()->ScriptReleasePointer(Int64);
+			CScriptSuperPointerMgr::GetInstance()->ReturnPointer(pPoint);
 		}
 		cType = EScriptVal_None;
 		Int64 = 0;
@@ -86,9 +94,13 @@ namespace zlscript
 			s_strPool.UseString(Int64);
 		}
 		break;
-		case EScriptVal_ClassPointIndex:
-			Int64 = cls.Int64;
-			CScriptSuperPointerMgr::GetInstance()->ScriptUsePointer(Int64);
+		//case EScriptVal_ClassPointIndex:
+		//	Int64 = cls.Int64;
+		//	CScriptSuperPointerMgr::GetInstance()->ScriptUsePointer(Int64);
+		//	break;
+		case EScriptVal_ClassPoint:
+			pPoint = cls.pPoint;
+			CScriptSuperPointerMgr::GetInstance()->PickupPointer(pPoint);
 			break;
 		case EScriptVal_Binary:
 		{
@@ -105,5 +117,42 @@ namespace zlscript
 	bool StackVarInfo::operator==(const StackVarInfo& cls) const
 	{
 		return cType == cls.cType && cExtend == cls.cExtend && Int64 == cls.Int64;
+	}
+	PointVarInfo::PointVarInfo()
+	{
+		pPoint = nullptr;
+	}
+	PointVarInfo::PointVarInfo(__int64 nPointIndex)
+	{
+		pPoint = CScriptSuperPointerMgr::GetInstance()->PickupPointer(nPointIndex);
+	}
+	PointVarInfo::PointVarInfo(CScriptBasePointer* pPoint)
+	{
+		this->pPoint = pPoint;
+		CScriptSuperPointerMgr::GetInstance()->PickupPointer(pPoint);
+	}
+	PointVarInfo::~PointVarInfo()
+	{
+		Clear();
+	}
+	void PointVarInfo::Clear()
+	{
+		CScriptSuperPointerMgr::GetInstance()->ReturnPointer(pPoint);
+		pPoint = nullptr;
+	}
+	PointVarInfo& PointVarInfo::operator=(__int64 nPointIndex)
+	{
+		Clear();
+		pPoint = CScriptSuperPointerMgr::GetInstance()->PickupPointer(nPointIndex);
+		// TODO: 在此处插入 return 语句
+		return *this;
+	}
+	PointVarInfo& PointVarInfo::operator=(CScriptBasePointer* pPoint)
+	{
+		Clear();
+		this->pPoint = pPoint;
+		CScriptSuperPointerMgr::GetInstance()->PickupPointer(pPoint);
+		// TODO: 在此处插入 return 语句
+		return *this;
 	}
 }

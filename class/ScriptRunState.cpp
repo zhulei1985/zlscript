@@ -128,9 +128,8 @@ namespace zlscript
 	bool CScriptRunState::PushClassPointToStack(__int64 nIndex)
 	{
 		StackVarInfo var;
-		var.cType = EScriptVal_ClassPointIndex;
-		var.Int64 = nIndex;
-		CScriptSuperPointerMgr::GetInstance()->ScriptUsePointer(var.Int64);
+		var.cType = EScriptVal_ClassPoint;
+		var.pPoint = CScriptSuperPointerMgr::GetInstance()->PickupPointer(nIndex);
 		if (m_BlockStack.size() > 0)
 		{
 			CScriptExecBlock* pBlock = m_BlockStack.top();
@@ -140,6 +139,23 @@ namespace zlscript
 			}
 		}
 
+		return true;
+	}
+
+	bool CScriptRunState::PushClassPointToStack(CScriptBasePointer* pPoint)
+	{
+		StackVarInfo var;
+		var.cType = EScriptVal_ClassPoint;
+		var.pPoint = pPoint;
+		CScriptSuperPointerMgr::GetInstance()->PickupPointer(pPoint);
+		if (m_BlockStack.size() > 0)
+		{
+			CScriptExecBlock* pBlock = m_BlockStack.top();
+			if (pBlock)
+			{
+				pBlock->PushVar(var);
+			}
+		}
 		return true;
 	}
 
@@ -277,7 +293,7 @@ namespace zlscript
 
 		return strbuff;
 	}
-	__int64 CScriptRunState::PopClassPointFormStack()
+	PointVarInfo CScriptRunState::PopClassPointFormStack()
 	{
 		StackVarInfo var;
 		if (m_BlockStack.size() > 0)
@@ -289,15 +305,15 @@ namespace zlscript
 			}
 		}
 
-		__int64 nReturn = 0;
 		switch (var.cType)
 		{
-		case EScriptVal_ClassPointIndex:
-			nReturn = var.Int64;
-			break;
+		//case EScriptVal_ClassPointIndex:
+		//	return PointVarInfo(var.Int64);
+		case EScriptVal_ClassPoint:
+			return PointVarInfo(var.pPoint);
 		}
 
-		return nReturn;
+		return PointVarInfo();
 	}
 	StackVarInfo CScriptRunState::PopVarFormStack()
 	{

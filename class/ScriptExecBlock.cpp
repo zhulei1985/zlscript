@@ -270,7 +270,14 @@ namespace zlscript
 					ScriptVector_PushVar(m_varRegister, (__int64)(strVal2 == strVal1 ? 1 : 0));
 				}
 				break;
-				case EScriptVal_ClassPointIndex:
+				//case EScriptVal_ClassPointIndex:
+				//{
+				//	__int64 nVal1 = GetPointIndex_StackVar(&var1);
+				//	__int64 nVal2 = GetPointIndex_StackVar(&var2);
+				//	ScriptVector_PushVar(m_varRegister, (__int64)(nVal1 == nVal2 ? 1 : 0));
+				//}
+				//break;
+				case EScriptVal_ClassPoint:
 				{
 					__int64 nVal1 = GetPointIndex_StackVar(&var1);
 					__int64 nVal2 = GetPointIndex_StackVar(&var2);
@@ -308,7 +315,14 @@ namespace zlscript
 					ScriptVector_PushVar(m_varRegister, (__int64)(strVal2 != strVal1 ? 1 : 0));
 				}
 				break;
-				case EScriptVal_ClassPointIndex:
+				//case EScriptVal_ClassPointIndex:
+				//{
+				//	__int64 nVal1 = GetPointIndex_StackVar(&var1);
+				//	__int64 nVal2 = GetPointIndex_StackVar(&var2);
+				//	ScriptVector_PushVar(m_varRegister, (__int64)(nVal1 != nVal2 ? 1 : 0));
+				//}
+				//break;
+				case EScriptVal_ClassPoint:
 				{
 					__int64 nVal1 = GetPointIndex_StackVar(&var1);
 					__int64 nVal2 = GetPointIndex_StackVar(&var2);
@@ -691,14 +705,14 @@ namespace zlscript
 			break;
 			case ECODE_CALL_CLASS_FUN:
 			{
-				__int64 nVal = ScriptStack_GetClassPointIndex(m_varRegister);
+				PointVarInfo pointVal = ScriptStack_GetClassPoint(m_varRegister);
 				int nParmNum = code.cExtend;
 				if (m_sCurStackSizeWithoutFunParam.size() > 0)
 				{
 					nParmNum = m_varRegister.size() - m_sCurStackSizeWithoutFunParam.top();
 					m_sCurStackSizeWithoutFunParam.pop();
 				}
-				CScriptBasePointer* pPoint = CScriptSuperPointerMgr::GetInstance()->PickupPointer(nVal);
+				CScriptBasePointer* pPoint = pointVal.pPoint;
 				if (pPoint)
 				{
 					SetCallFunParamNum(nParmNum);
@@ -720,7 +734,6 @@ namespace zlscript
 						nResult = ERESULT_NEXTCONTINUE;
 						break;
 					}
-					CScriptSuperPointerMgr::GetInstance()->ReturnPointer(pPoint);
 				}
 				else
 				{
@@ -746,8 +759,8 @@ namespace zlscript
 			break;
 			case ECODE_RELEASE_CLASS://释放一个类实例
 			{
-				__int64 nVal = ScriptStack_GetClassPointIndex(m_varRegister);
-				CScriptBasePointer* pPoint = CScriptSuperPointerMgr::GetInstance()->PickupPointer(nVal);
+				PointVarInfo pointVal = ScriptStack_GetClassPoint(m_varRegister);
+				CScriptBasePointer* pPoint = pointVal.pPoint;
 				if (pPoint)
 				{
 					CBaseScriptClassMgr* pMgr = CScriptSuperPointerMgr::GetInstance()->GetClassMgr(pPoint->GetType());
@@ -755,7 +768,6 @@ namespace zlscript
 					{
 						pMgr->Release(pPoint);
 					}
-					CScriptSuperPointerMgr::GetInstance()->ReturnPointer(pPoint);
 				}
 				m_nCodePoint++;
 			}
@@ -781,7 +793,7 @@ namespace zlscript
 			break;
 			case ECODE_CLASSPOINT:
 			{
-				m_cVarType = EScriptVal_ClassPointIndex;
+				m_cVarType = EScriptVal_ClassPoint;
 				m_nCodePoint++;
 			}
 			break;

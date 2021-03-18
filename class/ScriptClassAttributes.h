@@ -216,11 +216,12 @@ namespace zlscript
 			unsigned short noflag = ~(E_FLAG_DB | E_FLAG_DB_PRIMARY | E_FLAG_DB_UNIQUE);
 			m_flag = m_flag & noflag;
 		}
-		StackVarInfo m_val;
+		PointVarInfo m_val;
 		std::mutex m_lock;
-		operator __int64&();
-		__int64& operator =(CScriptPointInterface* pPoint);
-		__int64& operator =(__int64 val);
+		operator PointVarInfo&();
+		PointVarInfo& operator =(CScriptPointInterface* pPoint);
+		PointVarInfo& operator =(CScriptBasePointer* pPoint);
+		PointVarInfo& operator =(__int64 val);
 
 		virtual std::string ToType();
 		virtual std::string ToString();
@@ -239,13 +240,15 @@ namespace zlscript
 			unsigned short noflag = ~(E_FLAG_DB | E_FLAG_DB_PRIMARY | E_FLAG_DB_UNIQUE);
 			m_flag = m_flag & noflag;
 		}
-		std::vector<StackVarInfo> m_vecVal;
+		std::vector<PointVarInfo> m_vecVal;
 		std::set<unsigned int> m_setFlag;
 		std::mutex m_lock;
 		void SetSize(unsigned int size);
 		unsigned int GetSize();
+		bool SetVal(unsigned int index, CScriptPointInterface* pPoint);
+		bool SetVal(unsigned int index, CScriptBasePointer* pPoint);
 		bool SetVal(unsigned int index, __int64 nVal);
-		__int64 GetVal(unsigned int index);
+		PointVarInfo GetVal(unsigned int index);
 		void clear();
 		virtual std::string ToType();
 		virtual std::string ToString();
@@ -266,12 +269,14 @@ namespace zlscript
 			m_flag = m_flag & noflag;
 		}
 
-		std::map<__int64, StackVarInfo> m_val;
+		std::map<__int64, PointVarInfo> m_val;
 		std::set<__int64> m_setFlag;
 		std::mutex m_lock;
 		unsigned int GetSize();
+		bool SetVal(unsigned int index, CScriptPointInterface* pPoint);
+		bool SetVal(unsigned int index, CScriptBasePointer* pPoint);
 		bool SetVal(__int64 index, __int64 nVal);
-		__int64 GetVal(__int64 index);
+		PointVarInfo GetVal(__int64 index);
 		bool Remove(__int64 index);
 
 		void clear();

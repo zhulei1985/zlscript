@@ -103,8 +103,6 @@ namespace zlscript
 
 	void CScriptSuperPointerMgr::ReleaseAutoPoint()
 	{
-		std::vector<CScriptPointInterface*> vPoints;
-		//std::lock_guard<std::mutex> Lock(m_MutexLock);
 		m_MutexLock.lock();
 		auto itId = m_autoReleaseIds.begin();
 		for (; itId != m_autoReleaseIds.end();)
@@ -115,34 +113,28 @@ namespace zlscript
 				CScriptBasePointer* pPoint = it->second;
 				if (pPoint->m_nUseCount > 0)
 				{
-					itId++;
-					//TODO 应该删除的指针，还有地方引用，不应该
+					//在等待删除期间又有引用了
+					itId = m_autoReleaseIds.erase(itId);
 					continue;
 				}
-				CBaseScriptClassMgr* pMgr = CScriptSuperPointerMgr::GetInstance()->GetClassMgr(pPoint->GetType());
-				if (pPoint->GetPoint())
+				if (pPoint->GetAutoReleaseMode() & SCRIPT_NO_USED_AUTO_RELEASE)
 				{
-					pPoint->GetPoint()->ClearScriptPointIndex();
-					vPoints.push_back(pPoint->GetPoint());
-					//delete pPoint->GetPoint();
+					//自动释放对象
+					if (pPoint->GetPoint())
+					{
+						pPoint->GetPoint()->ClearScriptPointIndex();
+						delete pPoint->GetPoint();
+					}
 				}
-
-				pPoint->SetPointer(nullptr);
 
 				m_mapPointer.erase(it);
-				if (pPoint->m_nUseCount <= 0)
-				{
-					delete pPoint;
-				}
+				pPoint->SetPointer(nullptr);
+				delete pPoint;
+				
 			}
 			itId = m_autoReleaseIds.erase(itId);
 		}
 		m_MutexLock.unlock();
-
-		for (unsigned int i = 0; i < vPoints.size(); i++)
-		{
-			delete vPoints[i];
-		}
 	}
 
 	bool CScriptSuperPointerMgr::SetPointAutoRelease(__int64 nID, int autorelease)
@@ -240,86 +232,112 @@ namespace zlscript
 		m_MutexLock.unlock();
 		return pResult;
 	}
-
+	void CScriptSuperPointerMgr::PickupPointer(CScriptBasePointer* pPoint)
+	{
+		m_MutexLock.lock();
+		if (pPoint)
+		{
+			pPoint->m_nUseCount++;
+		}
+		m_MutexLock.unlock();
+	}
 	void CScriptSuperPointerMgr::ReturnPointer(CScriptBasePointer* pPointer)
 	{
 		m_MutexLock.lock();
 		if (pPointer)
 		{
-			pPointer->m_nUseCount--;
-			if (pPointer->m_nUseCount <= 0 && pPointer->GetPoint() == nullptr)
+			if (pPointer->m_nUseCount < 1)
 			{
-				auto it = m_mapPointer.find(pPointer->GetID());
-				if (it != m_mapPointer.end())
-				{
-					m_mapPointer.erase(it);
-				}
-				delete pPointer;
+				pPointer->m_nUseCount = 0;
+				m_autoReleaseIds.insert(pPointer->GetID());
+
+				//if (pPointer->GetAutoReleaseMode() & SCRIPT_NO_USED_AUTO_RELEASE)
+				//{
+				//	bool bRelease = true;
+				//	pPointer->Lock();
+				//	if (pPointer->GetPoint() && !pPointer->GetPoint()->CanRelease())
+				//	{
+				//		bRelease = false;
+				//	}
+				//	pPointer->Unlock();
+				//	if (bRelease)
+				//		m_autoReleaseIds.insert(pPointer->GetID());
+				//}
+				//auto it = m_mapPointer.find(pPointer->GetID());
+				//if (it != m_mapPointer.end())
+				//{
+				//	m_mapPointer.erase(it);
+				//}
+				//delete pPointer;
+			}
+			else
+			{
+				pPointer->m_nUseCount--;
 			}
 		}
 		m_MutexLock.unlock();
 	}
 
-	bool CScriptSuperPointerMgr::ScriptUsePointer(__int64 id)
-	{
-		if (id == 0)
-		{
-			return false;
-		}
-		std::lock_guard<std::mutex> Lock(m_MutexLock);
-		auto it = m_mapPointer.find(id);
-		if (it != m_mapPointer.end())
-		{
-			auto pPoint = it->second;
-			if (pPoint)
-			{
-				pPoint->m_nScriptUseCount++;
-			}
-			return true;
-		}
-		return false;
-	}
+	//bool CScriptSuperPointerMgr::ScriptUsePointer(__int64 id)
+	//{
+	//	if (id == 0)
+	//	{
+	//		return false;
+	//	}
+	//	std::lock_guard<std::mutex> Lock(m_MutexLock);
+	//	auto it = m_mapPointer.find(id);
+	//	if (it != m_mapPointer.end())
+	//	{
+	//		auto pPoint = it->second;
+	//		if (pPoint)
+	//		{
+	//			pPoint->m_nScriptUseCount++;
+	//		}
+	//		return true;
+	//	}
+	//	return false;
+	//}
 
-	bool CScriptSuperPointerMgr::ScriptReleasePointer(__int64 id)
-	{
-		if (id == 0)
-		{
-			return false;
-		}
-		std::lock_guard<std::mutex> Lock(m_MutexLock);
+	//bool CScriptSuperPointerMgr::ScriptReleasePointer(__int64 id)
+	//{
+	//	if (id == 0)
+	//	{
+	//		return false;
+	//	}
+	//	std::lock_guard<std::mutex> Lock(m_MutexLock);
 
-		auto it = m_mapPointer.find(id);
-		if (it != m_mapPointer.end())
-		{
-			auto pPoint = it->second;
-			if (pPoint)
-			{
-				if (pPoint->m_nScriptUseCount < 1)
-				{
-					pPoint->m_nScriptUseCount = 0;
-					//标记是否可以释放
-					if (pPoint->GetAutoReleaseMode() & SCRIPT_NO_USED_AUTO_RELEASE)
-					{
-						bool bRelease = true;
-						pPoint->Lock();
-						if (pPoint->GetPoint() && !pPoint->GetPoint()->CanRelease())
-						{
-							bRelease = false;
-						}
-						pPoint->Unlock();
-						if (bRelease)
-							m_autoReleaseIds.insert(pPoint->GetID());
-					}
-				}
-				else
-				{
-					pPoint->m_nScriptUseCount--;
-				}
-			}
-			return true;
-		}
-		return false;
-	}
+	//	auto it = m_mapPointer.find(id);
+	//	if (it != m_mapPointer.end())
+	//	{
+	//		auto pPoint = it->second;
+	//		if (pPoint)
+	//		{
+	//			if (pPoint->m_nScriptUseCount < 1)
+	//			{
+	//				pPoint->m_nScriptUseCount = 0;
+	//				//标记是否可以释放
+	//				if (pPoint->GetAutoReleaseMode() & SCRIPT_NO_USED_AUTO_RELEASE)
+	//				{
+	//					bool bRelease = true;
+	//					pPoint->Lock();
+	//					if (pPoint->GetPoint() && !pPoint->GetPoint()->CanRelease())
+	//					{
+	//						bRelease = false;
+	//					}
+	//					pPoint->Unlock();
+	//					if (bRelease)
+	//						m_autoReleaseIds.insert(pPoint->GetID());
+	//				}
+	//			}
+	//			else
+	//			{
+	//				pPoint->m_nScriptUseCount--;
+	//			}
+	//		}
+	//		return true;
+	//	}
+	//	return false;
+	//}
 
 	int CScriptSuperPointerMgr::GetClassFunIndex(int classindex, std::string funname)
 	{

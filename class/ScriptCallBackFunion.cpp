@@ -417,13 +417,12 @@ namespace zlscript
 		{
 			return ECALLBACK_ERROR;
 		}
-		__int64 index = pState->PopClassPointFormStack();
-		CScriptBasePointer* pPoint = CScriptSuperPointerMgr::GetInstance()->PickupPointer(index);
+		PointVarInfo PointVal = pState->PopClassPointFormStack();
+		CScriptBasePointer* pPoint = PointVal.pPoint;
 		pState->ClearFunParam();
 		if (pPoint && pPoint->GetPoint())
 		{
 			pState->PushVarToStack(1);
-			CScriptSuperPointerMgr::GetInstance()->ReturnPointer(pPoint);
 		}
 		else
 		{
@@ -439,11 +438,15 @@ namespace zlscript
 			return ECALLBACK_ERROR;
 		}
 		int nParmNum = pState->GetParamNum();
-		__int64 nClassPoint = pState->PopClassPointFormStack();
+		PointVarInfo pointVal = pState->PopClassPointFormStack();
 		std::string strEvent = pState->PopCharVarFormStack();
 		std::string strFlag = pState->PopCharVarFormStack();
 		std::string strScript = pState->PopCharVarFormStack();
-
+		__int64 nClassPoint = 0;
+		if (pointVal.pPoint)
+		{
+			nClassPoint = pointVal.pPoint->GetID();
+		}
 		nParmNum -= 4;
 		CScriptStack vParmVars;
 		for (int i = 0; i < nParmNum; i++)
@@ -462,8 +465,13 @@ namespace zlscript
 		{
 			return ECALLBACK_ERROR;
 		}
-		__int64 nClassPoint = pState->PopClassPointFormStack();
+		PointVarInfo pointVal = pState->PopClassPointFormStack();
 		std::string strEvent = pState->PopCharVarFormStack();
+		__int64 nClassPoint = 0;
+		if (pointVal.pPoint)
+		{
+			nClassPoint = pointVal.pPoint->GetID();
+		}
 		CScriptTriggerMgr::GetInstance()->TriggerEvent(strEvent, nClassPoint);
 		pState->ClearFunParam();
 		return ECALLBACK_FINISH;
@@ -475,9 +483,14 @@ namespace zlscript
 		{
 			return ECALLBACK_ERROR;
 		}
-		__int64 nClassPoint = pState->PopClassPointFormStack();
+		PointVarInfo pointVal = pState->PopClassPointFormStack();
 		std::string strEvent = pState->PopCharVarFormStack();
 		std::string strFlag = pState->PopCharVarFormStack();
+		__int64 nClassPoint = 0;
+		if (pointVal.pPoint)
+		{
+			nClassPoint = pointVal.pPoint->GetID();
+		}
 		CScriptTriggerMgr::GetInstance()->RemoveTrigger(strEvent, nClassPoint, strFlag);
 		pState->ClearFunParam();
 		return ECALLBACK_FINISH;
@@ -540,12 +553,11 @@ namespace zlscript
 		{
 			return ECALLBACK_ERROR;
 		}
-		__int64 index = pState->PopClassPointFormStack();
-		CScriptBasePointer* pPoint = CScriptSuperPointerMgr::GetInstance()->PickupPointer(index);
+		PointVarInfo pointVal = pState->PopClassPointFormStack();
+		CScriptBasePointer* pPoint = pointVal.pPoint;
 		if (pPoint)
 		{
 			auto pData = dynamic_cast<CScriptData*>(pPoint->GetPoint());
-			CScriptDataMgr::GetInstance()->ReleaseData(pData);
 		}
 
 		pState->ClearFunParam();

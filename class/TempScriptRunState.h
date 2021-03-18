@@ -21,7 +21,7 @@ namespace zlscript
 		virtual __int64 PopIntVarFormStack();
 		virtual double PopDoubleVarFormStack();
 		virtual char* PopCharVarFormStack();
-		virtual __int64 PopClassPointFormStack();
+		virtual PointVarInfo PopClassPointFormStack();
 		virtual StackVarInfo PopVarFormStack();
 
 		virtual int GetParamNum();

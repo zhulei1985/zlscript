@@ -74,7 +74,7 @@ void main()
 	int nVal = test->Add(1,2);
 	print(nVal);
 	//delete test;
-	RunScript(0,"CalculationTest3",test);
+	RunScript(0,"CalculationTest",test);
 	RunScript(0,"CalculationTest3",test);
 	RunScript(0,"CalculationTest3",test);
 	RunScript(0,"CalculationTest3",test);

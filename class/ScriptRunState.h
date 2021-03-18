@@ -76,7 +76,7 @@ namespace zlscript
 		virtual bool PushVarToStack(double Double);
 		virtual bool PushVarToStack(const char* pstr);
 		virtual bool PushClassPointToStack(__int64 nIndex);
-
+		virtual bool PushClassPointToStack(CScriptBasePointer* pPoint);
 		virtual bool PushVarToStack(StackVarInfo& Val);
 
 		template<class T>
@@ -85,7 +85,7 @@ namespace zlscript
 		virtual __int64 PopIntVarFormStack();
 		virtual double PopDoubleVarFormStack();
 		virtual char* PopCharVarFormStack();
-		virtual __int64 PopClassPointFormStack();
+		virtual PointVarInfo PopClassPointFormStack();
 		virtual StackVarInfo PopVarFormStack();
 
 		virtual int GetParamNum();
@@ -140,12 +140,13 @@ namespace zlscript
 	{
 		if (pVal)
 		{
-			PushClassPointToStack(pVal->GetScriptPointIndex());
+			CScriptBasePointer* pPoint = CScriptSuperPointerMgr::GetInstance()->PickupPointer(pVal->GetScriptPointIndex());
+			PushClassPointToStack(pPoint);
 			return true;
 		}
 		else
 		{
-			PushClassPointToStack(-1);
+			PushClassPointToStack((CScriptBasePointer*)nullptr);
 		}
 		return false;
 	}

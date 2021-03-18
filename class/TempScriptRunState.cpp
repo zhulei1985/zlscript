@@ -52,9 +52,8 @@ namespace zlscript
 	bool CTempScriptRunState::PushClassPointToStack(__int64 nIndex)
 	{
 		StackVarInfo var;
-		var.cType = EScriptVal_ClassPointIndex;
-		var.Int64 = nIndex;
-		CScriptSuperPointerMgr::GetInstance()->ScriptUsePointer(var.Int64);
+		var.cType = EScriptVal_ClassPoint;
+		var.pPoint = CScriptSuperPointerMgr::GetInstance()->PickupPointer(nIndex);
 		m_varRegister.push(var);
 		return true;
 	}
@@ -167,7 +166,7 @@ namespace zlscript
 
 		return strbuff;
 	}
-	__int64 CTempScriptRunState::PopClassPointFormStack()
+	PointVarInfo CTempScriptRunState::PopClassPointFormStack()
 	{
 		StackVarInfo var;
 		var = m_varRegister.top();
@@ -176,12 +175,13 @@ namespace zlscript
 		__int64 nReturn = 0;
 		switch (var.cType)
 		{
-		case EScriptVal_ClassPointIndex:
-			nReturn = var.Int64;
-			break;
+		//case EScriptVal_ClassPointIndex:
+		//	return PointVarInfo(var.Int64);
+		case EScriptVal_ClassPoint:
+			return PointVarInfo(var.pPoint);
 		}
 
-		return nReturn;
+		return PointVarInfo();
 	}
 	StackVarInfo CTempScriptRunState::PopVarFormStack()
 	{
