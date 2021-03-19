@@ -93,7 +93,7 @@ namespace zlscript
 				m_vecScriptClassFun.resize(id + 1,nullptr);
 				m_vecScriptClassFun[id] = pInfo;
 			}
-			else if (m_vecScriptClassFun[id])
+			else
 			{
 				if (m_vecScriptClassFun[id])
 				{

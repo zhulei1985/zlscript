@@ -43,7 +43,7 @@ namespace zlscript
 
 		PointVarInfo& operator=(__int64 nPointIndex);
 		PointVarInfo& operator=(CScriptBasePointer* pPoint);
-
+		PointVarInfo& operator=(const PointVarInfo& info);
 		CScriptBasePointer* pPoint;
 	};
 }

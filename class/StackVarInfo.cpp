@@ -159,4 +159,10 @@ namespace zlscript
 		CScriptSuperPointerMgr::GetInstance()->PickupPointer(pPoint);
 		return *this;
 	}
+	PointVarInfo& PointVarInfo::operator=(const PointVarInfo& info)
+	{
+		this->pPoint = info.pPoint;
+		CScriptSuperPointerMgr::GetInstance()->PickupPointer(info.pPoint);
+		return *this;
+	}
 }
