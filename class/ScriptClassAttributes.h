@@ -249,6 +249,15 @@ namespace zlscript
 		bool SetVal(unsigned int index, CScriptBasePointer* pPoint);
 		bool SetVal(unsigned int index, __int64 nVal);
 		PointVarInfo GetVal(unsigned int index);
+
+		void PushBack(CScriptPointInterface* pPoint);
+		void PushBack(CScriptBasePointer* pPoint);
+		void PushBack(__int64 nVal);
+
+		bool Remove(CScriptPointInterface* pPoint);
+		bool Remove(CScriptBasePointer* pPoint);
+		bool Remove(unsigned int index);
+
 		void clear();
 		virtual std::string ToType();
 		virtual std::string ToString();

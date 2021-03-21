@@ -756,11 +756,78 @@ namespace zlscript
 
 	PointVarInfo CScriptClassPointArrayAttribute::GetVal(unsigned int index)
 	{
+		std::lock_guard<std::mutex> Lock(m_lock);
 		if (index < m_vecVal.size())
 		{
 			return m_vecVal[index];
 		}
 		return PointVarInfo();
+	}
+
+	void CScriptClassPointArrayAttribute::PushBack(CScriptPointInterface* pPoint)
+	{
+		std::lock_guard<std::mutex> Lock(m_lock);
+		m_setFlag.insert(m_vecVal.size());
+		m_vecVal.push_back(pPoint->GetScriptPointIndex());
+	}
+
+	void CScriptClassPointArrayAttribute::PushBack(CScriptBasePointer* pPoint)
+	{
+		std::lock_guard<std::mutex> Lock(m_lock);
+		m_setFlag.insert(m_vecVal.size());
+		m_vecVal.push_back(pPoint);
+	}
+
+	void CScriptClassPointArrayAttribute::PushBack(__int64 nVal)
+	{
+		std::lock_guard<std::mutex> Lock(m_lock);
+		m_setFlag.insert(m_vecVal.size());
+		m_vecVal.push_back(nVal);
+	}
+
+	bool CScriptClassPointArrayAttribute::Remove(CScriptPointInterface* pPoint)
+	{
+		std::lock_guard<std::mutex> Lock(m_lock);
+		auto it = m_vecVal.begin();
+		for (; it != m_vecVal.end(); it++)
+		{
+			if ((*it).pPoint && (*it).pPoint->GetPoint() == pPoint)
+			{
+				m_vecVal.erase(it);
+				return true;
+			}
+		}
+		return false;
+	}
+
+	bool CScriptClassPointArrayAttribute::Remove(CScriptBasePointer* pPoint)
+	{
+		std::lock_guard<std::mutex> Lock(m_lock);
+		auto it = m_vecVal.begin();
+		for (; it != m_vecVal.end(); it++)
+		{
+			if ((*it).pPoint == pPoint)
+			{
+				m_vecVal.erase(it);
+				return true;
+			}
+		}
+		return false;
+	}
+
+	bool CScriptClassPointArrayAttribute::Remove(unsigned int index)
+	{
+		std::lock_guard<std::mutex> Lock(m_lock);
+		auto it = m_vecVal.begin();
+		for (unsigned int i = 0; it != m_vecVal.end(); it++, i++)
+		{
+			if (i == index)
+			{
+				m_vecVal.erase(it);
+				return true;
+			}
+		}
+		return false;
 	}
 
 	void CScriptClassPointArrayAttribute::clear()
