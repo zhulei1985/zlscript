@@ -30,7 +30,7 @@
 namespace zlscript
 {
 
-	//CScriptVirtualMachine  *CScriptVirtualMachine::m_pInstance = nullptr;
+	CScriptVirtualMachine  *CScriptVirtualMachine::m_pInstance = nullptr;
 	CScriptVirtualMachine::CScriptVirtualMachine()
 	{
 		nMaxTimeRes = 9999;
@@ -106,6 +106,10 @@ namespace zlscript
 		}
 		m_RunStateList.clear();
 		//vGlobalNumVar.clear();
+		if (m_pInstance == this)
+		{
+			m_pInstance = nullptr;
+		}
 	}
 
 	void CScriptVirtualMachine::SetEventIndex(int val)

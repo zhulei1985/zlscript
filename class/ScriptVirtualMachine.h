@@ -55,12 +55,25 @@ namespace zlscript
 	class CScriptVirtualMachine : public CScriptExecFrame
 	{
 	public:
+		void SetInstance()
+		{
+			m_pInstance = this;
+		}
+		static CScriptVirtualMachine* GetInstance()
+		{
+			return m_pInstance;
+		}
+	private:
+		static CScriptVirtualMachine* m_pInstance;
+	public:
 		CScriptVirtualMachine();
 		CScriptVirtualMachine(int nThread);
 
 		virtual ~CScriptVirtualMachine(void);
 
 		static CScriptVirtualMachine* CreateNew();
+
+
 
 		virtual void init(int nThread);
 

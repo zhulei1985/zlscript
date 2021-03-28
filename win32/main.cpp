@@ -118,7 +118,7 @@ int main()
 	Machine.InitEvent(zlscript::E_SCRIPT_EVENT_RUNSCRIPT,
 		std::bind(&zlscript::CScriptVirtualMachine::EventRunScriptFun, &Machine, std::placeholders::_1, std::placeholders::_2));
 	auto oldtime = std::chrono::steady_clock::now();
-
+	Machine.SetInstance();
 	CScriptStack parm;
 	Machine.RunFunImmediately("init", parm);
 

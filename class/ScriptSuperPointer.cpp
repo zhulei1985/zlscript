@@ -46,7 +46,7 @@ namespace zlscript
 
 	void CScriptSuperPointerMgr::Init()
 	{
-		CScriptArray::Init2Script();
+		//CScriptArray::Init2Script();
 
 		CScriptData::Init2Script();
 	}

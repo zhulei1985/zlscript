@@ -588,7 +588,7 @@ namespace zlscript
 
 
 				m_BlockStack.push(pBlock);
-				nReturn = Exec(999999, pMachine);
+				nReturn = Exec(0xffffffff, pMachine);
 			}
 			else
 			{
