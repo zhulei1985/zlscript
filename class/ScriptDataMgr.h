@@ -28,16 +28,6 @@
 
 namespace zlscript
 {
-	struct hash_SV
-	{
-		size_t operator() (const zlscript::StackVarInfo& cls) const
-		{
-			std::size_t h1 = std::hash<char>()(cls.cType);
-			std::size_t h2 = std::hash<char>()(cls.cExtend);
-			std::size_t h3 = std::hash<__int64>()(cls.Int64);
-			return h1 ^ h2 ^ h3;
-		}
-	};
 	class CScriptHashMap : public CScriptPointInterface
 	{
 	public:

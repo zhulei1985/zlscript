@@ -3,9 +3,22 @@
 #include "ScriptClassAttributes.h"
 #include "ScriptSuperPointer.h"
 #include "EScriptVariableType.h"
+#include "ScriptPointInterface.h"
 namespace zlscript
 {
-	void CBaseScriptClassAttribute::init(const char* pName, unsigned short flag, unsigned short index, CScriptPointInterface* master)
+	CBaseScriptClassAttribute::~CBaseScriptClassAttribute()
+	{
+		for (unsigned int i = 0; i < m_vObserver.size(); i++)
+		{
+			auto pObserver = m_vObserver[i];
+			if (pObserver)
+			{
+				pObserver->RemoveScriptAttribute(this);
+			}
+		}
+		m_vObserver.clear();
+	}
+	void CBaseScriptClassAttribute::init(const char* pName, unsigned short flag, unsigned short index, CScriptPointInterface* pMaster)
 	{
 		if (pName)
 		{
@@ -13,20 +26,64 @@ namespace zlscript
 		}
 		m_flag = flag;
 		m_index = index;
-		m_master = master;
-		master->RegisterScriptClassAttr(m_flag,this);
+		m_pMaster = pMaster;
+		
+		AddObserver(pMaster);
 	}
+	void CBaseScriptClassAttribute::AddObserver(IClassAttributeObserver* pObserver)
+	{
+		std::lock_guard<std::mutex> Lock(m_ObserverLock);
+		for (unsigned int i = 0; i < m_vObserver.size(); i++)
+		{
+			if (pObserver == m_vObserver[i])
+			{
+				return;
+			}
+		}
+		pObserver->RegisterScriptAttribute(this);
+		m_vObserver.push_back(pObserver);
+	}
+
+	void CBaseScriptClassAttribute::NotifyObserver(StackVarInfo old)
+	{
+		std::lock_guard<std::mutex> Lock(m_ObserverLock);
+		for (unsigned int i = 0; i < m_vObserver.size(); i++)
+		{
+			auto pObserver = m_vObserver[i];
+			if (pObserver)
+			{
+				pObserver->ChangeScriptAttribute(this, old);
+			}
+		}
+	}
+
+	void CBaseScriptClassAttribute::RemoveObserver(IClassAttributeObserver* pObserver)
+	{
+		std::lock_guard<std::mutex> Lock(m_ObserverLock);
+		auto it = m_vObserver.begin();
+		for (; it != m_vObserver.end(); it++)
+		{
+			if (*it == pObserver)
+			{
+				m_vObserver.erase(it);
+				break;
+			}
+		}
+	}
+
+
 	CScriptIntAttribute::operator int()
 	{
 		return m_val;
 	}
 	int CScriptIntAttribute::operator=(int val)
 	{
-		if (m_master && m_val != val)
+		if (m_val != val)
 		{
-			m_master->ChangeScriptAttribute(m_flag, this);
+			__int64 old = m_val;
+			m_val = val;
+			NotifyObserver(StackVarInfo(old));
 		}
-		m_val = val;
 		return m_val;
 	}
 
@@ -39,6 +96,10 @@ namespace zlscript
 		char strbuff[16];
 		snprintf(strbuff, sizeof(strbuff), "%d", m_val.load());
 		return strbuff;
+	}
+	StackVarInfo CScriptIntAttribute::ToScriptVal()
+	{
+		return StackVarInfo((__int64)m_val);
 	}
 	bool CScriptIntAttribute::SetVal(std::string str)
 	{
@@ -62,11 +123,12 @@ namespace zlscript
 
 	__int64 CScriptInt64Attribute::operator=(__int64 val)
 	{
-		if (m_master && m_val != val)
+		if (m_val != val)
 		{
-			m_master->ChangeScriptAttribute(m_flag, this);
+			__int64 old = m_val;
+			m_val = val;
+			NotifyObserver(StackVarInfo(old));
 		}
-		m_val = val;
 		return m_val;
 	}
 
@@ -80,6 +142,11 @@ namespace zlscript
 		char strbuff[32];
 		snprintf(strbuff, sizeof(strbuff), "%lld", m_val.load());
 		return strbuff;
+	}
+
+	StackVarInfo CScriptInt64Attribute::ToScriptVal()
+	{
+		return StackVarInfo(m_val);
 	}
 
 	bool CScriptInt64Attribute::SetVal(std::string str)
@@ -108,11 +175,12 @@ namespace zlscript
 	float CScriptFloatAttribute::operator=(float val)
 	{
 		std::lock_guard<std::mutex> Lock(m_lock);
-		if (m_master && m_val != val)
+		if (m_val != val)
 		{
-			m_master->ChangeScriptAttribute(m_flag, this);
+			double old = m_val;
+			m_val = val;
+			NotifyObserver(StackVarInfo(old));
 		}
-		m_val = val;
 		return m_val;
 	}
 
@@ -127,6 +195,11 @@ namespace zlscript
 		char strbuff[32];
 		snprintf(strbuff, sizeof(strbuff), "%f", m_val);
 		return strbuff;
+	}
+
+	StackVarInfo CScriptFloatAttribute::ToScriptVal()
+	{
+		return StackVarInfo((double)m_val);
 	}
 
 	bool CScriptFloatAttribute::SetVal(std::string str)
@@ -158,11 +231,12 @@ namespace zlscript
 	double CScriptDoubleAttribute::operator=(double val)
 	{
 		std::lock_guard<std::mutex> Lock(m_lock);
-		if (m_master && m_val != val)
+		if (m_val != val)
 		{
-			m_master->ChangeScriptAttribute(m_flag, this);
+			double old = m_val;
+			m_val = val;
+			NotifyObserver(StackVarInfo(old));
 		}
-		m_val = val;
 		return m_val;
 	}
 
@@ -177,6 +251,11 @@ namespace zlscript
 		char strbuff[32];
 		snprintf(strbuff, sizeof(strbuff),"%f", m_val);
 		return strbuff;
+	}
+
+	StackVarInfo CScriptDoubleAttribute::ToScriptVal()
+	{
+		return StackVarInfo(m_val);
 	}
 
 	bool CScriptDoubleAttribute::SetVal(std::string str)
@@ -209,22 +288,28 @@ namespace zlscript
 	std::string& CScriptStringAttribute::operator=(std::string& val)
 	{
 		std::lock_guard<std::mutex> Lock(m_lock);
-		if (m_master && m_val != val)
+		if (m_val != val)
 		{
-			m_master->ChangeScriptAttribute(m_flag, this);
+			std::string old = m_val;
+			m_val = val;
+			NotifyObserver(StackVarInfo(old.c_str()));
 		}
-		m_val = val;
 		return m_val;
 	}
 
 	std::string& CScriptStringAttribute::operator=(char* val)
 	{
 		std::lock_guard<std::mutex> Lock(m_lock);
-		if (m_master && m_val != val)
+		if (val == nullptr)
 		{
-			m_master->ChangeScriptAttribute(m_flag, this);
+			return m_val;
 		}
-		m_val = val;
+		if (m_val != val)
+		{
+			std::string old = m_val;
+			m_val = val;
+			NotifyObserver(StackVarInfo(old.c_str()));
+		}
 		return m_val;
 	}
 
@@ -235,11 +320,12 @@ namespace zlscript
 		{
 			return m_val;
 		}
-		if (m_master && m_val != val)
+		if (m_val != val)
 		{
-			m_master->ChangeScriptAttribute(m_flag, this);
+			std::string old = m_val;
+			m_val = val;
+			NotifyObserver(StackVarInfo(old.c_str()));
 		}
-		m_val = val;
 		return m_val;
 	}
 
@@ -260,6 +346,11 @@ namespace zlscript
 	{
 		std::lock_guard<std::mutex> Lock(m_lock);
 		return m_val;
+	}
+
+	StackVarInfo CScriptStringAttribute::ToScriptVal()
+	{
+		return StackVarInfo(m_val.c_str());
 	}
 
 	const char* CScriptStringAttribute::c_str()
@@ -313,10 +404,10 @@ namespace zlscript
 		std::lock_guard<std::mutex> Lock(m_lock);
 		if (m_vecVal.size() <= index)
 			return false;
-		if (m_master && m_vecVal[index] != nVal)
-		{
-			m_master->ChangeScriptAttribute(m_flag, this);
-		}
+		//if (m_vecVal[index] != nVal)
+		//{
+		//	NotifyObserver(StackVarInfo((__int64)index));
+		//}
 		m_vecVal[index] = nVal;
 		m_setFlag.insert(index);
 		return true;
@@ -687,19 +778,19 @@ namespace zlscript
 	void CScriptClassPointAttribute::AddData2Bytes(std::vector<char>& vBuff)
 	{
 		std::lock_guard<std::mutex> Lock(m_lock);
-		if (m_master)
+		if (m_pMaster)
 		{
-			AddInt2Bytes(vBuff, m_master->GetSyncInfo_ClassPoint2Index(m_val.pPoint));
+			AddInt2Bytes(vBuff, m_pMaster->GetSyncInfo_ClassPoint2Index(m_val.pPoint));
 		}
 	}
 
 	bool CScriptClassPointAttribute::DecodeData4Bytes(char* pBuff, int& pos, unsigned int len)
 	{
 		std::lock_guard<std::mutex> Lock(m_lock);
-		if (m_master)
+		if (m_pMaster)
 		{
 			int index = DecodeBytes2Int(pBuff, pos, len);
-			m_val = m_master->GetSyncInfo_Index2ClassPoint(index);
+			m_val = m_pMaster->GetSyncInfo_Index2ClassPoint(index);
 
 			return true;
 		}
@@ -870,7 +961,7 @@ namespace zlscript
 		for (unsigned int i = 0; i < m_vecVal.size(); i++)
 		{
 			AddUInt2Bytes(vBuff, i);
-			AddInt2Bytes(vBuff, m_master->GetSyncInfo_ClassPoint2Index(m_vecVal[i].pPoint));
+			AddInt2Bytes(vBuff, m_pMaster->GetSyncInfo_ClassPoint2Index(m_vecVal[i].pPoint));
 		}
 	}
 
@@ -886,7 +977,7 @@ namespace zlscript
 			if (index < m_vecVal.size())
 			{
 				AddUInt2Bytes(vBuff, index);
-				AddInt2Bytes(vBuff, m_master->GetSyncInfo_ClassPoint2Index(m_vecVal[index].pPoint));
+				AddInt2Bytes(vBuff, m_pMaster->GetSyncInfo_ClassPoint2Index(m_vecVal[index].pPoint));
 			}
 			else
 			{
@@ -911,7 +1002,7 @@ namespace zlscript
 			int val = DecodeBytes2Int(pBuff, pos, len);
 			if (index < m_vecVal.size())
 			{
-				m_vecVal[index] = m_master->GetSyncInfo_Index2ClassPoint(val);
+				m_vecVal[index] = m_pMaster->GetSyncInfo_Index2ClassPoint(val);
 			}
 		}
 		return true;
@@ -1017,7 +1108,7 @@ namespace zlscript
 		{
 			AddInt642Bytes(vBuff, it->first);
 
-			AddInt2Bytes(vBuff, m_master->GetSyncInfo_ClassPoint2Index(it->second.pPoint));
+			AddInt2Bytes(vBuff, m_pMaster->GetSyncInfo_ClassPoint2Index(it->second.pPoint));
 		}
 	}
 
@@ -1034,7 +1125,7 @@ namespace zlscript
 			{
 				AddInt642Bytes(vBuff, it->first);
 
-				AddInt2Bytes(vBuff, m_master->GetSyncInfo_ClassPoint2Index(it->second.pPoint));
+				AddInt2Bytes(vBuff, m_pMaster->GetSyncInfo_ClassPoint2Index(it->second.pPoint));
 			}
 			else
 			{
@@ -1056,7 +1147,7 @@ namespace zlscript
 			{
 				__int64 nIndex = DecodeBytes2Int64(pBuff, pos, len);
 				int nPointIndex = DecodeBytes2Int(pBuff, pos, len);
-				m_val[nIndex] = m_master->GetSyncInfo_Index2ClassPoint(nPointIndex);
+				m_val[nIndex] = m_pMaster->GetSyncInfo_Index2ClassPoint(nPointIndex);
 			}
 		}
 		else
@@ -1067,7 +1158,7 @@ namespace zlscript
 				int nPointIndex = DecodeBytes2Int(pBuff, pos, len);
 				if (nPointIndex != -1)
 				{
-					m_val[nIndex] = m_master->GetSyncInfo_Index2ClassPoint(nPointIndex);
+					m_val[nIndex] = m_pMaster->GetSyncInfo_Index2ClassPoint(nPointIndex);
 				}
 				else
 				{
@@ -1081,5 +1172,7 @@ namespace zlscript
 		}
 		return true;
 	}
+
+
 
 }

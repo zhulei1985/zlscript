@@ -8,7 +8,7 @@ namespace zlscript
 	zlscript::CBinaryPool StackVarInfo::s_binPool;
 	StackVarInfo::StackVarInfo()
 	{
-		cType = 0;
+		cType = EScriptVal_None;
 		cExtend = 0;
 		Int64 = 0;
 	}
@@ -47,6 +47,31 @@ namespace zlscript
 		break;
 		}
 
+	}
+	StackVarInfo::StackVarInfo(__int64 val)
+	{
+		Clear();
+		cType = EScriptVal_Int;
+		Int64 = val;
+	}
+	StackVarInfo::StackVarInfo(double val)
+	{
+		Clear();
+		cType = EScriptVal_Double;
+		Double = val;
+	}
+	StackVarInfo::StackVarInfo(const char *pStr)
+	{
+		Clear();
+		cType = EScriptVal_String;
+		Int64 = StackVarInfo::s_strPool.NewString(pStr);
+	}
+	StackVarInfo::StackVarInfo(CScriptBasePointer* pVal)
+	{
+		Clear();
+		cType = EScriptVal_ClassPoint;
+		pPoint = pVal;
+		CScriptSuperPointerMgr::GetInstance()->PickupPointer(pPoint);
 	}
 	StackVarInfo::~StackVarInfo()
 	{
@@ -164,5 +189,9 @@ namespace zlscript
 		this->pPoint = info.pPoint;
 		CScriptSuperPointerMgr::GetInstance()->PickupPointer(info.pPoint);
 		return *this;
+	}
+	bool PointVarInfo::operator==(const PointVarInfo& cls) const
+	{
+		return this->pPoint == cls.pPoint;
 	}
 }

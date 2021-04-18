@@ -2390,7 +2390,7 @@ namespace zlscript
 			return m_vScoureLines[nIndex];
 		}
 #endif
-		struct tagSourceLineInfo emtpy;
+		static tagSourceLineInfo emtpy;
 		return emtpy;
 	}
 

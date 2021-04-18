@@ -194,20 +194,35 @@ namespace zlscript
 		return *this;
 	}
 
-	void CScriptPointInterface::ChangeScriptAttribute(short flag, CBaseScriptClassAttribute* pAttr)
+	void CScriptPointInterface::ChangeScriptAttribute(CBaseScriptClassAttribute* pAttr, StackVarInfo& old)
 	{
-		if (flag & CBaseScriptClassAttribute::E_FLAG_DB)
+		if (pAttr == nullptr)
+		{
+			return;
+		}
+		if (pAttr->m_flag & CBaseScriptClassAttribute::E_FLAG_DB)
 		{
 
 		}
 	}
 
-	void CScriptPointInterface::RegisterScriptClassAttr(short flag, CBaseScriptClassAttribute* pAttr)
+	void CScriptPointInterface::RegisterScriptAttribute(CBaseScriptClassAttribute* pAttr)
 	{
-		if (flag & CBaseScriptClassAttribute::E_FLAG_DB)
+		if (pAttr == nullptr)
 		{
-			if (pAttr)
-				m_mapDBAttributes[pAttr->m_strAttrName] = pAttr;
+			return;
+		}
+		if (pAttr->m_flag & CBaseScriptClassAttribute::E_FLAG_DB)
+		{
+			m_mapDBAttributes[pAttr->m_strAttrName] = pAttr;
+		}
+	}
+
+	void CScriptPointInterface::RemoveScriptAttribute(CBaseScriptClassAttribute* pAttr)
+	{
+		if (pAttr == nullptr)
+		{
+			return;
 		}
 	}
 

@@ -111,7 +111,7 @@ namespace zlscript
 #define ATTR_DB_INT64_ARRAY(val,index) ATTR_BASE_INT64_ARRAY(val,CBaseScriptClassAttribute::E_FLAG_DB,index);
 #define ATTR_DB_INT64_MAP(val,index) ATTR_BASE_INT64_MAP(val,CBaseScriptClassAttribute::E_FLAG_DB,index);
 
-	class CScriptPointInterface
+	class CScriptPointInterface : public IClassAttributeObserver
 	{
 	public:
 		CScriptPointInterface();
@@ -147,8 +147,9 @@ namespace zlscript
 		{
 			return m_mapDBAttributes;
 		}
-		virtual void ChangeScriptAttribute(short flag, CBaseScriptClassAttribute* pAttr);
-		virtual void RegisterScriptClassAttr(short flag, CBaseScriptClassAttribute* pAttr);
+		virtual void ChangeScriptAttribute(CBaseScriptClassAttribute* pAttr, StackVarInfo& old);
+		virtual void RegisterScriptAttribute(CBaseScriptClassAttribute* pAttr);
+		virtual void RemoveScriptAttribute(CBaseScriptClassAttribute* pAttr);
 
 		virtual unsigned int GetSyncInfo_ClassPoint2Index(CScriptBasePointer* point) { return 0; }
 		virtual PointVarInfo GetSyncInfo_Index2ClassPoint(unsigned int index) { return PointVarInfo(); }
@@ -160,6 +161,7 @@ namespace zlscript
 		static __int64 s_nScriptPointIndexCount;
 
 		stScriptClassInfo* m_pClassInfo;
+
 
 		std::map<std::string, CBaseScriptClassAttribute*> m_mapDBAttributes;
 

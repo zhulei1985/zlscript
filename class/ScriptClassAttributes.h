@@ -8,22 +8,27 @@
 namespace zlscript
 {
 	class CScriptPointInterface;
+	struct CBaseScriptClassAttribute;
+	class IClassAttributeObserver
+	{
+	public:
+		virtual void ChangeScriptAttribute(CBaseScriptClassAttribute* pAttr, StackVarInfo& old) = 0;
+		virtual void RegisterScriptAttribute(CBaseScriptClassAttribute* pAttr) = 0;
+		virtual void RemoveScriptAttribute(CBaseScriptClassAttribute* pAttr) = 0;
+	};
 	struct CBaseScriptClassAttribute
 	{
 		CBaseScriptClassAttribute()
 		{
+			m_pMaster = nullptr;
 			m_flag = 0;
 			m_index = 0;
-			m_master = nullptr;
 		}
-		CBaseScriptClassAttribute(const char *pName,unsigned short flag, unsigned short index, CScriptPointInterface* master)
+		CBaseScriptClassAttribute(const char *pName,unsigned short flag, unsigned short index, CScriptPointInterface* pMaster)
 		{
-			init(pName,flag, index, master);
+			init(pName,flag, index, pMaster);
 		}
-		virtual ~CBaseScriptClassAttribute()
-		{
-
-		}
+		virtual ~CBaseScriptClassAttribute();
 		enum
 		{
 			E_FLAG_NONE = 0,
@@ -32,7 +37,7 @@ namespace zlscript
 			E_FLAG_DB_PRIMARY = 4,
 			E_FLAG_DB_UNIQUE = 8,
 		};
-		void init(const char* pName, unsigned short flag, unsigned short index, CScriptPointInterface* master);
+		void init(const char* pName, unsigned short flag, unsigned short index, CScriptPointInterface* pMaster);
 		virtual void AddData2Bytes(std::vector<char>& vBuff) = 0;
 		virtual bool DecodeData4Bytes(char* pBuff, int& pos, unsigned int len) = 0;
 		virtual void AddChangeData2Bytes(std::vector<char>& vBuff)
@@ -45,13 +50,21 @@ namespace zlscript
 		//}
 		virtual std::string ToType() = 0;
 		virtual std::string ToString() = 0;
+		virtual StackVarInfo ToScriptVal() { return StackVarInfo(); }
 		virtual bool SetVal(std::string str) =0;
 		virtual void ClearChangeFlag(){}
 		unsigned short m_flag;
 		unsigned short m_index;
 		std::string m_strAttrName;
-		CScriptPointInterface* m_master;
-	
+		CScriptPointInterface* m_pMaster;
+
+		void AddObserver(IClassAttributeObserver* pObserver);
+		void NotifyObserver(StackVarInfo old);
+		void RemoveObserver(IClassAttributeObserver* pObserver);
+
+	private:
+		std::vector<IClassAttributeObserver*> m_vObserver;
+		std::mutex m_ObserverLock;
 	};
 	struct CScriptCharAttribute : public CBaseScriptClassAttribute
 	{
@@ -82,6 +95,7 @@ namespace zlscript
 		int operator =(int val);
 		virtual std::string ToType();
 		virtual std::string ToString();
+		virtual StackVarInfo ToScriptVal();
 		bool SetVal(std::string str);
 		virtual void AddData2Bytes(std::vector<char>& vBuff);
 		virtual bool DecodeData4Bytes(char* pBuff, int& pos, unsigned int len);
@@ -98,6 +112,7 @@ namespace zlscript
 		__int64 operator =(__int64 val);
 		virtual std::string ToType();
 		virtual std::string ToString();
+		virtual StackVarInfo ToScriptVal();
 		bool SetVal(std::string str);
 		virtual void AddData2Bytes(std::vector<char>& vBuff);
 		virtual bool DecodeData4Bytes(char* pBuff, int& pos, unsigned int len);
@@ -115,6 +130,7 @@ namespace zlscript
 		float operator =(float val);
 		virtual std::string ToType();
 		virtual std::string ToString();
+		virtual StackVarInfo ToScriptVal();
 		bool SetVal(std::string str);
 		virtual void AddData2Bytes(std::vector<char>& vBuff);
 		virtual bool DecodeData4Bytes(char* pBuff, int& pos, unsigned int len);
@@ -132,6 +148,7 @@ namespace zlscript
 		double operator =(double val);
 		virtual std::string ToType();
 		virtual std::string ToString();
+		virtual StackVarInfo ToScriptVal();
 		bool SetVal(std::string str);
 		virtual void AddData2Bytes(std::vector<char>& vBuff);
 		virtual bool DecodeData4Bytes(char* pBuff, int& pos, unsigned int len);
@@ -152,6 +169,7 @@ namespace zlscript
 		std::string& operator =(const char* val);
 		virtual std::string ToType();
 		virtual std::string ToString();
+		virtual StackVarInfo ToScriptVal();
 		const char* c_str();
 		bool SetVal(std::string str);
 		virtual void AddData2Bytes(std::vector<char>& vBuff);

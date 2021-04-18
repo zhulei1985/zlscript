@@ -194,6 +194,7 @@ namespace zlscript
 	public:
 		CIfICode()
 		{
+			m_unElseSoureIndex = 0;
 			pCondCode = nullptr;
 			pTureCode = nullptr;
 			pFalseCode = nullptr;
