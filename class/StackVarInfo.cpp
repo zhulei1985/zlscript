@@ -97,6 +97,7 @@ namespace zlscript
 			CScriptSuperPointerMgr::GetInstance()->ReturnPointer(pPoint);
 		}
 		cType = EScriptVal_None;
+		cExtend = 0;
 		Int64 = 0;
 	}
 

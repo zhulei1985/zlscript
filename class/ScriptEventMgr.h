@@ -77,7 +77,7 @@ namespace zlscript
 		tagScriptEvent* NewEvent();
 		void ReleaseEvent(tagScriptEvent *pPoint);
 	protected:
-		typedef struct tagListEvents
+		struct tagListEvents
 		{
 			tagListEvents()
 			{
