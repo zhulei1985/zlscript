@@ -730,30 +730,30 @@ namespace zlscript
 			GetWord(nextWord);
 			switch (nVarType)
 			{
-			case EScriptVal_Int:
-			{
-				defVar.Int64 = _atoi64(nextWord.word.c_str());
-			}
-			break;
-			case EScriptVal_Double:
-			{
-				defVar.Double = atof(nextWord.word.c_str());
-			}
-			break;
-			case EScriptVal_String:
-			{
-				defVar.Int64 = StackVarInfo::s_strPool.NewString(nextWord.word.c_str());
-			}
-			break;
-			case EScriptVal_ClassPoint:
-			{
-				if (nextWord.word == "nullptr")
+				case EScriptVal_Int:
 				{
-					defVar.Int64 = 0;
+					defVar.Int64 = _atoi64(nextWord.word.c_str());
+				}
+				break;
+				case EScriptVal_Double:
+				{
+					defVar.Double = atof(nextWord.word.c_str());
+				}
+				break;
+				case EScriptVal_String:
+				{
+					defVar.Int64 = StackVarInfo::s_strPool.NewString(nextWord.word.c_str());
+				}
+				break;
+				case EScriptVal_ClassPoint:
+				{
+					if (nextWord.word == "nullptr")
+					{
+						defVar.Int64 = 0;
+					}
 				}
 			}
 			GetWord(nextWord);
-			}
 			if (nextWord.word != ";")
 			{
 				nErrorWordPos = wordFunName.nSourceWordsIndex;

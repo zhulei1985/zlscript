@@ -1,5 +1,5 @@
 //注释为两个'/'，当前只支持这一种注释方法
-//int g_a = 0;
+int g_a = 3;
 void init()
 {
 	print("init.....");
@@ -70,6 +70,7 @@ void CalculationTest3(CTest test)
 void main()
 {
 	print("begin");
+	print("g_a:" + g_a);
 	CTest test = new CTest;
 	int nVal = test->Add(1,2);
 	print(nVal);
