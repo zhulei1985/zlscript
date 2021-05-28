@@ -111,8 +111,8 @@ namespace zlscript
 
 			CodeStyle code(m_unBeginSoureIndex);
 			code.qwCode = 0;
-			code.cSign = 1;
-			code.wInstruct = ECODE_EVALUATE;
+			code.cSign = ESIGN_POS_LOACL_VAR;
+			code.wInstruct = ECODE_POP;
 			code.cExtend = 0;
 			code.dwPos = i;
 			vOut.push_back(code);

@@ -17,6 +17,24 @@
  ****************************************************************************/
 namespace zlscript
 {
+	enum ESignType
+	{
+		ESIGN_VALUE_INT, //32位整形值
+		ESIGN_POS_GLOBAL_VAR,//全局变量地址
+		ESIGN_POS_LOACL_VAR,//临时变量地址
+		ESIGN_POS_CONST_STRING,//字符串常量地址
+		ESIGN_POS_CONST_FLOAT,//浮点数常量地址
+		ESIGN_POS_CONST_INT64,//64位整形常量地址
+		ESIGN_REGISTER,//寄存器
+	};
+	enum ERegisterIndex
+	{
+		R_A,
+		R_B,
+		R_C,
+		R_D,
+		R_SIZE,
+	};
 	//脚本汇编的基本指令
 	enum EMicroCodeType
 	{
@@ -42,14 +60,28 @@ namespace zlscript
 		ECODE_BIT_OR,
 		ECODE_BIT_XOR,
 		/*************功能符************/
-		ECODE_PUSH = 20,//压入变量数值到堆栈cSign:0，值 1全局变量地址,2，临时变量,3,字符串常量 cExtend:数组索引 dwPos:表示值或地址
-		//ECODE_POP = 21,//从堆栈弹出数值到变量.cSign:0，值 1全局变量地址,2，临时变量,3,字符串常量 cExtend:数组索引  dwPos:或地址
+		// 压入变量到堆栈。
+		//	cSign:	使用ESignType的定义.变量来源
+		//	dwPos:	根据cSign的值表示值或地址
+		ECODE_PUSH = 20,
+		// 提取堆栈中的变量。
+		//	cSign:	使用ESignType的定义，变量去处
+		//	cExtend:寄存器索引ERegisterIndex
+		//	dwPos:	根据cSign的值表示值或地址
+		ECODE_POP = 21,
 		ECODE_STATEMENT_END = 22, //语句结束
-
-
+		//读取变量到寄存器。
+		//	cSign:	使用ESignType的定义
+		//	cExtend:寄存器索引ERegisterIndex
+		//	dwPos:	根据cSign的值表示值或地址
+		ECODE_LOAD,
+		// 移动寄存器的值
+		//	cSign:	目的地类型
+		//	cExtend:起点，寄存器索引ERegisterIndex
+		//	dwPos:	终点，根据cSign的值表示值或地址
+		ECODE_MOVE,
 		//ECODE_JMP,//无条件跳转
 		//ECODE_JMP_JUDGE,//m_JudgeRegister为真跳转
-		ECODE_EVALUATE,//从堆栈中取一个值放入指定地址cSign::0，全局变量，1，临时变量 cExtend:数组索引 dwPos:表示地址
 
 		ECODE_BEGIN_CALL,//开始计算本次函数调用实际压入多少个参数
 

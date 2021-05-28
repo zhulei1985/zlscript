@@ -94,10 +94,13 @@ namespace zlscript
 		{
 			tagCodeData();
 			int nType;
-			std::vector<std::string> vStrConst;//字符常量
+
 			std::vector<StackVarInfo> vNumVar;//临时变量
 			std::vector<CodeStyle> vCodeData;
+			std::vector<__int64> vInt64Const;//64位整形常量
 			std::vector<double> vFloatConst;//浮点常量
+			std::vector<std::string> vStrConst;//字符常量
+
 			std::vector<std::string> vCallFunName;//会调用的函数的名称
 
 			std::string filename;

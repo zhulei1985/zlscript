@@ -20,6 +20,7 @@
 #include <vector>
 #include "ScriptCodeLoader.h"
 #include "ScriptStack.h"
+#include "EMicroCodeType.h"
 #include <chrono>
 //////////////////////////////////////////////////////////////////////////////
 //                              脚本执行块                                  //
@@ -51,8 +52,10 @@ namespace zlscript
 		std::stack<unsigned int> m_sCycBlockEnd;
 		unsigned int m_nCycBlockEnd;
 
+		//寄存器
+		StackVarInfo m_register[R_SIZE];
 		//堆栈
-		CScriptStack m_varRegister;
+		CScriptStack m_stackRegister;
 
 	public:
 		enum ERESULT_TYPE
@@ -71,7 +74,7 @@ namespace zlscript
 		void SetCallFunParamNum(int nVal)
 		{
 			CurCallFunParamNum = nVal;
-			CurStackSizeWithoutFunParam = m_varRegister.size() - CurCallFunParamNum;
+			CurStackSizeWithoutFunParam = m_stackRegister.size() - CurCallFunParamNum;
 			if (CurStackSizeWithoutFunParam < 0)
 			{
 				CurStackSizeWithoutFunParam = 0;

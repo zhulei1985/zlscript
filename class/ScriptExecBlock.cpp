@@ -1,7 +1,7 @@
 ﻿#include "scriptcommon.h"
 
 #include "EScriptSentenceType.h"
-#include "EMicroCodeType.h"
+
 #include "ScriptVirtualMachine.h"
 #include "EScriptVariableType.h"
 #include "ScriptCallBackFunion.h"
@@ -13,7 +13,7 @@
 
 namespace zlscript
 {
-	CScriptExecBlock::CScriptExecBlock(CScriptCodeLoader::tagCodeData* pData, CScriptRunState* pMaster):m_varRegister(256)
+	CScriptExecBlock::CScriptExecBlock(CScriptCodeLoader::tagCodeData* pData, CScriptRunState* pMaster):m_stackRegister(256)
 	{
 		CurCallFunParamNum = 0;
 		m_nCodePoint = 0;
@@ -82,30 +82,28 @@ namespace zlscript
 				/*********************计算符************************/
 			case ECODE_ADD:
 			{
-				StackVarInfo var1 = ScriptStack_GetVar(m_varRegister);
-				StackVarInfo var2 = ScriptStack_GetVar(m_varRegister);
-				switch (var2.cType)
+				switch (m_register[R_A].cType)
 				{
 				case EScriptVal_Int:
 				{
-					__int64 nVal1 = GetInt_StackVar(&var1);
-					__int64 nVal2 = GetInt_StackVar(&var2);
-					ScriptVector_PushVar(m_varRegister, nVal2 + nVal1);
+					__int64 nVal1 = GetInt_StackVar(&m_register[R_A]);
+					__int64 nVal2 = GetInt_StackVar(&m_register[R_B]);
+					m_register[R_A] = nVal2 + nVal1;
 				}
 				break;
 				case EScriptVal_Double:
 				{
-					double dVal1 = GetFloat_StackVar(&var1);
-					double dVal2 = GetFloat_StackVar(&var2);
-					ScriptVector_PushVar(m_varRegister, dVal2 + dVal1);
+					double dVal1 = GetFloat_StackVar(&m_register[R_A]);
+					double dVal2 = GetFloat_StackVar(&m_register[R_B]);
+					m_register[R_A] = dVal2 + dVal1;
 				}
 				break;
 				case EScriptVal_String:
 				{
-					std::string strVal1 = GetString_StackVar(&var1);
-					std::string strVal2 = GetString_StackVar(&var2);
-					strVal2 = strVal2 + strVal1;
-					ScriptVector_PushVar(m_varRegister, (char*)strVal2.c_str());
+					std::string strVal1 = GetString_StackVar(&m_register[R_A]);
+					std::string strVal2 = GetString_StackVar(&m_register[R_B]);
+					strVal1 = strVal1 + strVal2;
+					m_register[R_A] = strVal1.c_str();
 				}
 				break;
 				}
@@ -114,22 +112,20 @@ namespace zlscript
 			break;
 			case ECODE_SUM:
 			{
-				StackVarInfo var1 = ScriptStack_GetVar(m_varRegister);
-				StackVarInfo var2 = ScriptStack_GetVar(m_varRegister);
-				switch (var2.cType)
+				switch (m_register[R_A].cType)
 				{
 				case EScriptVal_Int:
 				{
-					__int64 nVal1 = GetInt_StackVar(&var1);
-					__int64 nVal2 = GetInt_StackVar(&var2);
-					ScriptVector_PushVar(m_varRegister, nVal2 - nVal1);
+					__int64 nVal1 = GetInt_StackVar(&m_register[R_A]);
+					__int64 nVal2 = GetInt_StackVar(&m_register[R_B]);
+					m_register[R_A] = nVal2 - nVal1;;
 				}
 				break;
 				case EScriptVal_Double:
 				{
-					double dVal1 = GetFloat_StackVar(&var1);
-					double dVal2 = GetFloat_StackVar(&var2);
-					ScriptVector_PushVar(m_varRegister, dVal2 - dVal1);
+					double dVal1 = GetFloat_StackVar(&m_register[R_A]);
+					double dVal2 = GetFloat_StackVar(&m_register[R_B]);
+					m_register[R_A] = dVal1 - dVal2;
 				}
 				break;
 				}
@@ -138,22 +134,20 @@ namespace zlscript
 			break;
 			case ECODE_MUL:
 			{
-				StackVarInfo var1 = ScriptStack_GetVar(m_varRegister);
-				StackVarInfo var2 = ScriptStack_GetVar(m_varRegister);
-				switch (var2.cType)
+				switch (m_register[R_A].cType)
 				{
 				case EScriptVal_Int:
 				{
-					__int64 nVal1 = GetInt_StackVar(&var1);
-					__int64 nVal2 = GetInt_StackVar(&var2);
-					ScriptVector_PushVar(m_varRegister, nVal2 * nVal1);
+					__int64 nVal1 = GetInt_StackVar(&m_register[R_A]);
+					__int64 nVal2 = GetInt_StackVar(&m_register[R_B]);
+					m_register[R_A] = nVal2 * nVal1;
 				}
 				break;
 				case EScriptVal_Double:
 				{
-					double dVal1 = GetFloat_StackVar(&var1);
-					double dVal2 = GetFloat_StackVar(&var2);
-					ScriptVector_PushVar(m_varRegister, dVal2 * dVal1);
+					double dVal1 = GetFloat_StackVar(&m_register[R_A]);
+					double dVal2 = GetFloat_StackVar(&m_register[R_B]);
+					m_register[R_A] = dVal2 * dVal1;
 				}
 				break;
 				}
@@ -162,35 +156,33 @@ namespace zlscript
 			break;
 			case ECODE_DIV:
 			{
-				StackVarInfo var1 = ScriptStack_GetVar(m_varRegister);
-				StackVarInfo var2 = ScriptStack_GetVar(m_varRegister);
-				switch (var2.cType)
+				switch (m_register[R_A].cType)
 				{
 				case EScriptVal_Int:
 				{
-					__int64 nVal1 = GetInt_StackVar(&var1);
-					__int64 nVal2 = GetInt_StackVar(&var2);
-					if (nVal1 == 0)
+					__int64 nVal1 = GetInt_StackVar(&m_register[R_A]);
+					__int64 nVal2 = GetInt_StackVar(&m_register[R_B]);
+					if (nVal2 == 0)
 					{
-						ScriptVector_PushVar(m_varRegister, (__int64)0xffffffff);
+						m_register[R_A] = (__int64)0xffffffff;
 					}
 					else
 					{
-						ScriptVector_PushVar(m_varRegister, nVal2 / nVal1);
+						m_register[R_A] = nVal1 / nVal2;
 					}
 				}
 				break;
 				case EScriptVal_Double:
 				{
-					double dVal1 = GetFloat_StackVar(&var1);
-					double dVal2 = GetFloat_StackVar(&var2);
+					double dVal1 = GetFloat_StackVar(&m_register[R_A]);
+					double dVal2 = GetFloat_StackVar(&m_register[R_B]);
 					if (dVal1 <= 0.00000001f && dVal1 >= -0.00000001f)
 					{
-						ScriptVector_PushVar(m_varRegister, (double)1.7976931348623158e+308);
+						m_register[R_A] = (double)1.7976931348623158e+308;
 					}
 					else
 					{
-						ScriptVector_PushVar(m_varRegister, dVal2 / dVal1);
+						m_register[R_A] = dVal1 / dVal2;
 					}
 				}
 				break;
@@ -204,15 +196,15 @@ namespace zlscript
 				//{
 				//case EScriptVal_Int:
 				//	{
-				__int64 nVal1 = ScriptStack_GetInt(m_varRegister);
-				__int64 nVal2 = ScriptStack_GetInt(m_varRegister);
-				if (nVal1 == 0)
+				__int64 nVal1 = GetInt_StackVar(&m_register[R_A]);
+				__int64 nVal2 = GetInt_StackVar(&m_register[R_B]);
+				if (nVal2 == 0)
 				{
-					ScriptVector_PushVar(m_varRegister, (__int64)0);
+					m_register[R_A] = (__int64)0;
 				}
 				else
 				{
-					ScriptVector_PushVar(m_varRegister, nVal2 % nVal1);
+					m_register[R_A] = nVal1 % nVal2;
 				}
 				//	}
 				//	break;
@@ -222,22 +214,16 @@ namespace zlscript
 			break;
 			case ECODE_MINUS:
 			{
-				StackVarInfo var1 = ScriptStack_GetVar(m_varRegister);
-				switch (var1.cType)
+				switch (m_register[R_A].cType)
 				{
 				case EScriptVal_Int:
 				{
-					__int64 nVal1 = GetInt_StackVar(&var1);
-
-					ScriptVector_PushVar(m_varRegister, -nVal1);
-
+					m_register[R_A].Int64 = -m_register[R_A].Int64;
 				}
 				break;
 				case EScriptVal_Double:
 				{
-					double dVal1 = GetFloat_StackVar(&var1);
-
-					ScriptVector_PushVar(m_varRegister, -dVal1);
+					m_register[R_A].Double = -m_register[R_A].Double;
 				}
 				break;
 				}
@@ -246,43 +232,34 @@ namespace zlscript
 			break;
 			case ECODE_CMP_EQUAL://比较
 			{
-				StackVarInfo var1 = ScriptStack_GetVar(m_varRegister);
-				StackVarInfo var2 = ScriptStack_GetVar(m_varRegister);
-				switch (var2.cType)
+				switch (m_register[R_A].cType)
 				{
 				case EScriptVal_Int:
 				{
-					__int64 nVal1 = GetInt_StackVar(&var1);
-					__int64 nVal2 = GetInt_StackVar(&var2);
-					ScriptVector_PushVar(m_varRegister, (__int64)(nVal2 == nVal1 ? 1 : 0));
+					__int64 nVal1 = GetInt_StackVar(&m_register[R_A]);
+					__int64 nVal2 = GetInt_StackVar(&m_register[R_B]);
+					m_register[R_A] = (__int64)(nVal2 == nVal1 ? 1 : 0);
 				}
 				break;
 				case EScriptVal_Double:
 				{
-					double dVal1 = GetFloat_StackVar(&var1);
-					double dVal2 = GetFloat_StackVar(&var2);
-					ScriptVector_PushVar(m_varRegister, (__int64)(dVal2 == dVal1 ? 1 : 0));
+					double dVal1 = GetFloat_StackVar(&m_register[R_A]);
+					double dVal2 = GetFloat_StackVar(&m_register[R_B]);
+					m_register[R_A] =(__int64)(dVal2 == dVal1 ? 1 : 0);
 				}
 				break;
 				case EScriptVal_String:
 				{
-					std::string strVal1 = GetString_StackVar(&var1);
-					std::string strVal2 = GetString_StackVar(&var2);
-					ScriptVector_PushVar(m_varRegister, (__int64)(strVal2 == strVal1 ? 1 : 0));
+					std::string strVal1 = GetString_StackVar(&m_register[R_A]);
+					std::string strVal2 = GetString_StackVar(&m_register[R_B]);
+					m_register[R_A] = (__int64)(strVal2 == strVal1 ? 1 : 0);
 				}
 				break;
-				//case EScriptVal_ClassPointIndex:
-				//{
-				//	__int64 nVal1 = GetPointIndex_StackVar(&var1);
-				//	__int64 nVal2 = GetPointIndex_StackVar(&var2);
-				//	ScriptVector_PushVar(m_varRegister, (__int64)(nVal1 == nVal2 ? 1 : 0));
-				//}
-				//break;
 				case EScriptVal_ClassPoint:
 				{
-					__int64 nVal1 = GetPointIndex_StackVar(&var1);
-					__int64 nVal2 = GetPointIndex_StackVar(&var2);
-					ScriptVector_PushVar(m_varRegister, (__int64)(nVal1 == nVal2 ? 1 : 0));
+					__int64 nVal1 = GetPointIndex_StackVar(&m_register[R_A]);
+					__int64 nVal2 = GetPointIndex_StackVar(&m_register[R_B]);
+					m_register[R_A] = (__int64)(nVal1 == nVal2 ? 1 : 0);
 				}
 				break;
 				}
@@ -291,43 +268,34 @@ namespace zlscript
 			break;
 			case ECODE_CMP_NOTEQUAL:
 			{
-				StackVarInfo var1 = ScriptStack_GetVar(m_varRegister);
-				StackVarInfo var2 = ScriptStack_GetVar(m_varRegister);
-				switch (var2.cType)
+				switch (m_register[R_A].cType)
 				{
 				case EScriptVal_Int:
 				{
-					__int64 nVal1 = GetInt_StackVar(&var1);
-					__int64 nVal2 = GetInt_StackVar(&var2);
-					ScriptVector_PushVar(m_varRegister, (__int64)(nVal2 != nVal1 ? 1 : 0));
+					__int64 nVal1 = GetInt_StackVar(&m_register[R_A]);
+					__int64 nVal2 = GetInt_StackVar(&m_register[R_B]);
+					m_register[R_A] =(__int64)(nVal2 != nVal1 ? 1 : 0);
 				}
 				break;
 				case EScriptVal_Double:
 				{
-					double dVal1 = GetFloat_StackVar(&var1);
-					double dVal2 = GetFloat_StackVar(&var2);
-					ScriptVector_PushVar(m_varRegister, (__int64)(dVal2 != dVal1 ? 1 : 0));
+					double dVal1 = GetFloat_StackVar(&m_register[R_A]);
+					double dVal2 = GetFloat_StackVar(&m_register[R_B]);
+					m_register[R_A] = (__int64)(dVal2 != dVal1 ? 1 : 0);
 				}
 				break;
 				case EScriptVal_String:
 				{
-					std::string strVal1 = GetString_StackVar(&var1);
-					std::string strVal2 = GetString_StackVar(&var2);
-					ScriptVector_PushVar(m_varRegister, (__int64)(strVal2 != strVal1 ? 1 : 0));
+					std::string strVal1 = GetString_StackVar(&m_register[R_A]);
+					std::string strVal2 = GetString_StackVar(&m_register[R_B]);
+					m_register[R_A] = (__int64)(strVal2 != strVal1 ? 1 : 0);
 				}
 				break;
-				//case EScriptVal_ClassPointIndex:
-				//{
-				//	__int64 nVal1 = GetPointIndex_StackVar(&var1);
-				//	__int64 nVal2 = GetPointIndex_StackVar(&var2);
-				//	ScriptVector_PushVar(m_varRegister, (__int64)(nVal1 != nVal2 ? 1 : 0));
-				//}
-				//break;
 				case EScriptVal_ClassPoint:
 				{
-					__int64 nVal1 = GetPointIndex_StackVar(&var1);
-					__int64 nVal2 = GetPointIndex_StackVar(&var2);
-					ScriptVector_PushVar(m_varRegister, (__int64)(nVal1 != nVal2 ? 1 : 0));
+					__int64 nVal1 = GetPointIndex_StackVar(&m_register[R_A]);
+					__int64 nVal2 = GetPointIndex_StackVar(&m_register[R_B]);
+					m_register[R_A] =(__int64)(nVal1 != nVal2 ? 1 : 0);
 				}
 				break;
 				}
@@ -336,22 +304,20 @@ namespace zlscript
 			break;
 			case ECODE_CMP_BIG:
 			{
-				StackVarInfo var1 = ScriptStack_GetVar(m_varRegister);
-				StackVarInfo var2 = ScriptStack_GetVar(m_varRegister);
-				switch (var2.cType)
+				switch (m_register[R_A].cType)
 				{
 				case EScriptVal_Int:
 				{
-					__int64 nVal1 = GetInt_StackVar(&var1);
-					__int64 nVal2 = GetInt_StackVar(&var2);
-					ScriptVector_PushVar(m_varRegister, (__int64)(nVal2 > nVal1 ? 1 : 0));
+					__int64 nVal1 = GetInt_StackVar(&m_register[R_A]);
+					__int64 nVal2 = GetInt_StackVar(&m_register[R_B]);
+					m_register[R_A] = (__int64)(nVal2 > nVal1 ? 1 : 0);
 				}
 				break;
 				case EScriptVal_Double:
 				{
-					double dVal1 = GetFloat_StackVar(&var1);
-					double dVal2 = GetFloat_StackVar(&var2);
-					ScriptVector_PushVar(m_varRegister, (__int64)(dVal2 > dVal1 ? 1 : 0));
+					double dVal1 = GetFloat_StackVar(&m_register[R_A]);
+					double dVal2 = GetFloat_StackVar(&m_register[R_B]);
+					m_register[R_A] = (__int64)(dVal2 > dVal1 ? 1 : 0);
 				}
 				break;
 				}
@@ -360,22 +326,20 @@ namespace zlscript
 			break;
 			case ECODE_CMP_BIGANDEQUAL:
 			{
-				StackVarInfo var1 = ScriptStack_GetVar(m_varRegister);
-				StackVarInfo var2 = ScriptStack_GetVar(m_varRegister);
-				switch (var2.cType)
+				switch (m_register[R_A].cType)
 				{
 				case EScriptVal_Int:
 				{
-					__int64 nVal1 = GetInt_StackVar(&var1);
-					__int64 nVal2 = GetInt_StackVar(&var2);
-					ScriptVector_PushVar(m_varRegister, (__int64)(nVal2 >= nVal1 ? 1 : 0));
+					__int64 nVal1 = GetInt_StackVar(&m_register[R_A]);
+					__int64 nVal2 = GetInt_StackVar(&m_register[R_B]);
+					m_register[R_A] =(__int64)(nVal2 >= nVal1 ? 1 : 0);
 				}
 				break;
 				case EScriptVal_Double:
 				{
-					double dVal1 = GetFloat_StackVar(&var1);
-					double dVal2 = GetFloat_StackVar(&var2);
-					ScriptVector_PushVar(m_varRegister, (__int64)(dVal2 >= dVal1 ? 1 : 0));
+					double dVal1 = GetFloat_StackVar(&m_register[R_A]);
+					double dVal2 = GetFloat_StackVar(&m_register[R_B]);
+					m_register[R_A] = (__int64)(dVal2 >= dVal1 ? 1 : 0);
 				}
 				break;
 				}
@@ -384,22 +348,20 @@ namespace zlscript
 			break;
 			case ECODE_CMP_LESS:
 			{
-				StackVarInfo var1 = ScriptStack_GetVar(m_varRegister);
-				StackVarInfo var2 = ScriptStack_GetVar(m_varRegister);
-				switch (var2.cType)
+				switch (m_register[R_A].cType)
 				{
 				case EScriptVal_Int:
 				{
-					__int64 nVal1 = GetInt_StackVar(&var1);
-					__int64 nVal2 = GetInt_StackVar(&var2);
-					ScriptVector_PushVar(m_varRegister, (__int64)(nVal2 < nVal1 ? 1 : 0));
+					__int64 nVal1 = GetInt_StackVar(&m_register[R_A]);
+					__int64 nVal2 = GetInt_StackVar(&m_register[R_B]);
+					m_register[R_A] = (__int64)(nVal2 < nVal1 ? 1 : 0);
 				}
 				break;
 				case EScriptVal_Double:
 				{
-					double dVal1 = GetFloat_StackVar(&var1);
-					double dVal2 = GetFloat_StackVar(&var2);
-					ScriptVector_PushVar(m_varRegister, (__int64)(dVal2 < dVal1 ? 1 : 0));
+					double dVal1 = GetFloat_StackVar(&m_register[R_A]);
+					double dVal2 = GetFloat_StackVar(&m_register[R_B]);
+					m_register[R_A] = (__int64)(dVal2 < dVal1 ? 1 : 0);
 				}
 				break;
 				}
@@ -408,22 +370,20 @@ namespace zlscript
 			break;
 			case ECODE_CMP_LESSANDEQUAL:
 			{
-				StackVarInfo var1 = ScriptStack_GetVar(m_varRegister);
-				StackVarInfo var2 = ScriptStack_GetVar(m_varRegister);
-				switch (var2.cType)
+				switch (m_register[R_A].cType)
 				{
 				case EScriptVal_Int:
 				{
-					__int64 nVal1 = GetInt_StackVar(&var1);
-					__int64 nVal2 = GetInt_StackVar(&var2);
-					ScriptVector_PushVar(m_varRegister, (__int64)(nVal2 <= nVal1 ? 1 : 0));
+					__int64 nVal1 = GetInt_StackVar(&m_register[R_A]);
+					__int64 nVal2 = GetInt_StackVar(&m_register[R_B]);
+					m_register[R_A] = (__int64)(nVal2 <= nVal1 ? 1 : 0);
 				}
 				break;
 				case EScriptVal_Double:
 				{
-					double dVal1 = GetFloat_StackVar(&var1);
-					double dVal2 = GetFloat_StackVar(&var2);
-					ScriptVector_PushVar(m_varRegister, (__int64)(dVal2 <= dVal1 ? 1 : 0));
+					double dVal1 = GetFloat_StackVar(&m_register[R_A]);
+					double dVal2 = GetFloat_StackVar(&m_register[R_B]);
+					m_register[R_A] = (__int64)(dVal2 <= dVal1 ? 1 : 0);
 				}
 				break;
 				}
@@ -432,15 +392,13 @@ namespace zlscript
 			break;
 			case ECODE_BIT_AND:
 			{
-				StackVarInfo var1 = ScriptStack_GetVar(m_varRegister);
-				StackVarInfo var2 = ScriptStack_GetVar(m_varRegister);
-				switch (var2.cType)
+				switch (m_register[R_A].cType)
 				{
 				case EScriptVal_Int:
 				{
-					__int64 nVal1 = GetInt_StackVar(&var1);
-					__int64 nVal2 = GetInt_StackVar(&var2);
-					ScriptVector_PushVar(m_varRegister, nVal2 & nVal1);
+					__int64 nVal1 = GetInt_StackVar(&m_register[R_A]);
+					__int64 nVal2 = GetInt_StackVar(&m_register[R_B]);
+					m_register[R_A] = nVal1 & nVal2;
 				}
 				break;
 				}
@@ -449,15 +407,13 @@ namespace zlscript
 			break;
 			case ECODE_BIT_OR:
 			{
-				StackVarInfo var1 = ScriptStack_GetVar(m_varRegister);
-				StackVarInfo var2 = ScriptStack_GetVar(m_varRegister);
-				switch (var2.cType)
+				switch (m_register[R_A].cType)
 				{
 				case EScriptVal_Int:
 				{
-					__int64 nVal1 = GetInt_StackVar(&var1);
-					__int64 nVal2 = GetInt_StackVar(&var2);
-					ScriptVector_PushVar(m_varRegister, nVal2 | nVal1);
+					__int64 nVal1 = GetInt_StackVar(&m_register[R_A]);
+					__int64 nVal2 = GetInt_StackVar(&m_register[R_B]);
+					m_register[R_A] = nVal1 | nVal2;
 				}
 				break;
 				}
@@ -466,15 +422,13 @@ namespace zlscript
 			break;
 			case ECODE_BIT_XOR:
 			{
-				StackVarInfo var1 = ScriptStack_GetVar(m_varRegister);
-				StackVarInfo var2 = ScriptStack_GetVar(m_varRegister);
-				switch (var2.cType)
+				switch (m_register[R_A].cType)
 				{
 				case EScriptVal_Int:
 				{
-					__int64 nVal1 = GetInt_StackVar(&var1);
-					__int64 nVal2 = GetInt_StackVar(&var2);
-					ScriptVector_PushVar(m_varRegister, nVal2 ^ nVal1);
+					__int64 nVal1 = GetInt_StackVar(&m_register[R_A]);
+					__int64 nVal2 = GetInt_StackVar(&m_register[R_A]);
+					m_register[R_A] = nVal1 ^ nVal2;
 				}
 				break;
 				}
@@ -486,38 +440,75 @@ namespace zlscript
 			{
 				switch (code.cSign)
 				{
-				case 0://数值常量
+				case ESIGN_VALUE_INT://数值常量
 				{
 					m_cVarType = EScriptVal_Int;
-					ScriptVector_PushVar(m_varRegister, (__int64)code.dwPos);
+					ScriptVector_PushVar(m_stackRegister, (__int64)code.dwPos);
 				}
 				break;
-				case 1://全局变量
+				case ESIGN_POS_GLOBAL_VAR://全局变量
 				{
 					StackVarInfo var = pMachine->GetGlobalVar(code.dwPos);
 	
-					ScriptVector_PushVar(m_varRegister, &var);
+					ScriptVector_PushVar(m_stackRegister, &var);
 				}
 				break;
-				case 2:
+				case ESIGN_POS_LOACL_VAR:
 				{
 					StackVarInfo& var = vNumVar[code.dwPos];
-					ScriptVector_PushVar(m_varRegister, &var);
+					ScriptVector_PushVar(m_stackRegister, &var);
 				}
 				break;
-				case 3:
+				case ESIGN_POS_CONST_STRING:
 				{
-					m_cVarType = EScriptVal_String;
-					ScriptVector_PushVar(m_varRegister, (char*)m_pCodeData->vStrConst[code.dwPos].c_str());
+					ScriptVector_PushVar(m_stackRegister, m_pCodeData->vStrConst[code.dwPos].c_str());
 				}
 				break;
-				case 4:
+				case ESIGN_POS_CONST_FLOAT:
 				{
 					//浮点常量
-					m_cVarType = EScriptVal_Double;
-					ScriptVector_PushVar(m_varRegister, m_pCodeData->vFloatConst[code.dwPos]);
+					ScriptVector_PushVar(m_stackRegister, m_pCodeData->vFloatConst[code.dwPos]);
 				}
 				break;
+				case ESIGN_POS_CONST_INT64:
+				{
+					ScriptVector_PushVar(m_stackRegister, m_pCodeData->vInt64Const[code.dwPos]);
+				}
+				break;
+				case ESIGN_REGISTER:
+				{
+					ScriptVector_PushVar(m_stackRegister, &m_register[code.dwPos]);
+				}
+				break;
+				}
+				m_nCodePoint++;
+			}
+			break;
+			case ECODE_POP:
+			{
+				switch (code.cSign)
+				{
+				case ESIGN_POS_GLOBAL_VAR://全局变量
+					{
+						StackVarInfo var = ScriptStack_GetVar(m_stackRegister);
+						pMachine->SetGlobalVar(code.dwPos, var);
+					}
+					break;
+				case ESIGN_POS_LOACL_VAR:
+					{
+						StackVarInfo& var = vNumVar[code.dwPos];
+						var = ScriptStack_GetVar(m_stackRegister);
+					}
+					break;
+				case ESIGN_REGISTER:
+					{
+						StackVarInfo& var = m_register[code.dwPos];
+						var = ScriptStack_GetVar(m_stackRegister);
+					}
+					break;
+				default:
+					//TODO 报错
+					break;
 				}
 				m_nCodePoint++;
 			}
@@ -529,31 +520,74 @@ namespace zlscript
 				m_nCodePoint++;
 			}
 			break;
-			case ECODE_EVALUATE:
+			case ECODE_LOAD:
 			{
 				switch (code.cSign)
 				{
-				case 0://全局变量
+				case ESIGN_VALUE_INT://数值常量
 				{
-					auto var = ScriptStack_GetVar(m_varRegister);
-					pMachine->SetGlobalVar(code.dwPos, var);
-
+					m_register[code.cExtend] = (__int64)code.dwPos;
 				}
 				break;
-				case 1:
+				case ESIGN_POS_GLOBAL_VAR://全局变量
 				{
-					StackVarInfo& var = vNumVar[code.dwPos];
-					var = ScriptStack_GetVar(m_varRegister);
-
+					m_register[code.cExtend] = pMachine->GetGlobalVar(code.dwPos);
+				}
+				break;
+				case ESIGN_POS_LOACL_VAR:
+				{
+					m_register[code.cExtend] = vNumVar[code.dwPos];
+				}
+				break;
+				case ESIGN_POS_CONST_STRING:
+				{
+					m_register[code.cExtend] = m_pCodeData->vStrConst[code.dwPos].c_str();
+				}
+				break;
+				case ESIGN_POS_CONST_FLOAT:
+				{
+					//浮点常量
+					m_register[code.cExtend] = m_pCodeData->vFloatConst[code.dwPos];
+				}
+				break;
+				case ESIGN_POS_CONST_INT64:
+				{
+					m_register[code.cExtend] = m_pCodeData->vInt64Const[code.dwPos];
 				}
 				break;
 				}
 				m_nCodePoint++;
 			}
 			break;
+			case ECODE_MOVE:
+			{
+				switch (code.cSign)
+				{
+				case ESIGN_POS_GLOBAL_VAR://全局变量
+					{
+						pMachine->SetGlobalVar(code.dwPos, m_register[code.cExtend]);
+					}
+					break;
+				case ESIGN_POS_LOACL_VAR:
+					{
+						vNumVar[code.dwPos] = m_register[code.cExtend];
+					}
+					break;
+				case ESIGN_REGISTER:
+					{
+						m_register[code.dwPos] = m_register[code.cExtend];
+					}
+					break;
+				default:
+					//TODO 报错
+					break;
+				}
+				m_nCodePoint++;
+			}
+			break;
 			case ECODE_BEGIN_CALL:
 			{
-				m_sCurStackSizeWithoutFunParam.push(m_varRegister.size());
+				m_sCurStackSizeWithoutFunParam.push(m_stackRegister.size());
 				m_nCodePoint++;
 			}
 			break;
@@ -562,7 +596,7 @@ namespace zlscript
 				int nParmNum = code.cExtend;
 				if (m_sCurStackSizeWithoutFunParam.size() > 0)
 				{
-					nParmNum = m_varRegister.size() - m_sCurStackSizeWithoutFunParam.top();
+					nParmNum = m_stackRegister.size() - m_sCurStackSizeWithoutFunParam.top();
 					m_sCurStackSizeWithoutFunParam.pop();
 				}
 				unsigned int nCodeIndex = code.dwPos;
@@ -609,7 +643,7 @@ namespace zlscript
 			break;
 			case ECODE_BRANCH_IF:	// if分支,从堆栈中取一个值，如果非0则执行接下来的块
 			{
-				__int64 nVal = ScriptStack_GetInt(m_varRegister);
+				__int64 nVal = ScriptStack_GetInt(m_stackRegister);
 				if (nVal == 0)
 				{
 					m_vbIfSign[code.cSign] = false;
@@ -636,7 +670,7 @@ namespace zlscript
 			break;
 			case ECODE_CYC_IF:
 			{
-				__int64 nVal = ScriptStack_GetInt(m_varRegister);
+				__int64 nVal = ScriptStack_GetInt(m_stackRegister);
 				if (nVal == 0)
 				{
 					m_nCodePoint = m_nCodePoint + code.dwPos;
@@ -685,19 +719,19 @@ namespace zlscript
 				if (m_pCodeData->nDefaultReturnType != EScriptVal_None)
 				{
 					//当此函数需要返回值，但是没有的时候
-					if (CurStackSizeWithoutFunParam == m_varRegister.size())
+					if (CurStackSizeWithoutFunParam == m_stackRegister.size())
 					{
 						//压入一个空值
-						ScriptVector_PushEmptyVar(m_varRegister);
+						ScriptVector_PushEmptyVar(m_stackRegister);
 					}
 				}
 			}
 			break;
 			case ECODE_CLEAR_PARAM:
 			{
-				while (m_varRegister.size() > 0)
+				while (m_stackRegister.size() > 0)
 				{
-					m_varRegister.pop();
+					m_stackRegister.pop();
 				}
 				CurStackSizeWithoutFunParam = 0;
 				CurCallFunParamNum = 0;
@@ -706,11 +740,11 @@ namespace zlscript
 			break;
 			case ECODE_CALL_CLASS_FUN:
 			{
-				PointVarInfo pointVal = ScriptStack_GetClassPoint(m_varRegister);
+				PointVarInfo pointVal = ScriptStack_GetClassPoint(m_stackRegister);
 				int nParmNum = code.cExtend;
 				if (m_sCurStackSizeWithoutFunParam.size() > 0)
 				{
-					nParmNum = m_varRegister.size() - m_sCurStackSizeWithoutFunParam.top();
+					nParmNum = m_stackRegister.size() - m_sCurStackSizeWithoutFunParam.top();
 					m_sCurStackSizeWithoutFunParam.pop();
 				}
 				CScriptBasePointer* pPoint = pointVal.pPoint;
@@ -749,18 +783,18 @@ namespace zlscript
 				if (pMgr)
 				{
 					auto pNewPoint = pMgr->New(SCRIPT_NO_USED_AUTO_RELEASE);
-					ScriptVector_PushVar(m_varRegister, pNewPoint);
+					ScriptVector_PushVar(m_stackRegister, pNewPoint);
 				}
 				else
 				{
-					ScriptVector_PushVar(m_varRegister, (CScriptPointInterface*)nullptr);
+					ScriptVector_PushVar(m_stackRegister, (CScriptPointInterface*)nullptr);
 				}
 				m_nCodePoint++;
 			}
 			break;
 			case ECODE_RELEASE_CLASS://释放一个类实例
 			{
-				PointVarInfo pointVal = ScriptStack_GetClassPoint(m_varRegister);
+				PointVarInfo pointVal = ScriptStack_GetClassPoint(m_stackRegister);
 				CScriptBasePointer* pPoint = pointVal.pPoint;
 				if (pPoint)
 				{
@@ -823,47 +857,47 @@ namespace zlscript
 
 	void CScriptExecBlock::PushVar(StackVarInfo& var)
 	{
-		m_varRegister.push(var);
+		m_stackRegister.push(var);
 	}
 
 	StackVarInfo CScriptExecBlock::PopVar()
 	{
 		StackVarInfo var;
-		if (!m_varRegister.empty())
+		if (!m_stackRegister.empty())
 		{
-			var = m_varRegister.top();
-			m_varRegister.pop();
+			var = m_stackRegister.top();
+			m_stackRegister.pop();
 		}
 		return var;
 	}
 
 	StackVarInfo* CScriptExecBlock::GetVar(unsigned int index)
 	{
-		if (m_varRegister.size() > index)
+		if (m_stackRegister.size() > index)
 		{
-			return m_varRegister.GetVal(index);
+			return m_stackRegister.GetVal(index);
 		}
 		return nullptr;
 	}
 
 	unsigned int CScriptExecBlock::GetVarSize()
 	{
-		return m_varRegister.size();
+		return m_stackRegister.size();
 	}
 
 	void CScriptExecBlock::ClearFunParam()
 	{
-		while (m_varRegister.size() > 0 && (int)m_varRegister.size() > CurStackSizeWithoutFunParam)
+		while (m_stackRegister.size() > 0 && (int)m_stackRegister.size() > CurStackSizeWithoutFunParam)
 		{
-			m_varRegister.pop();
+			m_stackRegister.pop();
 		}
 	}
 
 	void CScriptExecBlock::ClearStack()
 	{
-		while (!m_varRegister.empty())
+		while (!m_stackRegister.empty())
 		{
-			m_varRegister.pop();
+			m_stackRegister.pop();
 		}
 	}
 
