@@ -88,14 +88,14 @@ namespace zlscript
 				{
 					__int64 nVal1 = GetInt_StackVar(&m_register[R_A]);
 					__int64 nVal2 = GetInt_StackVar(&m_register[R_B]);
-					m_register[R_A] = nVal2 + nVal1;
+					m_register[code.cExtend] = nVal2 + nVal1;
 				}
 				break;
 				case EScriptVal_Double:
 				{
 					double dVal1 = GetFloat_StackVar(&m_register[R_A]);
 					double dVal2 = GetFloat_StackVar(&m_register[R_B]);
-					m_register[R_A] = dVal2 + dVal1;
+					m_register[code.cExtend] = dVal2 + dVal1;
 				}
 				break;
 				case EScriptVal_String:
@@ -103,7 +103,7 @@ namespace zlscript
 					std::string strVal1 = GetString_StackVar(&m_register[R_A]);
 					std::string strVal2 = GetString_StackVar(&m_register[R_B]);
 					strVal1 = strVal1 + strVal2;
-					m_register[R_A] = strVal1.c_str();
+					m_register[code.cExtend] = strVal1.c_str();
 				}
 				break;
 				}
@@ -118,14 +118,14 @@ namespace zlscript
 				{
 					__int64 nVal1 = GetInt_StackVar(&m_register[R_A]);
 					__int64 nVal2 = GetInt_StackVar(&m_register[R_B]);
-					m_register[R_A] = nVal2 - nVal1;;
+					m_register[code.cExtend] = nVal2 - nVal1;;
 				}
 				break;
 				case EScriptVal_Double:
 				{
 					double dVal1 = GetFloat_StackVar(&m_register[R_A]);
 					double dVal2 = GetFloat_StackVar(&m_register[R_B]);
-					m_register[R_A] = dVal1 - dVal2;
+					m_register[code.cExtend] = dVal1 - dVal2;
 				}
 				break;
 				}
@@ -140,14 +140,14 @@ namespace zlscript
 				{
 					__int64 nVal1 = GetInt_StackVar(&m_register[R_A]);
 					__int64 nVal2 = GetInt_StackVar(&m_register[R_B]);
-					m_register[R_A] = nVal2 * nVal1;
+					m_register[code.cExtend] = nVal2 * nVal1;
 				}
 				break;
 				case EScriptVal_Double:
 				{
 					double dVal1 = GetFloat_StackVar(&m_register[R_A]);
 					double dVal2 = GetFloat_StackVar(&m_register[R_B]);
-					m_register[R_A] = dVal2 * dVal1;
+					m_register[code.cExtend] = dVal2 * dVal1;
 				}
 				break;
 				}
@@ -164,11 +164,11 @@ namespace zlscript
 					__int64 nVal2 = GetInt_StackVar(&m_register[R_B]);
 					if (nVal2 == 0)
 					{
-						m_register[R_A] = (__int64)0xffffffff;
+						m_register[code.cExtend] = (__int64)0xffffffff;
 					}
 					else
 					{
-						m_register[R_A] = nVal1 / nVal2;
+						m_register[code.cExtend] = nVal1 / nVal2;
 					}
 				}
 				break;
@@ -178,11 +178,11 @@ namespace zlscript
 					double dVal2 = GetFloat_StackVar(&m_register[R_B]);
 					if (dVal1 <= 0.00000001f && dVal1 >= -0.00000001f)
 					{
-						m_register[R_A] = (double)1.7976931348623158e+308;
+						m_register[code.cExtend] = (double)1.7976931348623158e+308;
 					}
 					else
 					{
-						m_register[R_A] = dVal1 / dVal2;
+						m_register[code.cExtend] = dVal1 / dVal2;
 					}
 				}
 				break;
@@ -200,11 +200,11 @@ namespace zlscript
 				__int64 nVal2 = GetInt_StackVar(&m_register[R_B]);
 				if (nVal2 == 0)
 				{
-					m_register[R_A] = (__int64)0;
+					m_register[code.cExtend] = (__int64)0;
 				}
 				else
 				{
-					m_register[R_A] = nVal1 % nVal2;
+					m_register[code.cExtend] = nVal1 % nVal2;
 				}
 				//	}
 				//	break;
@@ -214,16 +214,16 @@ namespace zlscript
 			break;
 			case ECODE_MINUS:
 			{
-				switch (m_register[R_A].cType)
+				switch (m_register[code.cExtend].cType)
 				{
 				case EScriptVal_Int:
 				{
-					m_register[R_A].Int64 = -m_register[R_A].Int64;
+					m_register[code.cExtend].Int64 = -m_register[code.cExtend].Int64;
 				}
 				break;
 				case EScriptVal_Double:
 				{
-					m_register[R_A].Double = -m_register[R_A].Double;
+					m_register[code.cExtend].Double = -m_register[code.cExtend].Double;
 				}
 				break;
 				}
@@ -238,28 +238,28 @@ namespace zlscript
 				{
 					__int64 nVal1 = GetInt_StackVar(&m_register[R_A]);
 					__int64 nVal2 = GetInt_StackVar(&m_register[R_B]);
-					m_register[R_A] = (__int64)(nVal2 == nVal1 ? 1 : 0);
+					m_register[code.cExtend] = (__int64)(nVal2 == nVal1 ? 1 : 0);
 				}
 				break;
 				case EScriptVal_Double:
 				{
 					double dVal1 = GetFloat_StackVar(&m_register[R_A]);
 					double dVal2 = GetFloat_StackVar(&m_register[R_B]);
-					m_register[R_A] =(__int64)(dVal2 == dVal1 ? 1 : 0);
+					m_register[code.cExtend] =(__int64)(dVal2 == dVal1 ? 1 : 0);
 				}
 				break;
 				case EScriptVal_String:
 				{
 					std::string strVal1 = GetString_StackVar(&m_register[R_A]);
 					std::string strVal2 = GetString_StackVar(&m_register[R_B]);
-					m_register[R_A] = (__int64)(strVal2 == strVal1 ? 1 : 0);
+					m_register[code.cExtend] = (__int64)(strVal2 == strVal1 ? 1 : 0);
 				}
 				break;
 				case EScriptVal_ClassPoint:
 				{
 					__int64 nVal1 = GetPointIndex_StackVar(&m_register[R_A]);
 					__int64 nVal2 = GetPointIndex_StackVar(&m_register[R_B]);
-					m_register[R_A] = (__int64)(nVal1 == nVal2 ? 1 : 0);
+					m_register[code.cExtend] = (__int64)(nVal1 == nVal2 ? 1 : 0);
 				}
 				break;
 				}
@@ -274,28 +274,28 @@ namespace zlscript
 				{
 					__int64 nVal1 = GetInt_StackVar(&m_register[R_A]);
 					__int64 nVal2 = GetInt_StackVar(&m_register[R_B]);
-					m_register[R_A] =(__int64)(nVal2 != nVal1 ? 1 : 0);
+					m_register[code.cExtend] =(__int64)(nVal2 != nVal1 ? 1 : 0);
 				}
 				break;
 				case EScriptVal_Double:
 				{
 					double dVal1 = GetFloat_StackVar(&m_register[R_A]);
 					double dVal2 = GetFloat_StackVar(&m_register[R_B]);
-					m_register[R_A] = (__int64)(dVal2 != dVal1 ? 1 : 0);
+					m_register[code.cExtend] = (__int64)(dVal2 != dVal1 ? 1 : 0);
 				}
 				break;
 				case EScriptVal_String:
 				{
 					std::string strVal1 = GetString_StackVar(&m_register[R_A]);
 					std::string strVal2 = GetString_StackVar(&m_register[R_B]);
-					m_register[R_A] = (__int64)(strVal2 != strVal1 ? 1 : 0);
+					m_register[code.cExtend] = (__int64)(strVal2 != strVal1 ? 1 : 0);
 				}
 				break;
 				case EScriptVal_ClassPoint:
 				{
 					__int64 nVal1 = GetPointIndex_StackVar(&m_register[R_A]);
 					__int64 nVal2 = GetPointIndex_StackVar(&m_register[R_B]);
-					m_register[R_A] =(__int64)(nVal1 != nVal2 ? 1 : 0);
+					m_register[code.cExtend] =(__int64)(nVal1 != nVal2 ? 1 : 0);
 				}
 				break;
 				}
@@ -310,14 +310,14 @@ namespace zlscript
 				{
 					__int64 nVal1 = GetInt_StackVar(&m_register[R_A]);
 					__int64 nVal2 = GetInt_StackVar(&m_register[R_B]);
-					m_register[R_A] = (__int64)(nVal2 > nVal1 ? 1 : 0);
+					m_register[code.cExtend] = (__int64)(nVal2 > nVal1 ? 1 : 0);
 				}
 				break;
 				case EScriptVal_Double:
 				{
 					double dVal1 = GetFloat_StackVar(&m_register[R_A]);
 					double dVal2 = GetFloat_StackVar(&m_register[R_B]);
-					m_register[R_A] = (__int64)(dVal2 > dVal1 ? 1 : 0);
+					m_register[code.cExtend] = (__int64)(dVal2 > dVal1 ? 1 : 0);
 				}
 				break;
 				}
@@ -332,14 +332,14 @@ namespace zlscript
 				{
 					__int64 nVal1 = GetInt_StackVar(&m_register[R_A]);
 					__int64 nVal2 = GetInt_StackVar(&m_register[R_B]);
-					m_register[R_A] =(__int64)(nVal2 >= nVal1 ? 1 : 0);
+					m_register[code.cExtend] =(__int64)(nVal2 >= nVal1 ? 1 : 0);
 				}
 				break;
 				case EScriptVal_Double:
 				{
 					double dVal1 = GetFloat_StackVar(&m_register[R_A]);
 					double dVal2 = GetFloat_StackVar(&m_register[R_B]);
-					m_register[R_A] = (__int64)(dVal2 >= dVal1 ? 1 : 0);
+					m_register[code.cExtend] = (__int64)(dVal2 >= dVal1 ? 1 : 0);
 				}
 				break;
 				}
@@ -354,14 +354,14 @@ namespace zlscript
 				{
 					__int64 nVal1 = GetInt_StackVar(&m_register[R_A]);
 					__int64 nVal2 = GetInt_StackVar(&m_register[R_B]);
-					m_register[R_A] = (__int64)(nVal2 < nVal1 ? 1 : 0);
+					m_register[code.cExtend] = (__int64)(nVal2 < nVal1 ? 1 : 0);
 				}
 				break;
 				case EScriptVal_Double:
 				{
 					double dVal1 = GetFloat_StackVar(&m_register[R_A]);
 					double dVal2 = GetFloat_StackVar(&m_register[R_B]);
-					m_register[R_A] = (__int64)(dVal2 < dVal1 ? 1 : 0);
+					m_register[code.cExtend] = (__int64)(dVal2 < dVal1 ? 1 : 0);
 				}
 				break;
 				}
@@ -376,14 +376,14 @@ namespace zlscript
 				{
 					__int64 nVal1 = GetInt_StackVar(&m_register[R_A]);
 					__int64 nVal2 = GetInt_StackVar(&m_register[R_B]);
-					m_register[R_A] = (__int64)(nVal2 <= nVal1 ? 1 : 0);
+					m_register[code.cExtend] = (__int64)(nVal2 <= nVal1 ? 1 : 0);
 				}
 				break;
 				case EScriptVal_Double:
 				{
 					double dVal1 = GetFloat_StackVar(&m_register[R_A]);
 					double dVal2 = GetFloat_StackVar(&m_register[R_B]);
-					m_register[R_A] = (__int64)(dVal2 <= dVal1 ? 1 : 0);
+					m_register[code.cExtend] = (__int64)(dVal2 <= dVal1 ? 1 : 0);
 				}
 				break;
 				}
@@ -398,7 +398,7 @@ namespace zlscript
 				{
 					__int64 nVal1 = GetInt_StackVar(&m_register[R_A]);
 					__int64 nVal2 = GetInt_StackVar(&m_register[R_B]);
-					m_register[R_A] = nVal1 & nVal2;
+					m_register[code.cExtend] = nVal1 & nVal2;
 				}
 				break;
 				}
@@ -413,7 +413,7 @@ namespace zlscript
 				{
 					__int64 nVal1 = GetInt_StackVar(&m_register[R_A]);
 					__int64 nVal2 = GetInt_StackVar(&m_register[R_B]);
-					m_register[R_A] = nVal1 | nVal2;
+					m_register[code.cExtend] = nVal1 | nVal2;
 				}
 				break;
 				}
@@ -428,7 +428,7 @@ namespace zlscript
 				{
 					__int64 nVal1 = GetInt_StackVar(&m_register[R_A]);
 					__int64 nVal2 = GetInt_StackVar(&m_register[R_A]);
-					m_register[R_A] = nVal1 ^ nVal2;
+					m_register[code.cExtend] = nVal1 ^ nVal2;
 				}
 				break;
 				}

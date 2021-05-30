@@ -151,6 +151,7 @@ namespace zlscript
 
 		CBlockICode* pBodyCode;
 	};
+
 	class CBlockICode : public CBaseICode
 	{
 	public:
@@ -171,6 +172,55 @@ namespace zlscript
 		std::vector< CBaseICode*> m_vICode;
 	};
 
+	class CLoadVarICode : public CBaseICode
+	{
+	public:
+		CLoadVarICode()
+		{
+			nSource = 0;
+			nPos = 0;
+			cRegisterIndex = 0;
+		}
+
+		virtual void MakeExeCode(std::vector<CodeStyle>& vOut);
+
+		int nSource;//ESignType
+		int nPos;
+
+		char cRegisterIndex;
+	};
+	class CSaveVarICode : public CBaseICode
+	{
+	public:
+		CSaveVarICode()
+		{
+			cDestination = 0;
+			nPos = 0;
+			cRegisterIndex = 0;
+		}
+
+		virtual void MakeExeCode(std::vector<CodeStyle>& vOut);
+
+		char cRegisterIndex;
+		char cDestination;//ESignType
+		int nPos;
+	};
+	class COperatorICode : public CBaseICode
+	{
+	public:
+		COperatorICode()
+		{
+			nOperatorCode = 0;
+			cRegisterIndex = 0;
+		}
+
+		virtual void MakeExeCode(std::vector<CodeStyle>& vOut);
+
+		int nOperatorCode;
+		char cRegisterIndex;
+		std::vector<CBaseICode*> m_vICode;
+	};
+
 	class CSentenceICode : public CBaseICode
 	{
 	public:
@@ -187,7 +237,7 @@ namespace zlscript
 		}
 	protected:
 		bool bClearParm;
-		std::vector<CodeStyle> vData;
+		std::vector<CBaseICode*> vData;
 	};
 	class CIfICode : public CBaseICode
 	{

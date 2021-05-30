@@ -201,6 +201,41 @@ namespace zlscript
 		CBaseICode::AddICode(nType, pCode);
 	}
 
+	void CLoadVarICode::MakeExeCode(std::vector<CodeStyle>& vOut)
+	{
+		CodeStyle code(m_unBeginSoureIndex);
+		code.qwCode = 0;
+		code.wInstruct = ECODE_LOAD;
+		code.cExtend = cRegisterIndex;
+		vOut.push_back(code);
+	}
+	void CSaveVarICode::MakeExeCode(std::vector<CodeStyle>& vOut)
+	{
+		CodeStyle code(m_unBeginSoureIndex);
+		code.qwCode = 0;
+		code.wInstruct = ECODE_MOVE;
+		code.cSign = cDestination;
+		code.cExtend = cRegisterIndex;
+		code.dwPos = nPos;
+		vOut.push_back(code);
+	}
+	void COperatorICode::MakeExeCode(std::vector<CodeStyle>& vOut)
+	{
+		for (auto it = m_vICode.begin(); it != m_vICode.end(); it++)
+		{
+			auto pCode = *it;
+			if (pCode)
+			{
+				pCode->MakeExeCode(vOut);
+			}
+		}
+		CodeStyle code(m_unBeginSoureIndex);
+		code.qwCode = 0;
+		code.wInstruct = nOperatorCode;
+		code.cExtend = cRegisterIndex;
+		vOut.push_back(code);
+	}
+
 	void CSentenceICode::MakeExeCode(std::vector<CodeStyle>& vOut)
 	{
 		for (auto it = vData.begin(); it != vData.end(); it++)
