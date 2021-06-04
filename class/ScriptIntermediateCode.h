@@ -145,6 +145,8 @@ namespace zlscript
 		virtual void MakeExeCode(std::vector<CodeStyle>& vOut);
 
 		virtual void AddICode(int nType, CBaseICode* pCode);
+	public:
+		//char cReturnRegisterIndex;
 	protected:
 		std::map<std::string, VarInfo> m_mapTempVarIndex;
 		std::vector<std::string> m_vecTempVarOrder;
@@ -177,14 +179,14 @@ namespace zlscript
 	public:
 		CLoadVarICode()
 		{
-			nSource = 0;
+			cSource = 0;
 			nPos = 0;
 			cRegisterIndex = 0;
 		}
 
 		virtual void MakeExeCode(std::vector<CodeStyle>& vOut);
 
-		int nSource;//ESignType
+		char cSource;//ESignType
 		int nPos;
 
 		char cRegisterIndex;
@@ -205,6 +207,58 @@ namespace zlscript
 		char cDestination;//ESignType
 		int nPos;
 	};
+	class CPush2StackICode : public CBaseICode
+	{
+	public:
+		CPush2StackICode()
+		{
+			cSource = 0;
+			nPos = 0;
+		}
+		virtual void MakeExeCode(std::vector<CodeStyle>& vOut);
+		char cSource;//ESignType
+		int nPos;
+	};
+	class CPop4StackICode : public CBaseICode
+	{
+	public:
+		CPop4StackICode()
+		{
+			cRegisterIndex = 0;
+		}
+		virtual void MakeExeCode(std::vector<CodeStyle>& vOut);
+		char cRegisterIndex;
+		char cDestination;//ESignType
+		int nPos;
+	};
+	class CGetClassParamICode : public CBaseICode
+	{
+	public:
+		CGetClassParamICode()
+		{
+			cDestRIndex = 0;
+			cClassRIndex = 0;
+			nParamPos = 0;
+		}
+		virtual void MakeExeCode(std::vector<CodeStyle>& vOut);
+		char cDestRIndex;//存放结果的寄存器索引
+		char cClassRIndex;//类对象所在寄存器
+		int nParamPos;//类成员参数编号
+	};
+	class CSetClassParamICode : public CBaseICode
+	{
+	public:
+		CSetClassParamICode()
+		{
+			cVarRIndex = 0;
+			cClassRIndex = 0;
+			nParamPos = 0;
+		}
+		virtual void MakeExeCode(std::vector<CodeStyle>& vOut);
+		char cVarRIndex;//存放值的寄存器索引
+		char cClassRIndex;//类对象所在寄存器
+		int nParamPos;//类成员参数编号
+	};
 	class COperatorICode : public CBaseICode
 	{
 	public:
@@ -213,12 +267,75 @@ namespace zlscript
 			nOperatorCode = 0;
 			cRegisterIndex = 0;
 		}
-
+		enum
+		{
+			E_CODE,
+		};
 		virtual void MakeExeCode(std::vector<CodeStyle>& vOut);
+		virtual void AddICode(int nType, CBaseICode* pCode);
 
-		int nOperatorCode;
+		int nOperatorCode;//操作符，暂时用EMicroCodeType里的ECODE_ADD到ECODE_BIT_XOR
 		char cRegisterIndex;
 		std::vector<CBaseICode*> m_vICode;
+	};
+	class CCallBackFunICode : public CBaseICode
+	{
+	public:
+		CCallBackFunICode()
+		{
+			nFunIndex = 0;
+			cRegisterIndex = 0;
+		}
+		enum
+		{
+			E_PARAM,
+		};
+		virtual void MakeExeCode(std::vector<CodeStyle>& vOut);
+		virtual void AddICode(int nType, CBaseICode* pCode);
+	public:
+		int nFunIndex;
+		char cRegisterIndex;//结果存放的寄存器
+		std::vector<CBaseICode*> vParams;//参数
+	};
+	class CCallScriptFunICode : public CBaseICode
+	{
+	public:
+		CCallScriptFunICode()
+		{
+			nFunIndex = 0;
+			cRegisterIndex = 0;//结果存放的寄存器
+		}
+		enum
+		{
+			E_PARAM,
+		};
+		virtual void MakeExeCode(std::vector<CodeStyle>& vOut);
+		virtual void AddICode(int nType, CBaseICode* pCode);
+	public:
+		int nFunIndex;
+		char cRegisterIndex;//结果存放的寄存器
+		std::vector<CBaseICode*> vParams;//参数
+	};
+	class CCallClassFunICode : public CBaseICode
+	{
+	public:
+		CCallClassFunICode()
+		{
+			nFunIndex = 0;
+			cRegisterIndex = 0;//结果存放的寄存器
+		}
+		enum
+		{
+			E_POINT,
+			E_PARAM,
+		};
+		virtual void MakeExeCode(std::vector<CodeStyle>& vOut);
+		virtual void AddICode(int nType, CBaseICode* pCode);
+	public:
+		int nFunIndex;
+		char cRegisterIndex;//结果存放的寄存器
+		CBaseICode* m_pClassPointCode;
+		std::vector<CBaseICode*> vParams;//参数
 	};
 
 	class CSentenceICode : public CBaseICode
@@ -229,7 +346,7 @@ namespace zlscript
 			bClearParm = true;
 		}
 		virtual void MakeExeCode(std::vector<CodeStyle>& vOut);
-		void AddExeCode(CodeStyle code);
+		void AddExeCode(CBaseICode* code);
 
 		void SetClear(bool val)
 		{
@@ -250,6 +367,13 @@ namespace zlscript
 			pFalseCode = nullptr;
 		}
 		unsigned int m_unElseSoureIndex;
+
+		enum
+		{
+			E_COND,
+			E_TRUE,
+			E_FALSE,
+		};
 	public:
 		virtual void MakeExeCode(std::vector<CodeStyle>& vOut);
 		virtual void AddICode(int nType, CBaseICode* pCode);
@@ -268,6 +392,11 @@ namespace zlscript
 			pCondCode = nullptr;
 			pBodyCode = nullptr;
 		}
+		enum
+		{
+			E_COND,
+			E_BLOCK,
+		};
 	public:
 		virtual void MakeExeCode(std::vector<CodeStyle>& vOut);
 		virtual void AddICode(int nType, CBaseICode* pCode);
@@ -275,6 +404,25 @@ namespace zlscript
 		CSentenceICode* pCondCode;
 		CBlockICode* pBodyCode;
 	};
+	class CContinueICode : public CBaseICode
+	{
+	public:
+		CContinueICode()
+		{
+
+		}
+		virtual void MakeExeCode(std::vector<CodeStyle>& vOut);
+	};
+	class CBreakICode : public CBaseICode
+	{
+	public:
+		CBreakICode()
+		{
+
+		}
+		virtual void MakeExeCode(std::vector<CodeStyle>& vOut);
+	};
+
 	class CForICode : public CBaseICode
 	{
 
@@ -283,11 +431,19 @@ namespace zlscript
 	class CReturnICode : public CBaseICode
 	{
 	public:
+		CReturnICode()
+		{
+			pBodyCode = nullptr;
+			nVarType = 0;
+			cRegisterIndex = 0;
+		}
 		virtual void MakeExeCode(std::vector<CodeStyle>& vOut);
 		virtual void AddICode(int nType, CBaseICode* pCode);
 
 	protected:
-		CSentenceICode* pBodyCode;
+		CBaseICode* pBodyCode;
+		int nVarType;//返回值类型
+		char cRegisterIndex;//结果存放的寄存器
 	};
 
 

@@ -43,6 +43,7 @@ namespace zlscript
 		std::string strClassName;
 		std::atomic_int64_t nDB_Id_Count;
 	};
+	class CScriptCallState;
 	class CScriptBasePointer
 	{
 	public:
@@ -61,7 +62,9 @@ namespace zlscript
 		void SetAutoReleaseMode(int val);
 		int GetAutoReleaseMode();
 
-		virtual int RunFun(unsigned int nIndex, CScriptRunState*) = 0;
+		virtual CBaseScriptClassAttribute* GetAttribute(unsigned int index) = 0;
+
+		virtual int RunFun(unsigned int nIndex, CScriptCallState*) = 0;
 		virtual int GetFunIndex(std::string name) = 0;
 
 		virtual CScriptPointInterface* GetPoint()
@@ -100,8 +103,8 @@ namespace zlscript
 			//m_nCount = 0;
 			//m_nUseCount = 0;
 		}
-
-		int RunFun(unsigned int nIndex, CScriptRunState*);
+		CBaseScriptClassAttribute* GetAttribute(unsigned int index);
+		int RunFun(unsigned int nIndex, CScriptCallState*);
 		int GetFunIndex(std::string name);
 
 		virtual void Lock();
@@ -126,7 +129,17 @@ namespace zlscript
 	}
 
 	template<class T>
-	inline int CScriptSuperPointer<T>::RunFun(unsigned int nIndex, CScriptRunState* pState)
+	inline CBaseScriptClassAttribute* CScriptSuperPointer<T>::GetAttribute(unsigned int index)
+	{
+		if (m_pPointer)
+		{
+			return m_pPointer->GetAttribute(index);
+		}
+		return nullptr;
+	}
+
+	template<class T>
+	inline int CScriptSuperPointer<T>::RunFun(unsigned int nIndex, CScriptCallState* pState)
 	{
 		Lock();
 		int nResult = 0;
@@ -351,7 +364,7 @@ namespace zlscript
 
 #define AddClassObject(id,point) CScriptSuperPointerMgr::GetInstance()->SetClassPoint(id,point,0);
 #define RemoveClassObject(id) CScriptSuperPointerMgr::GetInstance()->RemoveClassPoint(id);
-	typedef std::function<int(CScriptRunState*)> Script_ClassFun;
+	typedef std::function<int(CScriptCallState*)> Script_ClassFun;
 
 
 #define RegisterClassFun1(name,T) \
@@ -370,8 +383,8 @@ namespace zlscript
 	{ \
 		struct CScript_##name##_ClassFunInfo :public CScriptBaseClassFunInfo \
 		{ \
-			std::function< int (CScriptRunState *)> m_fun; \
-			int RunFun(CScriptRunState *pState) \
+			std::function< int (CScriptCallState *)> m_fun; \
+			int RunFun(CScriptCallState *pState) \
 			{ \
 				return m_fun(pState); \
 			} \

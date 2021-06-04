@@ -24,6 +24,7 @@
 #include <string>
 #include <vector>
 #include <set>
+#include <unordered_map>
 #include "ScriptClassAttributes.h"
 
 namespace zlscript
@@ -68,8 +69,8 @@ namespace zlscript
 		ut._addr = addr;
 		func = ut._func;
 	}
-	class CScriptRunState;
-	typedef int (*ScriptClassFunHandler)(CScriptRunState*);
+	class CScriptCallState;
+	typedef int (*ScriptClassFunHandler)(CScriptCallState*);
 	struct CScriptBaseClassFunInfo
 	{
 		struct tagParameterInfo
@@ -79,7 +80,7 @@ namespace zlscript
 		};
 		//virtual void init() = 0;
 		std::vector<tagParameterInfo> vParmeterInfo;
-		virtual int RunFun(CScriptRunState* pState) = 0;
+		virtual int RunFun(CScriptCallState* pState) = 0;
 		virtual CScriptBaseClassFunInfo* Copy() = 0;
 		virtual const char* GetFunName() = 0;
 	};
@@ -136,8 +137,9 @@ namespace zlscript
 			return m_pClassInfo;
 		}
 
+		CBaseScriptClassAttribute* GetAttribute(unsigned int index);
 		void SetFun(int id, CScriptBaseClassFunInfo* pInfo);
-		virtual int RunFun(int id, CScriptRunState* pState);
+		virtual int RunFun(int id, CScriptCallState* pState);
 		//virtual int CallFun(const char*pFunName, CScriptStack &parms);
 
 		CScriptPointInterface(const CScriptPointInterface& val);
@@ -164,6 +166,8 @@ namespace zlscript
 
 
 		std::map<std::string, CBaseScriptClassAttribute*> m_mapDBAttributes;
+
+		std::unordered_map<unsigned int, CBaseScriptClassAttribute*> m_mapAllAttributes;
 
 		std::vector<CScriptBaseClassFunInfo*> m_vecScriptClassFun;
 

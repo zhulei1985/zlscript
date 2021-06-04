@@ -57,6 +57,8 @@ namespace zlscript
 		//堆栈
 		CScriptStack m_stackRegister;
 
+		char m_cReturnRegisterIndex;//返回值放入的寄存器索引
+		StackVarInfo m_varReturnVar;//返回值
 	public:
 		enum ERESULT_TYPE
 		{
@@ -70,6 +72,8 @@ namespace zlscript
 		};
 		CodeStyle GetCurCode();
 		unsigned int ExecBlock(CScriptVirtualMachine* pMachine);
+
+		inline bool CheckRegisterTrue(char index);
 
 		void SetCallFunParamNum(int nVal)
 		{

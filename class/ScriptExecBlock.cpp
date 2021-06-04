@@ -15,6 +15,7 @@ namespace zlscript
 {
 	CScriptExecBlock::CScriptExecBlock(CScriptCodeLoader::tagCodeData* pData, CScriptRunState* pMaster):m_stackRegister(256)
 	{
+		m_cReturnRegisterIndex = 0;
 		CurCallFunParamNum = 0;
 		m_nCodePoint = 0;
 		m_nCycBlockEnd = 0;
@@ -585,175 +586,133 @@ namespace zlscript
 				m_nCodePoint++;
 			}
 			break;
-			case ECODE_BEGIN_CALL:
+			case ECODE_GET_CLASS_PARAM:
 			{
-				m_sCurStackSizeWithoutFunParam.push(m_stackRegister.size());
-				m_nCodePoint++;
+				if (m_register[code.cSign].cType == EScriptVal_ClassPoint)
+				{
+					PointVarInfo pointVal = GetPointIndex_StackVar(&m_register[code.cSign]);
+					CScriptBasePointer* pPoint = pointVal.pPoint;
+					if (pPoint)
+					{
+						pPoint->Lock();
+						auto pAttribute = pPoint->GetAttribute(code.dwPos);
+						if (pAttribute)
+						{
+							pAttribute->SetVal(m_register[code.cExtend]);
+						}
+						else
+						{
+							//TODO 报错
+						}
+						pPoint->Unlock();
+					}
+					m_nCodePoint++;
+				}
+				else
+				{
+					//TODO 报错
+				}
 			}
 			break;
-			case ECODE_CALL:		//调用函数
+			case ECODE_SET_CLASS_PARAM:
 			{
-				int nParmNum = code.cExtend;
-				if (m_sCurStackSizeWithoutFunParam.size() > 0)
+				if (m_register[code.cSign].cType == EScriptVal_ClassPoint)
 				{
-					nParmNum = m_stackRegister.size() - m_sCurStackSizeWithoutFunParam.top();
-					m_sCurStackSizeWithoutFunParam.pop();
-				}
-				unsigned int nCodeIndex = code.dwPos;
-				if (code.cSign == 1)
-				{
-					if (m_pCodeData->vCallFunName.size() > code.dwPos)
+					PointVarInfo pointVal = GetPointIndex_StackVar(&m_register[code.cSign]);
+					CScriptBasePointer* pPoint = pointVal.pPoint;
+					if (pPoint)
 					{
-						std::string& funname = m_pCodeData->vCallFunName[code.dwPos];
-						if (CScriptExecCodeMgr::GetInstance()->RemoteFunctionCall(funname, m_pMaster, nParmNum))
+						pPoint->Lock();
+						auto pAttribute = pPoint->GetAttribute(code.dwPos);
+						if (pAttribute)
 						{
-							m_nCodePoint++;
+							m_register[code.cExtend] = pAttribute->ToScriptVal();
+						}
+						else
+						{
+							//TODO 报错
+						}
+						pPoint->Unlock();
+					}
+					m_nCodePoint++;
+				}
+				else
+				{
+					//TODO 报错
+				}
+			}
+			break;
+			//case ECODE_BEGIN_CALL:
+			//{
+			//	m_sCurStackSizeWithoutFunParam.push(m_stackRegister.size());
+			//	m_nCodePoint++;
+			//}
+			//break;
+			case ECODE_CALL_CALLBACK:		//调用回调函数
+			{
+				if (m_stackRegister.size() <= code.cExtend)
+				{
+					CACHE_NEW(CScriptCallState, pCallState, m_pMaster);
+					if (pCallState)
+					{
+						//设置参数
+						for (unsigned int i = m_stackRegister.size() - code.cExtend; i < m_stackRegister.size(); i++)
+						{
+							auto pVar = m_stackRegister.GetVal(i);
+							if (pVar)
+								pCallState->PushVarToStack(*pVar);
+						}
+						for (unsigned char i = 0; i < code.cExtend; i++)
+						{
+							m_stackRegister.pop();
+						}
+						//运行回调函数
+						switch (m_pMaster->CallFun_CallBack(pMachine, code.dwPos, pCallState))
+						{
+						case ECALLBACK_ERROR:
+							nResult = ERESULT_ERROR;
+							break;
+						case ECALLBACK_WAITING:
 							nResult = ERESULT_WAITING;
+							break;
+						case ECALLBACK_CALLSCRIPTFUN:
+
+							nResult = ERESULT_CALLSCRIPTFUN;
+							break;
+						case ECALLBACK_NEXTCONTINUE:
+							nResult = ERESULT_NEXTCONTINUE;
 							break;
 						}
 
-						nCodeIndex = CScriptCodeLoader::GetInstance()->GetCodeIndex(funname.c_str());
+						m_nCodePoint++;
+						//执行完将结果放入寄存器
+						m_register[code.cSign] = pCallState->GetResult();
 					}
-					else
+					CACHE_DELETE(pCallState);
+				}
+				else
+				{
+					//TODO 报错
+				}
+			}
+			break;
+			case ECODE_CALL_SCRIPT:	//调用脚本函数
+			{
+				if (m_stackRegister.size() <= code.cExtend)
+				{
+					CScriptStack ParmStack;
+					for (unsigned int i = m_stackRegister.size() - code.cExtend; i < m_stackRegister.size(); i++)
 					{
-						nResult = ERESULT_ERROR;
-						break;
+						auto pVar = m_stackRegister.GetVal(i);
+						if (pVar)
+							ParmStack.push(*pVar);
 					}
-				}
-
-				switch (m_pMaster->CallFun(pMachine, this, code.cSign, nCodeIndex, nParmNum))
-				{
-				case ECALLBACK_ERROR:
-					nResult = ERESULT_ERROR;
-					break;
-				case ECALLBACK_WAITING:
-					nResult = ERESULT_WAITING;
-					break;
-				case ECALLBACK_CALLSCRIPTFUN:
-
-					nResult = ERESULT_CALLSCRIPTFUN;
-					break;
-				case ECALLBACK_NEXTCONTINUE:
-					nResult = ERESULT_NEXTCONTINUE;
-					break;
-				}
-
-				m_nCodePoint++;
-			}
-			break;
-			case ECODE_BRANCH_IF:	// if分支,从堆栈中取一个值，如果非0则执行接下来的块
-			{
-				__int64 nVal = ScriptStack_GetInt(m_stackRegister);
-				if (nVal == 0)
-				{
-					m_vbIfSign[code.cSign] = false;
-					m_nCodePoint = m_nCodePoint + code.dwPos;
-				}
-				else
-				{
-					m_vbIfSign[code.cSign] = true;
-					m_nCodePoint++;
-				}
-			}
-			break;
-			case ECODE_BRANCH_ELSE:	// else分支，如果之前的if没有执行，则执行
-			{
-				if (m_vbIfSign[code.cSign] == true)
-				{
-					m_nCodePoint = m_nCodePoint + code.dwPos;
-				}
-				else
-				{
-					m_nCodePoint++;
-				}
-			}
-			break;
-			case ECODE_CYC_IF:
-			{
-				__int64 nVal = ScriptStack_GetInt(m_stackRegister);
-				if (nVal == 0)
-				{
-					m_nCodePoint = m_nCodePoint + code.dwPos;
-				}
-				else
-				{
-					m_sCycBlockEnd.push(m_nCodePoint + code.dwPos);
-					m_nCodePoint++;
-				}
-			}
-			break;
-			case ECODE_BLOCK://块开始标志 cSign: cExtend: dwPos:表示块大小
-			{
-				m_nCodePoint++;
-			}
-			break;
-			case ECODE_BLOCK_CYC://放在块尾，执行到此返回块头
-			{
-				m_pMaster->ClearStack();
-				m_nCodePoint = m_nCodePoint - code.dwPos;
-				if (m_sCycBlockEnd.size())
-				{
-					m_sCycBlockEnd.pop();
-				}
-			}
-			break;
-			case ECODE_BREAK:
-			{
-				if (m_sCycBlockEnd.size())
-				{
-					m_nCodePoint = m_sCycBlockEnd.top();
-					m_sCycBlockEnd.pop();
-				}
-				else
-				{
-					m_nCodePoint++;
-				}
-				m_pMaster->ClearStack();
-			}
-			break;
-			case ECODE_RETURN:	//退出此块
-			{
-				m_nCodePoint = m_pCodeData->vCodeData.size();
-
-				nResult = ERESULT_END;
-				if (m_pCodeData->nDefaultReturnType != EScriptVal_None)
-				{
-					//当此函数需要返回值，但是没有的时候
-					if (CurStackSizeWithoutFunParam == m_stackRegister.size())
+					for (unsigned char i = 0; i < code.cExtend; i++)
 					{
-						//压入一个空值
-						ScriptVector_PushEmptyVar(m_stackRegister);
+						m_stackRegister.pop();
 					}
-				}
-			}
-			break;
-			case ECODE_CLEAR_PARAM:
-			{
-				while (m_stackRegister.size() > 0)
-				{
-					m_stackRegister.pop();
-				}
-				CurStackSizeWithoutFunParam = 0;
-				CurCallFunParamNum = 0;
-				m_nCodePoint++;
-			}
-			break;
-			case ECODE_CALL_CLASS_FUN:
-			{
-				PointVarInfo pointVal = ScriptStack_GetClassPoint(m_stackRegister);
-				int nParmNum = code.cExtend;
-				if (m_sCurStackSizeWithoutFunParam.size() > 0)
-				{
-					nParmNum = m_stackRegister.size() - m_sCurStackSizeWithoutFunParam.top();
-					m_sCurStackSizeWithoutFunParam.pop();
-				}
-				CScriptBasePointer* pPoint = pointVal.pPoint;
-				if (pPoint)
-				{
-					SetCallFunParamNum(nParmNum);
-					//CurCallFunParamNum = code.cExtend;
-
-					switch (pPoint->RunFun(code.dwPos, m_pMaster))
+					//运行回调函数
+					switch (m_pMaster->CallFun_Script(pMachine, code.dwPos, ParmStack))
 					{
 					case ECALLBACK_ERROR:
 						nResult = ERESULT_ERROR;
@@ -769,12 +728,139 @@ namespace zlscript
 						nResult = ERESULT_NEXTCONTINUE;
 						break;
 					}
+
+					m_nCodePoint++;
+
+				}
+				else
+				{
+					//TODO 报错
+				}
+			}
+			break;
+			case ECODE_JUMP:
+			{
+				if (code.cSign == 0)
+				{
+					m_nCodePoint = code.dwPos;
+				}
+				else
+				{
+					m_nCodePoint = m_nCodePoint + code.dwPos;
+				}
+			}
+			break;
+			case ECODE_JUMP_TRUE:
+			{
+				if (CheckRegisterTrue(code.cExtend))
+				{
+					if (code.cSign == 0)
+					{
+						m_nCodePoint = code.dwPos;
+					}
+					else
+					{
+						m_nCodePoint = m_nCodePoint + code.dwPos;
+					}
+				}
+				else
+				{
+					m_nCodePoint++;
+				}
+			}
+			break;
+			case ECODE_JUMP_FALSE:
+			{
+				if (!CheckRegisterTrue(code.cExtend))
+				{
+					if (code.cSign == 0)
+					{
+						m_nCodePoint = code.dwPos;
+					}
+					else
+					{
+						m_nCodePoint = m_nCodePoint + code.dwPos;
+					}
+				}
+				else
+				{
+					m_nCodePoint++;
+				}
+			}
+			break;
+			case ECODE_RETURN:	//退出此块
+			{
+				m_nCodePoint = m_pCodeData->vCodeData.size();
+				m_varReturnVar = m_register[code.cExtend];
+				nResult = ERESULT_END;
+			}
+			break;
+			case ECODE_CLEAR_PARAM:
+			{
+				while (m_stackRegister.size() > 0)
+				{
+					m_stackRegister.pop();
+				}
+				CurStackSizeWithoutFunParam = 0;
+				CurCallFunParamNum = 0;
+				m_nCodePoint++;
+			}
+			break;
+			case ECODE_CALL_CLASS_FUN:
+			{
+				PointVarInfo pointVal = GetPoint_StackVar(&m_register[code.cSign]);
+
+				if (m_stackRegister.size() <= code.cExtend)
+				{
+					CACHE_NEW(CScriptCallState, pCallState, m_pMaster);
+					if (pCallState)
+					{
+						//设置参数
+						for (unsigned int i = m_stackRegister.size() - code.cExtend; i < m_stackRegister.size(); i++)
+						{
+							auto pVar = m_stackRegister.GetVal(i);
+							if (pVar)
+								pCallState->PushVarToStack(*pVar);
+						}
+						for (unsigned char i = 0; i < code.cExtend; i++)
+						{
+							m_stackRegister.pop();
+						}
+
+						CScriptBasePointer* pPoint = pointVal.pPoint;
+						if (pPoint)
+						{
+							switch (pPoint->RunFun(code.dwPos, pCallState))
+							{
+							case ECALLBACK_ERROR:
+								nResult = ERESULT_ERROR;
+								break;
+							case ECALLBACK_WAITING:
+								nResult = ERESULT_WAITING;
+								break;
+							case ECALLBACK_CALLSCRIPTFUN:
+
+								nResult = ERESULT_CALLSCRIPTFUN;
+								break;
+							case ECALLBACK_NEXTCONTINUE:
+								nResult = ERESULT_NEXTCONTINUE;
+								break;
+							}
+							m_nCodePoint++;
+							//执行完将结果放入寄存器
+							m_register[code.cSign] = pCallState->GetResult();
+						}
+						else
+						{
+							nResult = ERESULT_ERROR;
+						}
+					}
+					CACHE_DELETE(pCallState);
 				}
 				else
 				{
 					nResult = ERESULT_ERROR;
 				}
-				m_nCodePoint++;
 			}
 			break;
 			case ECODE_NEW_CLASS: //新建一个类实例
@@ -783,18 +869,18 @@ namespace zlscript
 				if (pMgr)
 				{
 					auto pNewPoint = pMgr->New(SCRIPT_NO_USED_AUTO_RELEASE);
-					ScriptVector_PushVar(m_stackRegister, pNewPoint);
+					m_register[code.cSign] = pNewPoint;
 				}
 				else
 				{
-					ScriptVector_PushVar(m_stackRegister, (CScriptPointInterface*)nullptr);
+					m_register[code.cSign] = (CScriptPointInterface*)nullptr;
 				}
 				m_nCodePoint++;
 			}
 			break;
 			case ECODE_RELEASE_CLASS://释放一个类实例
 			{
-				PointVarInfo pointVal = ScriptStack_GetClassPoint(m_stackRegister);
+				PointVarInfo pointVal = GetPoint_StackVar(&m_register[code.cSign]);
 				CScriptBasePointer* pPoint = pointVal.pPoint;
 				if (pPoint)
 				{
@@ -808,30 +894,7 @@ namespace zlscript
 			}
 			break;
 			//****************标识，接下来的运算需要什么类型的变量***************************//
-			case ECODE_INT:
-			{
-				m_cVarType = EScriptVal_Int;
-				m_nCodePoint++;
-			}
-			break;
-			case ECODE_DOUDLE:
-			{
-				m_cVarType = EScriptVal_Double;
-				m_nCodePoint++;
-			}
-			break;
-			case ECODE_STRING:
-			{
-				m_cVarType = EScriptVal_String;
-				m_nCodePoint++;
-			}
-			break;
-			case ECODE_CLASSPOINT:
-			{
-				m_cVarType = EScriptVal_ClassPoint;
-				m_nCodePoint++;
-			}
-			break;
+
 			default:
 			{
 				//警告，未知代码
@@ -853,6 +916,62 @@ namespace zlscript
 			nResult = ERESULT_END;
 		}
 		return nResult;
+	}
+
+	inline bool CScriptExecBlock::CheckRegisterTrue(char index)
+	{
+		switch (m_register[index].cType)
+		{
+		case EScriptVal_None:
+			return false;
+		case EScriptVal_Int:
+			if (m_register[index].Int64 != 0)
+			{
+				return true;
+			}
+			break;
+		case EScriptVal_Double:
+			if (m_register[index].Double != 0)
+			{
+				return true;
+			}
+			break;
+		case EScriptVal_String:
+		{
+			const char* pStr = StackVarInfo::s_strPool.GetString(m_register[index].Int64);
+			if (pStr)
+			{
+				if (strlen(pStr) > 0)
+				{
+					return true;
+				}
+			}
+		}
+		break;
+		case EScriptVal_ClassPoint:
+			if (m_register[index].pPoint)
+			{
+				if (m_register[index].pPoint->GetPoint())
+				{
+					return true;
+				}
+			}
+			break;
+		case EScriptVal_Binary:
+		{
+			unsigned int nSize = 0;
+			const char* pStr = StackVarInfo::s_binPool.GetBinary(m_register[index].Int64, nSize);
+			if (pStr)
+			{
+				return true;
+			}
+		}
+		break;
+		default:
+			//TODO 报错
+			break;
+		}
+		return false;
 	}
 
 	void CScriptExecBlock::PushVar(StackVarInfo& var)

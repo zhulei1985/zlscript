@@ -51,6 +51,7 @@ namespace zlscript
 		virtual std::string ToType() = 0;
 		virtual std::string ToString() = 0;
 		virtual StackVarInfo ToScriptVal() { return StackVarInfo(); }
+		virtual bool SetVal(StackVarInfo& var) { return false; }
 		virtual bool SetVal(std::string str) =0;
 		virtual void ClearChangeFlag(){}
 		unsigned short m_flag;

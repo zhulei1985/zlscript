@@ -46,6 +46,14 @@ namespace zlscript
 #define SCRIPT_PRINT 
 #endif
 
+#ifndef CACHE_NEW
+#define CACHE_NEW(T,p,init)			auto p = new T(init);
+#endif
+
+#ifndef CACHE_DELETE
+#define CACHE_DELETE(p)			{ if(p) { delete (p); (p)=nullptr; }}
+#endif
+
 #ifndef SAFE_DELETE
 #define SAFE_DELETE(p)			{ if(p) { delete (p); (p)=nullptr; }}
 #endif

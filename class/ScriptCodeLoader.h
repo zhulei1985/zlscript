@@ -119,6 +119,7 @@ namespace zlscript
 		//代码库
 		std::vector<tagCodeData> m_vecCodeData;
 
+		std::unordered_map<std::string, int> m_mapNewString2CodeIndex;
 		std::unordered_map<std::string, int> m_mapString2CodeIndex;
 	public:
 		void GetGlobalVar(std::vector<StackVarInfo>& vOut);

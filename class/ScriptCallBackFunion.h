@@ -23,9 +23,9 @@
 namespace zlscript
 {
 
-	class CScriptRunState;
+	class CScriptCallState;
 	class CScriptVirtualMachine;
-	typedef int (*C_CallBackScriptFunion)(CScriptVirtualMachine*, CScriptRunState*);
+	typedef int (*C_CallBackScriptFunion)(CScriptVirtualMachine*, CScriptCallState*);
 
 
 	class CScriptCallBackFunion
@@ -54,34 +54,28 @@ namespace zlscript
 		std::unordered_map<std::string, int> m_mapFunIndex;
 
 	public:
-		static int SetProcessID(CScriptVirtualMachine* pMachine, CScriptRunState* pState);
-		//static int RunScript(CScriptVirtualMachine* pMachine, CScriptRunState* pState);
-		static int RunScriptToChannel(CScriptVirtualMachine* pMachine, CScriptRunState* pState);
-		//static int StopScript(CScriptVirtualMachine* pMachine, CScriptRunState* pState);
-		//static int CheckScriptRun(CScriptVirtualMachine* pMachine, CScriptRunState* pState);
+		static int SetProcessID(CScriptVirtualMachine* pMachine, CScriptCallState* pState);
+		static int RunScriptToChannel(CScriptVirtualMachine* pMachine, CScriptCallState* pState);
 
-		static int GetMsTime(CScriptVirtualMachine* pMachine, CScriptRunState* pState);
+		static int GetMsTime(CScriptVirtualMachine* pMachine, CScriptCallState* pState);
 
-		static int print(CScriptVirtualMachine* pMachine, CScriptRunState* pState);
-		static int Printf(CScriptVirtualMachine* pMachine, CScriptRunState* pState);
+		static int print(CScriptVirtualMachine* pMachine, CScriptCallState* pState);
+		static int Printf(CScriptVirtualMachine* pMachine, CScriptCallState* pState);
 
-		static int getrand(CScriptVirtualMachine* pMachine, CScriptRunState* pState);
-		static int wait(CScriptVirtualMachine* pMachine, CScriptRunState* pState);
+		static int getrand(CScriptVirtualMachine* pMachine, CScriptCallState* pState);
+		static int wait(CScriptVirtualMachine* pMachine, CScriptCallState* pState);
 
-		static int TransRadian(CScriptVirtualMachine* pMachine, CScriptRunState* pState);
-		static int CheckClassPoint(CScriptVirtualMachine* pMachine, CScriptRunState* pState);
+		static int TransRadian(CScriptVirtualMachine* pMachine, CScriptCallState* pState);
+		static int CheckClassPoint(CScriptVirtualMachine* pMachine, CScriptCallState* pState);
 
-		static int SetEventTrigger(CScriptVirtualMachine* pMachine, CScriptRunState* pState);
-		static int TriggerEvent(CScriptVirtualMachine* pMachine, CScriptRunState* pState);
-		static int RemoveEventTrigger(CScriptVirtualMachine* pMachine, CScriptRunState* pState);
+		static int SetEventTrigger(CScriptVirtualMachine* pMachine, CScriptCallState* pState);
+		static int TriggerEvent(CScriptVirtualMachine* pMachine, CScriptCallState* pState);
+		static int RemoveEventTrigger(CScriptVirtualMachine* pMachine, CScriptCallState* pState);
 
-		//static int NewArray(CScriptVirtualMachine* pMachine, CScriptRunState* pState);
-		//static int ReleaseArray(CScriptVirtualMachine* pMachine, CScriptRunState* pState);
-
-		static int InitData(CScriptVirtualMachine* pMachine, CScriptRunState* pState);
-		static int ReleaseData(CScriptVirtualMachine* pMachine, CScriptRunState* pState);
-		static int GetVal4Data(CScriptVirtualMachine* pMachine, CScriptRunState* pState);
-		static int SetVal2Data(CScriptVirtualMachine* pMachine, CScriptRunState* pState);
+		static int InitData(CScriptVirtualMachine* pMachine, CScriptCallState* pState);
+		static int ReleaseData(CScriptVirtualMachine* pMachine, CScriptCallState* pState);
+		static int GetVal4Data(CScriptVirtualMachine* pMachine, CScriptCallState* pState);
+		static int SetVal2Data(CScriptVirtualMachine* pMachine, CScriptCallState* pState);
 
 
 	};

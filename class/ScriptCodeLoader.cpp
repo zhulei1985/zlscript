@@ -198,6 +198,7 @@ namespace zlscript
 	}
 	void CScriptCodeLoader::clear()
 	{
+		m_mapNewString2CodeIndex.clear();
 		m_mapString2CodeIndex.clear();
 
 		m_vecCodeData.clear();
@@ -663,9 +664,9 @@ namespace zlscript
 		GetNewWord(wordFunName);
 
 
-		if (m_mapString2CodeIndex.find(wordFunName.word) != m_mapString2CodeIndex.end())
+		if (m_mapNewString2CodeIndex.find(wordFunName.word) != m_mapNewString2CodeIndex.end())
 		{
-			tagCodeData& funCode = m_vecCodeData[m_mapString2CodeIndex[wordFunName.word]];
+			tagCodeData& funCode = m_vecCodeData[m_mapNewString2CodeIndex[wordFunName.word]];
 			if (funCode.nType != EICODE_FUN_NO_CODE || !funCode.vCodeData.empty())
 			{
 				nErrorWordPos = wordFunName.nSourceWordsIndex;
@@ -684,6 +685,7 @@ namespace zlscript
 		//	return ECompile_ERROR;
 		//}
 
+		//检测名字是否与回调函数名冲突
 		if (CScriptCallBackFunion::GetFunIndex(wordFunName.word) >= 0)
 		{
 			nErrorWordPos = wordFunName.nSourceWordsIndex;
@@ -850,18 +852,18 @@ namespace zlscript
 			m_vTempCodeData.funname = wordFunName.word;
 			m_vTempCodeData.nDefaultReturnType = m_nCurFunVarType;
 
-			if (m_mapString2CodeIndex.find(wordFunName.word) != m_mapString2CodeIndex.end())
+			if (m_mapNewString2CodeIndex.find(wordFunName.word) != m_mapNewString2CodeIndex.end())
 			{
 				if (m_vTempCodeData.vCodeData.size())
 				{
-					tagCodeData& funCode = m_vecCodeData[m_mapString2CodeIndex[wordFunName.word]];
+					tagCodeData& funCode = m_vecCodeData[m_mapNewString2CodeIndex[wordFunName.word]];
 					funCode = m_vTempCodeData;
 				}
 			}
 			else
 			{
 				m_vTempCodeData.nType = nFunType;
-				m_mapString2CodeIndex[wordFunName.word] = m_vecCodeData.size();
+				m_mapNewString2CodeIndex[wordFunName.word] = m_vecCodeData.size();
 				m_vecCodeData.push_back(m_vTempCodeData);
 			}
 
@@ -1342,7 +1344,7 @@ namespace zlscript
 			callCode.cSign = 0;
 			callCode.dwPos = nCallFunIndex;
 		}
-		else if (m_mapString2CodeIndex.find(FunName.word) != m_mapString2CodeIndex.end())
+		else if (m_mapNewString2CodeIndex.find(FunName.word) != m_mapNewString2CodeIndex.end())
 		{
 			callCode.cSign = 1;
 			callCode.dwPos = m_vTempCodeData.vCallFunName.size();
@@ -1852,7 +1854,7 @@ namespace zlscript
 			{
 				RevertWord(nextWord);
 				//脚本函数
-				if (m_mapString2CodeIndex.find(varName.word) != m_mapString2CodeIndex.end())
+				if (m_mapNewString2CodeIndex.find(varName.word) != m_mapNewString2CodeIndex.end())
 				{
 					RevertWord(varName);
 					if (LoadCallFunState(vIn, pCode, vOut) == ECompile_ERROR)

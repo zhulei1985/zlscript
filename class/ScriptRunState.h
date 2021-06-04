@@ -35,6 +35,50 @@ namespace zlscript
 	};
 
 	class CScriptVirtualMachine;
+	class CScriptRunState;
+	class CScriptCallState
+	{
+	public:
+		CScriptCallState(CScriptRunState* pMaster)
+		{
+			m_pMaster = pMaster;
+		}
+		__int64 GetMasterID();
+
+		virtual bool PushEmptyVarToStack();
+		virtual bool PushVarToStack(int nVal);
+		virtual bool PushVarToStack(__int64 nVal);
+		virtual bool PushVarToStack(double Double);
+		virtual bool PushVarToStack(const char* pstr);
+		virtual bool PushClassPointToStack(__int64 nIndex);
+		virtual bool PushClassPointToStack(CScriptBasePointer* pPoint);
+		virtual bool PushVarToStack(StackVarInfo& Val);
+
+		template<class T>
+		bool PushClassPointToStack(T* pVal);
+
+		virtual __int64 PopIntVarFormStack();
+		virtual double PopDoubleVarFormStack();
+		virtual const char* PopCharVarFormStack();
+		virtual PointVarInfo PopClassPointFormStack();
+		virtual StackVarInfo PopVarFormStack();
+
+		virtual int GetParamNum();
+
+		virtual StackVarInfo& GetResult();
+		virtual void SetResult(__int64 nVal);
+		virtual void SetResult(double Val);
+		virtual void SetResult(const char* pStr);
+		virtual void SetClassPointResult(__int64 nIndex);
+		virtual void SetClassPointResult(CScriptBasePointer* pPoint);
+		virtual void SetResult(StackVarInfo& Val);
+		template<class T>
+		bool SetClassPointResult(T* pVal);
+	public:
+		CScriptStack m_stackRegister;
+		std::string strBuffer;
+		CScriptRunState* m_pMaster;
+	};
 	class CScriptRunState
 	{
 	public:
@@ -70,25 +114,7 @@ namespace zlscript
 		//int CurCallFunParamNum;//当前调用函数的参数数量
 		//int CurStackSizeWithoutFunParam;//除了函数参数，堆栈的大小
 	public:
-		virtual bool PushEmptyVarToStack();
-		virtual bool PushVarToStack(int nVal);
-		virtual bool PushVarToStack(__int64 nVal);
-		virtual bool PushVarToStack(double Double);
-		virtual bool PushVarToStack(const char* pstr);
-		virtual bool PushClassPointToStack(__int64 nIndex);
-		virtual bool PushClassPointToStack(CScriptBasePointer* pPoint);
-		virtual bool PushVarToStack(StackVarInfo& Val);
-
-		template<class T>
-		bool PushClassPointToStack(T* pVal);
-
-		virtual __int64 PopIntVarFormStack();
-		virtual double PopDoubleVarFormStack();
-		virtual char* PopCharVarFormStack();
-		virtual PointVarInfo PopClassPointFormStack();
-		virtual StackVarInfo PopVarFormStack();
-
-		virtual int GetParamNum();
+		
 
 
 		virtual void CopyToStack(CScriptStack* pStack, int nNum);
@@ -103,6 +129,9 @@ namespace zlscript
 
 		void PrintExecBlock();
 		void ClearAll();
+
+		int CallFun_CallBack(CScriptVirtualMachine* pMachine, int FunIndex, CScriptCallState* pCallState);
+		int CallFun_Script(CScriptVirtualMachine* pMachine, int FunIndex, CScriptStack& ParmStack, bool bIsBreak = false);
 
 		int CallFun(CScriptVirtualMachine* pMachine, CScriptExecBlock* pCurBlock, int nType, int FunIndex, int nParmNum, bool bIsBreak = false);
 		int CallFun(CScriptVirtualMachine* pMachine, int nType, int FunIndex, CScriptStack& ParmStack, bool bIsBreak = false);
@@ -136,7 +165,7 @@ namespace zlscript
 		char strbuff[2048];
 	};
 	template<class T>
-	inline bool CScriptRunState::PushClassPointToStack(T* pVal)
+	inline bool CScriptCallState::PushClassPointToStack(T* pVal)
 	{
 		if (pVal)
 		{

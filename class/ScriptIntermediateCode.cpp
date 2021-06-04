@@ -206,7 +206,9 @@ namespace zlscript
 		CodeStyle code(m_unBeginSoureIndex);
 		code.qwCode = 0;
 		code.wInstruct = ECODE_LOAD;
+		code.cSign = cSource;
 		code.cExtend = cRegisterIndex;
+		code.dwPos = nPos;
 		vOut.push_back(code);
 	}
 	void CSaveVarICode::MakeExeCode(std::vector<CodeStyle>& vOut)
@@ -217,6 +219,46 @@ namespace zlscript
 		code.cSign = cDestination;
 		code.cExtend = cRegisterIndex;
 		code.dwPos = nPos;
+		vOut.push_back(code);
+	}
+	void CPush2StackICode::MakeExeCode(std::vector<CodeStyle>& vOut)
+	{
+		CodeStyle code(m_unBeginSoureIndex);
+		code.qwCode = 0;
+		code.wInstruct = ECODE_PUSH;
+		code.cSign = cSource;
+		code.cExtend = 0;
+		code.dwPos = nPos;
+		vOut.push_back(code);
+	}
+	void CPop4StackICode::MakeExeCode(std::vector<CodeStyle>& vOut)
+	{
+		CodeStyle code(m_unBeginSoureIndex);
+		code.qwCode = 0;
+		code.wInstruct = ECODE_POP;
+		code.cSign = cDestination;
+		code.cExtend = cRegisterIndex;
+		code.dwPos = nPos;
+		vOut.push_back(code);
+	}
+	void CGetClassParamICode::MakeExeCode(std::vector<CodeStyle>& vOut)
+	{
+		CodeStyle code(m_unBeginSoureIndex);
+		code.qwCode = 0;
+		code.wInstruct = ECODE_GET_CLASS_PARAM;
+		code.cSign = cClassRIndex;
+		code.cExtend = cDestRIndex;
+		code.dwPos = nParamPos;
+		vOut.push_back(code);
+	}
+	void CSetClassParamICode::MakeExeCode(std::vector<CodeStyle>& vOut)
+	{
+		CodeStyle code(m_unBeginSoureIndex);
+		code.qwCode = 0;
+		code.wInstruct = ECODE_SET_CLASS_PARAM;
+		code.cSign = cClassRIndex;
+		code.cExtend = cVarRIndex;
+		code.dwPos = nParamPos;
 		vOut.push_back(code);
 	}
 	void COperatorICode::MakeExeCode(std::vector<CodeStyle>& vOut)
@@ -235,12 +277,107 @@ namespace zlscript
 		code.cExtend = cRegisterIndex;
 		vOut.push_back(code);
 	}
+	void COperatorICode::AddICode(int nType, CBaseICode* pCode)
+	{
+		if (pCode)
+		{
+			m_vICode.push_back(pCode);
+		}
+		CBaseICode::AddICode(nType, pCode);
+	}
+	void CCallBackFunICode::MakeExeCode(std::vector<CodeStyle>& vOut)
+	{
+		for (unsigned int i = 0; i < vParams.size(); i++)
+		{
+			CBaseICode* pCode = vParams[i];
+			if (pCode)
+			{
+				pCode->MakeExeCode(vOut);
+			}
+		}
+		CodeStyle code(m_unBeginSoureIndex);
+		code.qwCode = 0;
+		code.wInstruct = ECODE_CALL_CALLBACK;
+		code.cSign = cRegisterIndex;
+		code.cExtend = (char)vParams.size();
+		code.dwPos = nFunIndex;
+		vOut.push_back(code);
+	}
+	void CCallBackFunICode::AddICode(int nType, CBaseICode* pCode)
+	{
+		if (nType == E_PARAM)
+		{
+			vParams.push_back(pCode);
+		}
+		CBaseICode::AddICode(nType, pCode);
+	}
+	void CCallScriptFunICode::MakeExeCode(std::vector<CodeStyle>& vOut)
+	{
+		for (unsigned int i = 0; i < vParams.size(); i++)
+		{
+			CBaseICode* pCode = vParams[i];
+			if (pCode)
+			{
+				pCode->MakeExeCode(vOut);
+			}
+		}
+		CodeStyle code(m_unBeginSoureIndex);
+		code.qwCode = 0;
+		code.wInstruct = ECODE_CALL_SCRIPT;
+		code.cSign = cRegisterIndex;
+		code.cExtend = (char)vParams.size();
+		code.dwPos = nFunIndex;
+		vOut.push_back(code);
+	}
+	void CCallScriptFunICode::AddICode(int nType, CBaseICode* pCode)
+	{
+		if (nType == E_PARAM)
+		{
+			vParams.push_back(pCode);
+		}
+		CBaseICode::AddICode(nType, pCode);
+	}
+	void CCallClassFunICode::MakeExeCode(std::vector<CodeStyle>& vOut)
+	{
+		for (unsigned int i = 0; i < vParams.size(); i++)
+		{
+			CBaseICode* pCode = vParams[i];
+			if (pCode)
+			{
+				pCode->MakeExeCode(vOut);
+			}
+		}
+		CodeStyle code(m_unBeginSoureIndex);
+		code.qwCode = 0;
+		code.wInstruct = ECODE_CALL_CLASS_FUN;
+		code.cSign = cRegisterIndex;
+		code.cExtend = (char)vParams.size();
+		code.dwPos = nFunIndex;
+		vOut.push_back(code);
+	}
+
+	void CCallClassFunICode::AddICode(int nType, CBaseICode* pCode)
+	{
+		if (nType == E_POINT)
+		{
+			m_pClassPointCode = pCode;
+		}
+		else if (nType == E_PARAM)
+		{
+			vParams.push_back(pCode);
+		}
+		CBaseICode::AddICode(nType, pCode);
+	}
 
 	void CSentenceICode::MakeExeCode(std::vector<CodeStyle>& vOut)
 	{
 		for (auto it = vData.begin(); it != vData.end(); it++)
 		{
-			vOut.push_back(*it);
+			auto pCode = *it;
+			if (pCode)
+			{
+				pCode->MakeExeCode(vOut);
+			}
 		}
 
 		if (bClearParm)
@@ -255,7 +392,7 @@ namespace zlscript
 
 	}
 
-	void CSentenceICode::AddExeCode(CodeStyle code)
+	void CSentenceICode::AddExeCode(CBaseICode* code)
 	{
 		vData.push_back(code);
 	}
@@ -271,13 +408,12 @@ namespace zlscript
 		std::vector<CodeStyle> vTrueData;
 		if (pTureCode)
 			pTureCode->MakeExeCode(vTrueData);
-
-		CodeStyle ifcode(m_unBeginSoureIndex);
+		vOut.push_back(CodeStyle(m_unBeginSoureIndex));
+		CodeStyle &ifcode = vOut[vOut.size()-1];
 		ifcode.qwCode = 0;
-		ifcode.wInstruct = ECODE_BRANCH_IF;
-		ifcode.cSign = 0;
+		ifcode.wInstruct = ECODE_JUMP_FALSE;
+		ifcode.cSign = 1;
 		ifcode.dwPos = vTrueData.size() + 1;
-		vOut.push_back(ifcode);
 
 		for (auto it = vTrueData.begin(); it != vTrueData.end(); it++)
 		{
@@ -289,12 +425,13 @@ namespace zlscript
 			std::vector<CodeStyle> vFalseData;
 			pFalseCode->MakeExeCode(vFalseData);
 
-			CodeStyle elsecode(m_unElseSoureIndex);
+			ifcode.dwPos++;
+			vOut.push_back(CodeStyle(m_unElseSoureIndex));
+			CodeStyle &elsecode = vOut[vOut.size()-1];
 			elsecode.qwCode = 0;
-			elsecode.wInstruct = ECODE_BRANCH_ELSE;
-			elsecode.cSign = 0;
+			elsecode.wInstruct = ECODE_JUMP;
+			elsecode.cSign = 1;
 			elsecode.dwPos = vFalseData.size() + 1;
-			vOut.push_back(elsecode);
 
 			for (auto it = vFalseData.begin(); it != vFalseData.end(); it++)
 			{
@@ -305,15 +442,15 @@ namespace zlscript
 
 	void CIfICode::AddICode(int nType, CBaseICode* pCode)
 	{
-		if (nType == 0)
+		if (nType == E_COND)
 		{
 			pCondCode = dynamic_cast<CSentenceICode*>(pCode);
 		}
-		else if (nType == 1)
+		else if (nType == E_TRUE)
 		{
 			pTureCode = dynamic_cast<CBlockICode*>(pCode);
 		}
-		else if (nType == 2)
+		else if (nType == E_FALSE)
 		{
 			pFalseCode = pCode;
 		}
@@ -333,13 +470,16 @@ namespace zlscript
 		//要在块尾加入返回块头的指令
 		CodeStyle backcode(m_unBeginSoureIndex);
 		backcode.qwCode = 0;
-		backcode.wInstruct = ECODE_BLOCK_CYC;
+		backcode.wInstruct = ECODE_JUMP;
+		backcode.cSign = 2;
 		backcode.dwPos = vCondData.size() + vBlockData.size() + 1;
 		vBlockData.push_back(backcode);
 
 		CodeStyle code(m_unBeginSoureIndex);
 		code.qwCode = 0;
-		code.wInstruct = ECODE_CYC_IF;
+		code.wInstruct = ECODE_JUMP_FALSE;
+		code.cSign = 1;
+		code.cExtend = R_A;
 		code.dwPos = vBlockData.size()+1;
 		vCondData.push_back(code);
 
@@ -348,9 +488,22 @@ namespace zlscript
 			vOut.push_back(*it);
 		}
 
-		for (auto it = vBlockData.begin(); it != vBlockData.end(); it++)
+		for (unsigned int i = 0; i < vBlockData.size(); i++)
 		{
-			vOut.push_back(*it);
+			CodeStyle& code = vBlockData[i];
+			if (code.wInstruct == ECODE_BREAK)
+			{
+				code.wInstruct = ECODE_JUMP;
+				code.cSign = 1;
+				code.dwPos = vBlockData.size() - i + 1;
+			}
+			else if (code.wInstruct == ECODE_CONTINUE)
+			{
+				code.wInstruct = ECODE_JUMP;
+				code.cSign = 2;
+				code.dwPos = i + vCondData.size();
+			}
+			vOut.push_back(code);
 		}
 	}
 
@@ -366,28 +519,38 @@ namespace zlscript
 		}
 		CBaseICode::AddICode(nType, pCode);
 	}
-
+	void CContinueICode::MakeExeCode(std::vector<CodeStyle>& vOut)
+	{
+		CodeStyle code(m_unBeginSoureIndex);
+		code.qwCode = 0;
+		code.wInstruct = ECODE_CONTINUE;
+		vOut.push_back(code);
+	}
+	void CBreakICode::MakeExeCode(std::vector<CodeStyle>& vOut)
+	{
+		CodeStyle code(m_unBeginSoureIndex);
+		code.qwCode = 0;
+		code.wInstruct = ECODE_BREAK;
+		vOut.push_back(code);
+	}
 	void CReturnICode::MakeExeCode(std::vector<CodeStyle>& vOut)
 	{
 		if (pBodyCode)
 		{
-			pBodyCode->SetClear(false);
 			pBodyCode->MakeExeCode(vOut);
 		}
 
 		CodeStyle backcode(m_unBeginSoureIndex);
 		backcode.qwCode = 0;
 		backcode.wInstruct = ECODE_RETURN;
-		if (pBodyCode)
-		{
-			backcode.cSign = 1;
-		}
+		backcode.cExtend = cRegisterIndex;
+		
 		vOut.push_back(backcode);
 	}
 
 	void CReturnICode::AddICode(int nType, CBaseICode* pCode)
 	{
-		pBodyCode = dynamic_cast<CSentenceICode*>(pCode);
+		pBodyCode = pCode;
 		CBaseICode::AddICode(nType, pCode);
 	}
 

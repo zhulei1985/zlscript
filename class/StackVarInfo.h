@@ -6,6 +6,8 @@
 namespace zlscript
 {
 	class CScriptBasePointer;
+	class CScriptPointInterface;
+	struct PointVarInfo;
 	struct StackVarInfo
 	{
 		unsigned char cType;
@@ -29,6 +31,12 @@ namespace zlscript
 		void Clear();
 
 		//赋值重载
+		StackVarInfo& operator=(__int64 val);
+		StackVarInfo& operator=(double val);
+		StackVarInfo& operator=(const char *pStr);
+		StackVarInfo& operator=(CScriptBasePointer* pPoint);
+		StackVarInfo& operator=(CScriptPointInterface* pPoint);
+		StackVarInfo& operator=(const PointVarInfo& info);
 		StackVarInfo& operator=(const StackVarInfo& cls);
 		bool operator==(const StackVarInfo& cls) const;
 
