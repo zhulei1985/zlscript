@@ -998,7 +998,7 @@ namespace zlscript
 			}
 			vCondCode.push_back(nextWord);
 		}
-		if (LoadOneSentence(vCondCode, pIfICode, 0, "") == ECompile_ERROR)
+		if (LoadOneSentence(vCondCode, pIfICode, CIfICode::E_COND, "") == ECompile_ERROR)
 		{
 			return ECompile_ERROR;
 		}
@@ -1011,7 +1011,7 @@ namespace zlscript
 			return ECompile_ERROR;
 		}
 		RevertWord(nextWord);
-		if (LoadBlockState(vIn, pIfICode, 1) == ECompile_ERROR)
+		if (LoadBlockState(vIn, pIfICode, CIfICode::E_TRUE) == ECompile_ERROR)
 		{
 			return ECompile_ERROR;
 		}
@@ -1023,7 +1023,7 @@ namespace zlscript
 			if (nextWord.word == "if")
 			{
 				RevertWord(nextWord);
-				if (LoadIfSentence(vIn, pIfICode, 2) == ECompile_ERROR)
+				if (LoadIfSentence(vIn, pIfICode, CIfICode::E_FALSE) == ECompile_ERROR)
 				{
 					return ECompile_ERROR;
 				}
@@ -1031,7 +1031,7 @@ namespace zlscript
 			else if (nextWord.word == "{")
 			{
 				RevertWord(nextWord);
-				if (LoadBlockState(vIn, pIfICode, 2) == ECompile_ERROR)
+				if (LoadBlockState(vIn, pIfICode, CIfICode::E_FALSE) == ECompile_ERROR)
 				{
 					return ECompile_ERROR;
 				}
@@ -1102,7 +1102,7 @@ namespace zlscript
 			}
 			vCondCode.push_back(nextWord);
 		}
-		if (LoadOneSentence(vCondCode, pWhileICode, 0, "") == ECompile_ERROR)
+		if (LoadOneSentence(vCondCode, pWhileICode, CWhileICode::E_COND, "") == ECompile_ERROR)
 		{
 			return ECompile_ERROR;
 		}
@@ -1114,7 +1114,7 @@ namespace zlscript
 			return ECompile_ERROR;
 		}
 		RevertWord(nextWord);
-		if (LoadBlockState(vIn, pWhileICode, 1) == ECompile_ERROR)
+		if (LoadBlockState(vIn, pWhileICode, CWhileICode::E_BLOCK) == ECompile_ERROR)
 		{
 			return ECompile_ERROR;
 		}
