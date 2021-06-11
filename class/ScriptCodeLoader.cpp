@@ -1232,28 +1232,35 @@ namespace zlscript
 				strError = "break: format error";
 				return ECompile_ERROR;
 			}
-			CodeStyle breakCode(nextWord.nSourceWordsIndex);
-			breakCode.qwCode = 0;
-			breakCode.wInstruct = ECODE_BREAK;
-			pSentenceICode->AddExeCode(breakCode);
+			CBreakICode* pBreakICode = CICodeMgr::GetInstance()->New<CBreakICode>(nextWord.nSourceWordsIndex);
+			if (pBreakICode == nullptr)
+			{
+				return ECompile_ERROR;
+			}
+			pSentenceICode->AddExeCode(pBreakICode);
+		}
+		else if (nextWord.word == "continue")
+		{
+			GetWord(nextWord);
+
+			if (nextWord.word != ";")
+			{
+				nErrorWordPos = nextWord.nSourceWordsIndex;
+				strError = "continue: format error";
+				return ECompile_ERROR;
+			}
+			CContinueICode* pContinueICode = CICodeMgr::GetInstance()->New<CContinueICode>(nextWord.nSourceWordsIndex);
+			if (pContinueICode == nullptr)
+			{
+				return ECompile_ERROR;
+			}
+			pSentenceICode->AddExeCode(pContinueICode);
 		}
 		else
 		{
 			std::vector<CodeStyle> vTempCode;
 			int nReturn = ECompile_ERROR;
-			//if (m_mapString2CodeIndex.find(nextWord.word) != m_mapString2CodeIndex.end())
-			//{
-			//	RevertWord(nextWord);
-			//	//脚本函数调用
-			//	nReturn = LoadCallFunState(vIn, pSentenceICode, vTempCode);
-			//}
-			////回调函数
-			//else if (CScriptCallBackFunion::GetFunIndex(nextWord.word) >= 0)
-			//{
-			//	RevertWord(nextWord);
-			//	nReturn = LoadCallFunState(vIn, pSentenceICode, vTempCode);
-			//}
-			//else
+
 			{
 				bool isEvaluate = false;
 				CodeStyle code(nextWord.nSourceWordsIndex);
@@ -1325,30 +1332,33 @@ namespace zlscript
 		}
 		return ECompile_Return;
 	}
+	int CScriptCodeLoader::LoadOperatiorState(SentenceSourceCode& vIn, CBaseICode* pCode, int nType)
+	{
+		SignToPos;
+		return 0;
+	}
 	int CScriptCodeLoader::LoadCallFunState(SentenceSourceCode& vIn, CBaseICode* pCode, std::vector<CodeStyle>& vOut)
 	{
 		SignToPos;
 		GetNewWord(FunName);
 
-		CodeStyle begincode(FunName.nSourceWordsIndex);
-		begincode.qwCode = 0;
-		begincode.wInstruct = ECODE_BEGIN_CALL;
-
-		CodeStyle callCode(FunName.nSourceWordsIndex);
-		callCode.qwCode = 0;
-		callCode.wInstruct = ECODE_CALL;
+		CBaseICode* pICode = nullptr;
 
 		int nCallFunIndex = CScriptCallBackFunion::GetFunIndex(FunName.word);
 		if (nCallFunIndex >= 0)
 		{
-			callCode.cSign = 0;
-			callCode.dwPos = nCallFunIndex;
+			auto pCallBackCode = CICodeMgr::GetInstance()->New<CCallBackFunICode>(FunName.nSourceWordsIndex);
+
+			pICode = pCallBackCode;
 		}
 		else if (m_mapNewString2CodeIndex.find(FunName.word) != m_mapNewString2CodeIndex.end())
 		{
+			auto pCallScriptCode = CICodeMgr::GetInstance()->New<CCallScriptFunICode>(FunName.nSourceWordsIndex);
 			callCode.cSign = 1;
 			callCode.dwPos = m_vTempCodeData.vCallFunName.size();
 			m_vTempCodeData.vCallFunName.push_back(FunName.word);
+
+			pICode = pCallScriptCode;
 		}
 		else
 		{

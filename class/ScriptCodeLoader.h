@@ -203,7 +203,7 @@ namespace zlscript
 
 		//读取一条语句
 		int LoadOneSentence(SentenceSourceCode& vIn, CBaseICode* pCode, int nType, std::string endFlag=";");
-
+		int LoadOperatiorState(SentenceSourceCode& vIn, CBaseICode* pCode, int nType);
 		//读取函数调用
 		int LoadCallFunState(SentenceSourceCode& vIn, CBaseICode* pCode, std::vector<CodeStyle>& vOut);
 		//读取类函数调用
