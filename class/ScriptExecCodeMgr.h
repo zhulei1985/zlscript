@@ -21,7 +21,7 @@
 #include <map>
 namespace zlscript
 {
-	class CScriptRunState;
+	class CScriptCallState;
 	class CScriptExecCodeMgr
 	{
 	public:
@@ -36,7 +36,7 @@ namespace zlscript
 		static CScriptExecCodeMgr s_Instance;
 
 	public:
-		bool RemoteFunctionCall(std::string name, CScriptRunState* pState, int nParmNum);
+		bool RemoteFunctionCall(std::string name, CScriptCallState* pState, int nParmNum);
 
 		bool SetRemoteFunction(std::string name, __int64 nEventIndex);
 		void RemoveRemoteFunction(std::string name, __int64 nEventIndex);

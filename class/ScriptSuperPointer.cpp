@@ -358,6 +358,22 @@ namespace zlscript
 		m_MutexTypeLock.unlock();
 		return nResult;
 	}
+	int CScriptSuperPointerMgr::GetClassParamIndex(int classindex, std::string paramname)
+	{
+		int nResult = -1;
+		m_MutexTypeLock.lock();
+		std::map<__int64, CScriptBasePointer*>::iterator it = m_mapTypePointer.find(classindex);
+		if (it != m_mapTypePointer.end())
+		{
+			CScriptBasePointer* pPointer = it->second;
+			if (pPointer)
+			{
+				nResult = pPointer->GetAttributeIndex(paramname);
+			}
+		}
+		m_MutexTypeLock.unlock();
+		return nResult;
+	}
 	CBaseScriptClassMgr* CScriptSuperPointerMgr::GetClassMgr(int nType)
 	{
 		auto it = m_mapClassMgr.find(nType);

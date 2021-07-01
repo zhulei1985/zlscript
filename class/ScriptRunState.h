@@ -78,6 +78,8 @@ namespace zlscript
 		CScriptStack m_stackRegister;
 		std::string strBuffer;
 		CScriptRunState* m_pMaster;
+
+		StackVarInfo m_varReturn;
 	};
 	class CScriptRunState
 	{
@@ -176,6 +178,21 @@ namespace zlscript
 		else
 		{
 			PushClassPointToStack((CScriptBasePointer*)nullptr);
+		}
+		return false;
+	}
+	template<class T>
+	inline bool CScriptCallState::SetClassPointResult(T* pVal)
+	{
+		if (pVal)
+		{
+			CScriptBasePointer* pPoint = CScriptSuperPointerMgr::GetInstance()->PickupPointer(pVal->GetScriptPointIndex());
+			m_varReturn = pPoint;
+			return true;
+		}
+		else
+		{
+			m_varReturn.Clear();
 		}
 		return false;
 	}

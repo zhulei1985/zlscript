@@ -137,6 +137,7 @@ namespace zlscript
 			return m_pClassInfo;
 		}
 
+		unsigned int GetAttributeIndex(std::string name);
 		CBaseScriptClassAttribute* GetAttribute(unsigned int index);
 		void SetFun(int id, CScriptBaseClassFunInfo* pInfo);
 		virtual int RunFun(int id, CScriptCallState* pState);
@@ -168,6 +169,7 @@ namespace zlscript
 		std::map<std::string, CBaseScriptClassAttribute*> m_mapDBAttributes;
 
 		std::unordered_map<unsigned int, CBaseScriptClassAttribute*> m_mapAllAttributes;
+		std::unordered_map<std::string, unsigned int> m_mapAttributeName2Index;
 
 		std::vector<CScriptBaseClassFunInfo*> m_vecScriptClassFun;
 

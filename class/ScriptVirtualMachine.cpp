@@ -154,8 +154,7 @@ namespace zlscript
 				if (pState->m_CallReturnId != 0)
 				{
 					CScriptStack vRetrunVars;
-					auto var = pState->PopVarFormStack();
-					ScriptVector_PushVar(vRetrunVars, &var);
+					ScriptVector_PushVar(vRetrunVars, &pState->m_varReturn);
 					ResultTo(vRetrunVars, pState->m_CallReturnId, pState->nCallEventIndex);
 
 				}
@@ -223,8 +222,7 @@ namespace zlscript
 				if (pState->m_CallReturnId != 0)
 				{
 					CScriptStack vRetrunVars;
-					auto var = pState->PopVarFormStack();
-					ScriptVector_PushVar(vRetrunVars, &var);
+					ScriptVector_PushVar(vRetrunVars, &pState->m_varReturn);
 					ResultTo(vRetrunVars, pState->m_CallReturnId, pState->nCallEventIndex);
 
 				}

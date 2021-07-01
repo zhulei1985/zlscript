@@ -39,6 +39,9 @@ namespace zlscript
 
 		int GetDefaultReturnType();
 		int GetFunType();
+
+		inline __int64 GetVal_Int64(char cType, unsigned int pos);
+		StackVarInfo GetVal(char cType, unsigned int pos);
 	private:
 
 		CScriptRunState* m_pMaster;
@@ -48,9 +51,6 @@ namespace zlscript
 		unsigned int m_nCodePoint;
 
 	private:
-		std::stack<int> m_sCurStackSizeWithoutFunParam;
-		std::stack<unsigned int> m_sCycBlockEnd;
-		unsigned int m_nCycBlockEnd;
 
 		//寄存器
 		StackVarInfo m_register[R_SIZE];
@@ -75,44 +75,32 @@ namespace zlscript
 
 		inline bool CheckRegisterTrue(char index);
 
-		void SetCallFunParamNum(int nVal)
-		{
-			CurCallFunParamNum = nVal;
-			CurStackSizeWithoutFunParam = m_stackRegister.size() - CurCallFunParamNum;
-			if (CurStackSizeWithoutFunParam < 0)
-			{
-				CurStackSizeWithoutFunParam = 0;
-			}
-		}
 		void PushVar(StackVarInfo& var);
 		StackVarInfo PopVar();
 		StackVarInfo* GetVar(unsigned int index);
 		unsigned int GetVarSize();
 
-		int GetParamNum()
+		StackVarInfo& GetReturnVar()
 		{
-			return CurCallFunParamNum;
+			return m_varReturnVar;
 		}
-		void ClearFunParam();
+		char GetReturnRegisterIndex()
+		{
+			return m_cReturnRegisterIndex;
+		}
 		void ClearStack();
 
 		std::string GetCurSourceWords();
 	private:
 		std::vector<StackVarInfo> vNumVar;//临时变量
 
-		//当前变量类型
-		unsigned char m_cVarType;
-		bool bIfSign;
-		std::vector<bool> m_vbIfSign;
-
-		int CurCallFunParamNum;//当前调用函数的参数数量
-		int CurStackSizeWithoutFunParam;//除了函数参数，堆栈的大小
 
 	//性能监控
 
 		std::chrono::milliseconds m_msRunningTime;//运行时间
 	public:
 		friend class CScriptVirtualMachine;
+		friend class CScriptRunState;
 	};
 
 	class CScriptExecBlockStack

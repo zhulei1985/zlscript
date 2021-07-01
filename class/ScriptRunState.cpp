@@ -1,4 +1,5 @@
-﻿#include "ScriptRunState.h"
+﻿#include "scriptcommon.h"
+#include "ScriptRunState.h"
 #include "ScriptCallBackFunion.h"
 #include "ScriptDebugPrint.h"
 #include "EScriptSentenceType.h"
@@ -9,7 +10,7 @@ namespace zlscript
 {
 	__int64 CScriptCallState::GetMasterID()
 	{
-		return m_pMaster?m_pMaster->GetId():0;
+		return m_pMaster ? m_pMaster->GetId() : 0;
 	}
 	bool CScriptCallState::PushEmptyVarToStack()
 	{
@@ -23,14 +24,14 @@ namespace zlscript
 	}
 	bool CScriptCallState::PushVarToStack(int nVal)
 	{
-		ScriptVector_PushVar(m_stackRegister,(__int64)nVal);
+		ScriptVector_PushVar(m_stackRegister, (__int64)nVal);
 
 		return true;
 	}
 
 	bool CScriptCallState::PushVarToStack(__int64 nVal)
 	{
-		ScriptVector_PushVar(m_stackRegister,nVal);
+		ScriptVector_PushVar(m_stackRegister, nVal);
 
 		return true;
 	}
@@ -91,13 +92,51 @@ namespace zlscript
 	}
 	StackVarInfo CScriptCallState::PopVarFormStack()
 	{
-		StackVarInfo var= m_stackRegister.top();
+		StackVarInfo var = m_stackRegister.top();
 		m_stackRegister.pop();
 		return var;
 	}
 	int CScriptCallState::GetParamNum()
 	{
 		return m_stackRegister.size();
+	}
+
+	StackVarInfo& CScriptCallState::GetResult()
+	{
+		// TODO: 在此处插入 return 语句
+		return m_varReturn;
+	}
+
+	void CScriptCallState::SetResult(__int64 nVal)
+	{
+		m_varReturn = nVal;
+	}
+
+	void CScriptCallState::SetResult(double Val)
+	{
+		m_varReturn = Val;
+	}
+
+	void CScriptCallState::SetResult(const char* pStr)
+	{
+		m_varReturn = pStr;
+	}
+
+	void CScriptCallState::SetClassPointResult(__int64 nIndex)
+	{
+		m_varReturn.Clear();
+		m_varReturn.cType = EScriptVal_ClassPoint;
+		m_varReturn.pPoint = CScriptSuperPointerMgr::GetInstance()->PickupPointer(nIndex);
+	}
+
+	void CScriptCallState::SetClassPointResult(CScriptBasePointer* pPoint)
+	{
+		m_varReturn = pPoint;
+	}
+
+	void CScriptCallState::SetResult(StackVarInfo& Val)
+	{
+		m_varReturn = Val;
 	}
 
 
@@ -294,7 +333,7 @@ namespace zlscript
 			CScriptExecBlock* pBlock = m_BlockStack.top();
 			if (pBlock)
 			{
-				pBlock->ClearFunParam();
+				//pBlock->ClearFunParam();
 			}
 		}
 	}
@@ -470,12 +509,7 @@ namespace zlscript
 					m_BlockStack.pop();
 					if (m_BlockStack.empty())
 					{
-						if (pBlock->GetVarSize())
-						{
-							auto pVar = pBlock->GetVar(pBlock->GetVarSize() - 1);
-							if (pVar)
-								m_varReturn = *pVar;
-						}
+						m_varReturn = pBlock->GetReturnVar();
 						SAFE_DELETE(pBlock);
 						return ERunTime_Complete;
 					}
@@ -494,6 +528,14 @@ namespace zlscript
 									StackVarInfo var;
 									pCurBlock->PushVar(var);
 								}
+							}
+							if (pBlock->GetReturnRegisterIndex() < R_SIZE)
+							{
+								pCurBlock->m_register[pBlock->GetReturnRegisterIndex()] = pBlock->GetReturnVar();
+							}
+							else
+							{
+								pCurBlock->m_stackRegister.push(pBlock->GetReturnVar());
 							}
 						}
 						SAFE_DELETE(pBlock);
@@ -596,11 +638,33 @@ namespace zlscript
 		{
 		case 0:
 		{
-			pCurBlock->SetCallFunParamNum(nParmNum);
+			//pCurBlock->SetCallFunParamNum(nParmNum);
 			C_CallBackScriptFunion pFun = CScriptCallBackFunion::GetFun(FunIndex);
 			if (pFun)
 			{
-				nReturn = pFun(pMachine, this);
+				CACHE_NEW(CScriptCallState, pCallState, this);
+				if (pCurBlock)
+				{
+
+					for (int i = 0; i < nParmNum; i++)
+					{
+						auto pVar = pCurBlock->GetVar(pCurBlock->GetVarSize() - nParmNum + i);
+						if (pVar)
+							pCallState->PushVarToStack(*pVar);
+						else
+						{
+							StackVarInfo var;
+							pCallState->PushVarToStack(var);
+						}
+					}
+					//pBlock->SetCallFunParamNum(nParmNum);
+					for (int i = 0; i < nParmNum; i++)
+					{
+						pCurBlock->PopVar();
+					}
+				}
+				nReturn = pFun(pMachine, pCallState);
+				CACHE_DELETE(pCallState);
 			}
 			else
 			{
@@ -631,10 +695,10 @@ namespace zlscript
 							else
 							{
 								StackVarInfo var;
-								pCurBlock->PushVar(var);
+								pBlock->PushVar(var);
 							}
 						}
-						pBlock->SetCallFunParamNum(nParmNum);
+						//pBlock->SetCallFunParamNum(nParmNum);
 						for (int i = 0; i < nParmNum; i++)
 						{
 							pCurBlock->PopVar();
@@ -668,26 +732,23 @@ namespace zlscript
 		{
 		case 0:
 		{
-			//注入参数
-			if (m_BlockStack.size() > 0)
-			{
-				CScriptExecBlock* pBlock = m_BlockStack.top();
-				if (pBlock)
-				{
-					for (int i = 0; i < ParmStack.size(); i++)
-					{
-						StackVarInfo* pVar = ParmStack.GetVal(i);
-						if (pVar)
-						{
-							pBlock->PushVar(*pVar);
-						}
-					}
-				}
-			}
 			C_CallBackScriptFunion pFun = CScriptCallBackFunion::GetFun(FunIndex);
 			if (pFun)
 			{
-				nReturn = pFun(pMachine, this);
+				CACHE_NEW(CScriptCallState, pCallState, this);
+				//注入参数
+
+				for (int i = 0; i < ParmStack.size(); i++)
+				{
+					StackVarInfo* pVar = ParmStack.GetVal(i);
+					if (pVar)
+					{
+						pCallState->PushVarToStack(*pVar);
+					}
+				}
+
+				nReturn = pFun(pMachine, pCallState);
+				CACHE_DELETE(pCallState);
 			}
 			else
 			{
@@ -782,27 +843,24 @@ namespace zlscript
 		}
 		else
 		{
-			//注入参数
-			if (m_BlockStack.size() > 0)
-			{
-				CScriptExecBlock* pBlock = m_BlockStack.top();
-				if (pBlock)
-				{
-					for (int i = 0; i < ParmStack.size(); i++)
-					{
-						StackVarInfo* pVar = ParmStack.GetVal(i);
-						if (pVar)
-						{
-							pBlock->PushVar(*pVar);
-						}
-					}
-				}
-			}
 
 			C_CallBackScriptFunion pFun = CScriptCallBackFunion::GetFun(pFunName);
 			if (pFun)
 			{
-				nReturn = pFun(pMachine, this);
+				CACHE_NEW(CScriptCallState, pCallState, this);
+				//注入参数
+
+				for (int i = 0; i < ParmStack.size(); i++)
+				{
+					StackVarInfo* pVar = ParmStack.GetVal(i);
+					if (pVar)
+					{
+						pCallState->PushVarToStack(*pVar);
+					}
+				}
+
+				nReturn = pFun(pMachine, pCallState);
+				CACHE_DELETE(pCallState);
 			}
 			else
 			{

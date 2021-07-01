@@ -66,7 +66,7 @@ namespace zlscript
 
 		virtual int RunFun(unsigned int nIndex, CScriptCallState*) = 0;
 		virtual int GetFunIndex(std::string name) = 0;
-
+		virtual int GetAttributeIndex(std::string name) = 0;
 		virtual CScriptPointInterface* GetPoint()
 		{
 			return nullptr;
@@ -106,6 +106,7 @@ namespace zlscript
 		CBaseScriptClassAttribute* GetAttribute(unsigned int index);
 		int RunFun(unsigned int nIndex, CScriptCallState*);
 		int GetFunIndex(std::string name);
+		int GetAttributeIndex(std::string name);
 
 		virtual void Lock();
 		virtual void Unlock();
@@ -163,6 +164,16 @@ namespace zlscript
 			int index = s_Info.nFunSize++;
 			CScriptSuperPointer<T>::s_Info.mapDicString2Index[name] = index;
 			return index;
+		}
+		return -1;
+	}
+
+	template<class T>
+	inline int CScriptSuperPointer<T>::GetAttributeIndex(std::string name)
+	{
+		if (GetPoint())
+		{
+			return GetPoint()->GetAttributeIndex(name);
 		}
 		return -1;
 	}
@@ -240,6 +251,7 @@ namespace zlscript
 		//bool ScriptReleasePointer(__int64 id);
 
 		int GetClassFunIndex(int classindex, std::string funname);
+		int GetClassParamIndex(int classindex, std::string paramname);
 
 		CBaseScriptClassMgr* GetClassMgr(int nType);
 	private:

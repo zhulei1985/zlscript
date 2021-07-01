@@ -86,6 +86,9 @@ int main()
 	RegisterClassFun1("Add", CTest);
 
 	zlscript::LoadFile("test.script");
+	zlscript::CScriptCodeLoader::GetInstance()->MakeICode2Code(0);
+	zlscript::CScriptCodeLoader::GetInstance()->ClearICode();
+	zlscript::CScriptCodeLoader::GetInstance()->PrintAllCode("debug.txt");
 	g_nThreadRunState = 1;
 
 	//zlscript::CScriptStack stackParm;
@@ -111,7 +114,7 @@ int main()
 	//	std::thread tbg(BackGroundThreadFun);
 	//	tbg.detach();
 	//}
-	zlscript::CScriptVirtualMachine Machine(8);
+	zlscript::CScriptVirtualMachine Machine(1);
 	Machine.InitEvent(zlscript::E_SCRIPT_EVENT_RETURN,
 		std::bind(&zlscript::CScriptVirtualMachine::EventReturnFun, &Machine, std::placeholders::_1, std::placeholders::_2));
 	Machine.InitEvent(zlscript::E_SCRIPT_EVENT_RUNSCRIPT,

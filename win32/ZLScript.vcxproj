@@ -135,6 +135,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\class\ScriptCodeStyle.h" />
     <ClInclude Include="..\class\ScriptClassAttributes.h" />
     <ClInclude Include="..\class\ScriptClassMgr.h" />
     <ClInclude Include="..\class\ScriptDebugPrint.h" />

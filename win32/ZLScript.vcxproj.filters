@@ -94,6 +94,9 @@
     <ClInclude Include="..\class\StackVarInfo.h">
       <Filter>code</Filter>
     </ClInclude>
+    <ClInclude Include="..\class\ScriptCodeStyle.h">
+      <Filter>code</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\class\ScriptCallBackFunion.cpp">

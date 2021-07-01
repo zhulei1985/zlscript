@@ -76,6 +76,16 @@ namespace zlscript
 		m_nScriptPointIndex = 0;
 	}
 
+	unsigned int CScriptPointInterface::GetAttributeIndex(std::string name)
+	{
+		auto it = m_mapAttributeName2Index.find(name);
+		if (it != m_mapAttributeName2Index.end())
+		{
+			return it->second;
+		}
+		return -1;
+	}
+
 	CBaseScriptClassAttribute* CScriptPointInterface::GetAttribute(unsigned int index)
 	{
 		auto it = m_mapAllAttributes.find(index);
@@ -227,6 +237,7 @@ namespace zlscript
 			m_mapDBAttributes[pAttr->m_strAttrName] = pAttr;
 		}
 		m_mapAllAttributes.insert(std::pair<unsigned int, CBaseScriptClassAttribute*>(pAttr->m_index, pAttr));
+		m_mapAttributeName2Index.insert(std::pair<std::string, unsigned int>(pAttr->m_strAttrName, pAttr->m_index));
 	}
 
 	void CScriptPointInterface::RemoveScriptAttribute(CBaseScriptClassAttribute* pAttr)

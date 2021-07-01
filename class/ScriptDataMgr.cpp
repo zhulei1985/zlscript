@@ -42,7 +42,7 @@ namespace zlscript
 
 		RegisterClassFun1("Clear", CScriptHashMap);
 	}
-	int CScriptHashMap::GetVal2Script(CScriptRunState* pState)
+	int CScriptHashMap::GetVal2Script(CScriptCallState* pState)
 	{
 		if (pState == nullptr)
 		{
@@ -50,18 +50,18 @@ namespace zlscript
 		}
 		auto key = pState->PopVarFormStack();
 
-		pState->ClearFunParam();
+		//pState->ClearFunParam();
 		auto it = m_mapData.find(key);
 		if (it != m_mapData.end())
 		{
-			pState->PushVarToStack(it->second);
+			pState->SetResult(it->second);
 			return ECALLBACK_FINISH;
 		}
-		pState->PushEmptyVarToStack();
+		//pState->PushEmptyVarToStack();
 		return ECALLBACK_FINISH;
 	}
 
-	int CScriptHashMap::SetVal2Script(CScriptRunState* pState)
+	int CScriptHashMap::SetVal2Script(CScriptCallState* pState)
 	{
 		if (pState == nullptr)
 		{
@@ -70,11 +70,11 @@ namespace zlscript
 		auto key = pState->PopVarFormStack();
 		m_mapData[key] = pState->PopVarFormStack();
 
-		pState->ClearFunParam();
+		//pState->ClearFunParam();
 		return ECALLBACK_FINISH;
 	}
 
-	int CScriptHashMap::Remove2Script(CScriptRunState* pState)
+	int CScriptHashMap::Remove2Script(CScriptCallState* pState)
 	{
 		if (pState == nullptr)
 		{
@@ -88,18 +88,18 @@ namespace zlscript
 				m_mapData.erase(it);
 			}
 		}
-		pState->ClearFunParam();
+		//pState->ClearFunParam();
 		return ECALLBACK_FINISH;
 	}
 
-	int CScriptHashMap::Clear2Script(CScriptRunState* pState)
+	int CScriptHashMap::Clear2Script(CScriptCallState* pState)
 	{
 		if (pState == nullptr)
 		{
 			return ECALLBACK_ERROR;
 		}
 		m_mapData.clear();
-		pState->ClearFunParam();
+		//pState->ClearFunParam();
 		return ECALLBACK_FINISH;
 	}
 	CScriptArray::CScriptArray()
@@ -133,7 +133,7 @@ namespace zlscript
 		RegisterClassFun1("Clear", CScriptArray);
 	}
 
-	int CScriptArray::Add2Script(CScriptRunState* pState)
+	int CScriptArray::Add2Script(CScriptCallState* pState)
 	{
 		if (pState == nullptr)
 		{
@@ -141,12 +141,12 @@ namespace zlscript
 		}
 		m_vecVars.push_back(pState->PopVarFormStack());
 
-		pState->ClearFunParam();
-		pState->PushVarToStack((int)(m_vecVars.size() - 1));
+		//pState->ClearFunParam();
+		pState->SetResult((__int64)(m_vecVars.size() - 1));
 		return ECALLBACK_FINISH;
 	}
 
-	int CScriptArray::Get2Script(CScriptRunState* pState)
+	int CScriptArray::Get2Script(CScriptCallState* pState)
 	{
 		if (pState == nullptr)
 		{
@@ -154,31 +154,31 @@ namespace zlscript
 		}
 		unsigned int nIndex = pState->PopIntVarFormStack();
 
-		pState->ClearFunParam();
+		//pState->ClearFunParam();
 
 		if (nIndex < m_vecVars.size())
 		{
-			pState->PushVarToStack(m_vecVars[nIndex]);
+			pState->SetResult(m_vecVars[nIndex]);
 			return ECALLBACK_FINISH;
 		}
 		
-		pState->PushEmptyVarToStack();
+		//pState->s();
 		return ECALLBACK_FINISH;
 	}
 
-	int CScriptArray::GetSize2Script(CScriptRunState* pState)
+	int CScriptArray::GetSize2Script(CScriptCallState* pState)
 	{
 		if (pState == nullptr)
 		{
 			return ECALLBACK_ERROR;
 		}
 
-		pState->ClearFunParam();
-		pState->PushVarToStack((__int64)m_vecVars.size());
+		//pState->ClearFunParam();
+		pState->SetResult((__int64)m_vecVars.size());
 		return ECALLBACK_FINISH;
 	}
 
-	int CScriptArray::Set2Script(CScriptRunState* pState)
+	int CScriptArray::Set2Script(CScriptCallState* pState)
 	{
 		if (pState == nullptr)
 		{
@@ -189,15 +189,15 @@ namespace zlscript
 		if (nIndex < m_vecVars.size())
 		{
 			m_vecVars[nIndex] = pState->PopVarFormStack();
-			pState->ClearFunParam();
+			//pState->ClearFunParam();
 			return ECALLBACK_FINISH;
 		}
 
-		pState->ClearFunParam();
+		//pState->ClearFunParam();
 		return ECALLBACK_FINISH;
 	}
 
-	int CScriptArray::Remove2Script(CScriptRunState* pState)
+	int CScriptArray::Remove2Script(CScriptCallState* pState)
 	{
 		if (pState == nullptr)
 		{
@@ -215,11 +215,11 @@ namespace zlscript
 			}
 			m_vecVars.erase(itDel);
 		}
-		pState->ClearFunParam();
+		//pState->ClearFunParam();
 		return ECALLBACK_FINISH;
 	}
 
-	int CScriptArray::Clear2Script(CScriptRunState* pState)
+	int CScriptArray::Clear2Script(CScriptCallState* pState)
 	{
 		if (pState == nullptr)
 		{
@@ -227,7 +227,7 @@ namespace zlscript
 		}
 		m_vecVars.clear();
 
-		pState->ClearFunParam();
+		//pState->ClearFunParam();
 		return ECALLBACK_FINISH;
 	}
 
@@ -264,7 +264,7 @@ namespace zlscript
 		RegisterClassFun1("SetVal", CScriptData);
 	}
 
-	int CScriptData::GetVal2Script(CScriptRunState* pState)
+	int CScriptData::GetVal2Script(CScriptCallState* pState)
 	{
 		if (pState == nullptr)
 		{
@@ -302,12 +302,12 @@ namespace zlscript
 			}
 		}
 		m_Lock.unlock();
-		pState->ClearFunParam();
-		pState->PushVarToStack(result);
+		//pState->ClearFunParam();
+		pState->SetResult(result);
 		return ECALLBACK_FINISH;
 	}
 
-	int CScriptData::SetVal2Script(CScriptRunState* pState)
+	int CScriptData::SetVal2Script(CScriptCallState* pState)
 	{
 		if (pState == nullptr)
 		{
@@ -342,18 +342,18 @@ namespace zlscript
 			pArray->m_var = pState->PopVarFormStack();
 		}
 		m_Lock.unlock();
-		pState->ClearFunParam();
+		//pState->ClearFunParam();
 
 		return ECALLBACK_FINISH;
 	}
 
-	int CScriptData::SaveFile2Script(CScriptRunState* pState)
+	int CScriptData::SaveFile2Script(CScriptCallState* pState)
 	{
 
 		return ECALLBACK_FINISH;
 	}
 
-	int CScriptData::LoadFile2Script(CScriptRunState* pState)
+	int CScriptData::LoadFile2Script(CScriptCallState* pState)
 	{
 
 		return ECALLBACK_FINISH;

@@ -41,6 +41,10 @@ namespace zlscript
 		ECODE_NONE = 0, //空
 
 		/************计算符***********/
+		// 所有的二元计算符,左值固定为R_A
+		//	cSign:	使用ESignType的定义，右值来处
+		//	cExtend:计算结果放入此寄存器
+		//	dwPos:	右值根据cSign的值表示值或地址
 		ECODE_ADD = 1, //加
 		ECODE_SUM = 2, //减
 		ECODE_MUL = 3, //乘
@@ -145,7 +149,13 @@ namespace zlscript
 		// dwPos:	类函数索引
 		ECODE_CALL_CLASS_FUN,
 
+		// 新建一个类实例
+		//cSign:结果放入寄存器索引
+		//dwPos:类类型Index
 		ECODE_NEW_CLASS, //新建一个类实例
+		// 释放一个类实例
+		//cSign:使用ESignType的定义.变量来源
+		//dwPos:根据cSign的值获取类指针所在的地址
 		ECODE_RELEASE_CLASS,//释放一个类实例
 
 		//下面是中间代码
