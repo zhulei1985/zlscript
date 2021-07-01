@@ -177,6 +177,7 @@ namespace zlscript
 		m_mapDic2KeyWord["="] = ECODE_MOVE;// 赋值=
 
 		m_mapDic2KeyWord["->"] = ECODE_CALL_CLASS_FUN; //调用类函数
+		m_mapDic2KeyWord["new"] = ECODE_NEW_CLASS; //调用类函数
 		//符号
 		m_mapDicSignToEnum["=="] = E_OPERATOR_LEFT_AND_RIGHT;
 		m_mapDicSignToEnum["!="] = E_OPERATOR_LEFT_AND_RIGHT;
@@ -198,6 +199,7 @@ namespace zlscript
 		m_mapDicSignToEnum["->"] = E_OPERATOR_LEFT_AND_RIGHT; //调用类函数
 
 		m_mapDicSignToEnum["="] = E_OPERATOR_LEFT_AND_RIGHT;
+		m_mapDicSignToEnum["new"] = E_OPERATOR_RIGHT;
 
 		m_mapDicSignToPRI["="] = 0;
 
@@ -219,6 +221,7 @@ namespace zlscript
 		m_mapDicSignToPRI["%"] = 4; //求余%
 
 		m_mapDicSignToPRI["->"] = 5; //调用类函数
+		m_mapDicSignToPRI["new"] = 5; //调用类函数
 
 		//m_mapDic2KeyWord["int"] = EScriptVal_Int;
 		//m_mapDic2KeyWord["float"] = EScriptVal_Double;
@@ -2228,6 +2231,10 @@ namespace zlscript
 			if (pOperNode->pLeftOperand == nullptr && pOperNode->pRightOperand)
 			{
 				CMinusICode* pMinusICode = CICodeMgr::GetInstance()->New<CMinusICode>(pOperNode->m_unBeginSoureIndex);
+				if (CheckOperatorTree(&pOperNode->pRightOperand) == false)
+				{
+					return false;
+				}
 				pMinusICode->AddICode(0,pOperNode->pRightOperand);
 				*pNode = pMinusICode;
 				return true;
@@ -2264,8 +2271,13 @@ namespace zlscript
 				CSaveVarICode *pSaveCode = CICodeMgr::GetInstance()->New<CSaveVarICode>(pOperNode->m_unBeginSoureIndex);
 				CLoadVarICode* pLeftOperand = (CLoadVarICode*)pOperNode->pLeftOperand;
 				pSaveCode->m_word = pLeftOperand->m_word;
+				if (CheckOperatorTree(&pOperNode->pRightOperand) == false)
+				{
+					return false;
+				}
 				pSaveCode->AddICode(0, pOperNode->pRightOperand);
 				*pNode = pSaveCode;
+				return true;
 			}
 		}
 		else if (pOperNode->strOperator == "->")

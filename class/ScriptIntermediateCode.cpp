@@ -691,7 +691,7 @@ namespace zlscript
 		{
 			return false;
 		}
-		int nFunIndex = CScriptSuperPointerMgr::GetInstance()->GetClassFunIndex(pVarInfo->wExtend, strClassVarName);
+		int nFunIndex = CScriptSuperPointerMgr::GetInstance()->GetClassFunIndex(pVarInfo->wExtend, strFunName);
 		if (nFunIndex < 0)
 		{
 			return false;
@@ -777,28 +777,28 @@ namespace zlscript
 			pCondCode->MakeExeCode(vOut);
 		}
 		vOut.vCodeData.push_back(CodeStyle(m_unBeginSoureIndex));
-		CodeStyle& ifcode = vOut.vCodeData[vOut.vCodeData.size() - 1];
-		ifcode.qwCode = 0;
-		ifcode.wInstruct = ECODE_JUMP_FALSE;
-		ifcode.cExtend = cRegisterIndex;
-		ifcode.cSign = 1;
+		unsigned int ifpos = vOut.vCodeData.size() - 1;
+		vOut.vCodeData[ifpos].qwCode = 0;
+		vOut.vCodeData[ifpos].wInstruct = ECODE_JUMP_FALSE;
+		vOut.vCodeData[ifpos].cExtend = cRegisterIndex;
+		vOut.vCodeData[ifpos].cSign = 1;
 		unsigned int nCurPos = vOut.vCodeData.size();
 		if (pTureCode)
 			pTureCode->MakeExeCode(vOut);
 
-		ifcode.dwPos = vOut.vCodeData.size() - nCurPos + 1;
+		vOut.vCodeData[ifpos].dwPos = vOut.vCodeData.size() - nCurPos + 1;
 
 		if (pFalseCode)
 		{
 			vOut.vCodeData.push_back(CodeStyle(m_unElseSoureIndex));
-			CodeStyle& elsecode = vOut.vCodeData[vOut.vCodeData.size() - 1];
-			elsecode.qwCode = 0;
-			elsecode.wInstruct = ECODE_JUMP;
-			elsecode.cSign = 1;
+			unsigned int elsepos = vOut.vCodeData.size() - 1;
+			vOut.vCodeData[elsepos].qwCode = 0;
+			vOut.vCodeData[elsepos].wInstruct = ECODE_JUMP;
+			vOut.vCodeData[elsepos].cSign = 1;
 			nCurPos = vOut.vCodeData.size();
 			pFalseCode->MakeExeCode(vOut);
-			ifcode.dwPos++;
-			elsecode.dwPos = vOut.vCodeData.size() - nCurPos + 1;
+			vOut.vCodeData[ifpos].dwPos++;
+			vOut.vCodeData[elsepos].dwPos = vOut.vCodeData.size() - nCurPos + 1;
 		}
 
 		return true;
@@ -835,11 +835,11 @@ namespace zlscript
 
 		pCondCode->MakeExeCode(vOut);
 		vOut.vCodeData.push_back(CodeStyle(m_unBeginSoureIndex));
-		CodeStyle& ifcode = vOut.vCodeData[vOut.vCodeData.size() - 1];
-		ifcode.qwCode = 0;
-		ifcode.wInstruct = ECODE_JUMP_FALSE;
-		ifcode.cExtend = cRegisterIndex;
-		ifcode.cSign = 0;
+		unsigned int ifpos = vOut.vCodeData.size() - 1;
+		vOut.vCodeData[ifpos].qwCode = 0;
+		vOut.vCodeData[ifpos].wInstruct = ECODE_JUMP_FALSE;
+		vOut.vCodeData[ifpos].cExtend = cRegisterIndex;
+		vOut.vCodeData[ifpos].cSign = 0;
 		unsigned int nCondPos = vOut.vCodeData.size();
 
 		pBodyCode->MakeExeCode(vOut);
@@ -850,7 +850,7 @@ namespace zlscript
 		backcode.wInstruct = ECODE_JUMP;
 		backcode.cSign = 0;
 		backcode.dwPos = nBeginPos;
-		ifcode.dwPos = vOut.vCodeData.size();
+		vOut.vCodeData[ifpos].dwPos = vOut.vCodeData.size();
 
 		for (unsigned int i = nCondPos; i < vOut.vCodeData.size(); i++)
 		{
@@ -934,6 +934,7 @@ namespace zlscript
 		{
 			return false;
 		}
+		code.dwPos = nClassType;
 		vOut.vCodeData.push_back(code);
 		return true;
 	}
