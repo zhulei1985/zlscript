@@ -654,8 +654,8 @@ namespace zlscript
 			{
 				if (m_register[code.cSign].cType == EScriptVal_ClassPoint)
 				{
-					PointVarInfo pointVal = GetPointIndex_StackVar(&m_register[code.cSign]);
-					CScriptBasePointer* pPoint = pointVal.pPoint;
+					//PointVarInfo pointVal = GetPointIndex_StackVar(&m_register[code.cSign]);
+					CScriptBasePointer* pPoint = m_register[code.cSign].pPoint;
 					if (pPoint)
 					{
 						pPoint->Lock();
@@ -682,8 +682,8 @@ namespace zlscript
 			{
 				if (m_register[code.cSign].cType == EScriptVal_ClassPoint)
 				{
-					PointVarInfo pointVal = GetPointIndex_StackVar(&m_register[code.cSign]);
-					CScriptBasePointer* pPoint = pointVal.pPoint;
+					//PointVarInfo pointVal = GetPointIndex_StackVar(&m_register[code.cSign]);
+					CScriptBasePointer* pPoint = m_register[code.cSign].pPoint;
 					if (pPoint)
 					{
 						pPoint->Lock();

@@ -50,6 +50,40 @@ void CalculationTest2()
 void CalculationTest3(CTest test)
 {
 	int t1 = GetMsTime();
+	//int sum = 0;
+	int i = 1;
+	test->bbb = 0;
+	while (i <= 100)
+	{
+		int j = 1;
+		while (j <= 100)
+		{
+			test->bbb = test->bbb + i*j;
+			//sum = test->Add(sum , i*j);
+			j = j + 1;
+		}
+		i = i + 1;
+	}
+
+	int t2 = GetMsTime() - t1;
+
+	print("Calculation 3 test->bbb:" + test->bbb);
+	//print("Calculation 3 result:" + sum);
+	print("Calculation 3 time:" + t2 +"ms");
+}
+void test1(int a, int b)
+{
+	print("检测参数顺序");
+	print(a);
+	print(b);
+}
+int testAdd(int a, int b)
+{
+	return a+b;
+}
+void CalculationTest4()
+{
+	int t1 = GetMsTime();
 	int sum = 0;
 	int i = 1;
 	while (i <= 100)
@@ -57,18 +91,19 @@ void CalculationTest3(CTest test)
 		int j = 1;
 		while (j <= 100)
 		{
-			sum = test->Add(sum , i*j);
+			sum = testAdd(sum , i*j);
 			j = j + 1;
 		}
 		i = i + 1;
 	}
 
 	int t2 = GetMsTime() - t1;
-	print("Calculation 2 result:" + sum);
-	print("Calculation 2 time:" + t2 +"ms");
+	print("Calculation 4 result:" + sum);
+	print("Calculation 4 time:" + t2 +"ms");
 }
 void main()
 {
+	test1(1,2);
 	print("begin");
 	print("g_a:" + g_a);
 	CTest test = new CTest;
@@ -76,7 +111,9 @@ void main()
 	print(nVal);
 	//delete test;
 	CalculationTest();
-
+	CalculationTest2();
+	CalculationTest3(test);
+	CalculationTest4();
 	//RunScript(0,"CalculationTest",test);
 	//RunScript(0,"CalculationTest3",test);
 	//RunScript(0,"CalculationTest3",test);

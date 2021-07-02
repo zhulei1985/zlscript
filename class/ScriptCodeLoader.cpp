@@ -2221,6 +2221,7 @@ namespace zlscript
 				CLoadVarICode* pVarCode = (CLoadVarICode*)pOperNode->pRightOperand;
 				CNewICode* pNewICode = CICodeMgr::GetInstance()->New<CNewICode>(pOperNode->m_unBeginSoureIndex);
 				pNewICode->strClassType = pVarCode->m_word.word;
+				pNewICode->SetFather(pOperNode->GetFather());
 				*pNode = pNewICode;
 				return true;
 			}
@@ -2236,6 +2237,7 @@ namespace zlscript
 					return false;
 				}
 				pMinusICode->AddICode(0,pOperNode->pRightOperand);
+				pMinusICode->SetFather(pOperNode->GetFather());
 				*pNode = pMinusICode;
 				return true;
 			}
@@ -2256,8 +2258,13 @@ namespace zlscript
 					CSetClassParamICode* pSetCode = CICodeMgr::GetInstance()->New<CSetClassParamICode>(pOperNode->m_unBeginSoureIndex);
 					pSetCode->strClassVarName = pLeftOperand->m_word.word;
 					pSetCode->strParamName = pRightOperand->m_word.word;
-					pSetCode->AddICode(0,pOperNode->pRightOperand);
 
+					if (CheckOperatorTree(&pOperNode->pRightOperand) == false)
+					{
+						return false;
+					}
+					pSetCode->AddICode(0,pOperNode->pRightOperand);
+					pSetCode->SetFather(pOperNode->GetFather());
 					*pNode = pSetCode;
 					return true;
 				}
@@ -2276,6 +2283,7 @@ namespace zlscript
 					return false;
 				}
 				pSaveCode->AddICode(0, pOperNode->pRightOperand);
+				pSaveCode->SetFather(pOperNode->GetFather());
 				*pNode = pSaveCode;
 				return true;
 			}
@@ -2292,6 +2300,7 @@ namespace zlscript
 					CGetClassParamICode* pGetCode = CICodeMgr::GetInstance()->New<CGetClassParamICode>(pOperNode->m_unBeginSoureIndex);
 					pGetCode->strClassVarName = pLeftOperand->m_word.word;
 					pGetCode->strParamName = pRightOperand->m_word.word;
+					pGetCode->SetFather(pOperNode->GetFather());
 					*pNode = pGetCode;
 					return true;
 				}
@@ -2307,6 +2316,7 @@ namespace zlscript
 						if (pCallCode->vParams[i])
 							pCallCode->vParams[i]->SetFather(pCallCode);
 					}
+					pCallCode->SetFather(pOperNode->GetFather());
 					*pNode = pCallCode;
 					return true;
 				}
@@ -2438,6 +2448,7 @@ namespace zlscript
 
 	int CScriptCodeLoader::MakeICode2Code(int nMode)
 	{
+		//先遍历一遍注册信息
 		auto it = m_mapString2Code.begin();
 		for (; it != m_mapString2Code.end(); it++)
 		{
@@ -2447,9 +2458,26 @@ namespace zlscript
 				tagCodeData code;
 				code.funname = pCode->funname;
 				code.filename = pCode->filename;
-				pCode->MakeExeCode(code);
 				m_mapString2CodeIndex[it->first] = m_vecCodeData.size();
 				m_vecCodeData.push_back(code);
+			}
+		}
+		it = m_mapString2Code.begin();
+		for (; it != m_mapString2Code.end(); it++)
+		{
+			CFunICode* pCode = it->second;
+			if (pCode)
+			{
+				auto itS2I = m_mapString2CodeIndex.find(it->first);
+				if (itS2I != m_mapString2CodeIndex.end())
+				{
+					tagCodeData& code = m_vecCodeData[itS2I->second];
+					pCode->MakeExeCode(code);
+				}
+				else
+				{
+					//TODO 报错
+				}
 			}
 		}
 		return 0;
@@ -2478,18 +2506,21 @@ namespace zlscript
 			unsigned int curSoureWordIndex = -1;
 			for (unsigned int i = 0; i < data.vCodeData.size(); i++)
 			{
-				if (curSoureWordIndex != data.vCodeData[i].nSoureWordIndex)
-				{
-					curSoureWordIndex = data.vCodeData[i].nSoureWordIndex;
-					auto souceInfo = GetSourceWords(curSoureWordIndex);
-					fputs(souceInfo.strLineWords.c_str(), fp);
-					fputc('\n', fp);
-				}
+
 				std::string str = PrintOneCode(data.vCodeData[i]);
 				char strbuff[32] = { 0 };
 				sprintf(strbuff, "[%d]\t", i);
 				fputs(strbuff, fp);
 				fputs(str.c_str(), fp);
+#ifdef _SCRIPT_DEBUG
+				if (curSoureWordIndex != data.vCodeData[i].nSoureWordIndex)
+				{
+					curSoureWordIndex = data.vCodeData[i].nSoureWordIndex;
+					auto souceInfo = GetSourceWords(curSoureWordIndex);
+					fputc('\t', fp);
+					fputs(souceInfo.strLineWords.c_str(), fp);
+				}
+#endif
 				fputc('\n', fp);
 			}
 		}

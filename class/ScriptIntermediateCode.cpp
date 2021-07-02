@@ -413,7 +413,7 @@ namespace zlscript
 		{
 			return false;
 		}
-		int nParamIndex = CScriptSuperPointerMgr::GetInstance()->GetClassParamIndex(pVarInfo->wExtend, strClassVarName);
+		int nParamIndex = CScriptSuperPointerMgr::GetInstance()->GetClassParamIndex(pVarInfo->wExtend, strParamName);
 		if (nParamIndex < 0)
 		{
 			return false;
@@ -422,17 +422,18 @@ namespace zlscript
 		classcode.qwCode = 0;
 		classcode.wInstruct = ECODE_LOAD;
 		classcode.cSign = pVarInfo->cGlobal==1? ESIGN_POS_GLOBAL_VAR: ESIGN_POS_LOACL_VAR;
-		classcode.cExtend = cRegisterIndex;
+		classcode.cExtend = R_C;
 		classcode.dwPos = pVarInfo->dwPos;
 		vOut.vCodeData.push_back(classcode);
 
 		CodeStyle code(m_unBeginSoureIndex);
 		code.qwCode = 0;
 		code.wInstruct = ECODE_GET_CLASS_PARAM;
-		code.cSign = cRegisterIndex;
+		code.cSign = R_C;
 		code.cExtend = cRegisterIndex;
 		code.dwPos = nParamIndex;
 		vOut.vCodeData.push_back(code);
+		return true;
 	}
 	bool CSetClassParamICode::MakeExeCode(CScriptCodeLoader::tagCodeData& vOut)
 	{
@@ -450,29 +451,29 @@ namespace zlscript
 		{
 			return false;
 		}
-		int nParamIndex = CScriptSuperPointerMgr::GetInstance()->GetClassParamIndex(pVarInfo->wExtend, strClassVarName);
+		int nParamIndex = CScriptSuperPointerMgr::GetInstance()->GetClassParamIndex(pVarInfo->wExtend, strParamName);
 		if (nParamIndex < 0)
 		{
 			return false;
 		}
 		if (pRightOperand)
 		{
-			pRightOperand->SetRegisterIndex(R_B);
+			pRightOperand->SetRegisterIndex(cRegisterIndex);
 			pRightOperand->MakeExeCode(vOut);
 		}
 		CodeStyle classcode(m_unBeginSoureIndex);
 		classcode.qwCode = 0;
 		classcode.wInstruct = ECODE_LOAD;
 		classcode.cSign = pVarInfo->cGlobal == 1 ? ESIGN_POS_GLOBAL_VAR : ESIGN_POS_LOACL_VAR;
-		classcode.cExtend = R_A;
+		classcode.cExtend = R_C;
 		classcode.dwPos = pVarInfo->dwPos;
 		vOut.vCodeData.push_back(classcode);
 
 		CodeStyle code(m_unBeginSoureIndex);
 		code.qwCode = 0;
 		code.wInstruct = ECODE_SET_CLASS_PARAM;
-		code.cSign = R_A;
-		code.cExtend = R_B;
+		code.cSign = R_C;
+		code.cExtend = cRegisterIndex;
 		code.dwPos = nParamIndex;
 		vOut.vCodeData.push_back(code);
 		return true;

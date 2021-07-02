@@ -423,11 +423,9 @@ namespace zlscript
 					int i = 0;
 					while (ParmStack.size() > 0)
 					{
-						auto pVar = pBlock->GetVar(i);
-						if (pVar)
-						{
-							*pVar = ParmStack.top();
-						}
+						auto var = ParmStack.top();
+						pBlock->PushVar(var);
+						
 						ParmStack.pop();
 					}
 

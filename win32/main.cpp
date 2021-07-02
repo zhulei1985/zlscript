@@ -44,6 +44,7 @@ public:
 
 	}
 	ATTR_INT(aaa,1);
+	ATTR_INT(bbb, 2);
 
 	int Add2Script(CScriptCallState* pState)
 	{

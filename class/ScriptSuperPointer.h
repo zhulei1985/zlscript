@@ -254,6 +254,7 @@ namespace zlscript
 		int GetClassParamIndex(int classindex, std::string paramname);
 
 		CBaseScriptClassMgr* GetClassMgr(int nType);
+
 	private:
 		int nClassTypeCount;
 		std::map<std::string, int> m_mapString2ClassType;
@@ -279,7 +280,7 @@ namespace zlscript
 	template<class T>
 	inline bool CScriptSuperPointerMgr::RegisterClassType(std::string classname, T* p)
 	{
-		m_MutexTypeLock.lock();
+		std::lock_guard<std::mutex> Lock(m_MutexTypeLock);
 		if (m_mapString2ClassType.find(classname) == m_mapString2ClassType.end())
 		{
 			nClassTypeCount++;
@@ -290,10 +291,32 @@ namespace zlscript
 
 			m_mapClassMgr[nClassTypeCount] = GetScriptClassMgr<T>();//CScriptClassMgr<T>::GetInstance();
 			
-			m_MutexTypeLock.unlock();
+			if (p)
+			{
+				auto it = m_mapPointer.find(p->GetScriptPointIndex());
+				if (it != m_mapPointer.end())
+				{
+					m_mapTypePointer[CScriptSuperPointer<T>::s_Info.nClassType] = it->second;
+					m_mapPointer.erase(it);
+				}
+				else
+				{
+					CScriptSuperPointer<T>* pPoint = new CScriptSuperPointer<T>;
+					if (pPoint == nullptr)
+					{
+						return false;
+					}
+					p->SetClassInfo(&CScriptSuperPointer<T>::s_Info);
+					pPoint->SetAutoReleaseMode(false);
+					pPoint->SetID(p->GetScriptPointIndex());
+					pPoint->SetPointer(p);
+					m_mapTypePointer[CScriptSuperPointer<T>::s_Info.nClassType] = pPoint;
+				}
+			}
+
 			return true;
 		}
-		m_MutexTypeLock.unlock();
+		delete p;
 		return false;
 	}
 
@@ -313,10 +336,7 @@ namespace zlscript
 			CScriptSuperPointer<T>::s_Info.nFunSize++;
 		}
 
-		if (m_mapTypePointer[CScriptSuperPointer<T>::s_Info.nClassType] == nullptr)
-		{
-			m_mapTypePointer[CScriptSuperPointer<T>::s_Info.nClassType] = new CScriptSuperPointer<T>;
-		}
+
 		m_MutexTypeLock.unlock();
 		return true;
 	}
@@ -370,7 +390,7 @@ namespace zlscript
 
 #define RegisterClassType(name,T) \
 { \
-	T *pPoint = nullptr; \
+	T *pPoint = new T(); \
 	CScriptSuperPointerMgr::GetInstance()->RegisterClassType(name, pPoint); \
 }
 
