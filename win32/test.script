@@ -114,12 +114,12 @@ void main()
 	CalculationTest2();
 	CalculationTest3(test);
 	CalculationTest4();
-	//RunScript(0,"CalculationTest",test);
-	//RunScript(0,"CalculationTest3",test);
-	//RunScript(0,"CalculationTest3",test);
-	//RunScript(0,"CalculationTest3",test);
-	//RunScript(0,"CalculationTest3",test);
-	//RunScript(0,"CalculationTest3",test);
+	RunScript(0,"CalculationTest");
+	RunScript(0,"CalculationTest2");
+	RunScript(0,"CalculationTest3",test);
+	RunScript(0,"CalculationTest3",test);
+	RunScript(0,"CalculationTest4",test);
+	RunScript(0,"CalculationTest4",test);
 	//int nVal2 = test->Add(1,2);
 	print(nVal2);
 	//CalculationTest2();

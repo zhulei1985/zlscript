@@ -141,16 +141,16 @@ namespace zlscript
 		}
 
 		//首先是参数的赋值
-		for (int i = 0; i < m_vecTempVarOrder.size(); i++)
-		{
-			CodeStyle code(m_unBeginSoureIndex);
-			code.qwCode = 0;
-			code.cSign = ESIGN_POS_LOACL_VAR;
-			code.wInstruct = ECODE_POP;
-			code.cExtend = 0;
-			code.dwPos = GetTempVarIndex(m_vecTempVarOrder[i].c_str());
-			vOut.vCodeData.push_back(code);
-		}
+		//for (int i = 0; i < m_vecTempVarOrder.size(); i++)
+		//{
+		//	CodeStyle code(m_unBeginSoureIndex);
+		//	code.qwCode = 0;
+		//	code.cSign = ESIGN_POS_LOACL_VAR;
+		//	code.wInstruct = ECODE_POP;
+		//	code.cExtend = 0;
+		//	code.dwPos = GetTempVarIndex(m_vecTempVarOrder[i].c_str());
+		//	vOut.vCodeData.push_back(code);
+		//}
 		if (pBodyCode)
 		{
 			pBodyCode->MakeExeCode(vOut);

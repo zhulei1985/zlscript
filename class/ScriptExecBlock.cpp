@@ -714,7 +714,7 @@ namespace zlscript
 			//break;
 			case ECODE_CALL_CALLBACK:		//调用回调函数
 			{
-				if (m_stackRegister.size() <= code.cExtend)
+				if (m_stackRegister.size() >= code.cExtend)
 				{
 					CACHE_NEW(CScriptCallState, pCallState, m_pMaster);
 					if (pCallState)
@@ -757,26 +757,27 @@ namespace zlscript
 				else
 				{
 					//TODO 报错
+					nResult = ERESULT_ERROR;
 				}
 			}
 			break;
 			case ECODE_CALL_SCRIPT:	//调用脚本函数
 			{
-				if (m_stackRegister.size() <= code.cExtend)
+				if (m_stackRegister.size() >= code.cExtend)
 				{
-					CScriptStack ParmStack;
-					for (unsigned int i = m_stackRegister.size() - code.cExtend; i < m_stackRegister.size(); i++)
-					{
-						auto pVar = m_stackRegister.GetVal(i);
-						if (pVar)
-							ParmStack.push(*pVar);
-					}
-					for (unsigned char i = 0; i < code.cExtend; i++)
-					{
-						m_stackRegister.pop();
-					}
+					//CScriptStack ParmStack;
+					//for (unsigned int i = m_stackRegister.size() - code.cExtend; i < m_stackRegister.size(); i++)
+					//{
+					//	auto pVar = m_stackRegister.GetVal(i);
+					//	if (pVar)
+					//		ParmStack.push(*pVar);
+					//}
+					//for (unsigned char i = 0; i < code.cExtend; i++)
+					//{
+					//	m_stackRegister.pop();
+					//}
 					//运行回调函数
-					switch (m_pMaster->CallFun_Script(pMachine, code.dwPos, ParmStack))
+					switch (m_pMaster->CallFun_Script(pMachine, code.dwPos, m_stackRegister, code.cExtend))
 					{
 					case ECALLBACK_ERROR:
 						nResult = ERESULT_ERROR;
@@ -792,13 +793,17 @@ namespace zlscript
 						nResult = ERESULT_NEXTCONTINUE;
 						break;
 					}
-
+					for (unsigned char i = 0; i < code.cExtend; i++)
+					{
+						m_stackRegister.pop();
+					}
 					m_nCodePoint++;
 
 				}
 				else
 				{
 					//TODO 报错
+					nResult = ERESULT_ERROR;
 				}
 			}
 			break;

@@ -97,6 +97,9 @@
     <ClInclude Include="..\class\ScriptCodeStyle.h">
       <Filter>code</Filter>
     </ClInclude>
+    <ClInclude Include="..\class\ScriptClassFunion.h">
+      <Filter>code</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\class\ScriptCallBackFunion.cpp">
@@ -168,10 +171,14 @@
     <ClCompile Include="..\class\StackVarInfo.cpp">
       <Filter>code</Filter>
     </ClCompile>
+    <ClCompile Include="..\class\ScriptClassFunion.cpp">
+      <Filter>code</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="test.script">
       <Filter>资源文件</Filter>
     </None>
+    <None Include="cpp.hint" />
   </ItemGroup>
 </Project>

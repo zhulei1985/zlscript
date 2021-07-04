@@ -72,29 +72,58 @@ namespace zlscript
 	}
 
 
-	__int64 CScriptCallState::PopIntVarFormStack()
-	{
-		return ScriptStack_GetInt(m_stackRegister);
-	}
-	double CScriptCallState::PopDoubleVarFormStack()
-	{
-		return ScriptStack_GetFloat(m_stackRegister);
-	}
-	const char* CScriptCallState::PopCharVarFormStack()
-	{
-		strBuffer = ScriptStack_GetString(m_stackRegister);
+	//__int64 CScriptCallState::PopIntVarFormStack()
+	//{
+	//	return ScriptStack_GetInt(m_stackRegister);
+	//}
+	//double CScriptCallState::PopDoubleVarFormStack()
+	//{
+	//	return ScriptStack_GetFloat(m_stackRegister);
+	//}
+	//const char* CScriptCallState::PopCharVarFormStack()
+	//{
+	//	strBuffer = ScriptStack_GetString(m_stackRegister);
 
-		return strBuffer.c_str();
-	}
-	PointVarInfo CScriptCallState::PopClassPointFormStack()
+	//	return strBuffer.c_str();
+	//}
+	//PointVarInfo CScriptCallState::PopClassPointFormStack()
+	//{
+	//	return ScriptStack_GetClassPoint(m_stackRegister);
+	//}
+	//StackVarInfo CScriptCallState::PopVarFormStack()
+	//{
+	//	StackVarInfo var = m_stackRegister.top();
+	//	m_stackRegister.pop();
+	//	return var;
+	//}
+	__int64 CScriptCallState::GetIntVarFormStack(unsigned int index)
 	{
-		return ScriptStack_GetClassPoint(m_stackRegister);
+		StackVarInfo* var = m_stackRegister.GetVal(index);
+		return GetInt_StackVar(var);
 	}
-	StackVarInfo CScriptCallState::PopVarFormStack()
+	double CScriptCallState::GetDoubleVarFormStack(unsigned int index)
 	{
-		StackVarInfo var = m_stackRegister.top();
-		m_stackRegister.pop();
-		return var;
+		StackVarInfo* var = m_stackRegister.GetVal(index);
+		return GetFloat_StackVar(var);
+	}
+	std::string CScriptCallState::GetStringVarFormStack(unsigned int index)
+	{
+		StackVarInfo* var = m_stackRegister.GetVal(index);
+		return GetString_StackVar(var);
+	}
+	PointVarInfo CScriptCallState::GetClassPointFormStack(unsigned int index)
+	{
+		StackVarInfo* var = m_stackRegister.GetVal(index);
+		return GetPoint_StackVar(var);
+	}
+	StackVarInfo CScriptCallState::GetVarFormStack(unsigned int index)
+	{
+		StackVarInfo* var = m_stackRegister.GetVal(index);
+		if (var)
+		{
+			return *var;
+		}
+		return StackVarInfo();
 	}
 	int CScriptCallState::GetParamNum()
 	{
@@ -407,7 +436,7 @@ namespace zlscript
 		}
 		return nReturn;
 	}
-	int CScriptRunState::CallFun_Script(CScriptVirtualMachine* pMachine, int FunIndex, CScriptStack& ParmStack, bool bIsBreak)
+	int CScriptRunState::CallFun_Script(CScriptVirtualMachine* pMachine, int FunIndex, CScriptStack& ParmStack, int nParmNum, bool bIsBreak)
 	{
 		int nReturn = ECALLBACK_FINISH;
 		{
@@ -420,13 +449,16 @@ namespace zlscript
 				if (pBlock)
 				{
 					//提取参数
-					int i = 0;
-					while (ParmStack.size() > 0)
+					int nOffset = ParmStack.size() - nParmNum;
+					if (nOffset < 0)
+						nOffset = 0;
+					for (int i = 0; i < nParmNum; i++)
 					{
-						auto var = ParmStack.top();
-						pBlock->PushVar(var);
-						
-						ParmStack.pop();
+						StackVarInfo *pInfo = ParmStack.GetVal(i+ nOffset);
+						if (pInfo)
+						{
+							pBlock->vNumVar[i] = *pInfo;
+						}
 					}
 
 					m_BlockStack.push(pBlock);
@@ -816,12 +848,13 @@ namespace zlscript
 				//注入参数
 				for (int i = 0; i < ParmStack.size(); i++)
 				{
-					StackVarInfo* pVar = ParmStack.GetVal(i);
-					if (pVar)
+					StackVarInfo* pInfo = ParmStack.GetVal(i);
+					if (pInfo)
 					{
-						pBlock->PushVar(*pVar);
+						pBlock->vNumVar[i] = *pInfo;
 					}
 				}
+
 				if (bIsBreak && m_BlockStack.size() > 0)
 				{
 					CScriptExecBlock* pOldBlock = m_BlockStack.top();

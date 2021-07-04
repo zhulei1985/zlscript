@@ -45,33 +45,39 @@ namespace zlscript
 		}
 		__int64 GetMasterID();
 
-		virtual bool PushEmptyVarToStack();
-		virtual bool PushVarToStack(int nVal);
-		virtual bool PushVarToStack(__int64 nVal);
-		virtual bool PushVarToStack(double Double);
-		virtual bool PushVarToStack(const char* pstr);
-		virtual bool PushClassPointToStack(__int64 nIndex);
-		virtual bool PushClassPointToStack(CScriptBasePointer* pPoint);
-		virtual bool PushVarToStack(StackVarInfo& Val);
+		bool PushEmptyVarToStack();
+		bool PushVarToStack(int nVal);
+		bool PushVarToStack(__int64 nVal);
+		bool PushVarToStack(double Double);
+		bool PushVarToStack(const char* pstr);
+		bool PushClassPointToStack(__int64 nIndex);
+		bool PushClassPointToStack(CScriptBasePointer* pPoint);
+		bool PushVarToStack(StackVarInfo& Val);
 
 		template<class T>
 		bool PushClassPointToStack(T* pVal);
 
-		virtual __int64 PopIntVarFormStack();
-		virtual double PopDoubleVarFormStack();
-		virtual const char* PopCharVarFormStack();
-		virtual PointVarInfo PopClassPointFormStack();
-		virtual StackVarInfo PopVarFormStack();
+		//virtual __int64 PopIntVarFormStack();
+		//virtual double PopDoubleVarFormStack();
+		//virtual const char* PopCharVarFormStack();
+		//virtual PointVarInfo PopClassPointFormStack();
+		//virtual StackVarInfo PopVarFormStack();
+
+		 __int64 GetIntVarFormStack(unsigned int index);
+		double GetDoubleVarFormStack(unsigned int index);
+		std::string GetStringVarFormStack(unsigned int index);
+		PointVarInfo GetClassPointFormStack(unsigned int index);
+		StackVarInfo GetVarFormStack(unsigned int index);
 
 		virtual int GetParamNum();
 
-		virtual StackVarInfo& GetResult();
-		virtual void SetResult(__int64 nVal);
-		virtual void SetResult(double Val);
-		virtual void SetResult(const char* pStr);
-		virtual void SetClassPointResult(__int64 nIndex);
-		virtual void SetClassPointResult(CScriptBasePointer* pPoint);
-		virtual void SetResult(StackVarInfo& Val);
+		StackVarInfo& GetResult();
+		void SetResult(__int64 nVal);
+		void SetResult(double Val);
+		void SetResult(const char* pStr);
+		void SetClassPointResult(__int64 nIndex);
+		void SetClassPointResult(CScriptBasePointer* pPoint);
+		void SetResult(StackVarInfo& Val);
 		template<class T>
 		bool SetClassPointResult(T* pVal);
 	public:
@@ -133,7 +139,7 @@ namespace zlscript
 		void ClearAll();
 
 		int CallFun_CallBack(CScriptVirtualMachine* pMachine, int FunIndex, CScriptCallState* pCallState);
-		int CallFun_Script(CScriptVirtualMachine* pMachine, int FunIndex, CScriptStack& ParmStack, bool bIsBreak = false);
+		int CallFun_Script(CScriptVirtualMachine* pMachine, int FunIndex, CScriptStack& ParmStack, int nParmNum, bool bIsBreak = false);
 
 		int CallFun(CScriptVirtualMachine* pMachine, CScriptExecBlock* pCurBlock, int nType, int FunIndex, int nParmNum, bool bIsBreak = false);
 		int CallFun(CScriptVirtualMachine* pMachine, int nType, int FunIndex, CScriptStack& ParmStack, bool bIsBreak = false);

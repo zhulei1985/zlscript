@@ -33,7 +33,7 @@ namespace zlscript
 		//ScriptVector_PushVar(scriptParm, name.c_str());
 		for (int i = 0; i < nParmNum; i++)
 		{
-			StackVarInfo var = pState->PopVarFormStack();
+			StackVarInfo var = pState->GetVarFormStack(i);
 			ScriptVector_PushVar(scriptParm, &var);
 		}
 		if (pState->m_pMaster->m_pMachine)

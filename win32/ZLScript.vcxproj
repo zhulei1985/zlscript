@@ -135,6 +135,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\class\ScriptClassFunion.h" />
     <ClInclude Include="..\class\ScriptCodeStyle.h" />
     <ClInclude Include="..\class\ScriptClassAttributes.h" />
     <ClInclude Include="..\class\ScriptClassMgr.h" />
@@ -167,6 +168,7 @@
   <ItemGroup>
     <ClCompile Include="..\class\ScriptCallBackFunion.cpp" />
     <ClCompile Include="..\class\ScriptClassAttributes.cpp" />
+    <ClCompile Include="..\class\ScriptClassFunion.cpp" />
     <ClCompile Include="..\class\ScriptClassMgr.cpp" />
     <ClCompile Include="..\class\ScriptCodeLoader.cpp" />
     <ClCompile Include="..\class\scriptcommon.cpp" />
@@ -190,6 +192,7 @@
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="cpp.hint" />
     <None Include="test.script" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

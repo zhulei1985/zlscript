@@ -147,7 +147,7 @@ namespace zlscript
 		{
 			return ECALLBACK_ERROR;
 		}
-		short nVal = pState->PopIntVarFormStack();
+		short nVal = pState->GetIntVarFormStack(0);
 
 		g_Process_ID = nVal;
 
@@ -167,14 +167,15 @@ namespace zlscript
 		}
 		int nParmNum = pState->GetParamNum();
 		//CScriptStack vRetrunVars;
-		int nIsWaiting = pState->PopIntVarFormStack();//是否等待调用函数完成
-		std::string name = pState->PopCharVarFormStack();
+		
+		int nIsWaiting = pState->GetIntVarFormStack(0);//是否等待调用函数完成
+		std::string name = pState->GetStringVarFormStack(1);
 
-		nParmNum -= 2;
+		//nParmNum -= 2;
 		CScriptStack scriptParm;
-		for (int i = 0; i < nParmNum; i++)
+		for (int i = 2; i < nParmNum; i++)
 		{
-			auto var = pState->PopVarFormStack();
+			auto var = pState->GetVarFormStack(i);
 			ScriptVector_PushVar(scriptParm, &var);
 		}
 
@@ -212,7 +213,7 @@ namespace zlscript
 			return ECALLBACK_ERROR;
 		}
 
-		std::string str = pState->PopCharVarFormStack();
+		std::string str = pState->GetStringVarFormStack(0);
 		printf("%s\n", str.c_str());
 
 		return ECALLBACK_FINISH;
@@ -227,7 +228,8 @@ namespace zlscript
 		}
 		std::string strReturn;
 		char ch[2] = { 0,0 };
-		std::string str = pState->PopCharVarFormStack();
+		std::string str = pState->GetStringVarFormStack(0);
+		int nIndex = 1;
 		const char* pStr = str.c_str();
 		for (unsigned int i = 0; i < str.size(); i++)
 		{
@@ -240,7 +242,7 @@ namespace zlscript
 					case 'd':
 					case 'f':
 					case 's':
-						strReturn += pState->PopCharVarFormStack();
+						strReturn += pState->GetStringVarFormStack(nIndex++);
 						break;
 					default:
 						break;
@@ -280,7 +282,7 @@ namespace zlscript
 		int nval = 0x7fffffff;
 		if (pState->GetParamNum() >= 1)
 		{
-			nval = (int)pState->PopIntVarFormStack();
+			nval = (int)pState->GetIntVarFormStack(0);
 			if (nval <= 0)
 			{
 				nval = 1;
@@ -303,7 +305,7 @@ namespace zlscript
 		}
 		if (pState->GetParamNum() >= 1)
 		{
-			pState->m_pMaster->SetWatingTime(pState->PopIntVarFormStack());
+			pState->m_pMaster->SetWatingTime(pState->GetIntVarFormStack(0));
 		}
 		return ECALLBACK_NEXTCONTINUE;
 	}
@@ -314,7 +316,7 @@ namespace zlscript
 		{
 			return ECALLBACK_ERROR;
 		}
-		__int64 nAngle = pState->PopIntVarFormStack();
+		__int64 nAngle = pState->GetIntVarFormStack(0);
 		double fRadian = nAngle / 180.f * 3.1415926f;
 
 		pState->SetResult(fRadian);
@@ -327,7 +329,7 @@ namespace zlscript
 		{
 			return ECALLBACK_ERROR;
 		}
-		PointVarInfo PointVal = pState->PopClassPointFormStack();
+		PointVarInfo PointVal = pState->GetClassPointFormStack(0);
 		CScriptBasePointer* pPoint = PointVal.pPoint;
 
 		if (pPoint && pPoint->GetPoint())
@@ -348,20 +350,20 @@ namespace zlscript
 			return ECALLBACK_ERROR;
 		}
 		int nParmNum = pState->GetParamNum();
-		PointVarInfo pointVal = pState->PopClassPointFormStack();
-		std::string strEvent = pState->PopCharVarFormStack();
-		std::string strFlag = pState->PopCharVarFormStack();
-		std::string strScript = pState->PopCharVarFormStack();
+		PointVarInfo pointVal = pState->GetClassPointFormStack(0);
+		std::string strEvent = pState->GetStringVarFormStack(1);
+		std::string strFlag = pState->GetStringVarFormStack(2);
+		std::string strScript = pState->GetStringVarFormStack(3);
 		__int64 nClassPoint = 0;
 		if (pointVal.pPoint)
 		{
 			nClassPoint = pointVal.pPoint->GetID();
 		}
-		nParmNum -= 4;
+
 		CScriptStack vParmVars;
-		for (int i = 0; i < nParmNum; i++)
+		for (int i = 4; i < nParmNum; i++)
 		{
-			auto var = pState->PopVarFormStack();
+			auto var = pState->GetVarFormStack(i);
 			ScriptVector_PushVar(vParmVars, &var);
 		}
 		CScriptTriggerMgr::GetInstance()->SetEventTrigger(strEvent, nClassPoint, strFlag, pMachine->GetEventIndex(), strScript, vParmVars);
@@ -375,8 +377,8 @@ namespace zlscript
 		{
 			return ECALLBACK_ERROR;
 		}
-		PointVarInfo pointVal = pState->PopClassPointFormStack();
-		std::string strEvent = pState->PopCharVarFormStack();
+		PointVarInfo pointVal = pState->GetClassPointFormStack(0);
+		std::string strEvent = pState->GetStringVarFormStack(1);
 		__int64 nClassPoint = 0;
 		if (pointVal.pPoint)
 		{
@@ -393,9 +395,9 @@ namespace zlscript
 		{
 			return ECALLBACK_ERROR;
 		}
-		PointVarInfo pointVal = pState->PopClassPointFormStack();
-		std::string strEvent = pState->PopCharVarFormStack();
-		std::string strFlag = pState->PopCharVarFormStack();
+		PointVarInfo pointVal = pState->GetClassPointFormStack(0);
+		std::string strEvent = pState->GetStringVarFormStack(1);
+		std::string strFlag = pState->GetStringVarFormStack(2);
 		__int64 nClassPoint = 0;
 		if (pointVal.pPoint)
 		{
@@ -413,7 +415,7 @@ namespace zlscript
 			return ECALLBACK_ERROR;
 		}
 
-		std::string strFlag = pState->PopCharVarFormStack();
+		std::string strFlag = pState->GetStringVarFormStack(0);
 		auto pData = CScriptDataMgr::GetInstance()->GetData(strFlag.c_str());
 
 		pState->SetClassPointResult(pData);
@@ -426,7 +428,7 @@ namespace zlscript
 		{
 			return ECALLBACK_ERROR;
 		}
-		PointVarInfo pointVal = pState->PopClassPointFormStack();
+		PointVarInfo pointVal = pState->GetClassPointFormStack(0);
 		CScriptBasePointer* pPoint = pointVal.pPoint;
 		if (pPoint)
 		{
@@ -443,12 +445,12 @@ namespace zlscript
 			return ECALLBACK_ERROR;
 		}
 		int nParmNum = pState->GetParamNum();
-		std::string strFlag = pState->PopCharVarFormStack();
+		std::string strFlag = pState->GetStringVarFormStack(0);
 		auto pData = CScriptDataMgr::GetInstance()->GetData(strFlag.c_str());
 		CScriptSubData* pArray = nullptr;
 		if (nParmNum >= 2)
 		{
-			std::string strName = pState->PopCharVarFormStack();
+			std::string strName = pState->GetStringVarFormStack(1);
 			auto it = pData->m_mapChild.find(strName);
 			if (it != pData->m_mapChild.end())
 			{
@@ -459,7 +461,7 @@ namespace zlscript
 		{
 			for (int i = 2; i < nParmNum; i++)
 			{
-				std::string strName = pState->PopCharVarFormStack();
+				std::string strName = pState->GetStringVarFormStack(i);
 				auto it = pArray->m_mapChild.find(strName);
 				if (it != pArray->m_mapChild.end())
 				{
@@ -488,12 +490,12 @@ namespace zlscript
 			return ECALLBACK_ERROR;
 		}
 		int nParmNum = pState->GetParamNum();
-		std::string strFlag = pState->PopCharVarFormStack();
+		std::string strFlag = pState->GetStringVarFormStack(0);
 		auto pData = CScriptDataMgr::GetInstance()->GetData(strFlag.c_str());
 		CScriptSubData* pArray = nullptr;
 		if (nParmNum > 2)
 		{
-			std::string strName = pState->PopCharVarFormStack();
+			std::string strName = pState->GetStringVarFormStack(1);
 			pArray = pData->m_mapChild[strName];
 			if (pArray == nullptr)
 			{
@@ -504,7 +506,7 @@ namespace zlscript
 
 		for (int i = 2; i < nParmNum - 1; i++)
 		{
-			std::string strName = pState->PopCharVarFormStack();
+			std::string strName = pState->GetStringVarFormStack(i);
 			auto& subMap = pArray->m_mapChild;
 			pArray = subMap[strName];
 			if (pArray == nullptr)
@@ -514,7 +516,7 @@ namespace zlscript
 			}
 		}
 
-		pArray->m_var = pState->PopVarFormStack();
+		pArray->m_var = pState->GetVarFormStack(nParmNum - 1);
 		CScriptDataMgr::GetInstance()->ReleaseData(pData);
 
 		return ECALLBACK_FINISH;

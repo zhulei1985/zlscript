@@ -24,10 +24,10 @@ namespace zlscript
 	{
 		AddClassObject(CScriptPointInterface::GetScriptPointIndex(), this);
 
-		RegisterClassFun(GetVal, this, &CScriptHashMap::GetVal2Script);
-		RegisterClassFun(SetVal, this, &CScriptHashMap::SetVal2Script);
-		RegisterClassFun(Remove, this, &CScriptHashMap::Remove2Script);
-		RegisterClassFun(Clear, this, &CScriptHashMap::Clear2Script);
+		//RegisterClassFun(GetVal, this, &CScriptHashMap::GetVal2Script);
+		//RegisterClassFun(SetVal, this, &CScriptHashMap::SetVal2Script);
+		//RegisterClassFun(Remove, this, &CScriptHashMap::Remove2Script);
+		//RegisterClassFun(Clear, this, &CScriptHashMap::Clear2Script);
 	}
 	CScriptHashMap::~CScriptHashMap()
 	{
@@ -36,11 +36,11 @@ namespace zlscript
 	{
 		RegisterClassType("HashMap", CScriptHashMap);
 
-		RegisterClassFun1("GetVal", CScriptHashMap);
-		RegisterClassFun1("SetVal", CScriptHashMap);
-		RegisterClassFun1("Remove", CScriptHashMap);
+		//RegisterClassFun1("GetVal", CScriptHashMap);
+		//RegisterClassFun1("SetVal", CScriptHashMap);
+		//RegisterClassFun1("Remove", CScriptHashMap);
 
-		RegisterClassFun1("Clear", CScriptHashMap);
+		//RegisterClassFun1("Clear", CScriptHashMap);
 	}
 	int CScriptHashMap::GetVal2Script(CScriptCallState* pState)
 	{
@@ -48,7 +48,7 @@ namespace zlscript
 		{
 			return ECALLBACK_ERROR;
 		}
-		auto key = pState->PopVarFormStack();
+		auto key = pState->GetVarFormStack(0);
 
 		//pState->ClearFunParam();
 		auto it = m_mapData.find(key);
@@ -67,8 +67,8 @@ namespace zlscript
 		{
 			return ECALLBACK_ERROR;
 		}
-		auto key = pState->PopVarFormStack();
-		m_mapData[key] = pState->PopVarFormStack();
+		auto key = pState->GetVarFormStack(0);
+		m_mapData[key] = pState->GetVarFormStack(1);
 
 		//pState->ClearFunParam();
 		return ECALLBACK_FINISH;
@@ -80,7 +80,7 @@ namespace zlscript
 		{
 			return ECALLBACK_ERROR;
 		}
-		auto key = pState->PopVarFormStack();
+		auto key = pState->GetVarFormStack(0);
 		{
 			auto it = m_mapData.find(key);
 			if (it != m_mapData.end())
@@ -104,15 +104,15 @@ namespace zlscript
 	}
 	CScriptArray::CScriptArray()
 	{
-		AddClassObject(CScriptPointInterface::GetScriptPointIndex(), this);
+		//AddClassObject(CScriptPointInterface::GetScriptPointIndex(), this);
 
-		RegisterClassFun(Add, this, &CScriptArray::Add2Script);
-		RegisterClassFun(Get, this, &CScriptArray::Get2Script);
-		RegisterClassFun(GetSize, this, &CScriptArray::GetSize2Script);
-		RegisterClassFun(Set, this, &CScriptArray::Set2Script);
-		RegisterClassFun(Remove, this, &CScriptArray::Remove2Script);
+		//RegisterClassFun(Add, this, &CScriptArray::Add2Script);
+		//RegisterClassFun(Get, this, &CScriptArray::Get2Script);
+		//RegisterClassFun(GetSize, this, &CScriptArray::GetSize2Script);
+		//RegisterClassFun(Set, this, &CScriptArray::Set2Script);
+		//RegisterClassFun(Remove, this, &CScriptArray::Remove2Script);
 
-		RegisterClassFun(Clear, this, &CScriptArray::Clear2Script);
+		//RegisterClassFun(Clear, this, &CScriptArray::Clear2Script);
 	}
 
 	CScriptArray::~CScriptArray()
@@ -124,13 +124,13 @@ namespace zlscript
 	{
 		RegisterClassType("CArray", CScriptArray);
 
-		RegisterClassFun1("Add", CScriptArray);
-		RegisterClassFun1("Get", CScriptArray);
-		RegisterClassFun1("GetSize", CScriptArray);
-		RegisterClassFun1("Set", CScriptArray);
-		RegisterClassFun1("Remove", CScriptArray);
+		//RegisterClassFun1("Add", CScriptArray);
+		//RegisterClassFun1("Get", CScriptArray);
+		//RegisterClassFun1("GetSize", CScriptArray);
+		//RegisterClassFun1("Set", CScriptArray);
+		//RegisterClassFun1("Remove", CScriptArray);
 
-		RegisterClassFun1("Clear", CScriptArray);
+		//RegisterClassFun1("Clear", CScriptArray);
 	}
 
 	int CScriptArray::Add2Script(CScriptCallState* pState)
@@ -139,7 +139,7 @@ namespace zlscript
 		{
 			return ECALLBACK_ERROR;
 		}
-		m_vecVars.push_back(pState->PopVarFormStack());
+		m_vecVars.push_back(pState->GetVarFormStack(0));
 
 		//pState->ClearFunParam();
 		pState->SetResult((__int64)(m_vecVars.size() - 1));
@@ -152,7 +152,7 @@ namespace zlscript
 		{
 			return ECALLBACK_ERROR;
 		}
-		unsigned int nIndex = pState->PopIntVarFormStack();
+		unsigned int nIndex = pState->GetIntVarFormStack(0);
 
 		//pState->ClearFunParam();
 
@@ -184,11 +184,11 @@ namespace zlscript
 		{
 			return ECALLBACK_ERROR;
 		}
-		unsigned int nIndex = pState->PopIntVarFormStack();
+		unsigned int nIndex = pState->GetIntVarFormStack(0);
 
 		if (nIndex < m_vecVars.size())
 		{
-			m_vecVars[nIndex] = pState->PopVarFormStack();
+			m_vecVars[nIndex] = pState->GetVarFormStack(1);
 			//pState->ClearFunParam();
 			return ECALLBACK_FINISH;
 		}
@@ -203,8 +203,8 @@ namespace zlscript
 		{
 			return ECALLBACK_ERROR;
 		}
-		unsigned int nIndex = pState->PopIntVarFormStack();
-		std::string str = pState->PopCharVarFormStack();
+		unsigned int nIndex = pState->GetIntVarFormStack(0);
+		std::string str = pState->GetStringVarFormStack(1);
 		
 		if (nIndex < m_vecVars.size())
 		{
@@ -246,9 +246,9 @@ namespace zlscript
 	CScriptData::CScriptData()
 	{
 		m_nUseCount = 0;
-		AddClassObject(CScriptPointInterface::GetScriptPointIndex(), this);
-		RegisterClassFun(GetVal, this, &CScriptData::GetVal2Script);
-		RegisterClassFun(SetVal, this, &CScriptData::SetVal2Script);
+		//AddClassObject(CScriptPointInterface::GetScriptPointIndex(), this);
+		//RegisterClassFun(GetVal, this, &CScriptData::GetVal2Script);
+		//RegisterClassFun(SetVal, this, &CScriptData::SetVal2Script);
 	}
 
 	CScriptData::~CScriptData()
@@ -260,8 +260,8 @@ namespace zlscript
 	{
 		RegisterClassType("CData", CScriptData);
 
-		RegisterClassFun1("GetVal", CScriptData);
-		RegisterClassFun1("SetVal", CScriptData);
+		//RegisterClassFun1("GetVal", CScriptData);
+		//RegisterClassFun1("SetVal", CScriptData);
 	}
 
 	int CScriptData::GetVal2Script(CScriptCallState* pState)
@@ -281,7 +281,7 @@ namespace zlscript
 				result.Clear();
 				break;
 			}
-			std::string strKey = pState->PopCharVarFormStack();
+			std::string strKey = pState->GetStringVarFormStack(i);
 			auto it = pMap->find(strKey);
 			if (it != pMap->end())
 			{
@@ -323,7 +323,7 @@ namespace zlscript
 			{
 				break;
 			}
-			std::string strKey = pState->PopCharVarFormStack();
+			std::string strKey = pState->GetStringVarFormStack(i);
 
 			pArray = (*pMap)[strKey];
 			if (pArray)
@@ -339,7 +339,7 @@ namespace zlscript
 		}
 		if (pArray)
 		{
-			pArray->m_var = pState->PopVarFormStack();
+			pArray->m_var = pState->GetVarFormStack(nParmSize);
 		}
 		m_Lock.unlock();
 		//pState->ClearFunParam();
