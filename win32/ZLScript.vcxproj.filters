@@ -179,6 +179,5 @@
     <None Include="test.script">
       <Filter>资源文件</Filter>
     </None>
-    <None Include="cpp.hint" />
   </ItemGroup>
 </Project>
