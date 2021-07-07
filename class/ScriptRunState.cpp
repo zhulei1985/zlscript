@@ -452,7 +452,7 @@ namespace zlscript
 					int nOffset = ParmStack.size() - nParmNum;
 					if (nOffset < 0)
 						nOffset = 0;
-					for (int i = 0; i < nParmNum; i++)
+					for (int i = 0; i < nParmNum && i < pBlock->vNumVar.size(); i++)
 					{
 						StackVarInfo *pInfo = ParmStack.GetVal(i+ nOffset);
 						if (pInfo)
@@ -490,12 +490,13 @@ namespace zlscript
 			if (pBlock)
 			{
 				//注入参数
-				for (int i = 0; i < ParmStack.size(); i++)
+				for (unsigned int i = 0; i < ParmStack.size() && i < pBlock->vNumVar.size(); i++)
 				{
 					StackVarInfo* pVar = ParmStack.GetVal(i);
 					if (pVar)
 					{
-						pBlock->PushVar(*pVar);
+						pBlock->vNumVar[i] = *pVar;
+						//pBlock->PushVar(*pVar);
 					}
 				}
 
@@ -846,7 +847,7 @@ namespace zlscript
 			if (pBlock)
 			{
 				//注入参数
-				for (int i = 0; i < ParmStack.size(); i++)
+				for (unsigned int i = 0; i < ParmStack.size() && i < pBlock->vNumVar.size(); i++)
 				{
 					StackVarInfo* pInfo = ParmStack.GetVal(i);
 					if (pInfo)

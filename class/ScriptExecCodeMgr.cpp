@@ -28,14 +28,15 @@ namespace zlscript
 		}
 
 		__int64 nEventIndex = it->second.vScriptEventIndexs[it->second.unIndex];
-		CScriptStack scriptParm;
+		CScriptStack scriptParm = pState->m_stackRegister;
 	
 		//ScriptVector_PushVar(scriptParm, name.c_str());
-		for (int i = 0; i < nParmNum; i++)
-		{
-			StackVarInfo var = pState->GetVarFormStack(i);
-			ScriptVector_PushVar(scriptParm, &var);
-		}
+
+		//for (int i = 0; i < nParmNum; i++)
+		//{
+		//	StackVarInfo var = pState->GetVarFormStack(i);
+		//	ScriptVector_PushVar(scriptParm, &var);
+		//}
 		if (pState->m_pMaster->m_pMachine)
 		{
 			pState->m_pMaster->m_pMachine->RunTo(name, scriptParm, pState->m_pMaster->GetId(), nEventIndex);

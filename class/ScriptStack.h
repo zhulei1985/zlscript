@@ -35,6 +35,7 @@ namespace zlscript
 		CScriptStack(const CScriptStack& info);
 		~CScriptStack();
 	public:
+		bool pop_front(unsigned int size = 1);
 		bool pop();
 		bool push(StackVarInfo& val);
 		StackVarInfo& top();
@@ -190,6 +191,30 @@ namespace zlscript
 		break;
 		}
 		return PointVarInfo();
+	}
+	inline bool GetBinary_StackVar(StackVarInfo* pVar, std::vector<char>& out)
+	{
+		if (pVar == nullptr)
+		{
+			return false;
+		}
+		bool bResult = false;
+		switch (pVar->cType)
+		{
+		case EScriptVal_Binary:
+			unsigned int nSize = 0;
+			const char* pData = StackVarInfo::s_binPool.GetBinary(pVar->Int64, nSize);
+			if (pData)
+			{
+				for (unsigned int i = 0; i < nSize; i++)
+				{
+					out.push_back(pData[i]);
+				}
+				bResult = true;
+			}
+			break;
+		}
+		return bResult;
 	}
 
 	inline __int64 ScriptStack_GetInt(CScriptStack& Stack)

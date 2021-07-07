@@ -74,7 +74,8 @@ namespace zlscript
 		break;
 		case ESIGN_POS_LOACL_VAR:
 		{
-			return vNumVar[pos];
+			if (pos < vNumVar.size())
+				return vNumVar[pos];
 		}
 		break;
 		case ESIGN_POS_CONST_STRING:
@@ -520,8 +521,13 @@ namespace zlscript
 				break;
 				case ESIGN_POS_LOACL_VAR:
 				{
-					StackVarInfo& var = vNumVar[code.dwPos];
-					ScriptVector_PushVar(m_stackRegister, &var);
+					if (code.dwPos < vNumVar.size())
+					{
+						StackVarInfo& var = vNumVar[code.dwPos];
+						ScriptVector_PushVar(m_stackRegister, &var);
+					}
+					else
+						ScriptVector_PushEmptyVar(m_stackRegister);
 				}
 				break;
 				case ESIGN_POS_CONST_STRING:
@@ -877,7 +883,7 @@ namespace zlscript
 			{
 				PointVarInfo pointVal = GetPoint_StackVar(&m_register[code.cSign]);
 
-				if (m_stackRegister.size() <= code.cExtend)
+				if (m_stackRegister.size() >= code.cExtend)
 				{
 					CACHE_NEW(CScriptCallState, pCallState, m_pMaster);
 					if (pCallState)

@@ -36,20 +36,29 @@ namespace zlscript
 	{
 		CBaseScriptClassFun()
 		{
-
+			m_index = -1;
 		}
-		CBaseScriptClassFun(std::string name, std::function< int(CScriptCallState*)> pFun, IClassFunObserver* pMaster)
+		CBaseScriptClassFun(std::string name, std::function< int(CScriptCallState*)> pFun, IClassFunObserver* pMaster, int nFlag)
 		{
-			init(name, pFun, pMaster);
+			init(name, pFun, pMaster, nFlag);
 		}
 		virtual ~CBaseScriptClassFun();
 
-		void init(std::string name, std::function< int(CScriptCallState*)> pFun, IClassFunObserver* pMaster);
+		enum
+		{
+			E_FLAG_NONE = 0,
+			E_FLAG_SYNC = 1,//同步函数
+			E_FLAG_SYNC_RELAY_FUN = 2,//需要下行节点也执行一次函数
+		};
+
+		void init(std::string name, std::function< int(CScriptCallState*)> pFun, IClassFunObserver* pMaster, int nFlag);
 //}
 		int RunFun(CScriptCallState* pState);
 
 		std::function< int(CScriptCallState*)> m_fun;
 		std::string m_name;
+		int m_nFlag;
+		unsigned int m_index;
 	private:
 
 	};

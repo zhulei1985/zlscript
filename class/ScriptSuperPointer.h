@@ -258,7 +258,7 @@ namespace zlscript
 		int GetClassParamIndex(int classindex, std::string paramname);
 
 		CBaseScriptClassMgr* GetClassMgr(int nType);
-
+		CBaseScriptClassMgr* GetClassMgr(std::string strType);
 	private:
 		int nClassTypeCount;
 		std::map<std::string, int> m_mapString2ClassType;

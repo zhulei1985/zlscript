@@ -83,17 +83,18 @@ namespace zlscript
 			pEvent->nSendID = nSendID;
 			pEvent->nEventType = nEventType;
 
-			for (int i = vIn.size() - 1; i >= 0; i--)
-			{
-				StackVarInfo* pVar = vIn.GetVal(i);
-				if (pVar)
-					pEvent->m_Parm.push(*pVar);
-				else
-				{
-					StackVarInfo emtpy;
-					pEvent->m_Parm.push(emtpy);
-				}
-			}
+			//for (int i = 0; i < vIn.size(); i++)
+			//{
+			//	StackVarInfo* pVar = vIn.GetVal(i);
+			//	if (pVar)
+			//		pEvent->m_Parm.push(*pVar);
+			//	else
+			//	{
+			//		StackVarInfo emtpy;
+			//		pEvent->m_Parm.push(emtpy);
+			//	}
+			//}
+			pEvent->m_Parm = vIn;
 			//while (vIn.size() > 0)
 			//{
 			//	pEvent->m_Parm.push(vIn.top());
@@ -116,17 +117,18 @@ namespace zlscript
 				tagScriptEvent* pEvent = NewEvent();
 				pEvent->nSendID = nSendID;
 				pEvent->nEventType = nEventType;
-				for (int i = vIn.size() - 1; i >= 0; i--)
-				{
-					StackVarInfo* pVar = vIn.GetVal(i);
-					if (pVar)
-						pEvent->m_Parm.push(*pVar);
-					else
-					{
-						StackVarInfo emtpy;
-						pEvent->m_Parm.push(emtpy);
-					}
-				}
+				//for (int i = vIn.size() - 1; i >= 0; i--)
+				//{
+				//	StackVarInfo* pVar = vIn.GetVal(i);
+				//	if (pVar)
+				//		pEvent->m_Parm.push(*pVar);
+				//	else
+				//	{
+				//		StackVarInfo emtpy;
+				//		pEvent->m_Parm.push(emtpy);
+				//	}
+				//}
+				pEvent->m_Parm = vIn;
 				channel.list.push_back(pEvent);
 			}
 			else

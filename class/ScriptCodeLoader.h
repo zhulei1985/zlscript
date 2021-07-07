@@ -290,9 +290,10 @@ namespace zlscript
 
 		void PrintAllCode(const char *pFilename);
 		std::string PrintOneCode(CodeStyle code);
-		//临时变量管理
-	protected:
 
+	protected:
+		std::string GetSignPosTypeName(char Idx);
+		std::string GetRegisterName(char regIdx);
 	protected:
 		//typedef std::map<std::string, int> tagVarName2Pos;
 		//std::list<tagVarName2Pos> m_ListTempVarInfo;;

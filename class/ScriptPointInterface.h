@@ -105,7 +105,7 @@ namespace zlscript
 
 #define CLASS_SCRIPT_FUN(classname,funname) \
 	int funname##2Script(CScriptCallState* pState); \
-	CBaseScriptClassFun funname##Fun{#funname,std::bind(&classname::funname##2Script,this,std::placeholders::_1),this};
+	CBaseScriptClassFun funname##Fun{#funname,std::bind(&classname::funname##2Script,this,std::placeholders::_1),this, CBaseScriptClassFun::E_FLAG_NONE};
 
 	class CScriptPointInterface : public IClassAttributeObserver , public IClassFunObserver
 	{

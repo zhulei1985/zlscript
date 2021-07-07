@@ -617,8 +617,8 @@ namespace zlscript
 
 	void CScriptVirtualMachine::EventReturnFun(int nSendID, CScriptStack& ParmInfo)
 	{
-		__int64 nScriptStateID = ScriptStack_GetInt(ParmInfo);
-
+		__int64 nScriptStateID = GetInt_StackVar(ParmInfo.GetVal(0));
+		ParmInfo.pop_front(1);
 		auto pState = PopStateFormWaitingReturnMap(nScriptStateID);
 		if (pState)
 		{
@@ -628,34 +628,33 @@ namespace zlscript
 	}
 	void CScriptVirtualMachine::EventRunScriptFun(int nSendID, CScriptStack& ParmInfo)
 	{
-		__int64 nScriptStateID = ScriptStack_GetInt(ParmInfo);
+		__int64 nScriptStateID = GetInt_StackVar(ParmInfo.GetVal(0));
 
 		CScriptRunState* m_pScriptState = new CScriptRunState;
 		if (m_pScriptState)
 		{
 			//__int64 nCallStateID = ScriptStack_GetInt(ParmInfo);
-			std::string strScript = ScriptStack_GetString(ParmInfo);
+			std::string strScript = GetString_StackVar(ParmInfo.GetVal(1));
 			if (nScriptStateID != 0)
 			{
 				m_pScriptState->nCallEventIndex = nSendID;
 				m_pScriptState->m_CallReturnId = nScriptStateID;
 			}
+			ParmInfo.pop_front(2);
 			RunFun(m_pScriptState, strScript, ParmInfo);
 		}
 	}
 
 	void CScriptVirtualMachine::RunTo(std::string funName, CScriptStack& pram, __int64 nReturnID, __int64 nEventIndex)
 	{
-		CScriptStack m_scriptParm;
-
 		//ScriptVector_PushVar(m_scriptParm, GetEventIndex());
+
+		CScriptStack m_scriptParm;
 		ScriptVector_PushVar(m_scriptParm, nReturnID);
-
-
 		ScriptVector_PushVar(m_scriptParm, funName.c_str());
+
 		for (unsigned int i = 0; i < pram.size(); i++)
 		{
-
 			ScriptVector_PushVar(m_scriptParm, pram.GetVal(i));
 		}
 		CScriptEventMgr::GetInstance()->SendEvent(E_SCRIPT_EVENT_RUNSCRIPT, GetEventIndex(), m_scriptParm, nEventIndex);

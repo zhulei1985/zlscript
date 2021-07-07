@@ -689,18 +689,23 @@ namespace zlscript
 		GetNewWord(VarTypeWord);
 		strVarType = VarTypeWord.word;
 
-		int nVarType = m_mapDicVarTypeToICode[strVarType];
+		int nVarType = 0;
 		if (m_mapDicVarTypeToICode.find(strVarType) == m_mapDicVarTypeToICode.end())
 		{
-			if (CScriptSuperPointerMgr::GetInstance()->GetClassType(strVarType))
+			int ClassType = CScriptSuperPointerMgr::GetInstance()->GetClassType(strVarType);
+			if (ClassType == 0)
 			{
 				AddErrorInfo(
 					VarTypeWord.nSourceWordsIndex,
 					"LoadDefineFunState(var type error)");
 				return ECompile_ERROR;
 			}
+			nVarType = EScriptVal_ClassPoint;
 		}
-
+		else
+		{
+			nVarType = m_mapDicVarTypeToICode[strVarType];
+		}
 		GetNewWord(NameWord);
 		strName = NameWord.word;
 
@@ -2534,95 +2539,95 @@ namespace zlscript
 		switch (code.wInstruct)
 		{
 		case ECODE_ADD: //加
-			sprintf(strbuff, "ADD\tsign:%d\textend:%d\tpos:%d",(int)code.cSign,(int)code.cExtend,(int)code.dwPos);
+			sprintf(strbuff, "ADD\tRegisterIndex(extend):%s\tVarType(sign):%s\tpos:%d",  GetRegisterName(code.cExtend).c_str(),GetSignPosTypeName(code.cSign).c_str(),(int)code.dwPos);
 			break;
 		case ECODE_SUM: //减
-			sprintf(strbuff, "SUM\tsign:%d\textend:%d\tpos:%d", (int)code.cSign, (int)code.cExtend, (int)code.dwPos);
+			sprintf(strbuff, "SUM\tRegisterIndex(extend):%s\tVarType(sign):%s\tpos:%d",  GetRegisterName(code.cExtend).c_str(),GetSignPosTypeName(code.cSign).c_str(), (int)code.dwPos);
 			break;
 		case ECODE_MUL: //乘
-			sprintf(strbuff, "MUL\tsign:%d\textend:%d\tpos:%d", (int)code.cSign, (int)code.cExtend, (int)code.dwPos);
+			sprintf(strbuff, "MUL\tRegisterIndex(extend):%s\tVarType(sign):%s\tpos:%d",  GetRegisterName(code.cExtend).c_str(),GetSignPosTypeName(code.cSign).c_str(), (int)code.dwPos);
 			break;
 		case ECODE_DIV://除
-			sprintf(strbuff, "DIV\tsign:%d\textend:%d\tpos:%d", (int)code.cSign, (int)code.cExtend, (int)code.dwPos);
+			sprintf(strbuff, "DIV\tRegisterIndex(extend):%s\tVarType(sign):%s\tpos:%d",  GetRegisterName(code.cExtend).c_str(),GetSignPosTypeName(code.cSign).c_str(), (int)code.dwPos);
 			break;
 		case ECODE_MOD: //求余
-			sprintf(strbuff, "MOD\tsign:%d\textend:%d\tpos:%d", (int)code.cSign, (int)code.cExtend, (int)code.dwPos);
+			sprintf(strbuff, "MOD\tRegisterIndex(extend):%s\tVarType(sign):%s\tpos:%d",  GetRegisterName(code.cExtend).c_str(),GetSignPosTypeName(code.cSign).c_str(), (int)code.dwPos);
 			break;
 		case ECODE_MINUS: //	取负数
-			sprintf(strbuff, "MINUS\tsign:%d\textend:%d\tpos:%d", (int)code.cSign, (int)code.cExtend, (int)code.dwPos);
+			sprintf(strbuff, "MINUS\tRegisterIndex(extend):%s\tVarType(sign):%s\tpos:%d",  GetRegisterName(code.cExtend).c_str(),GetSignPosTypeName(code.cSign).c_str(), (int)code.dwPos);
 			break;
 		case ECODE_CMP_EQUAL://比较
-			sprintf(strbuff, "CMP(==)\sign:%d\textend:%d\tpos:%d", (int)code.cSign, (int)code.cExtend, (int)code.dwPos);
+			sprintf(strbuff, "CMP(==)\tRegisterIndex(extend):%s\tVarType(sign):%s\tpos:%d",  GetRegisterName(code.cExtend).c_str(),GetSignPosTypeName(code.cSign).c_str(), (int)code.dwPos);
 			break;
 		case ECODE_CMP_NOTEQUAL:
-			sprintf(strbuff, "CMP(!=)\tsign:%d\textend:%d\tpos:%d", (int)code.cSign, (int)code.cExtend, (int)code.dwPos);
+			sprintf(strbuff, "CMP(!=)\tRegisterIndex(extend):%s\tVarType(sign):%s\tpos:%d",  GetRegisterName(code.cExtend).c_str(),GetSignPosTypeName(code.cSign).c_str(), (int)code.dwPos);
 			break;
 		case ECODE_CMP_BIG:
-			sprintf(strbuff, "CMP(>)\tsign:%d\textend:%d\tpos:%d", (int)code.cSign, (int)code.cExtend, (int)code.dwPos);
+			sprintf(strbuff, "CMP(>)\tRegisterIndex(extend):%s\tVarType(sign):%s\tpos:%d",  GetRegisterName(code.cExtend).c_str(),GetSignPosTypeName(code.cSign).c_str(), (int)code.dwPos);
 			break;
 		case ECODE_CMP_BIGANDEQUAL:
-			sprintf(strbuff, "CMP(>=)\tsign:%d\textend:%d\tpos:%d", (int)code.cSign, (int)code.cExtend, (int)code.dwPos);
+			sprintf(strbuff, "CMP(>=)\tRegisterIndex(extend):%s\tVarType(sign):%s\tpos:%d",  GetRegisterName(code.cExtend).c_str(),GetSignPosTypeName(code.cSign).c_str(), (int)code.dwPos);
 			break;
 		case ECODE_CMP_LESS:
-			sprintf(strbuff, "CMP(<)\tsign:%d\textend:%d\tpos:%d", (int)code.cSign, (int)code.cExtend, (int)code.dwPos);
+			sprintf(strbuff, "CMP(<)\tRegisterIndex(extend):%s\tVarType(sign):%s\tpos:%d",  GetRegisterName(code.cExtend).c_str(),GetSignPosTypeName(code.cSign).c_str(), (int)code.dwPos);
 			break;
 		case ECODE_CMP_LESSANDEQUAL:
-			sprintf(strbuff, "CMP(<=)\tsign:%d\textend:%d\tpos:%d", (int)code.cSign, (int)code.cExtend, (int)code.dwPos);
+			sprintf(strbuff, "CMP(<=)\tRegisterIndex(extend):%s\tVarType(sign):%s\tpos:%d",  GetRegisterName(code.cExtend).c_str(),GetSignPosTypeName(code.cSign).c_str(), (int)code.dwPos);
 			break;
 				//位运算
 		case ECODE_BIT_AND:
-			sprintf(strbuff, "AND\tsign:%d\textend:%d\tpos:%d", (int)code.cSign, (int)code.cExtend, (int)code.dwPos);
+			sprintf(strbuff, "AND\tRegisterIndex(extend):%s\tVarType(sign):%s\tpos:%d",  GetRegisterName(code.cExtend).c_str(),GetSignPosTypeName(code.cSign).c_str(), (int)code.dwPos);
 			break;
 		case ECODE_BIT_OR:
-			sprintf(strbuff, "OR\tsign:%d\textend:%d\tpos:%d", (int)code.cSign, (int)code.cExtend, (int)code.dwPos);
+			sprintf(strbuff, "OR\tRegisterIndex(extend):%s\tVarType(sign):%s\tpos:%d",  GetRegisterName(code.cExtend).c_str(),GetSignPosTypeName(code.cSign).c_str(), (int)code.dwPos);
 			break;
 		case ECODE_BIT_XOR:
-			sprintf(strbuff, "XOR\tsign:%d\textend:%d\tpos:%d", (int)code.cSign, (int)code.cExtend, (int)code.dwPos);
+			sprintf(strbuff, "XOR\tRegisterIndex(extend):%s\tVarType(sign):%s\tpos:%d",  GetRegisterName(code.cExtend).c_str(),GetSignPosTypeName(code.cSign).c_str(), (int)code.dwPos);
 			break;
 				/*************功能符************/
 				// 压入变量到堆栈。
 				//	cSign:	使用ESignType的定义.变量来源
 				//	dwPos:	根据cSign的值表示值或地址
 		case ECODE_PUSH:
-			sprintf(strbuff, "PUSH\tsign:%d\textend:%d\tpos:%d", (int)code.cSign, (int)code.cExtend, (int)code.dwPos);
+			sprintf(strbuff, "PUSH\ttVarType(sign):%s\tpos:%d", GetSignPosTypeName(code.cSign).c_str(),  (int)code.dwPos);
 			break;
 				// 提取堆栈中的变量。
 				//	cSign:	使用ESignType的定义，变量去处
 				//	cExtend:寄存器索引ERegisterIndex
 				//	dwPos:	根据cSign的值表示值或地址
 		case ECODE_POP:
-			sprintf(strbuff, "POP\tsign:%d\textend:%d\tpos:%d", (int)code.cSign, (int)code.cExtend, (int)code.dwPos);
+			sprintf(strbuff, "POP\ttVarType(sign):%s\tpos:%d", GetSignPosTypeName(code.cSign).c_str(), (int)code.dwPos);
 			break;
 		case ECODE_STATEMENT_END: //语句结束
-			sprintf(strbuff, "STATEND\tsign:%d\textend:%d\tpos:%d", (int)code.cSign, (int)code.cExtend, (int)code.dwPos);
+			sprintf(strbuff, "STATEND\t");
 			break;
 				//读取变量到寄存器。
 				//	cSign:	使用ESignType的定义
 				//	cExtend:寄存器索引ERegisterIndex
 				//	dwPos:	根据cSign的值表示值或地址
 		case ECODE_LOAD:
-			sprintf(strbuff, "LOAD\tsign:%d\textend:%d\tpos:%d", (int)code.cSign, (int)code.cExtend, (int)code.dwPos);
+			sprintf(strbuff, "LOAD\tRegisterIndex(extend):%s\tVarType(sign):%s\tpos:%d", GetRegisterName(code.cExtend).c_str(), GetSignPosTypeName(code.cSign).c_str(), (int)code.dwPos);
 			break;
 				// 移动寄存器的值
 				//	cSign:	目的地类型
 				//	cExtend:起点，寄存器索引ERegisterIndex
 				//	dwPos:	终点，根据cSign的值表示值或地址
 		case ECODE_MOVE:
-			sprintf(strbuff, "MOVE\tsign:%d\textend:%d\tpos:%d", (int)code.cSign, (int)code.cExtend, (int)code.dwPos);
+			sprintf(strbuff, "MOVE\tRegisterIndex(extend):%s\tVarType(sign):%s\tpos:%d", GetRegisterName(code.cExtend).c_str(), GetSignPosTypeName(code.cSign).c_str(), (int)code.dwPos);
 			break;
 				//读取类成员变量到寄存器。
 				//	cSign:	类对象所在寄存器 ERegisterIndex
 				//	cExtend:结果放入的寄存器 ERegisterIndex
 				//	dwPos:	类成员变量的索引
 		case ECODE_GET_CLASS_PARAM:
-			sprintf(strbuff, "GET PARAM\tsign:%d\textend:%d\tpos:%d", (int)code.cSign, (int)code.cExtend, (int)code.dwPos);
+			sprintf(strbuff, "GET PARAM\tResultReg(extend):%s\tclassReg(sign):%s\tParamIdx(pos):%d", GetRegisterName(code.cExtend).c_str(), GetRegisterName(code.cSign).c_str(), (int)code.dwPos);
 			break;
 				// 设置寄存器内容到类成员变量。
 				//	cSign:	类对象所在寄存器 ERegisterIndex
 				//	cExtend:数值所在的寄存器 ERegisterIndex
 				//	dwPos:	类成员变量的索引
 		case ECODE_SET_CLASS_PARAM:
-			sprintf(strbuff, "SET PARAM\tsign:%d\textend:%d\tpos:%d", (int)code.cSign, (int)code.cExtend, (int)code.dwPos);
+			sprintf(strbuff, "SET PARAM\tVarReg(extend):%s\tclassReg(sign):%s\tParamIdx(pos):%d", GetRegisterName(code.cExtend).c_str(), GetRegisterName(code.cSign).c_str(), (int)code.dwPos);
 			break;
 				//ECODE_JMP,//无条件跳转
 				//ECODE_JMP_JUDGE,//m_JudgeRegister为真跳转
@@ -2633,14 +2638,14 @@ namespace zlscript
 				//cExtend:参数数量
 				//dwPos:函数索引
 		case ECODE_CALL_CALLBACK:
-			sprintf(strbuff, "CALL BACK\tsign:%d\textend:%d\tpos:%d", (int)code.cSign, (int)code.cExtend, (int)code.dwPos);
+			sprintf(strbuff, "CALL BACK\tResultReg(sign):%s\tParamSize(extend):%d\tFunIndex(pos):%d", GetRegisterName(code.cSign).c_str(), (int)code.cExtend, (int)code.dwPos);
 			break;
 				//调用脚本函数 
 				//cSign:0,返回值存放的寄存器 ERegisterIndex
 				//cExtend:参数数量
 				//dwPos:函数索引
 		case ECODE_CALL_SCRIPT:
-			sprintf(strbuff, "CALL\tsign:%d\textend:%d\tpos:%d", (int)code.cSign, (int)code.cExtend, (int)code.dwPos);
+			sprintf(strbuff, "CALL\tResultReg(sign):%s\tParamSize(extend):%d\tFunIndex(pos):%d", GetRegisterName(code.cSign).c_str(), (int)code.cExtend, (int)code.dwPos);
 			break;
 				// 跳转
 				//cSign:0,绝对地址跳转
@@ -2648,7 +2653,7 @@ namespace zlscript
 				//		2,相对地址向前跳转
 				//dwPos:地址值
 		case ECODE_JUMP:
-			sprintf(strbuff, "JUMP\tsign:%d\textend:%d\tpos:%d", (int)code.cSign, (int)code.cExtend, (int)code.dwPos);
+			sprintf(strbuff, "JUMP\ttype(sign):%d\tpos:%d", (int)code.cSign, (int)code.dwPos);
 			break;
 				// 寄存器值为真跳转
 				//cSign:0,绝对地址跳转
@@ -2657,7 +2662,7 @@ namespace zlscript
 				//cExtend:寄存器索引 ERegisterIndex
 				//dwPos:地址值
 		case ECODE_JUMP_TRUE:
-			sprintf(strbuff, "JUMP_T\tsign:%d\textend:%d\tpos:%d", (int)code.cSign, (int)code.cExtend, (int)code.dwPos);
+			sprintf(strbuff, "JUMP_T\tVarReg(extend):%s\ttype(sign):%d\tpos:%d", GetRegisterName(code.cSign).c_str(), (int)code.cExtend, (int)code.dwPos);
 			break;
 				// 寄存器值为假跳转
 				//cSign:0,绝对地址跳转
@@ -2666,7 +2671,7 @@ namespace zlscript
 				//cExtend:寄存器索引 ERegisterIndex
 				//dwPos:地址值
 		case ECODE_JUMP_FALSE:
-			sprintf(strbuff, "JUMP_F\tsign:%d\textend:%d\tpos:%d", (int)code.cSign, (int)code.cExtend, (int)code.dwPos);
+			sprintf(strbuff, "JUMP_F\tVarReg(extend):%s\ttype(sign):%d\tpos:%d", GetRegisterName(code.cSign).c_str(), (int)code.cExtend, (int)code.dwPos);
 			break;
 				// if分支,检查指定寄存器上的值，如果非0则执行接下来的块
 				//cSign:0,判断值存放的寄存器 ERegisterIndex
@@ -2684,7 +2689,7 @@ namespace zlscript
 			sprintf(strbuff, "RETURN\tsign:%d\textend:%d\tpos:%d", (int)code.cSign, (int)code.cExtend, (int)code.dwPos);
 			break;
 		case ECODE_CLEAR_PARAM://清空堆栈里的参数
-			sprintf(strbuff, "CLEAR\tsign:%d\textend:%d\tpos:%d", (int)code.cSign, (int)code.cExtend, (int)code.dwPos);
+			sprintf(strbuff, "CLEAR\t");
 			break;
 				//调用类函数 
 				// cSign:	类对象所在寄存器，返回值也会写入在此
@@ -2715,6 +2720,27 @@ namespace zlscript
 		}
 
 		return strbuff;
+	}
+
+	std::string CScriptCodeLoader::GetSignPosTypeName(char Idx)
+	{
+		return std::string();
+	}
+
+	std::string CScriptCodeLoader::GetRegisterName(char regIdx)
+	{
+		switch (regIdx)
+		{
+		case R_A:
+			return "R_A";
+		case R_B:
+			return "R_B";
+		case R_C:
+			return "R_C";
+		case R_D:
+			return "R_D";
+		}
+		return "unknow";
 	}
 
 	void CScriptCodeLoader::SaveToBin()
