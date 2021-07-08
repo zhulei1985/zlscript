@@ -92,7 +92,9 @@ namespace zlscript
 
 		std::string GetCurSourceWords();
 	private:
-		std::vector<StackVarInfo> vNumVar;//临时变量
+		StackVarInfo* m_pTempVar;//临时变量
+		unsigned int m_nTempVarSize;
+		//std::vector<StackVarInfo> vNumVar;//临时变量
 
 
 	//性能监控

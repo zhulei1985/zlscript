@@ -436,7 +436,7 @@ namespace zlscript
 		}
 		return nReturn;
 	}
-	int CScriptRunState::CallFun_Script(CScriptVirtualMachine* pMachine, int FunIndex, CScriptStack& ParmStack, int nParmNum, bool bIsBreak)
+	int CScriptRunState::CallFun_Script(CScriptVirtualMachine* pMachine, int FunIndex, CScriptStack& ParmStack, int nParmNum,char cRegisterIndex, bool bIsBreak)
 	{
 		int nReturn = ECALLBACK_FINISH;
 		{
@@ -448,16 +448,20 @@ namespace zlscript
 
 				if (pBlock)
 				{
+					pBlock->m_cReturnRegisterIndex = cRegisterIndex;
 					//提取参数
 					int nOffset = ParmStack.size() - nParmNum;
 					if (nOffset < 0)
 						nOffset = 0;
-					for (int i = 0; i < nParmNum && i < pBlock->vNumVar.size(); i++)
+					if (pBlock->m_pTempVar)
 					{
-						StackVarInfo *pInfo = ParmStack.GetVal(i+ nOffset);
-						if (pInfo)
+						for (int i = 0; i < nParmNum && i < pBlock->m_nTempVarSize; i++)
 						{
-							pBlock->vNumVar[i] = *pInfo;
+							StackVarInfo* pInfo = ParmStack.GetVal(i + nOffset);
+							if (pInfo)
+							{
+								pBlock->m_pTempVar[i] = *pInfo;
+							}
 						}
 					}
 
@@ -490,16 +494,18 @@ namespace zlscript
 			if (pBlock)
 			{
 				//注入参数
-				for (unsigned int i = 0; i < ParmStack.size() && i < pBlock->vNumVar.size(); i++)
+				if (pBlock->m_pTempVar)
 				{
-					StackVarInfo* pVar = ParmStack.GetVal(i);
-					if (pVar)
+					for (unsigned int i = 0; i < ParmStack.size() && i < pBlock->m_nTempVarSize; i++)
 					{
-						pBlock->vNumVar[i] = *pVar;
-						//pBlock->PushVar(*pVar);
+						StackVarInfo* pVar = ParmStack.GetVal(i);
+						if (pVar)
+						{
+							pBlock->m_pTempVar[i] = *pVar;
+							//pBlock->PushVar(*pVar);
+						}
 					}
 				}
-
 
 
 				m_BlockStack.push(pBlock);
@@ -847,15 +853,17 @@ namespace zlscript
 			if (pBlock)
 			{
 				//注入参数
-				for (unsigned int i = 0; i < ParmStack.size() && i < pBlock->vNumVar.size(); i++)
+				if (pBlock->m_pTempVar)
 				{
-					StackVarInfo* pInfo = ParmStack.GetVal(i);
-					if (pInfo)
+					for (unsigned int i = 0; i < ParmStack.size() && i < pBlock->m_nTempVarSize; i++)
 					{
-						pBlock->vNumVar[i] = *pInfo;
+						StackVarInfo* pInfo = ParmStack.GetVal(i);
+						if (pInfo)
+						{
+							pBlock->m_pTempVar[i] = *pInfo;
+						}
 					}
 				}
-
 				if (bIsBreak && m_BlockStack.size() > 0)
 				{
 					CScriptExecBlock* pOldBlock = m_BlockStack.top();

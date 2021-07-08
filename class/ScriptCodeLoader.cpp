@@ -2724,7 +2724,24 @@ namespace zlscript
 
 	std::string CScriptCodeLoader::GetSignPosTypeName(char Idx)
 	{
-		return std::string();
+		switch (Idx)
+		{
+		case ESIGN_VALUE_INT:
+			return "VALUE_INT";
+		case ESIGN_POS_GLOBAL_VAR:
+			return "GLOBAL_VAR";
+		case ESIGN_POS_LOACL_VAR:
+			return "LOACL_VAR";
+		case ESIGN_POS_CONST_STRING:
+			return "CONST_STRING";
+		case ESIGN_POS_CONST_FLOAT:
+			return "CONST_FLOAT";
+		case ESIGN_POS_CONST_INT64:
+			return "CONST_INT64";
+		case ESIGN_REGISTER:
+			return "REGISTER";
+		}
+		return "unknow";
 	}
 
 	std::string CScriptCodeLoader::GetRegisterName(char regIdx)

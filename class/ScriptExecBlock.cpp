@@ -19,22 +19,31 @@ namespace zlscript
 		m_nCodePoint = 0;
 		m_pMaster = pMaster;
 		m_pCodeData = pData;
+		m_nTempVarSize = 0;
+		m_pTempVar = nullptr;
 		if (pData)
 		{
-			vNumVar.resize(pData->vNumVar.size());
-			for (unsigned int i = 0; i < pData->vNumVar.size(); i++)
+			m_nTempVarSize = pData->vNumVar.size();
+			if (m_nTempVarSize > 0)
 			{
-				StackVarInfo& var = vNumVar[i];
-				var = pData->vNumVar[i];
-			}
+				m_pTempVar = new StackVarInfo[m_nTempVarSize];
 
+				for (unsigned int i = 0; i < m_nTempVarSize; i++)
+				{
+					m_pTempVar[i] = pData->vNumVar[i];
+				}
+			}
 		}
 
 	}
 
 	CScriptExecBlock::~CScriptExecBlock(void)
 	{
-		vNumVar.clear();
+		//vNumVar.clear();
+		if (m_pTempVar)
+		{
+			delete[] m_pTempVar;
+		}
 	}
 
 	int CScriptExecBlock::GetFunType()
@@ -74,8 +83,8 @@ namespace zlscript
 		break;
 		case ESIGN_POS_LOACL_VAR:
 		{
-			if (pos < vNumVar.size())
-				return vNumVar[pos];
+			if (m_pTempVar && pos < m_nTempVarSize)
+				return m_pTempVar[pos];
 		}
 		break;
 		case ESIGN_POS_CONST_STRING:
@@ -127,9 +136,11 @@ namespace zlscript
 		}
 		int nResult = ERESULT_CONTINUE;
 		auto oldTime = std::chrono::steady_clock::now();
-		while (m_nCodePoint < m_pCodeData->vCodeData.size())
+		unsigned int nDataLen = m_pCodeData->vCodeData.size();
+		CodeStyle* pData = &m_pCodeData->vCodeData[0];
+		while (m_nCodePoint < nDataLen)
 		{
-			CodeStyle& code = m_pCodeData->vCodeData[m_nCodePoint];
+			CodeStyle& code = *(pData+ m_nCodePoint);
 			switch (code.wInstruct)
 			{
 				/*********************计算符************************/
@@ -521,9 +532,9 @@ namespace zlscript
 				break;
 				case ESIGN_POS_LOACL_VAR:
 				{
-					if (code.dwPos < vNumVar.size())
+					if (m_pTempVar && code.dwPos < m_nTempVarSize)
 					{
-						StackVarInfo& var = vNumVar[code.dwPos];
+						StackVarInfo& var = m_pTempVar[code.dwPos];
 						ScriptVector_PushVar(m_stackRegister, &var);
 					}
 					else
@@ -567,8 +578,12 @@ namespace zlscript
 					break;
 				case ESIGN_POS_LOACL_VAR:
 					{
-						StackVarInfo& var = vNumVar[code.dwPos];
-						var = ScriptStack_GetVar(m_stackRegister);
+						if (m_pTempVar && code.dwPos < m_nTempVarSize)
+						{
+							StackVarInfo& var = m_pTempVar[code.dwPos];
+							var = ScriptStack_GetVar(m_stackRegister);
+						}
+
 					}
 					break;
 				case ESIGN_REGISTER:
@@ -607,7 +622,10 @@ namespace zlscript
 				break;
 				case ESIGN_POS_LOACL_VAR:
 				{
-					m_register[code.cExtend] = vNumVar[code.dwPos];
+					if (m_pTempVar && code.dwPos < m_nTempVarSize)
+					{
+						m_register[code.cExtend] = m_pTempVar[code.dwPos];
+					}
 				}
 				break;
 				case ESIGN_POS_CONST_STRING:
@@ -641,7 +659,10 @@ namespace zlscript
 					break;
 				case ESIGN_POS_LOACL_VAR:
 					{
-						vNumVar[code.dwPos] = m_register[code.cExtend];
+						if (m_pTempVar && code.dwPos < m_nTempVarSize)
+						{
+							m_pTempVar[code.dwPos] = m_register[code.cExtend];
+						}
 					}
 					break;
 				case ESIGN_REGISTER:
@@ -783,7 +804,7 @@ namespace zlscript
 					//	m_stackRegister.pop();
 					//}
 					//运行回调函数
-					switch (m_pMaster->CallFun_Script(pMachine, code.dwPos, m_stackRegister, code.cExtend))
+					switch (m_pMaster->CallFun_Script(pMachine, code.dwPos, m_stackRegister, code.cExtend, code.cSign))
 					{
 					case ECALLBACK_ERROR:
 						nResult = ERESULT_ERROR;

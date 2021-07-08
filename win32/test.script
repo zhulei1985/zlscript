@@ -5,6 +5,17 @@ void init()
 	print("init.....");
 
 }
+int FibTest(int n)
+{
+	if (n < 2)
+	{
+		return n;
+	}
+	else
+	{
+		return FibTest(n-2) + FibTest(n-1);
+	}
+}
 void CalculationTest()
 {
 	int t1 = GetMsTime();
@@ -103,12 +114,15 @@ void CalculationTest4()
 }
 void main()
 {
-	test1(1,2);
 	print("begin");
-	print("g_a:" + g_a);
+	int nVal = 0;
+	int t1 = GetMsTime();
+	//nVal = FibTest(40);
+	nVal = FibTest(20);
+	int t2 = GetMsTime() - t1;
+	print("fibtest result:" + nVal);
+	print("fibtest time:"+t2+"ms");
 	CTest test = new CTest;
-	int nVal = test->Add(1,2);
-	print(nVal);
 	//delete test;
 	CalculationTest();
 	CalculationTest2();
