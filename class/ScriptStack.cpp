@@ -54,6 +54,24 @@ namespace zlscript
 		nIndex = 0;
 		m_vData.clear();
 	}
+	bool CScriptStack::pop_front(unsigned int size)
+	{
+		if (size <= nIndex)
+		{
+			auto it = m_vData.begin();
+			auto beginIt = it;
+			for (int i = 0; i < size;i++)
+			{
+				it++;
+			}
+			nIndex -= size;
+			m_vData.erase(beginIt, it);
+			return true;
+		}
+		nIndex = 0;
+		m_vData.clear();
+		return false;
+	}
 	bool CScriptStack::pop()
 	{
 		if (nIndex > 0)

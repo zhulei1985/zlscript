@@ -11,7 +11,7 @@ namespace zlscript
 	CScriptExecCodeMgr::~CScriptExecCodeMgr()
 	{
 	}
-	bool CScriptExecCodeMgr::RemoteFunctionCall(std::string name, CScriptRunState* pState, int nParmNum)
+	bool CScriptExecCodeMgr::RemoteFunctionCall(std::string name, CScriptCallState* pState, int nParmNum)
 	{
 		auto it = m_mapRemoteCallInfo.find(name);
 		if (it == m_mapRemoteCallInfo.end())
@@ -28,17 +28,18 @@ namespace zlscript
 		}
 
 		__int64 nEventIndex = it->second.vScriptEventIndexs[it->second.unIndex];
-		CScriptStack scriptParm;
+		CScriptStack scriptParm = pState->m_stackRegister;
 	
 		//ScriptVector_PushVar(scriptParm, name.c_str());
-		for (int i = 0; i < nParmNum; i++)
+
+		//for (int i = 0; i < nParmNum; i++)
+		//{
+		//	StackVarInfo var = pState->GetVarFormStack(i);
+		//	ScriptVector_PushVar(scriptParm, &var);
+		//}
+		if (pState->m_pMaster->m_pMachine)
 		{
-			auto var = pState->PopVarFormStack();
-			ScriptVector_PushVar(scriptParm, &var);
-		}
-		if (pState->m_pMachine)
-		{
-			pState->m_pMachine->RunTo(name, scriptParm, pState->GetId(), nEventIndex);
+			pState->m_pMaster->m_pMachine->RunTo(name, scriptParm, pState->m_pMaster->GetId(), nEventIndex);
 		}
 		//CScriptEventMgr::GetInstance()->SendEvent(E_SCRIPT_EVENT_NETWORK_RUNSCRIPT, 0, m_scriptParm, nEventIndex);
 

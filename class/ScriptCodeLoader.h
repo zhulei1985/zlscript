@@ -26,11 +26,48 @@
 #include <functional> 
 #include <unordered_map>
  //#include "scriptcommon.h"
-#include "ScriptIntermediateCode.h"
+//#include "ScriptIntermediateCode.h"
 #include "ScriptStack.h"
-
+#include "ScriptCodeStyle.h"
 namespace zlscript
 {
+	struct VarInfo
+	{
+		VarInfo()
+		{
+			cType = 0;
+			cGlobal = 0;
+			wExtend = 0;
+			dwPos = 0;
+		}
+		//__int64 nVarInfo;
+
+		unsigned char cType; // 1,整数,2 浮点 3,字符 4 类指针
+		unsigned char cGlobal;// 1 表示全局变量
+		unsigned short wExtend; // 大于1表示是数组下标,不再使用
+		unsigned int dwPos;//位置ID
+
+	};
+	//一句源码
+	enum E_SOURCE_WORD_FLAG
+	{
+		E_WORD_FLAG_NORMAL,
+		E_WORD_FLAG_STRING,
+	};
+	struct tagSourceWord
+	{
+		tagSourceWord()
+		{
+			nFlag = E_WORD_FLAG_NORMAL;
+			nSourceWordsIndex = -1;
+		}
+		int nFlag;
+		std::string word;
+		unsigned int nSourceWordsIndex;
+	};
+	typedef std::list<tagSourceWord> SentenceSourceCode;
+	class CBaseICode;
+	class CFunICode;
 	class CScriptCodeLoader
 	{
 	public:
@@ -69,35 +106,31 @@ namespace zlscript
 		std::map<std::string, unsigned short> m_mapDicFunToICode;
 
 		void initDic();
-
+	public:
+		char GetVarType(std::string type, unsigned short& classtype);
+		unsigned short GetWordKey(std::string str)
+		{
+			auto it = m_mapDic2KeyWord.find(str);
+			if (it != m_mapDic2KeyWord.end())
+			{
+				return it->second;
+			}
+			return 0;
+		}
 	public:
 		//*****************代码*******************//
-
-		//typedef	vector<CodeStyle> tagCodeData;
-
-		//2020/5/5 不再直接做成数组的形式,与堆栈的数据类型统一
-		//struct VarPoint
-		//{
-		//	unsigned char cType;
-		//	
-		//	//unsigned short unArraySize;
-		//	union
-		//	{
-		//		double* pDouble;
-		//		__int64* pInt64;
-		//		char* pStr;
-		//		unsigned int nClassPointIndex;
-		//	};
-		//};
 
 		struct tagCodeData
 		{
 			tagCodeData();
 			int nType;
-			std::vector<std::string> vStrConst;//字符常量
+
 			std::vector<StackVarInfo> vNumVar;//临时变量
 			std::vector<CodeStyle> vCodeData;
+			std::vector<__int64> vInt64Const;//64位整形常量
 			std::vector<double> vFloatConst;//浮点常量
+			std::vector<std::string> vStrConst;//字符常量
+
 			std::vector<std::string> vCallFunName;//会调用的函数的名称
 
 			std::string filename;
@@ -118,6 +151,7 @@ namespace zlscript
 
 		std::unordered_map<std::string, int> m_mapString2CodeIndex;
 	public:
+		VarInfo* GetGlobalVarInfo(std::string name);
 		void GetGlobalVar(std::vector<StackVarInfo>& vOut);
 		int GetCodeSize()
 		{
@@ -171,7 +205,8 @@ namespace zlscript
 	private:
 		//*******************语法分析状态机********************
 
-
+		//检查是否是操作符
+		bool CheckOperator(std::string word);
 		//检查变量名是否合法
 		bool CheckVarName(std::string varName);
 		//查询临时变量的index
@@ -198,18 +233,24 @@ namespace zlscript
 		int LoadReturnSentence(SentenceSourceCode& vIn, CBaseICode* pCode, int nType);
 
 		//读取一条语句
-		int LoadOneSentence(SentenceSourceCode& vIn, CBaseICode* pCode, int nType, std::string endFlag=";");
+		//int LoadOneSentence(SentenceSourceCode& vIn, CBaseICode* pCode, int nType, std::string endFlag=";");
+		int LoadOperatiorState(SentenceSourceCode& vIn, CBaseICode* pCode, int nType);
+		////读取函数调用
+		//int LoadCallFunState(SentenceSourceCode& vIn, CBaseICode* pCode, int nType);
+		////读取类函数调用
+		//int LoadCallClassFun(SentenceSourceCode& vIn, CBaseICode* pCode, int nType);
+		//////读取算式的状态机
+		//int LoadFormulaSentence(SentenceSourceCode& vIn, CBaseICode* pCode, int nType);
+		////生成一个向堆栈压数值的代码
+		//int LoadAndPushNumVar(SentenceSourceCode& vIn, CBaseICode* pCode, int nType);
+		////读取括号内
+		//int LoadBracket(SentenceSourceCode& vIn, CBaseICode* pCode, int nType);
 
-		//读取函数调用
-		int LoadCallFunState(SentenceSourceCode& vIn, CBaseICode* pCode, std::vector<CodeStyle>& vOut);
-		//读取类函数调用
-		int LoadCallClassFun(SentenceSourceCode& vIn, CBaseICode* pCode, std::vector<CodeStyle>& vOut);
-		////读取算式的状态机
-		int LoadFormulaSentence(SentenceSourceCode& vIn, CBaseICode* pCode, std::vector<CodeStyle>& vOut);
-		//生成一个向堆栈压数值的代码
-		int LoadAndPushNumVar(SentenceSourceCode& vIn, CBaseICode* pCode, std::vector<CodeStyle>& vOut);
-		//读取括号内
-		int LoadBracket(SentenceSourceCode& vIn, CBaseICode* pCode,  std::vector<CodeStyle>& vOut);
+		CBaseICode* LoadOperator(SentenceSourceCode& vIn, std::string endFlag = "");
+		CBaseICode* LoadCallFun(SentenceSourceCode& vIn);
+		CBaseICode* LoadOperand(tagSourceWord &word);
+
+		bool CheckOperatorTree(CBaseICode**pNode);
 	private:
 		//编译时的中间指令
 		enum EICodeType
@@ -234,28 +275,32 @@ namespace zlscript
 
 			ECompile_Next = 0x8000,
 		};
-		//std::vector<std::string> vDebugStringLog;
-		std::string strError;
 
 		std::stack<int> m_stackCompile;//语法分析机的状态堆栈
 
 		typedef std::vector<CodeStyle> tagCodeSection;
 
-		int m_nCurFunVarType;
+		std::unordered_map<std::string, CFunICode*> m_mapString2Code;
 
-		//vector<CodeStyle> m_vICodeData;
+	public:
+		//将中间代码树转化成执行代码
+		int MakeICode2Code(int nMode);
+		//清理中间代码
+		void ClearICode();
 
-		CFunICode* m_pFun_ICode;
-		//临时变量管理
+		void PrintAllCode(const char *pFilename);
+		std::string PrintOneCode(CodeStyle code);
+
 	protected:
-
+		std::string GetSignPosTypeName(char Idx);
+		std::string GetRegisterName(char regIdx);
 	protected:
-		typedef std::map<std::string, int> tagVarName2Pos;
-		std::list<tagVarName2Pos> m_ListTempVarInfo;;
+		//typedef std::map<std::string, int> tagVarName2Pos;
+		//std::list<tagVarName2Pos> m_ListTempVarInfo;;
 
-		std::stack<char> m_stackBlockLayer;
+		//std::stack<char> m_stackBlockLayer;
 
-		tagCodeData m_vTempCodeData;
+		//tagCodeData m_vTempCodeData;
 	public:
 		void SaveToBin();
 		void LoadFormBin();
@@ -269,8 +314,22 @@ namespace zlscript
 		bool bCompileStop;//编译终止
 		std::string strCurFileName;
 		std::string strCurFunName;
-		unsigned int nErrorWordPos;
 
+		struct tagErrorInfo
+		{
+			tagErrorInfo(unsigned int pos, std::string error)
+			{
+				nErrorWordPos = pos;
+				strError = error;
+			}
+			unsigned int nErrorWordPos;
+			std::string strError;
+		};
+		std::vector<tagErrorInfo> m_vError;
+		void AddErrorInfo(unsigned int pos, std::string error)
+		{
+			m_vError.push_back(tagErrorInfo(pos, error));
+		}
 	public:
 		struct tagSourceLineInfo
 		{

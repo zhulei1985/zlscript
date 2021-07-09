@@ -106,6 +106,11 @@ namespace zlscript
 		m_val = atoi(str.c_str());
 		return true;
 	}
+	bool CScriptIntAttribute::SetVal(StackVarInfo& var)
+	{
+		m_val = (int)GetInt_StackVar(&var);
+		return true;
+	}
 	void CScriptIntAttribute::AddData2Bytes(std::vector<char>& vBuff)
 	{
 		AddInt2Bytes(vBuff, m_val);
@@ -152,6 +157,12 @@ namespace zlscript
 	bool CScriptInt64Attribute::SetVal(std::string str)
 	{
 		m_val = _atoi64(str.c_str());
+		return true;
+	}
+
+	bool CScriptInt64Attribute::SetVal(StackVarInfo& var)
+	{
+		m_val = GetInt_StackVar(&var);
 		return true;
 	}
 
@@ -209,6 +220,12 @@ namespace zlscript
 		return true;
 	}
 
+	bool CScriptFloatAttribute::SetVal(StackVarInfo& var)
+	{
+		m_val = (float)GetFloat_StackVar(&var);
+		return false;
+	}
+
 	void CScriptFloatAttribute::AddData2Bytes(std::vector<char>& vBuff)
 	{
 		std::lock_guard<std::mutex> Lock(m_lock);
@@ -262,6 +279,12 @@ namespace zlscript
 	{
 		std::lock_guard<std::mutex> Lock(m_lock);
 		m_val = atof(str.c_str());
+		return true;
+	}
+
+	bool CScriptDoubleAttribute::SetVal(StackVarInfo& var)
+	{
+		m_val = GetFloat_StackVar(&var);
 		return true;
 	}
 
@@ -363,6 +386,13 @@ namespace zlscript
 	{
 		std::lock_guard<std::mutex> Lock(m_lock);
 		m_val = str;
+		return true;
+	}
+
+	bool CScriptStringAttribute::SetVal(StackVarInfo& var)
+	{
+		std::lock_guard<std::mutex> Lock(m_lock);
+		m_val = GetString_StackVar(&var);
 		return true;
 	}
 
@@ -773,6 +803,14 @@ namespace zlscript
 	bool CScriptClassPointAttribute::SetVal(std::string str)
 	{
 		return false;
+	}
+
+	bool CScriptClassPointAttribute::SetVal(StackVarInfo& var)
+	{
+		std::lock_guard<std::mutex> Lock(m_lock);
+
+		m_val = GetPoint_StackVar(&var);
+		return true;
 	}
 
 	void CScriptClassPointAttribute::AddData2Bytes(std::vector<char>& vBuff)

@@ -36,10 +36,14 @@ namespace zlscript
 
 		static void Init2Script();
 	public:
-		int GetVal2Script(CScriptRunState* pState);
-		int SetVal2Script(CScriptRunState* pState);
-		int Remove2Script(CScriptRunState* pState);
-		int Clear2Script(CScriptRunState* pState);
+		CLASS_SCRIPT_FUN(CScriptHashMap, GetVal);
+		CLASS_SCRIPT_FUN(CScriptHashMap, SetVal);
+		CLASS_SCRIPT_FUN(CScriptHashMap, Remove);
+		CLASS_SCRIPT_FUN(CScriptHashMap, Clear);
+		//int GetVal2Script(CScriptCallState* pState);
+		//int SetVal2Script(CScriptCallState* pState);
+		//int Remove2Script(CScriptCallState* pState);
+		//int Clear2Script(CScriptCallState* pState);
 	private:
 		std::unordered_map<StackVarInfo, StackVarInfo, hash_SV> m_mapData;
 	};
@@ -50,13 +54,20 @@ namespace zlscript
 		~CScriptArray();
 		static void Init2Script();
 	public:
-		int Add2Script(CScriptRunState* pState);
-		int Get2Script(CScriptRunState* pState);
-		int GetSize2Script(CScriptRunState* pState);
-		int Set2Script(CScriptRunState* pState);
-		int Remove2Script(CScriptRunState* pState);
+		CLASS_SCRIPT_FUN(CScriptArray, Add);
+		CLASS_SCRIPT_FUN(CScriptArray, Get);
+		CLASS_SCRIPT_FUN(CScriptArray, GetSize);
+		CLASS_SCRIPT_FUN(CScriptArray, Set);
+		CLASS_SCRIPT_FUN(CScriptArray, Remove);
+		CLASS_SCRIPT_FUN(CScriptArray, Clear);
 
-		int Clear2Script(CScriptRunState* pState);
+		//int Add2Script(CScriptCallState* pState);
+		//int Get2Script(CScriptCallState* pState);
+		//int GetSize2Script(CScriptCallState* pState);
+		//int Set2Script(CScriptCallState* pState);
+		//int Remove2Script(CScriptCallState* pState);
+
+		//int Clear2Script(CScriptCallState* pState);
 	public:
 		std::vector<StackVarInfo>& GetVars()
 		{
@@ -83,11 +94,10 @@ namespace zlscript
 		~CScriptData();
 		static void Init2Script();
 
-		int GetVal2Script(CScriptRunState* pState);
-		int SetVal2Script(CScriptRunState* pState);
-
-		int SaveFile2Script(CScriptRunState* pState);
-		int LoadFile2Script(CScriptRunState* pState);
+		CLASS_SCRIPT_FUN(CScriptData, GetVal);
+		CLASS_SCRIPT_FUN(CScriptData, SetVal);
+		CLASS_SCRIPT_FUN(CScriptData, SaveFile);
+		CLASS_SCRIPT_FUN(CScriptData, LoadFile);
 
 		std::map<std::string, CScriptSubData*> m_mapChild;
 

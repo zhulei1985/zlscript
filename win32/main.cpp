@@ -35,31 +35,46 @@ class CTest : public CScriptPointInterface
 public:
 	CTest()
 	{
-		AddClassObject(CScriptPointInterface::GetScriptPointIndex(), this);
+		//AddClassObject(CScriptPointInterface::GetScriptPointIndex(), this);
 
-		RegisterClassFun(Add, this, &CTest::Add2Script);
+		//RegisterClassFun(Add, this, &CTest::Add2Script);
 	}
 	~CTest()
 	{
 
 	}
 	ATTR_INT(aaa,1);
+	ATTR_INT(bbb, 2);
 
-	int Add2Script(CScriptRunState* pState)
-	{
-		if (pState == nullptr)
-		{
-			return ECALLBACK_ERROR;
-		}
-		int nVal1 = pState->PopIntVarFormStack();
-		int nVal2 = pState->PopIntVarFormStack();
-		aaa = nVal1 + nVal2;
-		//printf("event %d\n", pState->m_pMachine->GetEventIndex());
-		pState->ClearFunParam();
-		pState->PushVarToStack(aaa);
-		return ECALLBACK_FINISH;
-	}
+	CLASS_SCRIPT_FUN(CTest, Add);
+
+	//int Add2Script(CScriptCallState* pState)
+	//{
+	//	if (pState == nullptr)
+	//	{
+	//		return ECALLBACK_ERROR;
+	//	}
+	//	int nVal1 = pState->PopIntVarFormStack();
+	//	int nVal2 = pState->PopIntVarFormStack();
+	//	aaa = nVal1 + nVal2;
+	//	//printf("event %d\n", pState->m_pMachine->GetEventIndex());
+	//	pState->SetResult((__int64)aaa);
+	//	return ECALLBACK_FINISH;
+	//}
 };
+int CTest::Add2Script(CScriptCallState* pState)
+{
+		if (pState == nullptr)
+	{
+		return ECALLBACK_ERROR;
+	}
+	int nVal1 = pState->GetIntVarFormStack(0);
+	int nVal2 = pState->GetIntVarFormStack(1);
+	aaa = nVal1 + nVal2;
+	//printf("event %d\n", pState->m_pMachine->GetEventIndex());
+	pState->SetResult((__int64)aaa);
+	return ECALLBACK_FINISH;
+}
 void DebugPrint(const char* pStr)
 {
 	if (pStr)
@@ -84,9 +99,12 @@ int main()
 	//zlscript::CScriptDebugPrintMgr::GetInstance()->RegisterCallBack_PrintFun(DebugPrintToFile);
 	//注册类和类函数
 	RegisterClassType("CTest", CTest);
-	RegisterClassFun1("Add", CTest);
+	//RegisterClassFun1("Add", CTest);
 
 	zlscript::LoadFile("test.script");
+	zlscript::CScriptCodeLoader::GetInstance()->MakeICode2Code(0);
+	zlscript::CScriptCodeLoader::GetInstance()->ClearICode();
+	zlscript::CScriptCodeLoader::GetInstance()->PrintAllCode("debug.txt");
 	g_nThreadRunState = 1;
 
 	//zlscript::CScriptStack stackParm;
@@ -112,7 +130,7 @@ int main()
 	//	std::thread tbg(BackGroundThreadFun);
 	//	tbg.detach();
 	//}
-	zlscript::CScriptVirtualMachine Machine(8);
+	zlscript::CScriptVirtualMachine Machine(1);
 	Machine.InitEvent(zlscript::E_SCRIPT_EVENT_RETURN,
 		std::bind(&zlscript::CScriptVirtualMachine::EventReturnFun, &Machine, std::placeholders::_1, std::placeholders::_2));
 	Machine.InitEvent(zlscript::E_SCRIPT_EVENT_RUNSCRIPT,

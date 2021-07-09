@@ -101,6 +101,60 @@ namespace zlscript
 		Int64 = 0;
 	}
 
+	StackVarInfo& StackVarInfo::operator=(__int64 val)
+	{
+		Clear();
+		cType = EScriptVal_Int;
+		Int64 = val;
+		return *this;
+	}
+
+	StackVarInfo& StackVarInfo::operator=(double val)
+	{
+		Clear();
+		cType = EScriptVal_Double;
+		Double = val;
+		return *this;
+	}
+
+	StackVarInfo& StackVarInfo::operator=(const char* pStr)
+	{
+		Clear();
+		cType = EScriptVal_String;
+		Int64 = StackVarInfo::s_strPool.NewString(pStr);
+		return *this;
+	}
+
+	StackVarInfo& StackVarInfo::operator=(CScriptBasePointer* pPoint)
+	{
+		Clear();
+		cType = EScriptVal_ClassPoint;
+		this->pPoint = pPoint;
+		CScriptSuperPointerMgr::GetInstance()->PickupPointer(pPoint);
+		return *this;
+	}
+
+	StackVarInfo& StackVarInfo::operator=(CScriptPointInterface* pPoint)
+	{
+		Clear();
+		if (pPoint)
+		{
+			cType = EScriptVal_ClassPoint;
+			this->pPoint = CScriptSuperPointerMgr::GetInstance()->PickupPointer(pPoint->GetScriptPointIndex());
+		}
+
+		return *this;
+	}
+
+	StackVarInfo& StackVarInfo::operator=(const PointVarInfo& info)
+	{
+		// TODO: 在此处插入 return 语句
+		Clear();
+		this->pPoint = info.pPoint;
+		CScriptSuperPointerMgr::GetInstance()->PickupPointer(info.pPoint);
+		return *this;
+	}
+
 	StackVarInfo& StackVarInfo::operator=(const StackVarInfo& cls)
 	{
 		Clear();

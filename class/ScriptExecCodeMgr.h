@@ -21,7 +21,8 @@
 #include <map>
 namespace zlscript
 {
-	class CScriptRunState;
+	//TODO 不再使用辅助模式，以下代码先屏蔽，以后删掉
+	class CScriptCallState;
 	class CScriptExecCodeMgr
 	{
 	public:
@@ -36,7 +37,7 @@ namespace zlscript
 		static CScriptExecCodeMgr s_Instance;
 
 	public:
-		bool RemoteFunctionCall(std::string name, CScriptRunState* pState, int nParmNum);
+		bool RemoteFunctionCall(std::string name, CScriptCallState* pState, int nParmNum);
 
 		bool SetRemoteFunction(std::string name, __int64 nEventIndex);
 		void RemoveRemoteFunction(std::string name, __int64 nEventIndex);

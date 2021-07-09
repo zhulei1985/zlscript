@@ -51,6 +51,7 @@ namespace zlscript
 		virtual std::string ToType() = 0;
 		virtual std::string ToString() = 0;
 		virtual StackVarInfo ToScriptVal() { return StackVarInfo(); }
+		virtual bool SetVal(StackVarInfo& var) { return false; }
 		virtual bool SetVal(std::string str) =0;
 		virtual void ClearChangeFlag(){}
 		unsigned short m_flag;
@@ -97,6 +98,7 @@ namespace zlscript
 		virtual std::string ToString();
 		virtual StackVarInfo ToScriptVal();
 		bool SetVal(std::string str);
+		bool SetVal(StackVarInfo& var);
 		virtual void AddData2Bytes(std::vector<char>& vBuff);
 		virtual bool DecodeData4Bytes(char* pBuff, int& pos, unsigned int len);
 	};
@@ -114,6 +116,7 @@ namespace zlscript
 		virtual std::string ToString();
 		virtual StackVarInfo ToScriptVal();
 		bool SetVal(std::string str);
+		bool SetVal(StackVarInfo& var);
 		virtual void AddData2Bytes(std::vector<char>& vBuff);
 		virtual bool DecodeData4Bytes(char* pBuff, int& pos, unsigned int len);
 	};
@@ -132,6 +135,7 @@ namespace zlscript
 		virtual std::string ToString();
 		virtual StackVarInfo ToScriptVal();
 		bool SetVal(std::string str);
+		bool SetVal(StackVarInfo& var);
 		virtual void AddData2Bytes(std::vector<char>& vBuff);
 		virtual bool DecodeData4Bytes(char* pBuff, int& pos, unsigned int len);
 	};
@@ -150,6 +154,7 @@ namespace zlscript
 		virtual std::string ToString();
 		virtual StackVarInfo ToScriptVal();
 		bool SetVal(std::string str);
+		bool SetVal(StackVarInfo& var);
 		virtual void AddData2Bytes(std::vector<char>& vBuff);
 		virtual bool DecodeData4Bytes(char* pBuff, int& pos, unsigned int len);
 	};
@@ -172,6 +177,7 @@ namespace zlscript
 		virtual StackVarInfo ToScriptVal();
 		const char* c_str();
 		bool SetVal(std::string str);
+		bool SetVal(StackVarInfo& var);
 		virtual void AddData2Bytes(std::vector<char>& vBuff);
 		virtual bool DecodeData4Bytes(char* pBuff, int& pos, unsigned int len);
 	};
@@ -244,6 +250,7 @@ namespace zlscript
 		virtual std::string ToType();
 		virtual std::string ToString();
 		bool SetVal(std::string str);
+		bool SetVal(StackVarInfo& var);
 		virtual void AddData2Bytes(std::vector<char>& vBuff);
 		virtual bool DecodeData4Bytes(char* pBuff, int& pos, unsigned int len);
 	};

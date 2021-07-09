@@ -24,8 +24,9 @@
 #include <string>
 #include <vector>
 #include <set>
+#include <unordered_map>
 #include "ScriptClassAttributes.h"
-
+#include "ScriptClassFunion.h"
 namespace zlscript
 {
 	class CBaseScriptClassMgr;
@@ -68,21 +69,9 @@ namespace zlscript
 		ut._addr = addr;
 		func = ut._func;
 	}
-	class CScriptRunState;
-	typedef int (*ScriptClassFunHandler)(CScriptRunState*);
-	struct CScriptBaseClassFunInfo
-	{
-		struct tagParameterInfo
-		{
-			int type;//1 数值 2 浮点 3 字符串 4 类指针
-			int classtype;//如果是类指针，类类型值
-		};
-		//virtual void init() = 0;
-		std::vector<tagParameterInfo> vParmeterInfo;
-		virtual int RunFun(CScriptRunState* pState) = 0;
-		virtual CScriptBaseClassFunInfo* Copy() = 0;
-		virtual const char* GetFunName() = 0;
-	};
+	class CScriptCallState;
+
+
 
 #define ATTR_BASE_INT(val,flag,index) CScriptIntAttribute val{#val,flag,index,this};
 #define ATTR_BASE_INT64(val,flag,index) CScriptInt64Attribute val{#val,flag,index,this};
@@ -111,7 +100,14 @@ namespace zlscript
 #define ATTR_DB_INT64_ARRAY(val,index) ATTR_BASE_INT64_ARRAY(val,CBaseScriptClassAttribute::E_FLAG_DB,index);
 #define ATTR_DB_INT64_MAP(val,index) ATTR_BASE_INT64_MAP(val,CBaseScriptClassAttribute::E_FLAG_DB,index);
 
-	class CScriptPointInterface : public IClassAttributeObserver
+#define CLASS_SCRIPT_FUN_TEST(classname,funname) \
+	int funname##2Script(CScriptCallState* pState); 
+
+#define CLASS_SCRIPT_FUN(classname,funname) \
+	int funname##2Script(CScriptCallState* pState); \
+	CBaseScriptClassFun funname##Fun{#funname,std::bind(&classname::funname##2Script,this,std::placeholders::_1),this, CBaseScriptClassFun::E_FLAG_NONE};
+
+	class CScriptPointInterface : public IClassAttributeObserver , public IClassFunObserver
 	{
 	public:
 		CScriptPointInterface();
@@ -136,8 +132,10 @@ namespace zlscript
 			return m_pClassInfo;
 		}
 
-		void SetFun(int id, CScriptBaseClassFunInfo* pInfo);
-		virtual int RunFun(int id, CScriptRunState* pState);
+		unsigned int GetAttributeIndex(std::string name);
+		CBaseScriptClassAttribute* GetAttribute(unsigned int index);
+		//void SetFun(int id, CScriptBaseClassFunInfo* pInfo);
+		virtual int RunFun(unsigned int id, CScriptCallState* pState);
 		//virtual int CallFun(const char*pFunName, CScriptStack &parms);
 
 		CScriptPointInterface(const CScriptPointInterface& val);
@@ -151,10 +149,13 @@ namespace zlscript
 		virtual void RegisterScriptAttribute(CBaseScriptClassAttribute* pAttr);
 		virtual void RemoveScriptAttribute(CBaseScriptClassAttribute* pAttr);
 
+		virtual void RegisterScriptFun(CBaseScriptClassFun* pClassFun);
+
 		virtual unsigned int GetSyncInfo_ClassPoint2Index(CScriptBasePointer* point) { return 0; }
 		virtual PointVarInfo GetSyncInfo_Index2ClassPoint(unsigned int index) { return PointVarInfo(); }
 
-		CScriptBaseClassFunInfo* GetClassFunInfo(int id);
+		unsigned int GetClassFunIndex(std::string name);
+		CBaseScriptClassFun* GetClassFunInfo(unsigned int id);
 	protected:
 		//用于所有脚本可用的类实例索引，作用范围是本地
 		__int64 m_nScriptPointIndex;
@@ -165,7 +166,11 @@ namespace zlscript
 
 		std::map<std::string, CBaseScriptClassAttribute*> m_mapDBAttributes;
 
-		std::vector<CScriptBaseClassFunInfo*> m_vecScriptClassFun;
+		std::unordered_map<unsigned int, CBaseScriptClassAttribute*> m_mapAllAttributes;
+		std::unordered_map<std::string, unsigned int> m_mapAttributeName2Index;
+
+		std::vector<CBaseScriptClassFun*> m_vecScriptClassFun;
+		std::unordered_map<std::string, unsigned int> m_mapFun2Index;
 
 		std::mutex m_FunLock;
 		//std::shared_ptr<std::mutex> m_FunLock;

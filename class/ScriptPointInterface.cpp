@@ -29,16 +29,16 @@ namespace zlscript
 	}
 	CScriptPointInterface::~CScriptPointInterface()
 	{
-		auto it = m_vecScriptClassFun.begin();
-		for (; it != m_vecScriptClassFun.end(); it++)
-		{
-			CScriptBaseClassFunInfo* pInfo = *it;
-			if (pInfo)
-			{
-				delete pInfo;
-			}
-		}
-		m_vecScriptClassFun.clear();
+		//auto it = m_vecScriptClassFun.begin();
+		//for (; it != m_vecScriptClassFun.end(); it++)
+		//{
+		//	CScriptBaseClassFunInfo* pInfo = *it;
+		//	if (pInfo)
+		//	{
+		//		delete pInfo;
+		//	}
+		//}
+		//m_vecScriptClassFun.clear();
 
 		if (IsInitScriptPointIndex())
 		{
@@ -76,49 +76,65 @@ namespace zlscript
 		m_nScriptPointIndex = 0;
 	}
 
-	void CScriptPointInterface::SetFun(int id, CScriptBaseClassFunInfo* pInfo)
+	unsigned int CScriptPointInterface::GetAttributeIndex(std::string name)
 	{
-		if (pInfo == nullptr)
+		auto it = m_mapAttributeName2Index.find(name);
+		if (it != m_mapAttributeName2Index.end())
 		{
-			return;
+			return it->second;
 		}
-		if (id >= 0)
-		{
-			if ((int)m_vecScriptClassFun.size() == id)
-			{
-				m_vecScriptClassFun.push_back(pInfo);
-			}
-			else if ((int)m_vecScriptClassFun.size() < id)
-			{
-				m_vecScriptClassFun.resize(id + 1,nullptr);
-				m_vecScriptClassFun[id] = pInfo;
-			}
-			else
-			{
-				if (m_vecScriptClassFun[id])
-				{
-					delete m_vecScriptClassFun[id];
-				}
-				m_vecScriptClassFun[id] = pInfo;
-			}
-		}
-		else
-		{
-			delete pInfo;
-		}
+		return -1;
 	}
-	int CScriptPointInterface::RunFun(int id, CScriptRunState* pState)
+
+	CBaseScriptClassAttribute* CScriptPointInterface::GetAttribute(unsigned int index)
 	{
-		if (id < 0)
+		auto it = m_mapAllAttributes.find(index);
+		if (it != m_mapAllAttributes.end())
 		{
-			return 0;
+			return it->second;
 		}
+		return nullptr;
+	}
+
+	//void CScriptPointInterface::SetFun(int id, CScriptBaseClassFunInfo* pInfo)
+	//{
+	//	if (pInfo == nullptr)
+	//	{
+	//		return;
+	//	}
+	//	if (id >= 0)
+	//	{
+	//		if ((int)m_vecScriptClassFun.size() == id)
+	//		{
+	//			m_vecScriptClassFun.push_back(pInfo);
+	//		}
+	//		else if ((int)m_vecScriptClassFun.size() < id)
+	//		{
+	//			m_vecScriptClassFun.resize(id + 1,nullptr);
+	//			m_vecScriptClassFun[id] = pInfo;
+	//		}
+	//		else
+	//		{
+	//			if (m_vecScriptClassFun[id])
+	//			{
+	//				delete m_vecScriptClassFun[id];
+	//			}
+	//			m_vecScriptClassFun[id] = pInfo;
+	//		}
+	//	}
+	//	else
+	//	{
+	//		delete pInfo;
+	//	}
+	//}
+	int CScriptPointInterface::RunFun(unsigned int id, CScriptCallState* pState)
+	{
 		if (id >= m_vecScriptClassFun.size())
 		{
 			return 0;
 		}
 		int nResult = 0;
-		CScriptBaseClassFunInfo* pFun = m_vecScriptClassFun[id];
+		CBaseScriptClassFun* pFun = m_vecScriptClassFun[id];
 		if (pFun)
 		{
 			nResult = pFun->RunFun(pState);
@@ -151,22 +167,22 @@ namespace zlscript
 	{
 		//AddClassObject(CScriptPointInterface::GetScriptPointIndex(), this);
 		//this->m_nID = val.m_nID;
-		auto itOld = m_vecScriptClassFun.begin();
-		for (; itOld != m_vecScriptClassFun.end(); itOld++)
-		{
-			CScriptBaseClassFunInfo* pInfo = *itOld;
-			if (pInfo)
-			{
-				delete pInfo;
-			}
-		}
-		m_vecScriptClassFun.clear();
-		//this->m_mapScriptClassFun = val.m_mapScriptClassFun;
-		auto it = val.m_vecScriptClassFun.begin();
-		for (; it != val.m_vecScriptClassFun.end(); it++)
-		{
-			m_vecScriptClassFun.push_back((*it)->Copy());
-		}
+		//auto itOld = m_vecScriptClassFun.begin();
+		//for (; itOld != m_vecScriptClassFun.end(); itOld++)
+		//{
+		//	CScriptBaseClassFunInfo* pInfo = *itOld;
+		//	if (pInfo)
+		//	{
+		//		delete pInfo;
+		//	}
+		//}
+		//m_vecScriptClassFun.clear();
+		////this->m_mapScriptClassFun = val.m_mapScriptClassFun;
+		//auto it = val.m_vecScriptClassFun.begin();
+		//for (; it != val.m_vecScriptClassFun.end(); it++)
+		//{
+		//	m_vecScriptClassFun.push_back((*it)->Copy());
+		//}
 	}
 	CScriptPointInterface& CScriptPointInterface::operator=(const CScriptPointInterface& val)
 	{
@@ -174,22 +190,22 @@ namespace zlscript
 		//this->m_mapScriptClassFun = val.m_mapScriptClassFun;
 		// TODO: 在此处插入 return 语句
 
-		auto itOld = m_vecScriptClassFun.begin();
-		for (; itOld != m_vecScriptClassFun.end(); itOld++)
-		{
-			CScriptBaseClassFunInfo* pInfo = *itOld;
-			if (pInfo)
-			{
-				delete pInfo;
-			}
-		}
-		m_vecScriptClassFun.clear();
-		//this->m_mapScriptClassFun = val.m_mapScriptClassFun;
-		auto it = val.m_vecScriptClassFun.begin();
-		for (; it != val.m_vecScriptClassFun.end(); it++)
-		{
-			m_vecScriptClassFun.push_back((*it)->Copy());
-		}
+		//auto itOld = m_vecScriptClassFun.begin();
+		//for (; itOld != m_vecScriptClassFun.end(); itOld++)
+		//{
+		//	CScriptBaseClassFunInfo* pInfo = *itOld;
+		//	if (pInfo)
+		//	{
+		//		delete pInfo;
+		//	}
+		//}
+		//m_vecScriptClassFun.clear();
+		////this->m_mapScriptClassFun = val.m_mapScriptClassFun;
+		//auto it = val.m_vecScriptClassFun.begin();
+		//for (; it != val.m_vecScriptClassFun.end(); it++)
+		//{
+		//	m_vecScriptClassFun.push_back((*it)->Copy());
+		//}
 
 		return *this;
 	}
@@ -216,6 +232,8 @@ namespace zlscript
 		{
 			m_mapDBAttributes[pAttr->m_strAttrName] = pAttr;
 		}
+		m_mapAllAttributes.insert(std::pair<unsigned int, CBaseScriptClassAttribute*>(pAttr->m_index, pAttr));
+		m_mapAttributeName2Index.insert(std::pair<std::string, unsigned int>(pAttr->m_strAttrName, pAttr->m_index));
 	}
 
 	void CScriptPointInterface::RemoveScriptAttribute(CBaseScriptClassAttribute* pAttr)
@@ -226,12 +244,29 @@ namespace zlscript
 		}
 	}
 
-	CScriptBaseClassFunInfo* CScriptPointInterface::GetClassFunInfo(int id)
+	void CScriptPointInterface::RegisterScriptFun(CBaseScriptClassFun* pClassFun)
 	{
-		if (id < 0)
+		if (pClassFun)
 		{
-			return 0;
+			pClassFun->m_index = m_vecScriptClassFun.size();
+			m_mapFun2Index.insert(std::pair<std::string, unsigned int>(pClassFun->m_name, pClassFun->m_index));
+			m_vecScriptClassFun.push_back(pClassFun);
 		}
+
+	}
+
+	unsigned int CScriptPointInterface::GetClassFunIndex(std::string name)
+	{
+		auto it = m_mapFun2Index.find(name);
+		if (it != m_mapFun2Index.end())
+		{
+			return it->second;
+		}
+		return -1;
+	}
+
+	CBaseScriptClassFun* CScriptPointInterface::GetClassFunInfo(unsigned int id)
+	{
 		if (id >= m_vecScriptClassFun.size())
 		{
 			return 0;

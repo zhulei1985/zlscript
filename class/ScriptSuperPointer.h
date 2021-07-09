@@ -43,6 +43,7 @@ namespace zlscript
 		std::string strClassName;
 		std::atomic_int64_t nDB_Id_Count;
 	};
+	class CScriptCallState;
 	class CScriptBasePointer
 	{
 	public:
@@ -61,9 +62,11 @@ namespace zlscript
 		void SetAutoReleaseMode(int val);
 		int GetAutoReleaseMode();
 
-		virtual int RunFun(unsigned int nIndex, CScriptRunState*) = 0;
-		virtual int GetFunIndex(std::string name) = 0;
+		virtual CBaseScriptClassAttribute* GetAttribute(unsigned int index) = 0;
 
+		virtual int RunFun(unsigned int nIndex, CScriptCallState*) = 0;
+		virtual int GetFunIndex(std::string name) = 0;
+		virtual int GetAttributeIndex(std::string name) = 0;
 		virtual CScriptPointInterface* GetPoint()
 		{
 			return nullptr;
@@ -100,9 +103,10 @@ namespace zlscript
 			//m_nCount = 0;
 			//m_nUseCount = 0;
 		}
-
-		int RunFun(unsigned int nIndex, CScriptRunState*);
+		CBaseScriptClassAttribute* GetAttribute(unsigned int index);
+		int RunFun(unsigned int nIndex, CScriptCallState*);
 		int GetFunIndex(std::string name);
+		int GetAttributeIndex(std::string name);
 
 		virtual void Lock();
 		virtual void Unlock();
@@ -126,7 +130,17 @@ namespace zlscript
 	}
 
 	template<class T>
-	inline int CScriptSuperPointer<T>::RunFun(unsigned int nIndex, CScriptRunState* pState)
+	inline CBaseScriptClassAttribute* CScriptSuperPointer<T>::GetAttribute(unsigned int index)
+	{
+		if (m_pPointer)
+		{
+			return m_pPointer->GetAttribute(index);
+		}
+		return nullptr;
+	}
+
+	template<class T>
+	inline int CScriptSuperPointer<T>::RunFun(unsigned int nIndex, CScriptCallState* pState)
 	{
 		Lock();
 		int nResult = 0;
@@ -140,16 +154,30 @@ namespace zlscript
 	template<class T>
 	inline int CScriptSuperPointer<T>::GetFunIndex(std::string name)
 	{
-		auto it = s_Info.mapDicString2Index.find(name);
-		if (it != CScriptSuperPointer<T>::s_Info.mapDicString2Index.cend())
+		//auto it = s_Info.mapDicString2Index.find(name);
+		//if (it != CScriptSuperPointer<T>::s_Info.mapDicString2Index.cend())
+		//{
+		//	return it->second;
+		//}
+		//else
+		//{
+		//	int index = s_Info.nFunSize++;
+		//	CScriptSuperPointer<T>::s_Info.mapDicString2Index[name] = index;
+		//	return index;
+		//}
+		if (GetPoint())
 		{
-			return it->second;
+			return GetPoint()->GetClassFunIndex(name);
 		}
-		else
+		return -1;
+	}
+
+	template<class T>
+	inline int CScriptSuperPointer<T>::GetAttributeIndex(std::string name)
+	{
+		if (GetPoint())
 		{
-			int index = s_Info.nFunSize++;
-			CScriptSuperPointer<T>::s_Info.mapDicString2Index[name] = index;
-			return index;
+			return GetPoint()->GetAttributeIndex(name);
 		}
 		return -1;
 	}
@@ -214,8 +242,8 @@ namespace zlscript
 		template<class T>
 		static std::string GetClassName(T* pVal);
 
-		template<class T>
-		bool SetClassFun(std::string funName, T* pPoint);
+		//template<class T>
+		//bool SetClassFun(std::string funName, T* pPoint);
 
 		//c++代码中，取一个指针进行操作 注意，pickup后必须return
 		CScriptBasePointer* PickupPointer(__int64 id, std::string className);
@@ -227,8 +255,10 @@ namespace zlscript
 		//bool ScriptReleasePointer(__int64 id);
 
 		int GetClassFunIndex(int classindex, std::string funname);
+		int GetClassParamIndex(int classindex, std::string paramname);
 
 		CBaseScriptClassMgr* GetClassMgr(int nType);
+		CBaseScriptClassMgr* GetClassMgr(std::string strType);
 	private:
 		int nClassTypeCount;
 		std::map<std::string, int> m_mapString2ClassType;
@@ -254,7 +284,7 @@ namespace zlscript
 	template<class T>
 	inline bool CScriptSuperPointerMgr::RegisterClassType(std::string classname, T* p)
 	{
-		m_MutexTypeLock.lock();
+		std::lock_guard<std::mutex> Lock(m_MutexTypeLock);
 		if (m_mapString2ClassType.find(classname) == m_mapString2ClassType.end())
 		{
 			nClassTypeCount++;
@@ -265,36 +295,55 @@ namespace zlscript
 
 			m_mapClassMgr[nClassTypeCount] = GetScriptClassMgr<T>();//CScriptClassMgr<T>::GetInstance();
 			
-			m_MutexTypeLock.unlock();
+			if (p)
+			{
+				auto it = m_mapPointer.find(p->GetScriptPointIndex());
+				if (it != m_mapPointer.end())
+				{
+					m_mapTypePointer[CScriptSuperPointer<T>::s_Info.nClassType] = it->second;
+					m_mapPointer.erase(it);
+				}
+				else
+				{
+					CScriptSuperPointer<T>* pPoint = new CScriptSuperPointer<T>;
+					if (pPoint == nullptr)
+					{
+						return false;
+					}
+					p->SetClassInfo(&CScriptSuperPointer<T>::s_Info);
+					pPoint->SetAutoReleaseMode(false);
+					pPoint->SetID(p->GetScriptPointIndex());
+					pPoint->SetPointer(p);
+					m_mapTypePointer[CScriptSuperPointer<T>::s_Info.nClassType] = pPoint;
+				}
+			}
+
 			return true;
 		}
-		m_MutexTypeLock.unlock();
+		delete p;
 		return false;
 	}
 
-	template<class T>
-	inline bool CScriptSuperPointerMgr::SetClassFun(std::string funName, T* pPoint)
-	{
-		m_MutexTypeLock.lock();
-		int nIndex = -1;
-		auto it = CScriptSuperPointer<T>::s_Info.mapDicString2Index.find(funName);
-		if (it != CScriptSuperPointer<T>::s_Info.mapDicString2Index.end())
-		{
-			nIndex = it->second;
-		}
-		else
-		{
-			CScriptSuperPointer<T>::s_Info.mapDicString2Index[funName] = CScriptSuperPointer<T>::s_Info.nFunSize;
-			CScriptSuperPointer<T>::s_Info.nFunSize++;
-		}
+	//template<class T>
+	//inline bool CScriptSuperPointerMgr::SetClassFun(std::string funName, T* pPoint)
+	//{
+	//	m_MutexTypeLock.lock();
+	//	int nIndex = -1;
+	//	auto it = CScriptSuperPointer<T>::s_Info.mapDicString2Index.find(funName);
+	//	if (it != CScriptSuperPointer<T>::s_Info.mapDicString2Index.end())
+	//	{
+	//		nIndex = it->second;
+	//	}
+	//	else
+	//	{
+	//		CScriptSuperPointer<T>::s_Info.mapDicString2Index[funName] = CScriptSuperPointer<T>::s_Info.nFunSize;
+	//		CScriptSuperPointer<T>::s_Info.nFunSize++;
+	//	}
 
-		if (m_mapTypePointer[CScriptSuperPointer<T>::s_Info.nClassType] == nullptr)
-		{
-			m_mapTypePointer[CScriptSuperPointer<T>::s_Info.nClassType] = new CScriptSuperPointer<T>;
-		}
-		m_MutexTypeLock.unlock();
-		return true;
-	}
+
+	//	m_MutexTypeLock.unlock();
+	//	return true;
+	//}
 
 	template<class T>
 	inline int CScriptSuperPointerMgr::GetClassType(T* pVal)
@@ -345,54 +394,54 @@ namespace zlscript
 
 #define RegisterClassType(name,T) \
 { \
-	T *pPoint = nullptr; \
+	T *pPoint = new T(); \
 	CScriptSuperPointerMgr::GetInstance()->RegisterClassType(name, pPoint); \
 }
 
 #define AddClassObject(id,point) CScriptSuperPointerMgr::GetInstance()->SetClassPoint(id,point,0);
 #define RemoveClassObject(id) CScriptSuperPointerMgr::GetInstance()->RemoveClassPoint(id);
-	typedef std::function<int(CScriptRunState*)> Script_ClassFun;
+	typedef std::function<int(CScriptCallState*)> Script_ClassFun;
 
-
-#define RegisterClassFun1(name,T) \
-{ \
-	T *pPoint = nullptr; \
-	CScriptSuperPointerMgr::GetInstance()->SetClassFun(name, pPoint); \
-}
-//代替RegisterClassFun1
-#define RegisterClassFunName(name,T) \
-{ \
-	T *pPoint = nullptr; \
-	CScriptSuperPointerMgr::GetInstance()->SetClassFun(#name, pPoint); \
-}
-
-#define RegisterClassFun(name, p, fun) \
-	{ \
-		struct CScript_##name##_ClassFunInfo :public CScriptBaseClassFunInfo \
-		{ \
-			std::function< int (CScriptRunState *)> m_fun; \
-			int RunFun(CScriptRunState *pState) \
-			{ \
-				return m_fun(pState); \
-			} \
-			CScriptBaseClassFunInfo* Copy() \
-			{ \
-				CScript_##name##_ClassFunInfo* pInfo = new CScript_##name##_ClassFunInfo; \
-				if (pInfo) \
-				{ \
-					pInfo->vParmeterInfo = this->vParmeterInfo; \
-				} \
-				return pInfo; \
-			} \
-			const char* GetFunName() \
-			{ \
-				return #name; \
-			} \
-		}; \
-		CScript_##name##_ClassFunInfo *pInfo = new CScript_##name##_ClassFunInfo; \
-		pInfo->m_fun = std::bind(fun,p,std::placeholders::_1); \
-		int nClassType = CScriptSuperPointerMgr::GetClassType(p); \
-		int index = CScriptSuperPointerMgr::GetInstance()->GetClassFunIndex(nClassType,#name); \
-		p->SetFun(index,pInfo); \
-	}
+//
+//#define RegisterClassFun1(name,T) \
+//{ \
+//	T *pPoint = nullptr; \
+//	CScriptSuperPointerMgr::GetInstance()->SetClassFun(name, pPoint); \
+//}
+////代替RegisterClassFun1
+//#define RegisterClassFunName(name,T) \
+//{ \
+//	T *pPoint = nullptr; \
+//	CScriptSuperPointerMgr::GetInstance()->SetClassFun(#name, pPoint); \
+//}
+//
+//#define RegisterClassFun(name, p, fun) \
+//	{ \
+//		struct CScript_##name##_ClassFunInfo :public CScriptBaseClassFunInfo \
+//		{ \
+//			std::function< int (CScriptCallState *)> m_fun; \
+//			int RunFun(CScriptCallState *pState) \
+//			{ \
+//				return m_fun(pState); \
+//			} \
+//			CScriptBaseClassFunInfo* Copy() \
+//			{ \
+//				CScript_##name##_ClassFunInfo* pInfo = new CScript_##name##_ClassFunInfo; \
+//				if (pInfo) \
+//				{ \
+//					pInfo->vParmeterInfo = this->vParmeterInfo; \
+//				} \
+//				return pInfo; \
+//			} \
+//			const char* GetFunName() \
+//			{ \
+//				return #name; \
+//			} \
+//		}; \
+//		CScript_##name##_ClassFunInfo *pInfo = new CScript_##name##_ClassFunInfo; \
+//		pInfo->m_fun = std::bind(fun,p,std::placeholders::_1); \
+//		int nClassType = CScriptSuperPointerMgr::GetClassType(p); \
+//		int index = CScriptSuperPointerMgr::GetInstance()->GetClassFunIndex(nClassType,#name); \
+//		p->SetFun(index,pInfo); \
+//	}
 }
