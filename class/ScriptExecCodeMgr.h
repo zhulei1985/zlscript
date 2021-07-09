@@ -21,6 +21,7 @@
 #include <map>
 namespace zlscript
 {
+	//TODO 不再使用辅助模式，以下代码先屏蔽，以后删掉
 	class CScriptCallState;
 	class CScriptExecCodeMgr
 	{
