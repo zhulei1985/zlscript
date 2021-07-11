@@ -58,4 +58,22 @@ namespace zlscript
 	};
 
 #endif
+
+	class CBaseExeCode
+	{
+	public:
+		CBaseExeCode()
+		{
+			m_pNext = nullptr;
+		}
+
+		virtual void Run() = 0;
+	public:
+		CBaseExeCode* m_pNext;
+	};
+
+	class COperatorExeCode : public CBaseExeCode
+	{
+	public:
+	};
 }
