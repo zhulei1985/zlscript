@@ -42,16 +42,15 @@ namespace zlscript
 
 		inline __int64 GetVal_Int64(char cType, unsigned int pos);
 		StackVarInfo GetVal(char cType, unsigned int pos);
+		bool SetVal(char cType, unsigned int pos, StackVarInfo& var);
 	private:
-
-		CScriptRunState* m_pMaster;
 		//指向的代码块
 		CScriptCodeLoader::tagCodeData* m_pCodeData;
 		//执行位置
-		unsigned int m_nCodePoint;
-
-	private:
-
+		//unsigned int m_nCodePoint;
+		CBaseExeCode* m_pCurCode;
+	public:
+		CScriptRunState* m_pMaster;
 		//寄存器
 		StackVarInfo m_register[R_SIZE];
 		//堆栈
@@ -59,6 +58,7 @@ namespace zlscript
 
 		char m_cReturnRegisterIndex;//返回值放入的寄存器索引
 		StackVarInfo m_varReturnVar;//返回值
+
 	public:
 		enum ERESULT_TYPE
 		{
@@ -70,10 +70,10 @@ namespace zlscript
 			ERESULT_CALLSCRIPTFUN,
 			ERESULT_NEXTCONTINUE
 		};
-		CodeStyle GetCurCode();
+		int GetCurCodeSoureIndex();
 		unsigned int ExecBlock(CScriptVirtualMachine* pMachine);
 
-		inline bool CheckRegisterTrue(char index);
+		bool CheckRegisterTrue(char index);
 
 		void PushVar(StackVarInfo& var);
 		StackVarInfo PopVar();

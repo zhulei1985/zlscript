@@ -2509,18 +2509,18 @@ namespace zlscript
 			fputc('\n', fp);
 			fputs("********************************\n", fp);
 			unsigned int curSoureWordIndex = -1;
-			for (unsigned int i = 0; i < data.vCodeData.size(); i++)
+			for (auto pCode = data.pBeginCode; pCode; pCode= pCode->m_pNext)
 			{
 
-				std::string str = PrintOneCode(data.vCodeData[i]);
+				std::string str = pCode->GetCodeString();// = PrintOneCode(pCode);
 				char strbuff[32] = { 0 };
-				sprintf(strbuff, "[%d]\t", i);
+				sprintf(strbuff, "[%d]\t", pCode->nCodeIndex);
 				fputs(strbuff, fp);
 				fputs(str.c_str(), fp);
 #ifdef _SCRIPT_DEBUG
-				if (curSoureWordIndex != data.vCodeData[i].nSoureWordIndex)
+				if (curSoureWordIndex != pCode->nSoureWordIndex)
 				{
-					curSoureWordIndex = data.vCodeData[i].nSoureWordIndex;
+					curSoureWordIndex = pCode->nSoureWordIndex;
 					auto souceInfo = GetSourceWords(curSoureWordIndex);
 					fputc('\t', fp);
 					fputs(souceInfo.strLineWords.c_str(), fp);
@@ -3063,5 +3063,7 @@ namespace zlscript
 	{
 		nType = EICODE_FUN_DEFAULT;
 		nDefaultReturnType = EScriptVal_None;
+		pBeginCode = nullptr;
+		pEndCode = nullptr;
 	}
 }

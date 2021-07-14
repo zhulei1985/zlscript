@@ -171,6 +171,7 @@
     <ClCompile Include="..\class\ScriptClassFunion.cpp" />
     <ClCompile Include="..\class\ScriptClassMgr.cpp" />
     <ClCompile Include="..\class\ScriptCodeLoader.cpp" />
+    <ClCompile Include="..\class\ScriptCodeStyle.cpp" />
     <ClCompile Include="..\class\scriptcommon.cpp" />
     <ClCompile Include="..\class\ScriptDataMgr.cpp" />
     <ClCompile Include="..\class\ScriptDebugPrint.cpp" />

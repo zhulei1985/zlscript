@@ -70,9 +70,9 @@ int CTest::Add2Script(CScriptCallState* pState)
 	}
 	int nVal1 = pState->GetIntVarFormStack(0);
 	int nVal2 = pState->GetIntVarFormStack(1);
-	aaa = nVal1 + nVal2;
+	//int aaa = nVal1 + nVal2;
 	//printf("event %d\n", pState->m_pMachine->GetEventIndex());
-	pState->SetResult((__int64)aaa);
+	pState->SetResult((__int64)(nVal1 + nVal2));
 	return ECALLBACK_FINISH;
 }
 void DebugPrint(const char* pStr)

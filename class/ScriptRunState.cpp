@@ -555,17 +555,17 @@ namespace zlscript
 						auto pCurBlock = m_BlockStack.top();
 						if (pCurBlock)
 						{
-							for (unsigned int i = 0; i < pBlock->GetVarSize(); i++)
-							{
-								auto pVar = pBlock->GetVar(i);
-								if (pVar)
-									pCurBlock->PushVar(*pVar);
-								else
-								{
-									StackVarInfo var;
-									pCurBlock->PushVar(var);
-								}
-							}
+							//for (unsigned int i = 0; i < pBlock->GetVarSize(); i++)
+							//{
+							//	auto pVar = pBlock->GetVar(i);
+							//	if (pVar)
+							//		pCurBlock->PushVar(*pVar);
+							//	else
+							//	{
+							//		StackVarInfo var;
+							//		pCurBlock->PushVar(var);
+							//	}
+							//}
 							if (pBlock->GetReturnRegisterIndex() < R_SIZE)
 							{
 								pCurBlock->m_register[pBlock->GetReturnRegisterIndex()] = pBlock->GetReturnVar();
@@ -589,9 +589,12 @@ namespace zlscript
 					for (unsigned int i = 0; i < m_BlockStack.size(); i++)
 					{
 						auto pBlock = m_BlockStack.get(i);
-						auto souceInfo = CScriptCodeLoader::GetInstance()->GetSourceWords(pBlock->GetCurCode().nSoureWordIndex);
-						SCRIPT_PRINT("script", "Stack %d|file:%s,line:%d,word:%s", i, souceInfo.strCurFileName.c_str(),
-							souceInfo.nLineNum, souceInfo.strLineWords.c_str());
+						if (pBlock->m_pCurCode)
+						{
+							auto souceInfo = CScriptCodeLoader::GetInstance()->GetSourceWords(pBlock->m_pCurCode->nSoureWordIndex);
+							SCRIPT_PRINT("script", "Stack %d|file:%s,line:%d,word:%s", i, souceInfo.strCurFileName.c_str(),
+								souceInfo.nLineNum, souceInfo.strLineWords.c_str());
+						}
 					}
 #endif
 					//退出本代码块，返回默认返回值

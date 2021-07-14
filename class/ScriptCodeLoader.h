@@ -123,10 +123,31 @@ namespace zlscript
 		struct tagCodeData
 		{
 			tagCodeData();
+			void AddCode(CBaseExeCode* pCode)
+			{
+				if (pCode == nullptr)
+				{
+					return;
+				}
+				if (pBeginCode == nullptr)
+				{
+					pBeginCode = pCode;
+					pEndCode = pCode;
+				}
+				else
+				{
+					pCode->nCodeIndex = pEndCode->nCodeIndex + 1;
+					pEndCode->m_pNext = pCode;
+					pEndCode = pCode;
+				}
+			}
+			CBaseExeCode* pBeginCode;
+			CBaseExeCode* pEndCode;
 			int nType;
 
 			std::vector<StackVarInfo> vNumVar;//临时变量
-			std::vector<CodeStyle> vCodeData;
+			//std::vector<CodeStyle> vCodeData;
+
 			std::vector<__int64> vInt64Const;//64位整形常量
 			std::vector<double> vFloatConst;//浮点常量
 			std::vector<std::string> vStrConst;//字符常量

@@ -328,13 +328,11 @@ namespace zlscript
 
 	bool CLoadVarICode::MakeExeCode(CScriptCodeLoader::tagCodeData& vOut)
 	{
-		CodeStyle code(m_unBeginSoureIndex);
-		code.qwCode = 0;
-		code.wInstruct = ECODE_LOAD;
-		code.cExtend = cRegisterIndex;
-		code.cSign = AnalysisVar(vOut, code.dwPos);
+		CLoadExeCode *pCode = CExeCodeMgr::GetInstance()->New<CLoadExeCode>(m_unBeginSoureIndex);
+		pCode->cResultRegister = cRegisterIndex;
+		pCode->cType = AnalysisVar(vOut, pCode->dwPos);
 
-		vOut.vCodeData.push_back(code);
+		vOut.AddCode(pCode);
 		return true;
 	}
 	bool CSaveVarICode::MakeExeCode(CScriptCodeLoader::tagCodeData& vOut)
@@ -363,13 +361,12 @@ namespace zlscript
 		}
 		pRightOperand->SetRegisterIndex(cRegisterIndex);
 		pRightOperand->MakeExeCode(vOut);
-		CodeStyle code(m_unBeginSoureIndex);
-		code.qwCode = 0;
-		code.wInstruct = ECODE_MOVE;
-		code.cSign = cType;
-		code.cExtend = cRegisterIndex;
-		code.dwPos = pos;
-		vOut.vCodeData.push_back(code);
+
+		CMoveExeCode* pCode = CExeCodeMgr::GetInstance()->New<CMoveExeCode>(m_unBeginSoureIndex);
+		pCode->cResultRegister = cRegisterIndex;
+		pCode->cType = cType;
+		pCode->dwPos = pos;
+		vOut.AddCode(pCode);
 		return true;
 	}
 	void CSaveVarICode::AddICode(int nType, CBaseICode* pCode)
@@ -418,21 +415,17 @@ namespace zlscript
 		{
 			return false;
 		}
-		CodeStyle classcode(m_unBeginSoureIndex);
-		classcode.qwCode = 0;
-		classcode.wInstruct = ECODE_LOAD;
-		classcode.cSign = pVarInfo->cGlobal==1? ESIGN_POS_GLOBAL_VAR: ESIGN_POS_LOACL_VAR;
-		classcode.cExtend = R_C;
-		classcode.dwPos = pVarInfo->dwPos;
-		vOut.vCodeData.push_back(classcode);
+		CLoadExeCode* pLoadCode = CExeCodeMgr::GetInstance()->New<CLoadExeCode>(m_unBeginSoureIndex);
+		pLoadCode->cType = pVarInfo->cGlobal==1? ESIGN_POS_GLOBAL_VAR: ESIGN_POS_LOACL_VAR;
+		pLoadCode->cResultRegister = R_C;
+		pLoadCode->dwPos = pVarInfo->dwPos;
+		vOut.AddCode(pLoadCode);
 
-		CodeStyle code(m_unBeginSoureIndex);
-		code.qwCode = 0;
-		code.wInstruct = ECODE_GET_CLASS_PARAM;
-		code.cSign = R_C;
-		code.cExtend = cRegisterIndex;
-		code.dwPos = nParamIndex;
-		vOut.vCodeData.push_back(code);
+		CGetClassParamExeCode* pGetCode = CExeCodeMgr::GetInstance()->New<CGetClassParamExeCode>(m_unBeginSoureIndex);
+		pGetCode->cClassRegIndex = R_C;
+		pGetCode->cResultRegister = cRegisterIndex;
+		pGetCode->dwPos = nParamIndex;
+		vOut.AddCode(pGetCode);
 		return true;
 	}
 	bool CSetClassParamICode::MakeExeCode(CScriptCodeLoader::tagCodeData& vOut)
@@ -461,21 +454,18 @@ namespace zlscript
 			pRightOperand->SetRegisterIndex(cRegisterIndex);
 			pRightOperand->MakeExeCode(vOut);
 		}
-		CodeStyle classcode(m_unBeginSoureIndex);
-		classcode.qwCode = 0;
-		classcode.wInstruct = ECODE_LOAD;
-		classcode.cSign = pVarInfo->cGlobal == 1 ? ESIGN_POS_GLOBAL_VAR : ESIGN_POS_LOACL_VAR;
-		classcode.cExtend = R_C;
-		classcode.dwPos = pVarInfo->dwPos;
-		vOut.vCodeData.push_back(classcode);
+		CLoadExeCode* pLoadCode = CExeCodeMgr::GetInstance()->New<CLoadExeCode>(m_unBeginSoureIndex);
+		pLoadCode->cType = pVarInfo->cGlobal == 1 ? ESIGN_POS_GLOBAL_VAR : ESIGN_POS_LOACL_VAR;
+		pLoadCode->cResultRegister = R_C;
+		pLoadCode->dwPos = pVarInfo->dwPos;
+		vOut.AddCode(pLoadCode);
 
-		CodeStyle code(m_unBeginSoureIndex);
-		code.qwCode = 0;
-		code.wInstruct = ECODE_SET_CLASS_PARAM;
-		code.cSign = R_C;
-		code.cExtend = cRegisterIndex;
-		code.dwPos = nParamIndex;
-		vOut.vCodeData.push_back(code);
+		CSetClassParamExeCode* pGetCode = CExeCodeMgr::GetInstance()->New<CSetClassParamExeCode>(m_unBeginSoureIndex);
+		pGetCode->cClassRegIndex = R_C;
+		pGetCode->cVarRegister = cRegisterIndex;
+		pGetCode->dwPos = nParamIndex;
+		vOut.AddCode(pGetCode);
+
 		return true;
 	}
 	void CSetClassParamICode::AddICode(int nType, CBaseICode* pCode)
@@ -491,12 +481,10 @@ namespace zlscript
 			pRightOperand->MakeExeCode(vOut);
 		}
 
-		CodeStyle code(m_unBeginSoureIndex);
-		code.qwCode = 0;
-		code.wInstruct = ECODE_MINUS;
-		code.cSign = R_A;
-		code.cExtend = cRegisterIndex;
-		vOut.vCodeData.push_back(code);
+		CMinusExeCode* pCode = CExeCodeMgr::GetInstance()->New<CMinusExeCode>(m_unBeginSoureIndex);
+		pCode->cResultRegister = cRegisterIndex;
+		vOut.AddCode(pCode);
+
 		return true;
 	}
 	void CMinusICode::AddICode(int nType, CBaseICode* pCode)
@@ -507,9 +495,8 @@ namespace zlscript
 	bool COperatorICode::MakeExeCode(CScriptCodeLoader::tagCodeData& vOut)
 	{
 		nOperatorCode = CScriptCodeLoader::GetInstance()->GetWordKey(strOperator);
-		CodeStyle opercode(m_unBeginSoureIndex);
-		opercode.qwCode = 0;
-		opercode.wInstruct = nOperatorCode;
+		char cType = 0;
+		unsigned int dwPos = 0;
 		if (pLeftOperand)
 		{
 			pLeftOperand->SetRegisterIndex(R_A);
@@ -520,42 +507,161 @@ namespace zlscript
 			pRightOperand->SetRegisterIndex(R_B);
 			if (pRightOperand->GetType() != E_I_CODE_OPERAND)
 			{
-				CodeStyle pushcode(m_unBeginSoureIndex);
-				pushcode.qwCode = 0;
-				pushcode.wInstruct = ECODE_PUSH;
-				pushcode.cSign = ESIGN_REGISTER;
-				pushcode.dwPos = R_A;
-				vOut.vCodeData.push_back(pushcode);
+				CPushExeCode* pPushCode = CExeCodeMgr::GetInstance()->New<CPushExeCode>(m_unBeginSoureIndex);
+				pPushCode->cType = ESIGN_REGISTER;
+				pPushCode->dwPos = R_A;
+				vOut.AddCode(pPushCode);
 
 				pRightOperand->MakeExeCode(vOut);
 
-				CodeStyle popcode(m_unBeginSoureIndex);
-				popcode.qwCode = 0;
-				popcode.wInstruct = ECODE_POP;
-				popcode.cSign = ESIGN_REGISTER;
-				popcode.dwPos = R_A;
-				vOut.vCodeData.push_back(popcode);
+				CPopExeCode* pPopCode = CExeCodeMgr::GetInstance()->New<CPopExeCode>(m_unBeginSoureIndex);
+				pPopCode->cType = ESIGN_REGISTER;
+				pPopCode->dwPos = R_A;
+				vOut.AddCode(pPopCode);
 
-				opercode.cSign = ESIGN_REGISTER;
-				opercode.dwPos = pRightOperand->cRegisterIndex;
+				cType = ESIGN_REGISTER;
+				dwPos = pRightOperand->cRegisterIndex;
 			}
 			else
 			{
 				CLoadVarICode* pVarCode = (CLoadVarICode*)pRightOperand;
-				opercode.cSign = pVarCode->AnalysisVar(vOut, opercode.dwPos);
+				cType = pVarCode->AnalysisVar(vOut, dwPos);
 			}
 		}
-		//for (auto it = m_OtherOperand.begin(); it != m_OtherOperand.end(); it++)
-		//{
-		//	auto pCode = *it;
-		//	if (pCode)
-		//	{
-		//		pCode->MakeExeCode(vOut);
-		//	}
-		//}
 
-		opercode.cExtend = cRegisterIndex;
-		vOut.vCodeData.push_back(opercode);
+		switch (nOperatorCode)
+		{
+		case ECODE_ADD:
+			{
+				CAddExeCode* pCode = CExeCodeMgr::GetInstance()->New<CAddExeCode>(m_unBeginSoureIndex);
+				pCode->cResultRegister = cRegisterIndex;
+				pCode->cType = cType;
+				pCode->dwPos = dwPos;
+				vOut.AddCode(pCode);
+			}
+			break;
+		case ECODE_SUM:
+			{
+				CSumExeCode* pCode = CExeCodeMgr::GetInstance()->New<CSumExeCode>(m_unBeginSoureIndex);
+				pCode->cResultRegister = cRegisterIndex;
+				pCode->cType = cType;
+				pCode->dwPos = dwPos;
+				vOut.AddCode(pCode);
+			}
+			break;
+		case ECODE_MUL:
+			{
+				CMulExeCode* pCode = CExeCodeMgr::GetInstance()->New<CMulExeCode>(m_unBeginSoureIndex);
+				pCode->cResultRegister = cRegisterIndex;
+				pCode->cType = cType;
+				pCode->dwPos = dwPos;
+				vOut.AddCode(pCode);
+			}
+			break;
+		case ECODE_DIV:
+			{
+				CDivExeCode* pCode = CExeCodeMgr::GetInstance()->New<CDivExeCode>(m_unBeginSoureIndex);
+				pCode->cResultRegister = cRegisterIndex;
+				pCode->cType = cType;
+				pCode->dwPos = dwPos;
+				vOut.AddCode(pCode);
+			}
+			break;
+		case ECODE_MOD:
+			{
+				CModExeCode* pCode = CExeCodeMgr::GetInstance()->New<CModExeCode>(m_unBeginSoureIndex);
+				pCode->cResultRegister = cRegisterIndex;
+				pCode->cType = cType;
+				pCode->dwPos = dwPos;
+				vOut.AddCode(pCode);
+			}
+			break;
+		case ECODE_CMP_EQUAL:
+			{
+				CCmpEqualExeCode* pCode = CExeCodeMgr::GetInstance()->New<CCmpEqualExeCode>(m_unBeginSoureIndex);
+				pCode->cResultRegister = cRegisterIndex;
+				pCode->cType = cType;
+				pCode->dwPos = dwPos;
+				vOut.AddCode(pCode);
+			}
+			break;
+		case ECODE_CMP_NOTEQUAL:
+			{
+				CCmpNotEqualExeCode* pCode = CExeCodeMgr::GetInstance()->New<CCmpNotEqualExeCode>(m_unBeginSoureIndex);
+				pCode->cResultRegister = cRegisterIndex;
+				pCode->cType = cType;
+				pCode->dwPos = dwPos;
+				vOut.AddCode(pCode);
+			}
+			break;
+		case ECODE_CMP_BIG:
+			{
+				CCmpBigExeCode* pCode = CExeCodeMgr::GetInstance()->New<CCmpBigExeCode>(m_unBeginSoureIndex);
+				pCode->cResultRegister = cRegisterIndex;
+				pCode->cType = cType;
+				pCode->dwPos = dwPos;
+				vOut.AddCode(pCode);
+			}
+			break;
+		case ECODE_CMP_BIGANDEQUAL:
+			{
+				CCmpBigAndEqualExeCode* pCode = CExeCodeMgr::GetInstance()->New<CCmpBigAndEqualExeCode>(m_unBeginSoureIndex);
+				pCode->cResultRegister = cRegisterIndex;
+				pCode->cType = cType;
+				pCode->dwPos = dwPos;
+				vOut.AddCode(pCode);
+			}
+			break;
+		case ECODE_CMP_LESS:
+			{
+				CCmpLessExeCode* pCode = CExeCodeMgr::GetInstance()->New<CCmpLessExeCode>(m_unBeginSoureIndex);
+				pCode->cResultRegister = cRegisterIndex;
+				pCode->cType = cType;
+				pCode->dwPos = dwPos;
+				vOut.AddCode(pCode);
+			}
+			break;
+		case ECODE_CMP_LESSANDEQUAL:
+			{
+				CCmpLessAndEqualExeCode* pCode = CExeCodeMgr::GetInstance()->New<CCmpLessAndEqualExeCode>(m_unBeginSoureIndex);
+				pCode->cResultRegister = cRegisterIndex;
+				pCode->cType = cType;
+				pCode->dwPos = dwPos;
+				vOut.AddCode(pCode);
+			}
+			break;
+		case ECODE_BIT_AND:
+			{
+				CBitAndExeCode* pCode = CExeCodeMgr::GetInstance()->New<CBitAndExeCode>(m_unBeginSoureIndex);
+				pCode->cResultRegister = cRegisterIndex;
+				pCode->cType = cType;
+				pCode->dwPos = dwPos;
+				vOut.AddCode(pCode);
+			}
+			break;
+		case ECODE_BIT_OR:
+			{
+				CBitOrExeCode* pCode = CExeCodeMgr::GetInstance()->New<CBitOrExeCode>(m_unBeginSoureIndex);
+				pCode->cResultRegister = cRegisterIndex;
+				pCode->cType = cType;
+				pCode->dwPos = dwPos;
+				vOut.AddCode(pCode);
+			}
+			break;
+		case ECODE_BIT_XOR:
+			{
+				CBitXorExeCode* pCode = CExeCodeMgr::GetInstance()->New<CBitXorExeCode>(m_unBeginSoureIndex);
+				pCode->cResultRegister = cRegisterIndex;
+				pCode->cType = cType;
+				pCode->dwPos = dwPos;
+				vOut.AddCode(pCode);
+			}
+			break;
+		default:
+			return false;
+		}
+
+
 		return true;
 	}
 	void COperatorICode::AddICode(int nType, CBaseICode* pCode)
@@ -634,36 +740,32 @@ namespace zlscript
 			{
 				pCode->SetRegisterIndex(R_A);
 				pCode->MakeExeCode(vOut);
-				CodeStyle pushcode(m_unBeginSoureIndex);
-				pushcode.qwCode = 0;
-				pushcode.wInstruct = ECODE_PUSH;
-				pushcode.cSign = ESIGN_REGISTER;
-				pushcode.dwPos = R_A;
-				vOut.vCodeData.push_back(pushcode);
+				CPushExeCode* pPushCode = CExeCodeMgr::GetInstance()->New<CPushExeCode>(m_unBeginSoureIndex);
+				pPushCode->cType = ESIGN_REGISTER;
+				pPushCode->dwPos = R_A;
+				vOut.AddCode(pPushCode);
 			}
 		}
 		int nCallBack = CScriptCallBackFunion::GetFunIndex(strFunName);
 		if (nCallBack >= 0)
 		{
-			CodeStyle code(m_unBeginSoureIndex);
-			code.qwCode = 0;
-			code.wInstruct = ECODE_CALL_CALLBACK;
-			code.cSign = cRegisterIndex;
-			code.cExtend = (char)vParams.size();
-			code.dwPos = nCallBack;
-			vOut.vCodeData.push_back(code);
+			CCallBackExeCode* pCallCode = CExeCodeMgr::GetInstance()->New<CCallBackExeCode>(m_unBeginSoureIndex);
+			pCallCode->cParmSize = (unsigned char)vParams.size();
+			pCallCode->cResultRegister = cRegisterIndex;
+			pCallCode->unFunIndex = nCallBack;
+			vOut.AddCode(pCallCode);
+
 			return true;
 		}
 		int nFunIndex = CScriptCodeLoader::GetInstance()->GetCodeIndex(strFunName.c_str());
 		if (nFunIndex >= 0)
 		{
-			CodeStyle code(m_unBeginSoureIndex);
-			code.qwCode = 0;
-			code.wInstruct = ECODE_CALL_SCRIPT;
-			code.cSign = cRegisterIndex;
-			code.cExtend = (char)vParams.size();
-			code.dwPos = nFunIndex;
-			vOut.vCodeData.push_back(code);
+			CCallScriptExeCode* pCallCode = CExeCodeMgr::GetInstance()->New<CCallScriptExeCode>(m_unBeginSoureIndex);
+			pCallCode->cParmSize = (unsigned char)vParams.size();
+			pCallCode->cResultRegister = cRegisterIndex;
+			pCallCode->unFunIndex = nFunIndex;
+			vOut.AddCode(pCallCode);
+
 			return true;
 		}
 		return false;
@@ -704,29 +806,25 @@ namespace zlscript
 			{
 				pCode->SetRegisterIndex(R_A);
 				pCode->MakeExeCode(vOut);
-				CodeStyle pushcode(m_unBeginSoureIndex);
-				pushcode.qwCode = 0;
-				pushcode.wInstruct = ECODE_PUSH;
-				pushcode.cSign = ESIGN_REGISTER;
-				pushcode.dwPos = R_A;
-				vOut.vCodeData.push_back(pushcode);
+				CPushExeCode* pPushCode = CExeCodeMgr::GetInstance()->New<CPushExeCode>(m_unBeginSoureIndex);
+				pPushCode->cType = ESIGN_REGISTER;
+				pPushCode->dwPos = R_A;
+				vOut.AddCode(pPushCode);
 			}
 		}
-		CodeStyle classcode(m_unBeginSoureIndex);
-		classcode.qwCode = 0;
-		classcode.wInstruct = ECODE_LOAD;
-		classcode.cSign = pVarInfo->cGlobal == 1 ? ESIGN_POS_GLOBAL_VAR : ESIGN_POS_LOACL_VAR;
-		classcode.cExtend = cRegisterIndex;
-		classcode.dwPos = pVarInfo->dwPos;
-		vOut.vCodeData.push_back(classcode);
+		CLoadExeCode* pLoadCode = CExeCodeMgr::GetInstance()->New<CLoadExeCode>(m_unBeginSoureIndex);
+		pLoadCode->cType = pVarInfo->cGlobal == 1 ? ESIGN_POS_GLOBAL_VAR : ESIGN_POS_LOACL_VAR;
+		pLoadCode->cResultRegister = R_C;
+		pLoadCode->dwPos = pVarInfo->dwPos;
+		vOut.AddCode(pLoadCode);
 
-		CodeStyle code(m_unBeginSoureIndex);
-		code.qwCode = 0;
-		code.wInstruct = ECODE_CALL_CLASS_FUN;
-		code.cSign = cRegisterIndex;
-		code.cExtend = (char)vParams.size();
-		code.dwPos = nFunIndex;
-		vOut.vCodeData.push_back(code);
+		CCallClassFunExeCode* pCallCode = CExeCodeMgr::GetInstance()->New<CCallClassFunExeCode>(m_unBeginSoureIndex);
+		pCallCode->cParmSize = (unsigned char)vParams.size();
+		pCallCode->cResultRegister = cRegisterIndex;
+		pCallCode->cClassRegIndex = R_C;
+		pCallCode->dwPos = nFunIndex;
+		vOut.AddCode(pCallCode);
+
 		return true;
 	}
 
@@ -739,35 +837,6 @@ namespace zlscript
 		CBaseICode::AddICode(nType, pCode);
 	}
 
-	//bool CSentenceICode::MakeExeCode(CScriptCodeLoader::tagCodeData& vOut)
-	//{
-	//	for (auto it = vData.begin(); it != vData.end(); it++)
-	//	{
-	//		auto pCode = *it;
-	//		if (pCode)
-	//		{
-	//			pCode->MakeExeCode(vOut);
-	//		}
-	//	}
-
-	//	if (bClearParm)
-	//	{
-	//		//每句结束后都清除堆栈
-	//		CodeStyle clearcode(m_unBeginSoureIndex);
-	//		clearcode.qwCode = 0;
-	//		clearcode.wInstruct = ECODE_CLEAR_PARAM;
-	//		clearcode.cSign = 0;
-	//		vOut.vCodeData.push_back(clearcode);
-	//	}
-
-	//}
-
-	//void CSentenceICode::AddExeCode(CBaseICode* code)
-	//{
-	//	vData.push_back(code);
-	//}
-
-
 
 	bool CIfICode::MakeExeCode(CScriptCodeLoader::tagCodeData& vOut)
 	{
@@ -777,31 +846,28 @@ namespace zlscript
 			pCondCode->SetRegisterIndex(cRegisterIndex);
 			pCondCode->MakeExeCode(vOut);
 		}
-		vOut.vCodeData.push_back(CodeStyle(m_unBeginSoureIndex));
-		unsigned int ifpos = vOut.vCodeData.size() - 1;
-		vOut.vCodeData[ifpos].qwCode = 0;
-		vOut.vCodeData[ifpos].wInstruct = ECODE_JUMP_FALSE;
-		vOut.vCodeData[ifpos].cExtend = cRegisterIndex;
-		vOut.vCodeData[ifpos].cSign = 1;
-		unsigned int nCurPos = vOut.vCodeData.size();
+		CJumpFalseExeCode* pIfCode = CExeCodeMgr::GetInstance()->New<CJumpFalseExeCode>(m_unBeginSoureIndex);
+		pIfCode->cVarRegister = cRegisterIndex;
+		vOut.AddCode(pIfCode);
 		if (pTureCode)
 			pTureCode->MakeExeCode(vOut);
 
-		vOut.vCodeData[ifpos].dwPos = vOut.vCodeData.size() - nCurPos + 1;
-
 		if (pFalseCode)
 		{
-			vOut.vCodeData.push_back(CodeStyle(m_unElseSoureIndex));
-			unsigned int elsepos = vOut.vCodeData.size() - 1;
-			vOut.vCodeData[elsepos].qwCode = 0;
-			vOut.vCodeData[elsepos].wInstruct = ECODE_JUMP;
-			vOut.vCodeData[elsepos].cSign = 1;
-			nCurPos = vOut.vCodeData.size();
+			CJumpExeCode* pElseCode = CExeCodeMgr::GetInstance()->New<CJumpExeCode>(m_unBeginSoureIndex);
+			vOut.AddCode(pElseCode);
 			pFalseCode->MakeExeCode(vOut);
-			vOut.vCodeData[ifpos].dwPos++;
-			vOut.vCodeData[elsepos].dwPos = vOut.vCodeData.size() - nCurPos + 1;
+			pIfCode->pJumpCode = pElseCode->m_pNext;
+			CSignExeCode* pEndCode = CExeCodeMgr::GetInstance()->New<CSignExeCode>(m_unBeginSoureIndex);
+			vOut.AddCode(pEndCode);
+			pElseCode->pJumpCode = pEndCode;
 		}
-
+		else
+		{
+			CSignExeCode* pEndCode = CExeCodeMgr::GetInstance()->New<CSignExeCode>(m_unBeginSoureIndex);
+			vOut.AddCode(pEndCode);
+			pIfCode->pJumpCode = pEndCode;
+		}
 		return true;
 	}
 
@@ -832,42 +898,45 @@ namespace zlscript
 		{
 			return false;
 		}
-		unsigned int nBeginPos = vOut.vCodeData.size();
-
+		CBaseExeCode* pBegin = vOut.pEndCode;
 		pCondCode->MakeExeCode(vOut);
-		vOut.vCodeData.push_back(CodeStyle(m_unBeginSoureIndex));
-		unsigned int ifpos = vOut.vCodeData.size() - 1;
-		vOut.vCodeData[ifpos].qwCode = 0;
-		vOut.vCodeData[ifpos].wInstruct = ECODE_JUMP_FALSE;
-		vOut.vCodeData[ifpos].cExtend = cRegisterIndex;
-		vOut.vCodeData[ifpos].cSign = 0;
-		unsigned int nCondPos = vOut.vCodeData.size();
+
+		CJumpFalseExeCode* pIfCode = CExeCodeMgr::GetInstance()->New<CJumpFalseExeCode>(m_unBeginSoureIndex);
+		pIfCode->cVarRegister = cRegisterIndex;
+		vOut.AddCode(pIfCode);
 
 		pBodyCode->MakeExeCode(vOut);
 		//要在块尾加入返回块头的指令
-		vOut.vCodeData.push_back(CodeStyle(pBodyCode->m_unBeginSoureIndex));
-		CodeStyle& backcode = vOut.vCodeData[vOut.vCodeData.size() - 1];
-		backcode.qwCode = 0;
-		backcode.wInstruct = ECODE_JUMP;
-		backcode.cSign = 0;
-		backcode.dwPos = nBeginPos;
-		vOut.vCodeData[ifpos].dwPos = vOut.vCodeData.size();
+		CJumpExeCode* pJumpBeginCode = CExeCodeMgr::GetInstance()->New<CJumpExeCode>(m_unBeginSoureIndex);
+		pJumpBeginCode->pJumpCode = pBegin->m_pNext;
+		vOut.AddCode(pJumpBeginCode);
 
-		for (unsigned int i = nCondPos; i < vOut.vCodeData.size(); i++)
+		CSignExeCode* pEndCode = CExeCodeMgr::GetInstance()->New<CSignExeCode>(m_unBeginSoureIndex);
+		vOut.AddCode(pEndCode);
+		pIfCode->pJumpCode = pEndCode;
+
+		for (CBaseExeCode *pCheckCode = pIfCode; pCheckCode && pCheckCode != pJumpBeginCode; pCheckCode= pCheckCode->m_pNext)
 		{
-			CodeStyle& code = vOut.vCodeData[i];
-			if (code.wInstruct == ECODE_BREAK)
+			auto pBreakCode = dynamic_cast<CBreakExeCode*>(pCheckCode);
+			if (pBreakCode)
 			{
-				code.wInstruct = ECODE_JUMP;
-				code.cSign = 0;
-				code.dwPos = vOut.vCodeData.size();
+				if (pBreakCode->pJumpCode == nullptr)
+				{
+					pBreakCode->pJumpCode = pEndCode;
+				}
 			}
-			else if (code.wInstruct == ECODE_CONTINUE)
+			else
 			{
-				code.wInstruct = ECODE_JUMP;
-				code.cSign = 0;
-				code.dwPos = nBeginPos;
+				auto pContinueCode = dynamic_cast<CContinueExeCode*>(pCheckCode);
+				if (pContinueCode)
+				{
+					if (pContinueCode->pJumpCode == nullptr)
+					{
+						pContinueCode->pJumpCode = pBegin->m_pNext;;
+					}
+				}
 			}
+
 		}
 		return true;
 	}
@@ -886,33 +955,29 @@ namespace zlscript
 	}
 	bool CContinueICode::MakeExeCode(CScriptCodeLoader::tagCodeData& vOut)
 	{
-		CodeStyle code(m_unBeginSoureIndex);
-		code.qwCode = 0;
-		code.wInstruct = ECODE_CONTINUE;
-		vOut.vCodeData.push_back(code);
+		CContinueExeCode* pCode = CExeCodeMgr::GetInstance()->New<CContinueExeCode>(m_unBeginSoureIndex);
+		vOut.AddCode(pCode);
+
 		return true;
 	}
 	bool CBreakICode::MakeExeCode(CScriptCodeLoader::tagCodeData& vOut)
 	{
-		CodeStyle code(m_unBeginSoureIndex);
-		code.qwCode = 0;
-		code.wInstruct = ECODE_BREAK;
-		vOut.vCodeData.push_back(code);
+		CBreakExeCode* pCode = CExeCodeMgr::GetInstance()->New<CBreakExeCode>(m_unBeginSoureIndex);
+		vOut.AddCode(pCode);
 		return true;
 	}
 	bool CReturnICode::MakeExeCode(CScriptCodeLoader::tagCodeData& vOut)
 	{
 		if (pBodyCode)
 		{
+			pBodyCode->SetRegisterIndex(cRegisterIndex);
 			pBodyCode->MakeExeCode(vOut);
 		}
 
-		CodeStyle backcode(m_unBeginSoureIndex);
-		backcode.qwCode = 0;
-		backcode.wInstruct = ECODE_RETURN;
-		backcode.cExtend = cRegisterIndex;
+		CReturnExeCode* pCode = CExeCodeMgr::GetInstance()->New<CReturnExeCode>(m_unBeginSoureIndex);
+		pCode->cVarRegister = cRegisterIndex;
+		vOut.AddCode(pCode);
 
-		vOut.vCodeData.push_back(backcode);
 		return true;
 	}
 
@@ -925,18 +990,17 @@ namespace zlscript
 
 	bool CNewICode::MakeExeCode(CScriptCodeLoader::tagCodeData& vOut)
 	{
-		CodeStyle code(m_unBeginSoureIndex);
-		code.qwCode = 0;
-		code.wInstruct = ECODE_NEW_CLASS;
-		code.cSign = cRegisterIndex;
 		unsigned short nClassType = 0;
 		char cType = CScriptCodeLoader::GetInstance()->GetVarType(strClassType, nClassType);
 		if (cType != EScriptVal_ClassPoint)
 		{
 			return false;
 		}
-		code.dwPos = nClassType;
-		vOut.vCodeData.push_back(code);
+		CNewClassExeCode* pCode = CExeCodeMgr::GetInstance()->New<CNewClassExeCode>(m_unBeginSoureIndex);
+		pCode->cResultRegister = cRegisterIndex;
+		pCode->dwClassIndex = nClassType;
+		vOut.AddCode(pCode);
+
 		return true;
 	}
 
@@ -961,13 +1025,16 @@ namespace zlscript
 		{
 			return false;
 		}
-		CodeStyle code(m_unBeginSoureIndex);
-		code.qwCode = 0;
-		code.wInstruct = ECODE_RELEASE_CLASS;
-		code.cSign = pVarInfo->cGlobal == 1 ? ESIGN_POS_GLOBAL_VAR : ESIGN_POS_LOACL_VAR;;
-		code.dwPos = pVarInfo->dwPos;
-		vOut.vCodeData.push_back(code);
-		return false;
+		CLoadExeCode* pLoadCode = CExeCodeMgr::GetInstance()->New<CLoadExeCode>(m_unBeginSoureIndex);
+		pLoadCode->cType = pVarInfo->cGlobal == 1 ? ESIGN_POS_GLOBAL_VAR : ESIGN_POS_LOACL_VAR;
+		pLoadCode->cResultRegister = R_C;
+		pLoadCode->dwPos = pVarInfo->dwPos;
+		vOut.AddCode(pLoadCode);
+
+		CReleaseClassExeCode* pCode = CExeCodeMgr::GetInstance()->New<CReleaseClassExeCode>(m_unBeginSoureIndex);
+		pCode->cVarRegister = R_C;
+		vOut.AddCode(pCode);
+		return true;
 	}
 
 	void CDeleteICode::AddICode(int nType, CBaseICode* pCode)
