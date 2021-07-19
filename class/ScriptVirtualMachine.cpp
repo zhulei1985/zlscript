@@ -618,11 +618,20 @@ namespace zlscript
 	void CScriptVirtualMachine::EventReturnFun(int nSendID, CScriptStack& ParmInfo)
 	{
 		__int64 nScriptStateID = GetInt_StackVar(ParmInfo.GetVal(0));
-		ParmInfo.pop_front(1);
+		//ParmInfo.pop_front(1);
 		auto pState = PopStateFormWaitingReturnMap(nScriptStateID);
 		if (pState)
 		{
-			pState->CopyFromStack(&ParmInfo);
+			auto pReturnVal = ParmInfo.GetVal(1);
+			if (pReturnVal && pState->m_BlockStack.size() > 0)
+			{
+				auto pBlock = pState->m_BlockStack.top();
+				if (pBlock)
+				{
+					pBlock->m_register[R_A] = *pReturnVal;
+				}
+			}
+			//pState->CopyFromStack(&ParmInfo);
 			PushStateToRunList(pState);
 		}
 	}

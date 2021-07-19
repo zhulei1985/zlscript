@@ -137,6 +137,10 @@ namespace zlscript
 		int nResult = ERESULT_CONTINUE;
 		auto oldTime = std::chrono::steady_clock::now();
 		unsigned int nDataLen = m_pCodeData->vCodeData.size();
+		if (m_nCodePoint >= nDataLen)
+		{
+			return ERESULT_END;
+		}
 		CodeStyle* pData = &m_pCodeData->vCodeData[0];
 		while (m_nCodePoint < nDataLen)
 		{
@@ -1005,10 +1009,10 @@ namespace zlscript
 		auto nowTime = std::chrono::steady_clock::now();
 		auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(nowTime - oldTime);
 		m_msRunningTime += duration;
-		if (m_nCodePoint >= m_pCodeData->vCodeData.size())
-		{
-			nResult = ERESULT_END;
-		}
+		//if (m_nCodePoint >= m_pCodeData->vCodeData.size())
+		//{
+		//	nResult = ERESULT_END;
+		//}
 		return nResult;
 	}
 
