@@ -703,7 +703,10 @@ namespace zlscript
 			if (pCode)
 			{
 				pCode->SetRegisterIndex(R_A);
-				pCode->MakeExeCode(vOut);
+				if (pCode->MakeExeCode(vOut) == false)
+				{
+					return false;
+				}
 				CodeStyle pushcode(m_unBeginSoureIndex);
 				pushcode.qwCode = 0;
 				pushcode.wInstruct = ECODE_PUSH;
@@ -904,7 +907,10 @@ namespace zlscript
 	{
 		if (pBodyCode)
 		{
-			pBodyCode->MakeExeCode(vOut);
+			if (pBodyCode->MakeExeCode(vOut) == false)
+			{
+				return false;
+			}
 		}
 
 		CodeStyle backcode(m_unBeginSoureIndex);

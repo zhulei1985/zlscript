@@ -81,8 +81,9 @@ namespace zlscript
 #define ATTR_BASE_INT64_ARRAY(val,flag,index) CScriptInt64ArrayAttribute val{#val,flag,index,this};
 #define ATTR_BASE_INT64_MAP(val,flag,index) CScriptInt64toInt64MapAttribute val{#val,flag,index,this};
 #define ATTR_BASE_CLASS_POINT(val,flag,index) CScriptClassPointAttribute val{#val,flag,index,this};
-#define ATTR_BASE_CLASS_POINT_ARRAY(val,flag,index) CScriptClassPointArrayAttribute val{#val,flag,index,this};
-#define ATTR_BASE_CLASS_POINT_MAP(val,flag,index) CScriptInt64toClassPointMapAttribute val{#val,flag,index,this};
+#define ATTR_BASE_VAR(val,flag,index) CScriptVarAttribute val{#val,flag,index,this};
+#define ATTR_BASE_VAR_ARRAY(val,flag,index) CScriptVarArrayAttribute val{#val,flag,index,this};
+#define ATTR_BASE_VAR_MAP(val,flag,index) CScriptVar2VarMapAttribute val{#val,flag,index,this};
 
 #define ATTR_INT(val,index) ATTR_BASE_INT(val,CBaseScriptClassAttribute::E_FLAG_NONE,index);
 #define ATTR_INT64(val,index) ATTR_BASE_INT64(val,CBaseScriptClassAttribute::E_FLAG_NONE,index);
@@ -150,12 +151,27 @@ namespace zlscript
 		virtual void RemoveScriptAttribute(CBaseScriptClassAttribute* pAttr);
 
 		virtual void RegisterScriptFun(CBaseScriptClassFun* pClassFun);
-
-		virtual unsigned int GetSyncInfo_ClassPoint2Index(CScriptBasePointer* point) { return 0; }
-		virtual PointVarInfo GetSyncInfo_Index2ClassPoint(unsigned int index) { return PointVarInfo(); }
-
 		unsigned int GetClassFunIndex(std::string name);
 		CBaseScriptClassFun* GetClassFunInfo(unsigned int id);
+
+		//virtual unsigned int GetSyncInfo_ClassPoint2Index(CScriptBasePointer* point) { return 0; }
+		//virtual PointVarInfo GetSyncInfo_Index2ClassPoint(unsigned int index) { return PointVarInfo(); }
+
+		bool AddVar2Bytes(std::vector<char>& vBuff, StackVarInfo* pVal, std::vector<PointVarInfo>& vOutClassPoint);
+		bool AddVar2Bytes(std::vector<char>& vBuff, PointVarInfo* pVal, std::vector<PointVarInfo>& vOutClassPoint);
+
+		StackVarInfo DecodeVar4Bytes(char* pBuff, int& pos, unsigned int len, std::vector<PointVarInfo>& vOutClassPoint);
+		PointVarInfo DecodePointVar4Bytes(char* pBuff, int& pos, unsigned int len, std::vector<PointVarInfo>& vOutClassPoint);
+
+		//vOutClassPoint 当成员变量中包含了可用于脚本的类实例指针时，将指针放入vOutClassPoint单独进行传递
+		virtual bool AddAllData2Bytes(std::vector<char>& vBuff, std::vector<PointVarInfo>& vOutClassPoint)
+		{
+			return true;
+		}
+		virtual bool DecodeData4Bytes(char* pBuff, int& pos, unsigned int len, std::vector<PointVarInfo>& vOutClassPoint)
+		{
+			return true;
+		}
 	protected:
 		//用于所有脚本可用的类实例索引，作用范围是本地
 		__int64 m_nScriptPointIndex;

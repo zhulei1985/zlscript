@@ -73,6 +73,9 @@ namespace zlscript
 		{
 			return m_vecVars;
 		}
+
+		virtual bool AddAllData2Bytes(std::vector<char>& vBuff, std::vector<PointVarInfo>& vOutClassPoint);
+		virtual bool DecodeData4Bytes(char* pBuff, int& pos, unsigned int len, std::vector<PointVarInfo>& vOutClassPoint);
 	private:
 		//std::map<std::string, unsigned int> m_mapDicName2Index;
 		std::vector<StackVarInfo> m_vecVars;

@@ -150,6 +150,7 @@ namespace zlscript
 	{
 		// TODO: 在此处插入 return 语句
 		Clear();
+		cType = EScriptVal_ClassPoint;
 		this->pPoint = info.pPoint;
 		CScriptSuperPointerMgr::GetInstance()->PickupPointer(info.pPoint);
 		return *this;

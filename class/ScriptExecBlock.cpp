@@ -676,6 +676,7 @@ namespace zlscript
 					break;
 				default:
 					//TODO 报错
+					nResult = ERESULT_ERROR;
 					break;
 				}
 				m_nCodePoint++;
@@ -706,6 +707,7 @@ namespace zlscript
 				else
 				{
 					//TODO 报错
+					nResult = ERESULT_ERROR;
 				}
 			}
 			break;
@@ -734,6 +736,7 @@ namespace zlscript
 				else
 				{
 					//TODO 报错
+					nResult = ERESULT_ERROR;
 				}
 			}
 			break;

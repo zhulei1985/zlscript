@@ -18,6 +18,8 @@
 #include "ScriptVirtualMachine.h"
 
 #include "ScriptDataMgr.h"
+
+#include "zByteArray.h"
 namespace zlscript
 {
 	CScriptHashMap::CScriptHashMap()
@@ -230,7 +232,26 @@ namespace zlscript
 		//pState->ClearFunParam();
 		return ECALLBACK_FINISH;
 	}
+	bool CScriptArray::AddAllData2Bytes(std::vector<char>& vBuff, std::vector<PointVarInfo>& vOutClassPoint)
+	{
+		AddUInt2Bytes(vBuff, m_vecVars.size());
+		for (auto it = m_vecVars.begin(); it != m_vecVars.end(); it++)
+		{
+			AddVar2Bytes(vBuff, &(*it), vOutClassPoint);
+		}
+		return true;
+	}
 
+	bool CScriptArray::DecodeData4Bytes(char* pBuff, int& pos, unsigned int len, std::vector<PointVarInfo>& vOutClassPoint)
+	{
+		unsigned int nSize = DecodeBytes2Int(pBuff, pos, len);
+		m_vecVars.resize(nSize);
+		for (unsigned int i = 0; i < nSize; i++)
+		{
+			m_vecVars[i] = DecodeVar4Bytes(pBuff, pos, len, vOutClassPoint);
+		}
+		return true;
+	}
 
 	CScriptSubData::CScriptSubData()
 	{
@@ -461,4 +482,5 @@ namespace zlscript
 			delete pArray;
 		}
 	}
+
 }
