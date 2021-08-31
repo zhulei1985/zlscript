@@ -17,7 +17,6 @@
  ****************************************************************************/
 #include <list>
 #include <string>
-#include "EMicroCodeType.h"
 namespace zlscript
 {
 
@@ -67,16 +66,14 @@ namespace zlscript
 	public:
 		CBaseExeCode()
 		{
-			unInstruct = 0;
 			m_pNext = nullptr;
 			nSoureWordIndex = 0;
 			nCodeIndex = 0;
 		}
 
-		//virtual int Run(CScriptExecBlock *pBlock, CBaseExeCode **pNextPoint) = 0;
+		virtual int Run(CScriptExecBlock *pBlock, CBaseExeCode **pNextPoint) = 0;
 		virtual std::string GetCodeString() { return ""; }
 	public:
-		unsigned int unInstruct;
 		CBaseExeCode* m_pNext;
 
 		unsigned int nSoureWordIndex;
@@ -88,12 +85,11 @@ namespace zlscript
 	public:
 		CAddExeCode()
 		{
-			unInstruct = ECODE_ADD;
 			cResultRegister = 0;
 			cType = 0;
 			dwPos = 0;
 		}
-		//int Run(CScriptExecBlock * pBlock, CBaseExeCode** pNextPoint);
+		int Run(CScriptExecBlock * pBlock, CBaseExeCode** pNextPoint);
 	public:
 		char cResultRegister;
 		char cType;
@@ -105,12 +101,11 @@ namespace zlscript
 	public:
 		CSumExeCode()
 		{
-			unInstruct = ECODE_SUM;
 			cResultRegister = 0;
 			cType = 0;
 			dwPos = 0;
 		}
-		//int Run(CScriptExecBlock * pBlock, CBaseExeCode** pNextPoint);
+		int Run(CScriptExecBlock * pBlock, CBaseExeCode** pNextPoint);
 	public:
 		char cResultRegister;
 		char cType;
@@ -122,12 +117,11 @@ namespace zlscript
 	public:
 		CMulExeCode()
 		{
-			unInstruct = ECODE_MUL;
 			cResultRegister = 0;
 			cType = 0;
 			dwPos = 0;
 		}
-		//int Run(CScriptExecBlock * pBlock, CBaseExeCode** pNextPoint);
+		int Run(CScriptExecBlock * pBlock, CBaseExeCode** pNextPoint);
 	public:
 		char cResultRegister;
 		char cType;
@@ -139,12 +133,11 @@ namespace zlscript
 	public:
 		CDivExeCode()
 		{
-			unInstruct = ECODE_DIV;
 			cResultRegister = 0;
 			cType = 0;
 			dwPos = 0;
 		}
-		//int Run(CScriptExecBlock * pBlock, CBaseExeCode** pNextPoint);
+		int Run(CScriptExecBlock * pBlock, CBaseExeCode** pNextPoint);
 	public:
 		char cResultRegister;
 		char cType;
@@ -156,12 +149,11 @@ namespace zlscript
 	public:
 		CModExeCode()
 		{
-			unInstruct = ECODE_MOD;
 			cResultRegister = 0;
 			cType = 0;
 			dwPos = 0;
 		}
-		//int Run(CScriptExecBlock* pBlock, CBaseExeCode** pNextPoint);
+		int Run(CScriptExecBlock* pBlock, CBaseExeCode** pNextPoint);
 	public:
 		char cResultRegister;
 		char cType;
@@ -173,12 +165,11 @@ namespace zlscript
 	public:
 		CMinusExeCode()
 		{
-			unInstruct = ECODE_MINUS;
 			cResultRegister = 0;
 			//cType = 0;
 			//dwPos = 0;
 		}
-		//int Run(CScriptExecBlock* pBlock, CBaseExeCode** pNextPoint);
+		int Run(CScriptExecBlock* pBlock, CBaseExeCode** pNextPoint);
 	public:
 		char cResultRegister;
 		//char cType;
@@ -190,12 +181,11 @@ namespace zlscript
 	public:
 		CCmpEqualExeCode()
 		{
-			unInstruct = ECODE_CMP_EQUAL;
 			cResultRegister = 0;
 			cType = 0;
 			dwPos = 0;
 		}
-		//int Run(CScriptExecBlock* pBlock, CBaseExeCode** pNextPoint);
+		int Run(CScriptExecBlock* pBlock, CBaseExeCode** pNextPoint);
 	public:
 		char cResultRegister;
 		char cType;
@@ -207,12 +197,11 @@ namespace zlscript
 	public:
 		CCmpNotEqualExeCode()
 		{
-			unInstruct = ECODE_CMP_NOTEQUAL;
 			cResultRegister = 0;
 			cType = 0;
 			dwPos = 0;
 		}
-		//int Run(CScriptExecBlock* pBlock, CBaseExeCode** pNextPoint);
+		int Run(CScriptExecBlock* pBlock, CBaseExeCode** pNextPoint);
 	public:
 		char cResultRegister;
 		char cType;
@@ -224,12 +213,11 @@ namespace zlscript
 	public:
 		CCmpBigExeCode()
 		{
-			unInstruct = ECODE_CMP_BIG;
 			cResultRegister = 0;
 			cType = 0;
 			dwPos = 0;
 		}
-		//int Run(CScriptExecBlock * pBlock, CBaseExeCode** pNextPoint);
+		int Run(CScriptExecBlock * pBlock, CBaseExeCode** pNextPoint);
 	public:
 		char cResultRegister;
 		char cType;
@@ -241,12 +229,11 @@ namespace zlscript
 	public:
 		CCmpBigAndEqualExeCode()
 		{
-			unInstruct = ECODE_CMP_BIGANDEQUAL;
 			cResultRegister = 0;
 			cType = 0;
 			dwPos = 0;
 		}
-		//int Run(CScriptExecBlock* pBlock, CBaseExeCode** pNextPoint);
+		int Run(CScriptExecBlock* pBlock, CBaseExeCode** pNextPoint);
 	public:
 		char cResultRegister;
 		char cType;
@@ -258,12 +245,11 @@ namespace zlscript
 	public:
 		CCmpLessExeCode()
 		{
-			unInstruct = ECODE_CMP_LESS;
 			cResultRegister = 0;
 			cType = 0;
 			dwPos = 0;
 		}
-		//int Run(CScriptExecBlock* pBlock, CBaseExeCode** pNextPoint);
+		int Run(CScriptExecBlock* pBlock, CBaseExeCode** pNextPoint);
 	public:
 		char cResultRegister;
 		char cType;
@@ -275,12 +261,11 @@ namespace zlscript
 	public:
 		CCmpLessAndEqualExeCode()
 		{
-			unInstruct = ECODE_CMP_LESSANDEQUAL;
 			cResultRegister = 0;
 			cType = 0;
 			dwPos = 0;
 		}
-		//int Run(CScriptExecBlock* pBlock, CBaseExeCode** pNextPoint);
+		int Run(CScriptExecBlock* pBlock, CBaseExeCode** pNextPoint);
 	public:
 		char cResultRegister;
 		char cType;
@@ -292,12 +277,11 @@ namespace zlscript
 	public:
 		CBitAndExeCode()
 		{
-			unInstruct = ECODE_BIT_AND;
 			cResultRegister = 0;
 			cType = 0;
 			dwPos = 0;
 		}
-		//int Run(CScriptExecBlock* pBlock, CBaseExeCode **pNextPoint);
+		int Run(CScriptExecBlock* pBlock, CBaseExeCode **pNextPoint);
 	public:
 		char cResultRegister;
 		char cType;
@@ -309,12 +293,11 @@ namespace zlscript
 	public:
 		CBitOrExeCode()
 		{
-			unInstruct = ECODE_BIT_OR;
 			cResultRegister = 0;
 			cType = 0;
 			dwPos = 0;
 		}
-		//int Run(CScriptExecBlock * pBlock, CBaseExeCode** pNextPoint);
+		int Run(CScriptExecBlock * pBlock, CBaseExeCode** pNextPoint);
 	public:
 		char cResultRegister;
 		char cType;
@@ -326,12 +309,11 @@ namespace zlscript
 	public:
 		CBitXorExeCode()
 		{
-			unInstruct = ECODE_BIT_XOR;
 			cResultRegister = 0;
 			cType = 0;
 			dwPos = 0;
 		}
-		//int Run(CScriptExecBlock * pBlock, CBaseExeCode** pNextPoint);
+		int Run(CScriptExecBlock * pBlock, CBaseExeCode** pNextPoint);
 	public:
 		char cResultRegister;
 		char cType;
@@ -343,12 +325,11 @@ namespace zlscript
 	public:
 		CPushExeCode()
 		{
-			unInstruct = ECODE_PUSH;
 			//cResultRegister = 0;
 			cType = 0;
 			dwPos = 0;
 		}
-		//int Run(CScriptExecBlock* pBlock, CBaseExeCode **pNextPoint);
+		int Run(CScriptExecBlock* pBlock, CBaseExeCode **pNextPoint);
 	public:
 		//char cResultRegister;
 		char cType;
@@ -360,12 +341,11 @@ namespace zlscript
 	public:
 		CPopExeCode()
 		{
-			unInstruct = ECODE_POP;
 			//cResultRegister = 0;
 			cType = 0;
 			dwPos = 0;
 		}
-		//int Run(CScriptExecBlock* pBlock, CBaseExeCode **pNextPoint);
+		int Run(CScriptExecBlock* pBlock, CBaseExeCode **pNextPoint);
 	public:
 		//char cResultRegister;
 		char cType;
@@ -378,12 +358,11 @@ namespace zlscript
 	public:
 		CLoadExeCode()
 		{
-			unInstruct = ECODE_LOAD;
 			cResultRegister = 0;
 			cType = 0;
 			dwPos = 0;
 		}
-		//int Run(CScriptExecBlock* pBlock, CBaseExeCode **pNextPoint);
+		int Run(CScriptExecBlock* pBlock, CBaseExeCode **pNextPoint);
 	public:
 		char cResultRegister;
 		char cType;
@@ -395,12 +374,11 @@ namespace zlscript
 	public:
 		CMoveExeCode()
 		{
-			unInstruct = ECODE_MOVE;
 			cResultRegister = 0;
 			cType = 0;
 			dwPos = 0;
 		}
-		//int Run(CScriptExecBlock* pBlock, CBaseExeCode **pNextPoint);
+		int Run(CScriptExecBlock* pBlock, CBaseExeCode **pNextPoint);
 	public:
 		char cResultRegister;
 		char cType;
@@ -412,12 +390,11 @@ namespace zlscript
 	public:
 		CGetClassParamExeCode()
 		{
-			unInstruct = ECODE_GET_CLASS_PARAM;
 			cResultRegister = 0;
 			cClassRegIndex = 0;
 			dwPos = 0;
 		}
-		//int Run(CScriptExecBlock* pBlock, CBaseExeCode **pNextPoint);
+		int Run(CScriptExecBlock* pBlock, CBaseExeCode **pNextPoint);
 	public:
 		char cResultRegister;
 		char cClassRegIndex;
@@ -429,12 +406,11 @@ namespace zlscript
 	public:
 		CSetClassParamExeCode()
 		{
-			unInstruct = ECODE_SET_CLASS_PARAM;
 			cVarRegister = 0;
 			cClassRegIndex = 0;
 			dwPos = 0;
 		}
-		//int Run(CScriptExecBlock* pBlock, CBaseExeCode **pNextPoint);
+		int Run(CScriptExecBlock* pBlock, CBaseExeCode **pNextPoint);
 	public:
 		char cVarRegister;
 		char cClassRegIndex;
@@ -446,13 +422,12 @@ namespace zlscript
 	public:
 		CCallBackExeCode()
 		{
-			unInstruct = ECODE_CALL_CALLBACK;
 			cResultRegister = 0;
 
 			cParmSize = 0;
 			unFunIndex = 0;
 		}
-		//int Run(CScriptExecBlock * pBlock, CBaseExeCode** pNextPoint);
+		int Run(CScriptExecBlock * pBlock, CBaseExeCode** pNextPoint);
 	public:
 		unsigned char cParmSize;
 		char cResultRegister;
@@ -464,13 +439,12 @@ namespace zlscript
 	public:
 		CCallScriptExeCode()
 		{
-			unInstruct = ECODE_CALL_SCRIPT;
 			cResultRegister = 0;
 
 			cParmSize = 0;
 			unFunIndex = 0;
 		}
-		//int Run(CScriptExecBlock* pBlock, CBaseExeCode **pNextPoint);
+		int Run(CScriptExecBlock* pBlock, CBaseExeCode **pNextPoint);
 	public:
 		unsigned char cParmSize;
 		char cResultRegister;
@@ -482,10 +456,9 @@ namespace zlscript
 	public:
 		CJumpExeCode()
 		{
-			unInstruct = ECODE_JUMP;
 			pJumpCode = nullptr;
 		}
-		//int Run(CScriptExecBlock* pBlock, CBaseExeCode **pNextPoint);
+		int Run(CScriptExecBlock* pBlock, CBaseExeCode **pNextPoint);
 	public:
 		CBaseExeCode* pJumpCode;
 	};
@@ -495,11 +468,10 @@ namespace zlscript
 	public:
 		CJumpTrueExeCode()
 		{
-			unInstruct = ECODE_JUMP_TRUE;
 			cVarRegister = 0;
 			pJumpCode = nullptr;
 		}
-		//int Run(CScriptExecBlock* pBlock, CBaseExeCode** pNextPoint);
+		int Run(CScriptExecBlock* pBlock, CBaseExeCode** pNextPoint);
 	public:
 		char cVarRegister;
 		CBaseExeCode* pJumpCode;
@@ -510,11 +482,10 @@ namespace zlscript
 	public:
 		CJumpFalseExeCode()
 		{
-			unInstruct = ECODE_JUMP_FALSE;
 			cVarRegister = 0;
 			pJumpCode = nullptr;
 		}
-		//int Run(CScriptExecBlock* pBlock, CBaseExeCode** pNextPoint);
+		int Run(CScriptExecBlock* pBlock, CBaseExeCode** pNextPoint);
 	public:
 		char cVarRegister;
 		CBaseExeCode* pJumpCode;
@@ -525,10 +496,9 @@ namespace zlscript
 	public:
 		CReturnExeCode()
 		{
-			unInstruct = ECODE_RETURN;
 			cVarRegister = 0;
 		}
-		//int Run(CScriptExecBlock* pBlock, CBaseExeCode** pNextPoint);
+		int Run(CScriptExecBlock* pBlock, CBaseExeCode** pNextPoint);
 	public:
 		char cVarRegister;
 	};
@@ -539,13 +509,12 @@ namespace zlscript
 	public:
 		CCallClassFunExeCode()
 		{
-			unInstruct = ECODE_CALL_CLASS_FUN;
 			cResultRegister = 0;
 			cParmSize = 0;
 			cClassRegIndex = 0;
 			dwPos = 0;
 		}
-		//int Run(CScriptExecBlock* pBlock, CBaseExeCode** pNextPoint);
+		int Run(CScriptExecBlock* pBlock, CBaseExeCode** pNextPoint);
 	public:
 		char cResultRegister;
 		unsigned char cParmSize;
@@ -558,11 +527,10 @@ namespace zlscript
 	public:
 		CNewClassExeCode()
 		{
-			unInstruct = ECODE_NEW_CLASS;
 			cResultRegister = 0;
 			dwClassIndex = 0;
 		}
-		//int Run(CScriptExecBlock* pBlock, CBaseExeCode** pNextPoint);
+		int Run(CScriptExecBlock* pBlock, CBaseExeCode** pNextPoint);
 	public:
 		char cResultRegister;
 		unsigned int dwClassIndex;
@@ -573,10 +541,9 @@ namespace zlscript
 	public:
 		CReleaseClassExeCode()
 		{
-			unInstruct = ECODE_RELEASE_CLASS;
 			cVarRegister = 0;
 		}
-		//int Run(CScriptExecBlock* pBlock, CBaseExeCode** pNextPoint);
+		int Run(CScriptExecBlock* pBlock, CBaseExeCode** pNextPoint);
 	public:
 		char cVarRegister;
 	};
@@ -586,10 +553,9 @@ namespace zlscript
 	public:
 		CBreakExeCode()
 		{
-			unInstruct = ECODE_BREAK;
 			pJumpCode = nullptr;
 		}
-		//int Run(CScriptExecBlock * pBlock, CBaseExeCode * *pNextPoint);
+		int Run(CScriptExecBlock * pBlock, CBaseExeCode * *pNextPoint);
 	public:
 		CBaseExeCode* pJumpCode;
 	};
@@ -599,10 +565,9 @@ namespace zlscript
 	public:
 		CContinueExeCode()
 		{
-			unInstruct = ECODE_CONTINUE;
 			pJumpCode = nullptr;
 		}
-		//int Run(CScriptExecBlock* pBlock, CBaseExeCode** pNextPoint);
+		int Run(CScriptExecBlock* pBlock, CBaseExeCode** pNextPoint);
 	public:
 		CBaseExeCode* pJumpCode;
 	};
@@ -614,7 +579,7 @@ namespace zlscript
 		{
 
 		}
-		//int Run(CScriptExecBlock* pBlock, CBaseExeCode** pNextPoint);
+		int Run(CScriptExecBlock* pBlock, CBaseExeCode** pNextPoint);
 	};
 
 	class CExeCodeMgr
