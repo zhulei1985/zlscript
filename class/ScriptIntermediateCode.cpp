@@ -18,7 +18,7 @@
 #include "EScriptSentenceType.h"
 #include "EMicroCodeType.h"
 #include "ScriptCallBackFunion.h"
-
+#include "ScriptCodeLoader.h"
 #include "ScriptIntermediateCode.h"
 
 namespace zlscript
@@ -57,7 +57,7 @@ namespace zlscript
 		return g_nTempVarIndexError;
 	}
 
-	VarInfo *CBaseICode::GetTempVarInfo(const char* pVarName)
+	VarInfo* CBaseICode::GetTempVarInfo(const char* pVarName)
 	{
 		if (GetFather())
 		{
@@ -328,7 +328,7 @@ namespace zlscript
 
 	bool CLoadVarICode::MakeExeCode(CScriptCodeLoader::tagCodeData& vOut)
 	{
-		CLoadExeCode *pCode = CExeCodeMgr::GetInstance()->New<CLoadExeCode>(m_unBeginSoureIndex);
+		CLoadExeCode* pCode = CExeCodeMgr::GetInstance()->New<CLoadExeCode>(m_unBeginSoureIndex);
 		pCode->cResultRegister = cRegisterIndex;
 		pCode->cType = AnalysisVar(vOut, pCode->dwPos);
 
@@ -372,7 +372,7 @@ namespace zlscript
 	void CSaveVarICode::AddICode(int nType, CBaseICode* pCode)
 	{
 		pRightOperand = pCode;
-		CBaseICode::AddICode(0,pCode);
+		CBaseICode::AddICode(0, pCode);
 	}
 	//void CPush2StackICode::MakeExeCode(CScriptCodeLoader::tagCodeData& vOut)
 	//{
@@ -396,7 +396,7 @@ namespace zlscript
 	//}
 	bool CGetClassParamICode::MakeExeCode(CScriptCodeLoader::tagCodeData& vOut)
 	{
-		VarInfo *pVarInfo = GetTempVarInfo(strClassVarName.c_str());
+		VarInfo* pVarInfo = GetTempVarInfo(strClassVarName.c_str());
 		if (pVarInfo == nullptr)
 		{
 			//检查是否是全局变量
@@ -416,7 +416,7 @@ namespace zlscript
 			return false;
 		}
 		CLoadExeCode* pLoadCode = CExeCodeMgr::GetInstance()->New<CLoadExeCode>(m_unBeginSoureIndex);
-		pLoadCode->cType = pVarInfo->cGlobal==1? ESIGN_POS_GLOBAL_VAR: ESIGN_POS_LOACL_VAR;
+		pLoadCode->cType = pVarInfo->cGlobal == 1 ? ESIGN_POS_GLOBAL_VAR : ESIGN_POS_LOACL_VAR;
 		pLoadCode->cResultRegister = R_C;
 		pLoadCode->dwPos = pVarInfo->dwPos;
 		vOut.AddCode(pLoadCode);
@@ -532,131 +532,131 @@ namespace zlscript
 		switch (nOperatorCode)
 		{
 		case ECODE_ADD:
-			{
-				CAddExeCode* pCode = CExeCodeMgr::GetInstance()->New<CAddExeCode>(m_unBeginSoureIndex);
-				pCode->cResultRegister = cRegisterIndex;
-				pCode->cType = cType;
-				pCode->dwPos = dwPos;
-				vOut.AddCode(pCode);
-			}
-			break;
+		{
+			CAddExeCode* pCode = CExeCodeMgr::GetInstance()->New<CAddExeCode>(m_unBeginSoureIndex);
+			pCode->cResultRegister = cRegisterIndex;
+			pCode->cType = cType;
+			pCode->dwPos = dwPos;
+			vOut.AddCode(pCode);
+		}
+		break;
 		case ECODE_SUM:
-			{
-				CSumExeCode* pCode = CExeCodeMgr::GetInstance()->New<CSumExeCode>(m_unBeginSoureIndex);
-				pCode->cResultRegister = cRegisterIndex;
-				pCode->cType = cType;
-				pCode->dwPos = dwPos;
-				vOut.AddCode(pCode);
-			}
-			break;
+		{
+			CSumExeCode* pCode = CExeCodeMgr::GetInstance()->New<CSumExeCode>(m_unBeginSoureIndex);
+			pCode->cResultRegister = cRegisterIndex;
+			pCode->cType = cType;
+			pCode->dwPos = dwPos;
+			vOut.AddCode(pCode);
+		}
+		break;
 		case ECODE_MUL:
-			{
-				CMulExeCode* pCode = CExeCodeMgr::GetInstance()->New<CMulExeCode>(m_unBeginSoureIndex);
-				pCode->cResultRegister = cRegisterIndex;
-				pCode->cType = cType;
-				pCode->dwPos = dwPos;
-				vOut.AddCode(pCode);
-			}
-			break;
+		{
+			CMulExeCode* pCode = CExeCodeMgr::GetInstance()->New<CMulExeCode>(m_unBeginSoureIndex);
+			pCode->cResultRegister = cRegisterIndex;
+			pCode->cType = cType;
+			pCode->dwPos = dwPos;
+			vOut.AddCode(pCode);
+		}
+		break;
 		case ECODE_DIV:
-			{
-				CDivExeCode* pCode = CExeCodeMgr::GetInstance()->New<CDivExeCode>(m_unBeginSoureIndex);
-				pCode->cResultRegister = cRegisterIndex;
-				pCode->cType = cType;
-				pCode->dwPos = dwPos;
-				vOut.AddCode(pCode);
-			}
-			break;
+		{
+			CDivExeCode* pCode = CExeCodeMgr::GetInstance()->New<CDivExeCode>(m_unBeginSoureIndex);
+			pCode->cResultRegister = cRegisterIndex;
+			pCode->cType = cType;
+			pCode->dwPos = dwPos;
+			vOut.AddCode(pCode);
+		}
+		break;
 		case ECODE_MOD:
-			{
-				CModExeCode* pCode = CExeCodeMgr::GetInstance()->New<CModExeCode>(m_unBeginSoureIndex);
-				pCode->cResultRegister = cRegisterIndex;
-				pCode->cType = cType;
-				pCode->dwPos = dwPos;
-				vOut.AddCode(pCode);
-			}
-			break;
+		{
+			CModExeCode* pCode = CExeCodeMgr::GetInstance()->New<CModExeCode>(m_unBeginSoureIndex);
+			pCode->cResultRegister = cRegisterIndex;
+			pCode->cType = cType;
+			pCode->dwPos = dwPos;
+			vOut.AddCode(pCode);
+		}
+		break;
 		case ECODE_CMP_EQUAL:
-			{
-				CCmpEqualExeCode* pCode = CExeCodeMgr::GetInstance()->New<CCmpEqualExeCode>(m_unBeginSoureIndex);
-				pCode->cResultRegister = cRegisterIndex;
-				pCode->cType = cType;
-				pCode->dwPos = dwPos;
-				vOut.AddCode(pCode);
-			}
-			break;
+		{
+			CCmpEqualExeCode* pCode = CExeCodeMgr::GetInstance()->New<CCmpEqualExeCode>(m_unBeginSoureIndex);
+			pCode->cResultRegister = cRegisterIndex;
+			pCode->cType = cType;
+			pCode->dwPos = dwPos;
+			vOut.AddCode(pCode);
+		}
+		break;
 		case ECODE_CMP_NOTEQUAL:
-			{
-				CCmpNotEqualExeCode* pCode = CExeCodeMgr::GetInstance()->New<CCmpNotEqualExeCode>(m_unBeginSoureIndex);
-				pCode->cResultRegister = cRegisterIndex;
-				pCode->cType = cType;
-				pCode->dwPos = dwPos;
-				vOut.AddCode(pCode);
-			}
-			break;
+		{
+			CCmpNotEqualExeCode* pCode = CExeCodeMgr::GetInstance()->New<CCmpNotEqualExeCode>(m_unBeginSoureIndex);
+			pCode->cResultRegister = cRegisterIndex;
+			pCode->cType = cType;
+			pCode->dwPos = dwPos;
+			vOut.AddCode(pCode);
+		}
+		break;
 		case ECODE_CMP_BIG:
-			{
-				CCmpBigExeCode* pCode = CExeCodeMgr::GetInstance()->New<CCmpBigExeCode>(m_unBeginSoureIndex);
-				pCode->cResultRegister = cRegisterIndex;
-				pCode->cType = cType;
-				pCode->dwPos = dwPos;
-				vOut.AddCode(pCode);
-			}
-			break;
+		{
+			CCmpBigExeCode* pCode = CExeCodeMgr::GetInstance()->New<CCmpBigExeCode>(m_unBeginSoureIndex);
+			pCode->cResultRegister = cRegisterIndex;
+			pCode->cType = cType;
+			pCode->dwPos = dwPos;
+			vOut.AddCode(pCode);
+		}
+		break;
 		case ECODE_CMP_BIGANDEQUAL:
-			{
-				CCmpBigAndEqualExeCode* pCode = CExeCodeMgr::GetInstance()->New<CCmpBigAndEqualExeCode>(m_unBeginSoureIndex);
-				pCode->cResultRegister = cRegisterIndex;
-				pCode->cType = cType;
-				pCode->dwPos = dwPos;
-				vOut.AddCode(pCode);
-			}
-			break;
+		{
+			CCmpBigAndEqualExeCode* pCode = CExeCodeMgr::GetInstance()->New<CCmpBigAndEqualExeCode>(m_unBeginSoureIndex);
+			pCode->cResultRegister = cRegisterIndex;
+			pCode->cType = cType;
+			pCode->dwPos = dwPos;
+			vOut.AddCode(pCode);
+		}
+		break;
 		case ECODE_CMP_LESS:
-			{
-				CCmpLessExeCode* pCode = CExeCodeMgr::GetInstance()->New<CCmpLessExeCode>(m_unBeginSoureIndex);
-				pCode->cResultRegister = cRegisterIndex;
-				pCode->cType = cType;
-				pCode->dwPos = dwPos;
-				vOut.AddCode(pCode);
-			}
-			break;
+		{
+			CCmpLessExeCode* pCode = CExeCodeMgr::GetInstance()->New<CCmpLessExeCode>(m_unBeginSoureIndex);
+			pCode->cResultRegister = cRegisterIndex;
+			pCode->cType = cType;
+			pCode->dwPos = dwPos;
+			vOut.AddCode(pCode);
+		}
+		break;
 		case ECODE_CMP_LESSANDEQUAL:
-			{
-				CCmpLessAndEqualExeCode* pCode = CExeCodeMgr::GetInstance()->New<CCmpLessAndEqualExeCode>(m_unBeginSoureIndex);
-				pCode->cResultRegister = cRegisterIndex;
-				pCode->cType = cType;
-				pCode->dwPos = dwPos;
-				vOut.AddCode(pCode);
-			}
-			break;
+		{
+			CCmpLessAndEqualExeCode* pCode = CExeCodeMgr::GetInstance()->New<CCmpLessAndEqualExeCode>(m_unBeginSoureIndex);
+			pCode->cResultRegister = cRegisterIndex;
+			pCode->cType = cType;
+			pCode->dwPos = dwPos;
+			vOut.AddCode(pCode);
+		}
+		break;
 		case ECODE_BIT_AND:
-			{
-				CBitAndExeCode* pCode = CExeCodeMgr::GetInstance()->New<CBitAndExeCode>(m_unBeginSoureIndex);
-				pCode->cResultRegister = cRegisterIndex;
-				pCode->cType = cType;
-				pCode->dwPos = dwPos;
-				vOut.AddCode(pCode);
-			}
-			break;
+		{
+			CBitAndExeCode* pCode = CExeCodeMgr::GetInstance()->New<CBitAndExeCode>(m_unBeginSoureIndex);
+			pCode->cResultRegister = cRegisterIndex;
+			pCode->cType = cType;
+			pCode->dwPos = dwPos;
+			vOut.AddCode(pCode);
+		}
+		break;
 		case ECODE_BIT_OR:
-			{
-				CBitOrExeCode* pCode = CExeCodeMgr::GetInstance()->New<CBitOrExeCode>(m_unBeginSoureIndex);
-				pCode->cResultRegister = cRegisterIndex;
-				pCode->cType = cType;
-				pCode->dwPos = dwPos;
-				vOut.AddCode(pCode);
-			}
-			break;
+		{
+			CBitOrExeCode* pCode = CExeCodeMgr::GetInstance()->New<CBitOrExeCode>(m_unBeginSoureIndex);
+			pCode->cResultRegister = cRegisterIndex;
+			pCode->cType = cType;
+			pCode->dwPos = dwPos;
+			vOut.AddCode(pCode);
+		}
+		break;
 		case ECODE_BIT_XOR:
-			{
-				CBitXorExeCode* pCode = CExeCodeMgr::GetInstance()->New<CBitXorExeCode>(m_unBeginSoureIndex);
-				pCode->cResultRegister = cRegisterIndex;
-				pCode->cType = cType;
-				pCode->dwPos = dwPos;
-				vOut.AddCode(pCode);
-			}
-			break;
+		{
+			CBitXorExeCode* pCode = CExeCodeMgr::GetInstance()->New<CBitXorExeCode>(m_unBeginSoureIndex);
+			pCode->cResultRegister = cRegisterIndex;
+			pCode->cType = cType;
+			pCode->dwPos = dwPos;
+			vOut.AddCode(pCode);
+		}
+		break;
 		default:
 			return false;
 		}
@@ -915,7 +915,7 @@ namespace zlscript
 		vOut.AddCode(pEndCode);
 		pIfCode->pJumpCode = pEndCode;
 
-		for (CBaseExeCode *pCheckCode = pIfCode; pCheckCode && pCheckCode != pJumpBeginCode; pCheckCode= pCheckCode->m_pNext)
+		for (CBaseExeCode* pCheckCode = pIfCode; pCheckCode && pCheckCode != pJumpBeginCode; pCheckCode = pCheckCode->m_pNext)
 		{
 			auto pBreakCode = dynamic_cast<CBreakExeCode*>(pCheckCode);
 			if (pBreakCode)
@@ -1042,18 +1042,27 @@ namespace zlscript
 		CBaseICode::AddICode(nType, pCode);
 	}
 
-	CICodeMgr CICodeMgr::s_Instance;
-	CICodeMgr::CICodeMgr()
-	{
-	}
-	CICodeMgr::~CICodeMgr()
-	{
-		Clear();
-	}
+
 	//void CICodeMgr::Release(CBaseICode* pPoint)
 	//{
 	//}
-	void CICodeMgr::Clear()
+	//void CICodeMgr<T>::Clear()
+	//{
+	//	for (auto it = m_listICode.begin(); it != m_listICode.end(); it++)
+	//	{
+	//		CBaseICode* pCode = *it;
+	//		if (pCode)
+	//		{
+	//			delete pCode;
+	//		}
+	//	}
+	//	m_listICode.clear();
+	//}
+
+
+	std::list<CBaseICode*> CBaseICodeMgr::m_listICode;
+
+	void CBaseICodeMgr::Clear()
 	{
 		for (auto it = m_listICode.begin(); it != m_listICode.end(); it++)
 		{
@@ -1065,8 +1074,5 @@ namespace zlscript
 		}
 		m_listICode.clear();
 	}
-
-
-
 
 }

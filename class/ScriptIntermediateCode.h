@@ -21,12 +21,28 @@
 #include <vector>
 #include <map>
 #include <set>
-#include "ScriptCodeLoader.h"
+
 #include "ScriptCodeStyle.h"
-//编译时的中间代码
+ //编译时的中间代码
 namespace zlscript
 {
+	struct VarInfo
+	{
+		VarInfo()
+		{
+			cType = 0;
+			cGlobal = 0;
+			wExtend = 0;
+			dwPos = 0;
+		}
+		//__int64 nVarInfo;
 
+		unsigned char cType; // 1,整数,2 浮点 3,字符 4 类指针
+		unsigned char cGlobal;// 1 表示全局变量
+		unsigned short wExtend; // 大于1表示是数组下标,不再使用
+		unsigned int dwPos;//位置ID
+
+	};
 
 	const unsigned int g_nTempVarIndexError = -1;
 
@@ -60,16 +76,16 @@ namespace zlscript
 		virtual CBaseICode* GetFather();
 		virtual void SetFather(CBaseICode* pCode);
 
-		virtual bool DefineTempVar(std::string VarType,std::string VarName);
+		virtual bool DefineTempVar(std::string VarType, std::string VarName);
 		virtual bool CheckTempVar(const char* pVarName);
 		//virtual void SetTempVarIndex(const char* pVarName, unsigned int nIndex, int nType, int ClassIndex) {
 		//	return;
 		//}
 		virtual unsigned int GetTempVarIndex(const char* pVarName);
-		virtual VarInfo *GetTempVarInfo(const char* pVarName);
+		virtual VarInfo* GetTempVarInfo(const char* pVarName);
 
 		virtual void SetRegisterIndex(char val) { cRegisterIndex = val; }
-		virtual bool MakeExeCode(CScriptCodeLoader::tagCodeData &vOut)=0;
+		virtual bool MakeExeCode(CScriptCodeLoader::tagCodeData& vOut) = 0;
 
 		virtual void AddICode(int nType, CBaseICode* pCode);
 		virtual CBaseICode* GetICode(int nType, int index);
@@ -92,7 +108,7 @@ namespace zlscript
 		virtual bool DefineTempVar(std::string VarType, std::string VarName);
 		//virtual void SetTempVarIndex(const char* pVarName, unsigned int nIndex, int nType, int ClassIndex);
 		virtual unsigned int GetTempVarIndex(const char* pVarName);
-		virtual VarInfo *GetTempVarInfo(const char* pVarName);
+		virtual VarInfo* GetTempVarInfo(const char* pVarName);
 		virtual bool MakeExeCode(CScriptCodeLoader::tagCodeData& vOut);
 
 		virtual void AddICode(int nType, CBaseICode* pCode);
@@ -123,7 +139,7 @@ namespace zlscript
 		virtual bool CheckTempVar(const char* pVarName);
 		//virtual void SetTempVarIndex(const char* pVarName, unsigned int nIndex, int nType, int ClassIndex);
 		virtual unsigned int GetTempVarIndex(const char* pVarName);
-		virtual VarInfo *GetTempVarInfo(const char* pVarName);
+		virtual VarInfo* GetTempVarInfo(const char* pVarName);
 		virtual bool MakeExeCode(CScriptCodeLoader::tagCodeData& vOut);
 		virtual void AddICode(int nType, CBaseICode* pCode);
 	public:
@@ -462,31 +478,38 @@ namespace zlscript
 		int nPos;
 	};
 
-	class CICodeMgr
+	class CBaseICodeMgr
+	{
+	public:
+		static void Clear();
+	protected:
+		static std::list<CBaseICode*> m_listICode;
+	};
+
+	template<class T>
+	class CICodeMgr : public CBaseICodeMgr
 	{
 	public:
 		CICodeMgr();
 		~CICodeMgr();
 
-		template<class T>
 		T* New(unsigned int index);
 
-		//void Release(CBaseICode* pPoint);
 
-		void Clear();
-	private:
-		std::list<CBaseICode*> m_listICode;
-	public:
-		static CICodeMgr* GetInstance()
-		{
-			return &s_Instance;
-		}
-	private:
-		static CICodeMgr s_Instance;
 	};
 
 	template<class T>
-	inline T* CICodeMgr::New(unsigned int index)
+	inline CICodeMgr<T>::CICodeMgr()
+	{
+	}
+
+	template<class T>
+	inline CICodeMgr<T>::~CICodeMgr()
+	{
+	}
+
+	template<class T>
+	inline T* CICodeMgr<T>::New(unsigned int index)
 	{
 		T* pResult = new T;
 		CBaseICode* pCode = dynamic_cast<CBaseICode*>(pResult);
@@ -502,4 +525,5 @@ namespace zlscript
 		}
 		return pResult;
 	}
+
 }

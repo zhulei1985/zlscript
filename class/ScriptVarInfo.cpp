@@ -1,6 +1,6 @@
 ﻿#include "EScriptVariableType.h"
 #include "ScriptSuperPointer.h"
-#include "StackVarInfo.h"
+#include "ScriptVarInfo.h"
 
 namespace zlscript
 {

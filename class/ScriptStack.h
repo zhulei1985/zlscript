@@ -20,7 +20,7 @@
 #include <list>
 #include <stack>
 #include <string>
-#include "StackVarInfo.h"
+#include "ScriptVarInfo.h"
 #include "EScriptVariableType.h"
 #include "ScriptSuperPointer.h"
 

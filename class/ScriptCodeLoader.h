@@ -26,28 +26,12 @@
 #include <functional> 
 #include <unordered_map>
  //#include "scriptcommon.h"
-//#include "ScriptIntermediateCode.h"
+#include "ScriptIntermediateCode.h"
 #include "ScriptStack.h"
 #include "ScriptCodeStyle.h"
 namespace zlscript
 {
-	struct VarInfo
-	{
-		VarInfo()
-		{
-			cType = 0;
-			cGlobal = 0;
-			wExtend = 0;
-			dwPos = 0;
-		}
-		//__int64 nVarInfo;
 
-		unsigned char cType; // 1,整数,2 浮点 3,字符 4 类指针
-		unsigned char cGlobal;// 1 表示全局变量
-		unsigned short wExtend; // 大于1表示是数组下标,不再使用
-		unsigned int dwPos;//位置ID
-
-	};
 	//一句源码
 	enum E_SOURCE_WORD_FLAG
 	{
@@ -66,8 +50,7 @@ namespace zlscript
 		unsigned int nSourceWordsIndex;
 	};
 	typedef std::list<tagSourceWord> SentenceSourceCode;
-	class CBaseICode;
-	class CFunICode;
+
 	class CScriptCodeLoader
 	{
 	public:
@@ -272,6 +255,18 @@ namespace zlscript
 		CBaseICode* LoadOperand(tagSourceWord &word);
 
 		bool CheckOperatorTree(CBaseICode**pNode);
+
+	private:
+		enum E_CODE_SCOPE
+		{
+			E_CODE_SCOPE_OUTSIDE = 1,//块外范围
+			E_CODE_SCOPE_BLOCK = 2,//块内范围
+			E_CODE_SCOPE_BRACKET = 4,//括号内范围
+		};
+		template<class T>
+		bool AddCodeCompile(int nScopeType);
+		typedef std::list<CBaseICodeMgr> ListICodeMgr;
+		std::unordered_map<int, ListICodeMgr> m_mapICodeMgr;
 	private:
 		//编译时的中间指令
 		enum EICodeType
@@ -387,4 +382,27 @@ namespace zlscript
 
 		friend class CScriptVirtualMachine;
 	};
+	template<class T>
+	inline bool CScriptCodeLoader::AddCodeCompile(int nScopeType)
+	{
+		if (nScopeType & E_CODE_SCOPE_OUTSIDE)
+		{
+			ListICodeMgr& list = m_mapICodeMgr[E_CODE_SCOPE_OUTSIDE];
+			auto pMgr = new CICodeMgr<T>();
+			list.push_back(pMgr);
+		}
+		if (nScopeType & E_CODE_SCOPE_BLOCK)
+		{
+			ListICodeMgr& list = m_mapICodeMgr[E_CODE_SCOPE_BLOCK];
+			auto pMgr = new CICodeMgr<T>();
+			list.push_back(pMgr);
+		}
+		if (nScopeType & E_CODE_SCOPE_BRACKET)
+		{
+			ListICodeMgr& list = m_mapICodeMgr[E_CODE_SCOPE_BRACKET];
+			auto pMgr = new CICodeMgr<T>();
+			list.push_back(pMgr);
+		}
+		return false;
+	}
 }
