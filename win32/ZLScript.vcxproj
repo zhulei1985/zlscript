@@ -139,6 +139,7 @@
     <ClInclude Include="..\class\ScriptCodeStyle.h" />
     <ClInclude Include="..\class\ScriptClassAttributes.h" />
     <ClInclude Include="..\class\ScriptClassMgr.h" />
+    <ClInclude Include="..\class\ScriptCompileInfo.h" />
     <ClInclude Include="..\class\ScriptDebugPrint.h" />
     <ClInclude Include="..\class\ScriptExecCodeMgr.h" />
     <ClInclude Include="..\class\ScriptExecFrame.h" />

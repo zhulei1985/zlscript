@@ -126,7 +126,7 @@ namespace zlscript
 		return nullptr;
 	}
 
-	bool CFunICode::MakeExeCode(CScriptCodeLoader::tagCodeData& vOut)
+	bool CFunICode::MakeExeCode(stCodeData& vOut)
 	{
 		//注册临时变量
 		for (unsigned int i = 0; i < m_vecTempVarOrder.size(); i++)
@@ -227,7 +227,7 @@ namespace zlscript
 		return nullptr;
 	}
 
-	bool CBlockICode::MakeExeCode(CScriptCodeLoader::tagCodeData& vOut)
+	bool CBlockICode::MakeExeCode(stCodeData& vOut)
 	{
 		//注册临时变量
 		for (auto it = m_mapVarNameAndType.begin(); it != m_mapVarNameAndType.end(); it++)
@@ -257,7 +257,7 @@ namespace zlscript
 		CBaseICode::AddICode(nType, pCode);
 	}
 
-	char CLoadVarICode::AnalysisVar(CScriptCodeLoader::tagCodeData& vOut, unsigned int& pos)
+	char CLoadVarICode::AnalysisVar(stCodeData& vOut, unsigned int& pos)
 	{
 		char cType = 0;
 		if (m_word.nFlag == E_WORD_FLAG_STRING)
@@ -326,7 +326,7 @@ namespace zlscript
 		return cType;
 	}
 
-	bool CLoadVarICode::MakeExeCode(CScriptCodeLoader::tagCodeData& vOut)
+	bool CLoadVarICode::MakeExeCode(stCodeData& vOut)
 	{
 		CLoadExeCode* pCode = CExeCodeMgr::GetInstance()->New<CLoadExeCode>(m_unBeginSoureIndex);
 		pCode->cResultRegister = cRegisterIndex;
@@ -335,7 +335,7 @@ namespace zlscript
 		vOut.AddCode(pCode);
 		return true;
 	}
-	bool CSaveVarICode::MakeExeCode(CScriptCodeLoader::tagCodeData& vOut)
+	bool CSaveVarICode::MakeExeCode(stCodeData& vOut)
 	{
 		char cType = 0;
 		unsigned int pos = 0;
@@ -374,7 +374,7 @@ namespace zlscript
 		pRightOperand = pCode;
 		CBaseICode::AddICode(0, pCode);
 	}
-	//void CPush2StackICode::MakeExeCode(CScriptCodeLoader::tagCodeData& vOut)
+	//void CPush2StackICode::MakeExeCode(stCodeData& vOut)
 	//{
 	//	CodeStyle code(m_unBeginSoureIndex);
 	//	code.qwCode = 0;
@@ -384,7 +384,7 @@ namespace zlscript
 	//	code.dwPos = nPos;
 	//	vOut.push_back(code);
 	//}
-	//void CPop4StackICode::MakeExeCode(CScriptCodeLoader::tagCodeData& vOut)
+	//void CPop4StackICode::MakeExeCode(stCodeData& vOut)
 	//{
 	//	CodeStyle code(m_unBeginSoureIndex);
 	//	code.qwCode = 0;
@@ -394,7 +394,7 @@ namespace zlscript
 	//	code.dwPos = nPos;
 	//	vOut.push_back(code);
 	//}
-	bool CGetClassParamICode::MakeExeCode(CScriptCodeLoader::tagCodeData& vOut)
+	bool CGetClassParamICode::MakeExeCode(stCodeData& vOut)
 	{
 		VarInfo* pVarInfo = GetTempVarInfo(strClassVarName.c_str());
 		if (pVarInfo == nullptr)
@@ -428,7 +428,7 @@ namespace zlscript
 		vOut.AddCode(pGetCode);
 		return true;
 	}
-	bool CSetClassParamICode::MakeExeCode(CScriptCodeLoader::tagCodeData& vOut)
+	bool CSetClassParamICode::MakeExeCode(stCodeData& vOut)
 	{
 		VarInfo* pVarInfo = GetTempVarInfo(strClassVarName.c_str());
 		if (pVarInfo == nullptr)
@@ -473,7 +473,7 @@ namespace zlscript
 		pRightOperand = pCode;
 		CBaseICode::AddICode(0, pCode);
 	}
-	bool CMinusICode::MakeExeCode(CScriptCodeLoader::tagCodeData& vOut)
+	bool CMinusICode::MakeExeCode(stCodeData& vOut)
 	{
 		if (pRightOperand)
 		{
@@ -492,7 +492,7 @@ namespace zlscript
 		pRightOperand = pCode;
 		CBaseICode::AddICode(0, pCode);
 	}
-	bool COperatorICode::MakeExeCode(CScriptCodeLoader::tagCodeData& vOut)
+	bool COperatorICode::MakeExeCode(stCodeData& vOut)
 	{
 		nOperatorCode = CScriptCodeLoader::GetInstance()->GetWordKey(strOperator);
 		char cType = 0;
@@ -705,7 +705,7 @@ namespace zlscript
 		}
 		return nullptr;
 	}
-	//bool CCallBackFunICode::MakeExeCode(CScriptCodeLoader::tagCodeData& vOut)
+	//bool CCallBackFunICode::MakeExeCode(stCodeData& vOut)
 	//{
 	//	for (unsigned int i = 0; i < vParams.size(); i++)
 	//	{
@@ -731,7 +731,7 @@ namespace zlscript
 	//	}
 	//	CBaseICode::AddICode(nType, pCode);
 	//}
-	bool CCallFunICode::MakeExeCode(CScriptCodeLoader::tagCodeData& vOut)
+	bool CCallFunICode::MakeExeCode(stCodeData& vOut)
 	{
 		for (unsigned int i = 0; i < vParams.size(); i++)
 		{
@@ -778,7 +778,7 @@ namespace zlscript
 		}
 		CBaseICode::AddICode(nType, pCode);
 	}
-	bool CCallClassFunICode::MakeExeCode(CScriptCodeLoader::tagCodeData& vOut)
+	bool CCallClassFunICode::MakeExeCode(stCodeData& vOut)
 	{
 		VarInfo* pVarInfo = GetTempVarInfo(strClassVarName.c_str());
 		if (pVarInfo == nullptr)
@@ -838,7 +838,7 @@ namespace zlscript
 	}
 
 
-	bool CIfICode::MakeExeCode(CScriptCodeLoader::tagCodeData& vOut)
+	bool CIfICode::MakeExeCode(stCodeData& vOut)
 	{
 		//先压入条件
 		if (pCondCode)
@@ -888,7 +888,7 @@ namespace zlscript
 		CBaseICode::AddICode(nType, pCode);
 	}
 
-	bool CWhileICode::MakeExeCode(CScriptCodeLoader::tagCodeData& vOut)
+	bool CWhileICode::MakeExeCode(stCodeData& vOut)
 	{
 		if (pCondCode == nullptr)
 		{
@@ -953,20 +953,20 @@ namespace zlscript
 		}
 		CBaseICode::AddICode(nType, pCode);
 	}
-	bool CContinueICode::MakeExeCode(CScriptCodeLoader::tagCodeData& vOut)
+	bool CContinueICode::MakeExeCode(stCodeData& vOut)
 	{
 		CContinueExeCode* pCode = CExeCodeMgr::GetInstance()->New<CContinueExeCode>(m_unBeginSoureIndex);
 		vOut.AddCode(pCode);
 
 		return true;
 	}
-	bool CBreakICode::MakeExeCode(CScriptCodeLoader::tagCodeData& vOut)
+	bool CBreakICode::MakeExeCode(stCodeData& vOut)
 	{
 		CBreakExeCode* pCode = CExeCodeMgr::GetInstance()->New<CBreakExeCode>(m_unBeginSoureIndex);
 		vOut.AddCode(pCode);
 		return true;
 	}
-	bool CReturnICode::MakeExeCode(CScriptCodeLoader::tagCodeData& vOut)
+	bool CReturnICode::MakeExeCode(stCodeData& vOut)
 	{
 		if (pBodyCode)
 		{
@@ -988,7 +988,7 @@ namespace zlscript
 	}
 
 
-	bool CNewICode::MakeExeCode(CScriptCodeLoader::tagCodeData& vOut)
+	bool CNewICode::MakeExeCode(stCodeData& vOut)
 	{
 		unsigned short nClassType = 0;
 		char cType = CScriptCodeLoader::GetInstance()->GetVarType(strClassType, nClassType);
@@ -1009,7 +1009,7 @@ namespace zlscript
 		CBaseICode::AddICode(nType, pCode);
 	}
 
-	bool CDeleteICode::MakeExeCode(CScriptCodeLoader::tagCodeData& vOut)
+	bool CDeleteICode::MakeExeCode(stCodeData& vOut)
 	{
 		VarInfo* pVarInfo = GetTempVarInfo(m_VarName.c_str());
 		if (pVarInfo == nullptr)
@@ -1061,6 +1061,24 @@ namespace zlscript
 
 
 	std::list<CBaseICode*> CBaseICodeMgr::m_listICode;
+
+	bool CBaseICodeMgr::Release(CBaseICode* pCode)
+	{
+		if (pCode)
+		{
+			for (auto it = m_listICode.begin(); it != m_listICode.end(); it++)
+			{
+				if (*it == pCode)
+				{
+					m_listICode.erase(it);
+					break;
+				}
+			}
+			delete pCode;
+			return true;
+		}
+		return false;
+	}
 
 	void CBaseICodeMgr::Clear()
 	{

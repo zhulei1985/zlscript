@@ -29,27 +29,10 @@
 #include "ScriptIntermediateCode.h"
 #include "ScriptStack.h"
 #include "ScriptCodeStyle.h"
+#include "ScriptCompileInfo.h"
 namespace zlscript
 {
 
-	//一句源码
-	enum E_SOURCE_WORD_FLAG
-	{
-		E_WORD_FLAG_NORMAL,
-		E_WORD_FLAG_STRING,
-	};
-	struct tagSourceWord
-	{
-		tagSourceWord()
-		{
-			nFlag = E_WORD_FLAG_NORMAL;
-			nSourceWordsIndex = -1;
-		}
-		int nFlag;
-		std::string word;
-		unsigned int nSourceWordsIndex;
-	};
-	typedef std::list<tagSourceWord> SentenceSourceCode;
 
 	class CScriptCodeLoader
 	{
@@ -256,7 +239,7 @@ namespace zlscript
 
 		bool CheckOperatorTree(CBaseICode**pNode);
 
-	private:
+	public:
 		enum E_CODE_SCOPE
 		{
 			E_CODE_SCOPE_OUTSIDE = 1,//块外范围
@@ -265,7 +248,8 @@ namespace zlscript
 		};
 		template<class T>
 		bool AddCodeCompile(int nScopeType);
-		typedef std::list<CBaseICodeMgr> ListICodeMgr;
+	private:
+		typedef std::list<CBaseICodeMgr*> ListICodeMgr;
 		std::unordered_map<int, ListICodeMgr> m_mapICodeMgr;
 	private:
 		//编译时的中间指令

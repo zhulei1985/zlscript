@@ -618,11 +618,30 @@ namespace zlscript
 
 	bool CScriptCodeLoader::RunCompileState(SentenceSourceCode& vIn)
 	{
-		if (LoadDefineFunState(vIn) == ECompile_ERROR)
+		auto& list = m_mapICodeMgr[E_CODE_SCOPE_OUTSIDE];
+		bool bResult = false;
+		for (auto it = list.begin(); it != list.end(); it++)
 		{
-			return false;
+			auto pMgr = *it;
+			if (pMgr)
+			{
+				auto pICode = pMgr->New();
+				if (pICode)
+				{
+					if (pICode->Compile(vIn))
+					{
+						bResult = true;
+						break;
+					}
+					pMgr->Release(pICode);
+				}
+			}
 		}
-		return true;
+		//if (LoadDefineFunState(vIn) == ECompile_ERROR)
+		//{
+		//	return false;
+		//}
+		return bResult;
 	}
 
 	int CScriptCodeLoader::LoadDefineFunctionParameter(SentenceSourceCode& vIn, CBaseICode* pCode)
