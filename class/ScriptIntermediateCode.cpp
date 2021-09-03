@@ -31,6 +31,14 @@ namespace zlscript
 	{
 		m_pFather = pCode;
 	}
+	CScriptCodeLoader* CBaseICode::GetLoader()
+	{
+		return m_pLoader;
+	}
+	void CBaseICode::SetLoader(CScriptCodeLoader* pLoader)
+	{
+		m_pLoader = pLoader;
+	}
 	bool CBaseICode::DefineTempVar(std::string VarType, std::string VarName)
 	{
 		if (m_pFather)
@@ -79,6 +87,10 @@ namespace zlscript
 		return nullptr;
 	}
 
+	bool CDefGlobalVarICode::Compile(SentenceSourceCode& vIn)
+	{
+
+	}
 
 	bool CFunICode::DefineTempVar(std::string VarType, std::string VarName)
 	{

@@ -189,6 +189,14 @@ namespace zlscript
 		std::stack<int> m_stackLexical;//词法分析机的状态堆栈
 		SentenceSourceCode m_vCurSourceSentence;
 		//vector<SentenceSourceCode> m_vLexicalData;//存放词法分析机的生成结果
+	public:
+		enum E_CODE_SCOPE
+		{
+			E_CODE_SCOPE_OUTSIDE = 1,//块外范围
+			E_CODE_SCOPE_BLOCK = 2,//块内范围
+			E_CODE_SCOPE_BRACKET = 4,//括号内范围
+		};
+		bool RunCompileState(SentenceSourceCode& vIn, CBaseICode* pFather, E_CODE_SCOPE type);
 	private:
 		//*******************语法分析状态机********************
 
@@ -199,8 +207,6 @@ namespace zlscript
 		//查询临时变量的index
 		int QueryTempVar(std::string varName, CBaseICode *pICode);
 		/////////////////////////////////////////////
-
-		bool RunCompileState(SentenceSourceCode& vIn);
 
 		int LoadDefineFunctionParameter(SentenceSourceCode& vIn, CBaseICode *pCode);
 		int LoadDefineTempVar(SentenceSourceCode& vIn, CBaseICode* pCode);
@@ -240,12 +246,7 @@ namespace zlscript
 		bool CheckOperatorTree(CBaseICode**pNode);
 
 	public:
-		enum E_CODE_SCOPE
-		{
-			E_CODE_SCOPE_OUTSIDE = 1,//块外范围
-			E_CODE_SCOPE_BLOCK = 2,//块内范围
-			E_CODE_SCOPE_BRACKET = 4,//括号内范围
-		};
+
 		template<class T>
 		bool AddCodeCompile(int nScopeType);
 	private:
@@ -372,19 +373,19 @@ namespace zlscript
 		if (nScopeType & E_CODE_SCOPE_OUTSIDE)
 		{
 			ListICodeMgr& list = m_mapICodeMgr[E_CODE_SCOPE_OUTSIDE];
-			auto pMgr = new CICodeMgr<T>();
+			auto pMgr = new CICodeMgr<T>(this);
 			list.push_back(pMgr);
 		}
 		if (nScopeType & E_CODE_SCOPE_BLOCK)
 		{
 			ListICodeMgr& list = m_mapICodeMgr[E_CODE_SCOPE_BLOCK];
-			auto pMgr = new CICodeMgr<T>();
+			auto pMgr = new CICodeMgr<T>(this);
 			list.push_back(pMgr);
 		}
 		if (nScopeType & E_CODE_SCOPE_BRACKET)
 		{
 			ListICodeMgr& list = m_mapICodeMgr[E_CODE_SCOPE_BRACKET];
-			auto pMgr = new CICodeMgr<T>();
+			auto pMgr = new CICodeMgr<T>(this);
 			list.push_back(pMgr);
 		}
 		return false;

@@ -49,6 +49,53 @@ namespace zlscript
 	};
 	typedef std::list<tagSourceWord> SentenceSourceCode;
 
+#define SignToPos \
+	unsigned int nBeginSourceWordIndex = 0; \
+	if (vIn.size() != 0) \
+	{ \
+		tagSourceWord word = vIn.front(); \
+		nBeginSourceWordIndex = word.nSourceWordsIndex; \
+	}
+
+#define GetNewWord(word) \
+	if (vIn.size() == 0) \
+	{ \
+		AddErrorInfo(nBeginSourceWordIndex,"(Unexpected end of statement)"); \
+		return ECompile_ERROR; \
+	} \
+	tagSourceWord word = vIn.front(); \
+	vIn.pop_front();
+
+#define GetWord(word) \
+	if (vIn.size() == 0) \
+	{ \
+		AddErrorInfo(nBeginSourceWordIndex,"(Unexpected end of statement)"); \
+		return ECompile_ERROR; \
+	} \
+	word = vIn.front(); \
+	vIn.pop_front();
+
+#define GetNewWord2(word) \
+	if (vIn.size() == 0) \
+	{ \
+		AddErrorInfo(nBeginSourceWordIndex,"(Unexpected end of statement)"); \
+		return nullptr; \
+	} \
+	tagSourceWord word = vIn.front(); \
+	vIn.pop_front();
+
+#define GetWord2(word) \
+	if (vIn.size() == 0) \
+	{ \
+		AddErrorInfo(nBeginSourceWordIndex,"(Unexpected end of statement)"); \
+		return nullptr; \
+	} \
+	word = vIn.front(); \
+	vIn.pop_front();
+
+#define RevertWord(word) \
+	vIn.push_front(word);
+
 	struct stCodeData
 	{
 		stCodeData()

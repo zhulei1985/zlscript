@@ -47,6 +47,7 @@ namespace zlscript
 
 	const unsigned int g_nTempVarIndexError = -1;
 
+	class CScriptCodeLoader;
 	//struct stVarDefine
 	//{
 	//	std::string strType;
@@ -67,6 +68,7 @@ namespace zlscript
 	public:
 		CBaseICode() {
 			m_pFather = nullptr;
+			m_pLoader = nullptr;
 			cRegisterIndex = R_A;
 		}
 		virtual int GetType()
@@ -76,6 +78,9 @@ namespace zlscript
 	public:
 		virtual CBaseICode* GetFather();
 		virtual void SetFather(CBaseICode* pCode);
+
+		CScriptCodeLoader* GetLoader();
+		void SetLoader(CScriptCodeLoader* pLoader);
 
 		virtual bool DefineTempVar(std::string VarType, std::string VarName);
 		virtual bool CheckTempVar(const char* pVarName);
@@ -93,12 +98,27 @@ namespace zlscript
 		virtual CBaseICode* GetICode(int nType, int index);
 	private:
 		CBaseICode* m_pFather;
+	protected:
+		CScriptCodeLoader* m_pLoader;
 	public:
 		unsigned int m_unBeginSoureIndex;
 
 		unsigned char cRegisterIndex;
 	};
 	class CBlockICode;
+	class CDefGlobalVarICode : public CBaseICode
+	{
+	public:
+		CDefGlobalVarICode()
+		{
+
+		}
+		virtual bool MakeExeCode(stCodeData& vOut)
+		{
+			return true;
+		}
+		virtual bool Compile(SentenceSourceCode& vIn);
+	};
 	class CFunICode : public CBaseICode
 	{
 	public:
@@ -483,8 +503,10 @@ namespace zlscript
 	class CBaseICodeMgr
 	{
 	public:
-		virtual CBaseICode* New() = 0;
+		virtual CBaseICode* New(CScriptCodeLoader* pLoader, unsigned int index) = 0;
 		virtual bool Release(CBaseICode* pCode);
+
+	public:
 		static void Clear();
 	protected:
 		static std::list<CBaseICode*> m_listICode;
@@ -497,8 +519,7 @@ namespace zlscript
 		CICodeMgr();
 		~CICodeMgr();
 
-		T* New(unsigned int index);
-
+		CBaseICode* New(CScriptCodeLoader* pLoader, unsigned int index);
 
 	};
 
@@ -513,12 +534,13 @@ namespace zlscript
 	}
 
 	template<class T>
-	inline T* CICodeMgr<T>::New(unsigned int index)
+	inline CBaseICode* CICodeMgr<T>::New(CScriptCodeLoader* pLoader,unsigned int index)
 	{
 		T* pResult = new T;
 		CBaseICode* pCode = dynamic_cast<CBaseICode*>(pResult);
 		if (pCode)
 		{
+			pCode->SetLoader(pLoader);
 			pCode->m_unBeginSoureIndex = index;
 			m_listICode.push_front(pCode);
 		}
@@ -526,8 +548,9 @@ namespace zlscript
 		{
 			delete pResult;
 			pResult = nullptr;
+			return nullptr;
 		}
-		return pResult;
+		return pCode;
 	}
 
 }

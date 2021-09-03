@@ -48,6 +48,7 @@ namespace zlscript
 	CScriptCodeLoader CScriptCodeLoader::s_Instance;
 	CScriptCodeLoader::CScriptCodeLoader(void)
 	{
+		AddCodeCompile<CFunICode>(E_CODE_SCOPE_OUTSIDE);
 		//CScriptCallBackFunion::init();
 		initDic();
 		RegisterCallBack_LoadFun(DefaultLoadFile);
@@ -103,7 +104,7 @@ namespace zlscript
 
 		while (m_vCurSourceSentence.size())
 		{
-			if (RunCompileState(m_vCurSourceSentence) == ECompile_ERROR)
+			if (RunCompileState(m_vCurSourceSentence, E_CODE_SCOPE_OUTSIDE) == ECompile_ERROR)
 			{
 				zlscript::CScriptDebugPrintMgr::GetInstance()->Print("ScriptLoad Error:");
 
@@ -569,65 +570,23 @@ namespace zlscript
 		}
 		return g_nTempVarIndexError;
 	}
-#define SignToPos \
-	unsigned int nBeginSourceWordIndex = 0; \
-	if (vIn.size() != 0) \
-	{ \
-		tagSourceWord word = vIn.front(); \
-		nBeginSourceWordIndex = word.nSourceWordsIndex; \
-	}
 
-#define GetNewWord(word) \
-	if (vIn.size() == 0) \
-	{ \
-		AddErrorInfo(nBeginSourceWordIndex,"(Unexpected end of statement)"); \
-		return ECompile_ERROR; \
-	} \
-	tagSourceWord word = vIn.front(); \
-	vIn.pop_front();
 
-#define GetWord(word) \
-	if (vIn.size() == 0) \
-	{ \
-		AddErrorInfo(nBeginSourceWordIndex,"(Unexpected end of statement)"); \
-		return ECompile_ERROR; \
-	} \
-	word = vIn.front(); \
-	vIn.pop_front();
-
-#define GetNewWord2(word) \
-	if (vIn.size() == 0) \
-	{ \
-		AddErrorInfo(nBeginSourceWordIndex,"(Unexpected end of statement)"); \
-		return nullptr; \
-	} \
-	tagSourceWord word = vIn.front(); \
-	vIn.pop_front();
-
-#define GetWord2(word) \
-	if (vIn.size() == 0) \
-	{ \
-		AddErrorInfo(nBeginSourceWordIndex,"(Unexpected end of statement)"); \
-		return nullptr; \
-	} \
-	word = vIn.front(); \
-	vIn.pop_front();
-
-#define RevertWord(word) \
-	vIn.push_front(word);
-
-	bool CScriptCodeLoader::RunCompileState(SentenceSourceCode& vIn)
+	bool CScriptCodeLoader::RunCompileState(SentenceSourceCode& vIn, CBaseICode *pFather,CScriptCodeLoader::E_CODE_SCOPE type)
 	{
-		auto& list = m_mapICodeMgr[E_CODE_SCOPE_OUTSIDE];
+		SignToPos;
+
+		auto& list = m_mapICodeMgr[type];
 		bool bResult = false;
 		for (auto it = list.begin(); it != list.end(); it++)
 		{
 			auto pMgr = *it;
 			if (pMgr)
 			{
-				auto pICode = pMgr->New();
+				auto pICode = pMgr->New(this, nBeginSourceWordIndex);
 				if (pICode)
 				{
+					pICode->SetFather(pFather);
 					if (pICode->Compile(vIn))
 					{
 						bResult = true;
