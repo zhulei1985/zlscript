@@ -84,47 +84,8 @@ namespace zlscript
 			return 0;
 		}
 	public:
+		bool AddGlobalVar(int type, std::string name);
 		//*****************代码*******************//
-
-		struct tagCodeData
-		{
-			tagCodeData();
-			void AddCode(CBaseExeCode* pCode)
-			{
-				if (pCode == nullptr)
-				{
-					return;
-				}
-				if (pBeginCode == nullptr)
-				{
-					pBeginCode = pCode;
-					pEndCode = pCode;
-				}
-				else
-				{
-					pCode->nCodeIndex = pEndCode->nCodeIndex + 1;
-					pEndCode->m_pNext = pCode;
-					pEndCode = pCode;
-				}
-			}
-			CBaseExeCode* pBeginCode;
-			CBaseExeCode* pEndCode;
-			int nType;
-
-			std::vector<StackVarInfo> vNumVar;//临时变量
-			//std::vector<CodeStyle> vCodeData;
-
-			std::vector<__int64> vInt64Const;//64位整形常量
-			std::vector<double> vFloatConst;//浮点常量
-			std::vector<std::string> vStrConst;//字符常量
-
-			std::vector<std::string> vCallFunName;//会调用的函数的名称
-
-			std::string filename;
-			std::string funname;
-
-			int nDefaultReturnType;//默认返回值类型
-		};
 
 		unsigned int GetCodeIndex(const char* pStr);
 	private:
@@ -134,7 +95,7 @@ namespace zlscript
 		std::vector<StackVarInfo> vGlobalNumVar;//变量
 
 		//代码库
-		std::vector<tagCodeData> m_vecCodeData;
+		std::vector<stCodeData> m_vecCodeData;
 
 		std::unordered_map<std::string, int> m_mapString2CodeIndex;
 	public:
@@ -144,7 +105,7 @@ namespace zlscript
 		{
 			return (int)m_vecCodeData.size();
 		}
-		tagCodeData* GetCode(int index)
+		stCodeData* GetCode(int index)
 		{
 			if (index >= 0 && index < (int)m_vecCodeData.size())
 			{
@@ -152,7 +113,7 @@ namespace zlscript
 			}
 			return nullptr;
 		}
-		tagCodeData* GetCode(const char* pName);
+		stCodeData* GetCode(const char* pName);
 		void LoadXml(std::string filename);
 		void clear();
 		//***************************编译器*******************************
@@ -327,6 +288,7 @@ namespace zlscript
 			std::string strError;
 		};
 		std::vector<tagErrorInfo> m_vError;
+	public:
 		void AddErrorInfo(unsigned int pos, std::string error)
 		{
 			m_vError.push_back(tagErrorInfo(pos, error));

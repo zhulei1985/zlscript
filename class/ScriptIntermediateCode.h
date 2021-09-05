@@ -100,6 +100,7 @@ namespace zlscript
 		CBaseICode* m_pFather;
 	protected:
 		CScriptCodeLoader* m_pLoader;
+		void AddErrorInfo(unsigned int pos, std::string error);
 	public:
 		unsigned int m_unBeginSoureIndex;
 

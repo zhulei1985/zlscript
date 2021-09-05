@@ -49,52 +49,67 @@ namespace zlscript
 	};
 	typedef std::list<tagSourceWord> SentenceSourceCode;
 
-#define SignToPos \
+#define SignToPos() \
 	unsigned int nBeginSourceWordIndex = 0; \
+	SentenceSourceCode rollBackList; \
 	if (vIn.size() != 0) \
 	{ \
 		tagSourceWord word = vIn.front(); \
 		nBeginSourceWordIndex = word.nSourceWordsIndex; \
 	}
+#define RevertOne() \
+	vIn.push_front(rollBackList.back()); \
+	rollBackList.pop_back();
+
+#define RevertAll() \
+	while (rollBackList.size() > 0) \
+	{ \
+		vIn.push_front(rollBackList.back()); \
+		rollBackList.pop_back(); \
+	}
 
 #define GetNewWord(word) \
 	if (vIn.size() == 0) \
 	{ \
-		AddErrorInfo(nBeginSourceWordIndex,"(Unexpected end of statement)"); \
-		return ECompile_ERROR; \
+		RevertAll() \
+		return false; \
 	} \
 	tagSourceWord word = vIn.front(); \
-	vIn.pop_front();
+	vIn.pop_front(); \
+	rollBackList.push_back(word);
 
 #define GetWord(word) \
 	if (vIn.size() == 0) \
 	{ \
-		AddErrorInfo(nBeginSourceWordIndex,"(Unexpected end of statement)"); \
-		return ECompile_ERROR; \
+		RevertAll() \
+		return false; \
 	} \
 	word = vIn.front(); \
-	vIn.pop_front();
+	vIn.pop_front(); \
+	rollBackList.push_back(word);
 
 #define GetNewWord2(word) \
 	if (vIn.size() == 0) \
 	{ \
+		RevertAll() \
 		AddErrorInfo(nBeginSourceWordIndex,"(Unexpected end of statement)"); \
 		return nullptr; \
 	} \
 	tagSourceWord word = vIn.front(); \
-	vIn.pop_front();
+	vIn.pop_front(); \
+	rollBackList.push_back(word);
 
 #define GetWord2(word) \
 	if (vIn.size() == 0) \
 	{ \
+		RevertAll() \
 		AddErrorInfo(nBeginSourceWordIndex,"(Unexpected end of statement)"); \
 		return nullptr; \
 	} \
 	word = vIn.front(); \
-	vIn.pop_front();
+	vIn.pop_front(); \
+	rollBackList.push_back(word);
 
-#define RevertWord(word) \
-	vIn.push_front(word);
 
 	struct stCodeData
 	{

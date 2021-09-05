@@ -87,9 +87,59 @@ namespace zlscript
 		return nullptr;
 	}
 
+	void CBaseICode::AddErrorInfo(unsigned int pos, std::string error)
+	{
+		if (m_pLoader)
+			m_pLoader->AddErrorInfo(pos, error);
+	}
+
 	bool CDefGlobalVarICode::Compile(SentenceSourceCode& vIn)
 	{
+		SignToPos();
 
+		if (m_pLoader == nullptr)
+		{
+			return false;
+		}
+
+		GetNewWord(strType);
+		int nVarType = 0;
+		if (m_pLoader->m_mapDicVarTypeToICode.find(strVarType) == m_pLoader->m_mapDicVarTypeToICode.end())
+		{
+			int ClassType = CScriptSuperPointerMgr::GetInstance()->GetClassType(strVarType);
+			if (ClassType == 0)
+			{
+				AddErrorInfo(
+					strType.nSourceWordsIndex,
+					"LoadDefineFunState(var type error)");
+				return false;
+			}
+			nVarType = EScriptVal_ClassPoint;
+		}
+		else
+		{
+			nVarType = m_mapDicVarTypeToICode[strVarType];
+		}
+
+		GetNewWord(strName);
+
+		GetNewWord(strSign);
+
+		if (strSign.word == "=")
+		{
+
+		}
+		else if (strSign.word == ";")
+		{
+			if (m_pLoader->AddGlobalVar()
+		}
+		else
+		{
+			RevertAll();
+			return false;
+		}
+
+		return true;
 	}
 
 	bool CFunICode::DefineTempVar(std::string VarType, std::string VarName)
