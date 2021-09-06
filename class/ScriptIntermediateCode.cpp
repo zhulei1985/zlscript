@@ -341,6 +341,22 @@ namespace zlscript
 		return true;
 	}
 
+	bool CFunICode::LoadDefineFunctionParameter(SentenceSourceCode& vIn)
+	{
+		SignToPos();
+		GetNewWord(strType);
+		GetNewWord(strName);
+		if (!DefineTempVar(strType.word, strName.word))
+		{
+			AddErrorInfo(
+				strType.nSourceWordsIndex,
+				"CFunICode:DefineTempVar(defining temporary variable error)");
+			RevertAll();
+			return false;
+		}
+		return true;
+	}
+
 	bool CFunICode::Compile(SentenceSourceCode& vIn)
 	{
 		SignToPos();
@@ -387,6 +403,54 @@ namespace zlscript
 		}
 
 		GetNewWord(strSign);
+		if (strSign.word != "(")
+		{
+			AddErrorInfo(
+				strName.nSourceWordsIndex,
+				"CFunICode:format error,no bracket");
+			RevertAll();
+			return false;
+		}
+		GetWord(nextWord);
+		if (nextWord.word != ")")
+		{
+			RevertOne();
+			while (true)
+			{
+				if (!LoadDefineFunctionParameter(vIn))
+				{
+					RevertAll();
+					return false;
+				}
+				GetWord(nextWord);
+				if (nextWord.word == ",")
+				{
+					continue;
+				}
+				else if (nextWord.word == ")")
+				{
+					break;
+				}
+				else
+				{
+					AddErrorInfo(
+						strName.nSourceWordsIndex,
+						"CFunICode:format error,FunctionParameter");
+					RevertAll();
+					return false;
+				}
+			}
+		}
+		GetWord(nextWord);
+		if (nextWord.word == ";")
+		{
+			//只定义没实现
+		}
+		else if (nextWord.word == "{")
+		{
+			//有定义
+		}
+
 		return true;
 	}
 

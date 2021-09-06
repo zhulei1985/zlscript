@@ -605,7 +605,7 @@ namespace zlscript
 
 	bool CScriptCodeLoader::RunCompileState(SentenceSourceCode& vIn, CBaseICode* pFather, CScriptCodeLoader::E_CODE_SCOPE type)
 	{
-		SignToPos;
+		SignToPos();
 
 		auto& list = m_mapICodeMgr[type];
 		bool bResult = false;

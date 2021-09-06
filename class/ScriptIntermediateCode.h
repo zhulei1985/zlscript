@@ -135,6 +135,7 @@ namespace zlscript
 		virtual bool MakeExeCode(stCodeData& vOut);
 
 		bool LoadAttribute(SentenceSourceCode& vIn);
+		bool LoadDefineFunctionParameter(SentenceSourceCode& vIn);
 		virtual bool Compile(SentenceSourceCode& vIn);
 
 		virtual void AddICode(int nType, CBaseICode* pCode);
@@ -147,7 +148,8 @@ namespace zlscript
 
 		std::string strReturnType;
 
-		CBlockICode* pBodyCode;
+		//CBlockICode* pBodyCode;
+		std::vector<CBaseICode*> vBodyCode;
 	protected:
 		std::map<std::string, VarInfo> m_mapTempVarIndex;
 		std::vector<std::string> m_vecTempVarOrder;
