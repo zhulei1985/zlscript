@@ -134,6 +134,9 @@ namespace zlscript
 		virtual VarInfo* GetTempVarInfo(const char* pVarName);
 		virtual bool MakeExeCode(stCodeData& vOut);
 
+		bool LoadAttribute(SentenceSourceCode& vIn);
+		virtual bool Compile(SentenceSourceCode& vIn);
+
 		virtual void AddICode(int nType, CBaseICode* pCode);
 	public:
 		std::string funname;
@@ -148,6 +151,8 @@ namespace zlscript
 	protected:
 		std::map<std::string, VarInfo> m_mapTempVarIndex;
 		std::vector<std::string> m_vecTempVarOrder;
+		//函数属性
+		std::map<std::string, StackVarInfo> m_mapFunAttribute;
 	};
 
 	class CBlockICode : public CBaseICode

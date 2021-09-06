@@ -103,35 +103,97 @@ namespace zlscript
 		}
 
 		GetNewWord(strType);
-		int nVarType = 0;
-		if (m_pLoader->m_mapDicVarTypeToICode.find(strVarType) == m_pLoader->m_mapDicVarTypeToICode.end())
+		unsigned short unVarType = 0;
+		unsigned short unClassType = 0;
+		unVarType = m_pLoader->GetVarType(strType.word, unClassType);
+		if (unVarType == EScriptVal_None)
 		{
-			int ClassType = CScriptSuperPointerMgr::GetInstance()->GetClassType(strVarType);
-			if (ClassType == 0)
-			{
-				AddErrorInfo(
-					strType.nSourceWordsIndex,
-					"LoadDefineFunState(var type error)");
-				return false;
-			}
-			nVarType = EScriptVal_ClassPoint;
+			AddErrorInfo(
+				strType.nSourceWordsIndex,
+				"CDefGlobalVarICode:type is none");
+			RevertAll();
+			return false;
 		}
-		else
-		{
-			nVarType = m_mapDicVarTypeToICode[strVarType];
-		}
-
 		GetNewWord(strName);
+
+		//检测名字是否与回调函数名冲突
+		if (CScriptCallBackFunion::GetFunIndex(strName.word) >= 0)
+		{
+			AddErrorInfo(
+				strName.nSourceWordsIndex,
+				"CDefGlobalVarICode:Callback Function name already exists");
+			RevertAll();
+			return false;
+		}
 
 		GetNewWord(strSign);
 
 		if (strSign.word == "=")
 		{
-
+			if (!m_pLoader->AddGlobalVar(strName.word, unVarType, unClassType))
+			{
+				AddErrorInfo(
+					strName.nSourceWordsIndex,
+					"CDefGlobalVarICode:global var cannot add");
+				RevertAll();
+				return false;
+			}
 		}
 		else if (strSign.word == ";")
 		{
-			if (m_pLoader->AddGlobalVar()
+			GetNewWord(strVal);
+			StackVarInfo defVar;//默认值
+			defVar.cType = (char)unVarType;
+			switch (unVarType)
+			{
+			case EScriptVal_Int:
+			{
+				defVar.Int64 = _atoi64(strVal.word.c_str());
+			}
+			break;
+			case EScriptVal_Double:
+			{
+				defVar.Double = atof(strVal.word.c_str());
+			}
+			break;
+			case EScriptVal_String:
+			{
+				defVar.Int64 = StackVarInfo::s_strPool.NewString(strVal.word.c_str());
+			}
+			break;
+			case EScriptVal_ClassPoint:
+			{
+				if (strVal.word == "nullptr")
+				{
+					defVar.Int64 = 0;
+				}
+			}
+			}
+			if (!m_pLoader->AddGlobalVar(strName.word, unVarType, unClassType))
+			{
+				AddErrorInfo(
+					strName.nSourceWordsIndex,
+					"CDefGlobalVarICode:global var cannot add");
+				RevertAll();
+				return false;
+			}
+			if (!m_pLoader->SetGlobalVar(strName.word, defVar))
+			{
+				AddErrorInfo(
+					strName.nSourceWordsIndex,
+					"CDefGlobalVarICode:global var cannot set");
+				RevertAll();
+				return false;
+			}
+			GetNewWord(NextWord);
+			if (NextWord.word != ";")
+			{
+				AddErrorInfo(
+					NextWord.nSourceWordsIndex,
+					"CDefGlobalVarICode : Format error , not end");
+				RevertAll();
+				return false;
+			}
 		}
 		else
 		{
@@ -218,6 +280,113 @@ namespace zlscript
 			pBodyCode->MakeExeCode(vOut);
 		}
 
+		return true;
+	}
+
+	bool CFunICode::LoadAttribute(SentenceSourceCode& vIn)
+	{
+		SignToPos();
+		GetNewWord(nextWord);
+		if (m_mapFunAttribute.find(nextWord.word) != m_mapFunAttribute.end())
+		{
+			AddErrorInfo(
+				nextWord.nSourceWordsIndex,
+				"CFunICode:Attribute already exists");
+			RevertAll();
+			return false;
+		}
+		StackVarInfo& var = m_mapFunAttribute[nextWord.word];
+		GetWord(nextWord);
+		if (nextWord.word == "(")
+		{
+			GetWord(nextWord);
+			switch (m_pLoader->GetVarType(nextWord))
+			{
+			case EScriptVal_Int:
+				{
+					var.Int64 = _atoi64(nextWord.word.c_str());
+				}
+				break;
+			case EScriptVal_Double:
+				{
+					var.Double = atof(nextWord.word.c_str());
+				}
+				break;
+			case EScriptVal_String:
+				{
+					var.Int64 = StackVarInfo::s_strPool.NewString(nextWord.word.c_str());
+				}
+				break;
+			default:
+				AddErrorInfo(
+					nextWord.nSourceWordsIndex,
+					"CFunICode:Attribute var type error");
+				RevertAll();
+				return false;
+			}
+			GetWord(nextWord);
+			if (nextWord.word != ")")
+			{
+				AddErrorInfo(
+					nextWord.nSourceWordsIndex,
+					"CFunICode:Attribute format error");
+				RevertAll();
+				return false;
+			}
+		}
+		else
+		{
+			RevertOne();
+		}
+		return true;
+	}
+
+	bool CFunICode::Compile(SentenceSourceCode& vIn)
+	{
+		SignToPos();
+
+		if (m_pLoader == nullptr)
+		{
+			return false;
+		}
+
+		GetNewWord(nextWord);
+		while (nextWord.word == "@")
+		{
+			if (!LoadAttribute(vIn))
+			{
+				RevertAll();
+				return false;
+			}
+
+			GetWord(nextWord);
+		}
+
+		std::string strType = nextWord.word;
+		unsigned short unVarType = 0;
+		unsigned short unClassType = 0;
+		unVarType = m_pLoader->GetVarType(strType, unClassType);
+		if (unVarType == EScriptVal_None)
+		{
+			AddErrorInfo(
+				nextWord.nSourceWordsIndex,
+				"CFunICode:type is none");
+			RevertAll();
+			return false;
+		}
+		GetNewWord(strName);
+
+		//检测名字是否与回调函数名冲突
+		if (CScriptCallBackFunion::GetFunIndex(strName.word) >= 0)
+		{
+			AddErrorInfo(
+				strName.nSourceWordsIndex,
+				"CFunICode:Callback Function name already exists");
+			RevertAll();
+			return false;
+		}
+
+		GetNewWord(strSign);
 		return true;
 	}
 

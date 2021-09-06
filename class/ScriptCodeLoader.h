@@ -73,7 +73,8 @@ namespace zlscript
 
 		void initDic();
 	public:
-		char GetVarType(std::string type, unsigned short& classtype);
+		unsigned short GetVarType(tagSourceWord varWord);
+		unsigned short GetVarType(std::string type, unsigned short& classtype);
 		unsigned short GetWordKey(std::string str)
 		{
 			auto it = m_mapDic2KeyWord.find(str);
@@ -84,7 +85,9 @@ namespace zlscript
 			return 0;
 		}
 	public:
-		bool AddGlobalVar(int type, std::string name);
+
+		bool AddGlobalVar(std::string name, unsigned short type, unsigned short typeExtend);
+		bool SetGlobalVar(std::string name, StackVarInfo& var);
 		//*****************代码*******************//
 
 		unsigned int GetCodeIndex(const char* pStr);
@@ -205,6 +208,7 @@ namespace zlscript
 		CBaseICode* LoadOperand(tagSourceWord &word);
 
 		bool CheckOperatorTree(CBaseICode**pNode);
+
 
 	public:
 
