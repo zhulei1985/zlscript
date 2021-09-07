@@ -111,9 +111,9 @@ namespace zlscript
 	rollBackList.push_back(word);
 
 
-	struct stCodeData
+	struct tagCodeData
 	{
-		stCodeData()
+		tagCodeData()
 		{
 
 		}

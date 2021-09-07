@@ -50,6 +50,20 @@ namespace zlscript
 	{
 		AddCodeCompile<CDefGlobalVarICode>(E_CODE_SCOPE_OUTSIDE);
 		AddCodeCompile<CFunICode>(E_CODE_SCOPE_OUTSIDE);
+		AddCodeCompile<CBlockICode>(E_CODE_SCOPE_STATEMENT);
+
+		AddCodeCompile<CIfICode>(E_CODE_SCOPE_STATEMENT);
+		AddCodeCompile<CWhileICode>(E_CODE_SCOPE_STATEMENT);
+		AddCodeCompile<CContinueICode>(E_CODE_SCOPE_STATEMENT);
+		AddCodeCompile<CBreakICode>(E_CODE_SCOPE_STATEMENT);
+		AddCodeCompile<CReturnICode>(E_CODE_SCOPE_STATEMENT);
+		AddCodeCompile<CDeleteICode>(E_CODE_SCOPE_STATEMENT);
+		AddCodeCompile<CSentenceICode>(E_CODE_SCOPE_STATEMENT);
+
+		AddCodeCompile<CExpressionICode>(E_CODE_SCOPE_EXPRESSION);
+
+		AddCodeCompile<CNewICode>(E_CODE_SCOPE_MEMBER);
+		AddCodeCompile<CCallFunICode>(E_CODE_SCOPE_MEMBER);
 		//CScriptCallBackFunion::init();
 		initDic();
 		RegisterCallBack_LoadFun(DefaultLoadFile);
@@ -105,7 +119,7 @@ namespace zlscript
 
 		while (m_vCurSourceSentence.size())
 		{
-			if (RunCompileState(m_vCurSourceSentence, E_CODE_SCOPE_OUTSIDE) == ECompile_ERROR)
+			if (!RunCompileState(m_vCurSourceSentence, E_CODE_SCOPE_OUTSIDE, nullptr,0))
 			{
 				zlscript::CScriptDebugPrintMgr::GetInstance()->Print("ScriptLoad Error:");
 
@@ -603,11 +617,11 @@ namespace zlscript
 	}
 
 
-	bool CScriptCodeLoader::RunCompileState(SentenceSourceCode& vIn, CBaseICode* pFather, CScriptCodeLoader::E_CODE_SCOPE type)
+	bool CScriptCodeLoader::RunCompileState(SentenceSourceCode& vIn, E_CODE_SCOPE scopeType, CBaseICode* pFather, int addType)
 	{
 		SignToPos();
 
-		auto& list = m_mapICodeMgr[type];
+		auto& list = m_mapICodeMgr[scopeType];
 		bool bResult = false;
 		for (auto it = list.begin(); it != list.end(); it++)
 		{
@@ -620,6 +634,10 @@ namespace zlscript
 					pICode->SetFather(pFather);
 					if (pICode->Compile(vIn))
 					{
+						if (pFather)
+						{
+							pFather->AddICode(addType, pICode);
+						}
 						bResult = true;
 						break;
 					}
@@ -2502,6 +2520,25 @@ namespace zlscript
 	}
 
 
+	bool CScriptCodeLoader::SetFunICode(std::string name, CFunICode* pCode)
+	{
+		CFunICode* pOld = m_mapString2Code[name];
+		if (pOld == nullptr)
+		{
+			m_mapString2Code[name] = pCode;
+			return true;
+		}
+		else if (pOld && pCode)
+		{
+			if (pOld->vBodyCode.empty())
+			{
+				m_mapString2Code[name] = pCode;
+				return true;
+			}
+		}
+		return false;
+	}
+
 	int CScriptCodeLoader::MakeICode2Code(int nMode)
 	{
 		//先遍历一遍注册信息
@@ -2542,7 +2579,19 @@ namespace zlscript
 	void CScriptCodeLoader::ClearICode()
 	{
 		m_mapString2Code.clear();
-		CICodeMgr::GetInstance()->Clear();
+		//CICodeMgr::GetInstance()->Clear();
+		for (auto itMap = m_mapICodeMgr.begin(); itMap != m_mapICodeMgr.end(); itMap++)
+		{
+			ListICodeMgr &listMgr = itMap->second;
+			for (auto itList = listMgr.begin(); itList != listMgr.end(); itList++)
+			{
+				CBaseICodeMgr* pMgr = *itList;
+				if (pMgr)
+				{
+					pMgr->Clear();
+				}
+			}
+		}
 	}
 
 	void CScriptCodeLoader::PrintAllCode(const char* pFilename)

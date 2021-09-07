@@ -250,7 +250,7 @@ namespace zlscript
 		return nullptr;
 	}
 
-	bool CFunICode::MakeExeCode(stCodeData& vOut)
+	bool CFunICode::MakeExeCode(tagCodeData& vOut)
 	{
 		//注册临时变量
 		for (unsigned int i = 0; i < m_vecTempVarOrder.size(); i++)
@@ -275,9 +275,12 @@ namespace zlscript
 		//	code.dwPos = GetTempVarIndex(m_vecTempVarOrder[i].c_str());
 		//	vOut.vCodeData.push_back(code);
 		//}
-		if (pBodyCode)
+		for (unsigned int i = 0; i < vBodyCode.size(); i++)
 		{
-			pBodyCode->MakeExeCode(vOut);
+			if (vBodyCode[i])
+			{
+				vBodyCode[i]->MakeExeCode(vOut);
+			}
 		}
 
 		return true;
@@ -406,7 +409,7 @@ namespace zlscript
 		if (strSign.word != "(")
 		{
 			AddErrorInfo(
-				strName.nSourceWordsIndex,
+				strSign.nSourceWordsIndex,
 				"CFunICode:format error,no bracket");
 			RevertAll();
 			return false;
@@ -434,7 +437,7 @@ namespace zlscript
 				else
 				{
 					AddErrorInfo(
-						strName.nSourceWordsIndex,
+						nextWord.nSourceWordsIndex,
 						"CFunICode:format error,FunctionParameter");
 					RevertAll();
 					return false;
@@ -448,16 +451,37 @@ namespace zlscript
 		}
 		else if (nextWord.word == "{")
 		{
-			//有定义
+			while (true)
+			{
+				//有定义
+				if (!m_pLoader->RunCompileState(vIn, CScriptCodeLoader::E_CODE_SCOPE_STATEMENT, this, 0))
+				{
+					RevertAll();
+					return false;
+				}
+				else
+				{
+					m_pLoader->ClearErrorInfo();
+				}
+				GetWord(nextWord);
+				if (nextWord.word == "}")
+				{
+					break;
+				}
+				else
+				{
+					RevertOne();
+				}
+			}
 		}
-
+		m_pLoader->SetFunICode(strName.word, this);
 		return true;
 	}
 
 	void CFunICode::AddICode(int nType, CBaseICode* pCode)
 	{
-		pBodyCode = dynamic_cast<CBlockICode*>(pCode);
-		CBaseICode::AddICode(nType, pBodyCode);
+		vBodyCode.push_back(pCode);
+		CBaseICode::AddICode(nType, pCode);
 	}
 
 	bool CBlockICode::DefineTempVar(std::string VarType, std::string VarName)
@@ -522,7 +546,7 @@ namespace zlscript
 		return nullptr;
 	}
 
-	bool CBlockICode::MakeExeCode(stCodeData& vOut)
+	bool CBlockICode::MakeExeCode(tagCodeData& vOut)
 	{
 		//注册临时变量
 		for (auto it = m_mapVarNameAndType.begin(); it != m_mapVarNameAndType.end(); it++)
@@ -545,6 +569,44 @@ namespace zlscript
 		return true;
 	}
 
+	bool CBlockICode::Compile(SentenceSourceCode& vIn)
+	{
+		SignToPos();
+
+		if (m_pLoader == nullptr)
+		{
+			return false;
+		}
+
+		GetNewWord(nextWord);
+		if (nextWord.word == "{")
+		{
+			while (true)
+			{
+				//有定义
+				if (!m_pLoader->RunCompileState(vIn, CScriptCodeLoader::E_CODE_SCOPE_STATEMENT, this, 0))
+				{
+					RevertAll();
+					return false;
+				}
+				else
+				{
+					m_pLoader->ClearErrorInfo();
+				}
+				GetWord(nextWord);
+				if (nextWord.word == "}")
+				{
+					break;
+				}
+				else
+				{
+					RevertOne();
+				}
+			}
+		}
+		return true;
+	}
+
 	void CBlockICode::AddICode(int nType, CBaseICode* pCode)
 	{
 		if (pCode)
@@ -552,7 +614,7 @@ namespace zlscript
 		CBaseICode::AddICode(nType, pCode);
 	}
 
-	char CLoadVarICode::AnalysisVar(stCodeData& vOut, unsigned int& pos)
+	char CLoadVarICode::AnalysisVar(tagCodeData& vOut, unsigned int& pos)
 	{
 		char cType = 0;
 		if (m_word.nFlag == E_WORD_FLAG_STRING)
@@ -621,7 +683,7 @@ namespace zlscript
 		return cType;
 	}
 
-	bool CLoadVarICode::MakeExeCode(stCodeData& vOut)
+	bool CLoadVarICode::MakeExeCode(tagCodeData& vOut)
 	{
 		CLoadExeCode* pCode = CExeCodeMgr::GetInstance()->New<CLoadExeCode>(m_unBeginSoureIndex);
 		pCode->cResultRegister = cRegisterIndex;
@@ -630,7 +692,15 @@ namespace zlscript
 		vOut.AddCode(pCode);
 		return true;
 	}
-	bool CSaveVarICode::MakeExeCode(stCodeData& vOut)
+	bool CLoadVarICode::Compile(SentenceSourceCode& vIn)
+	{
+		SignToPos();
+
+		GetNewWord(nextWord);
+		m_word = nextWord;
+		return true;
+	}
+	bool CSaveVarICode::MakeExeCode(tagCodeData& vOut)
 	{
 		char cType = 0;
 		unsigned int pos = 0;
@@ -664,6 +734,14 @@ namespace zlscript
 		vOut.AddCode(pCode);
 		return true;
 	}
+	bool CSaveVarICode::Compile(SentenceSourceCode& vIn)
+	{
+		SignToPos();
+
+		GetNewWord(nextWord);
+		m_word = nextWord;
+		return true;
+	}
 	void CSaveVarICode::AddICode(int nType, CBaseICode* pCode)
 	{
 		pRightOperand = pCode;
@@ -689,7 +767,7 @@ namespace zlscript
 	//	code.dwPos = nPos;
 	//	vOut.push_back(code);
 	//}
-	bool CGetClassParamICode::MakeExeCode(stCodeData& vOut)
+	bool CGetClassParamICode::MakeExeCode(tagCodeData& vOut)
 	{
 		VarInfo* pVarInfo = GetTempVarInfo(strClassVarName.c_str());
 		if (pVarInfo == nullptr)
@@ -723,7 +801,7 @@ namespace zlscript
 		vOut.AddCode(pGetCode);
 		return true;
 	}
-	bool CSetClassParamICode::MakeExeCode(stCodeData& vOut)
+	bool CSetClassParamICode::MakeExeCode(tagCodeData& vOut)
 	{
 		VarInfo* pVarInfo = GetTempVarInfo(strClassVarName.c_str());
 		if (pVarInfo == nullptr)
@@ -768,7 +846,7 @@ namespace zlscript
 		pRightOperand = pCode;
 		CBaseICode::AddICode(0, pCode);
 	}
-	bool CMinusICode::MakeExeCode(stCodeData& vOut)
+	bool CMinusICode::MakeExeCode(tagCodeData& vOut)
 	{
 		if (pRightOperand)
 		{
@@ -787,7 +865,7 @@ namespace zlscript
 		pRightOperand = pCode;
 		CBaseICode::AddICode(0, pCode);
 	}
-	bool COperatorICode::MakeExeCode(stCodeData& vOut)
+	bool COperatorICode::MakeExeCode(tagCodeData& vOut)
 	{
 		nOperatorCode = CScriptCodeLoader::GetInstance()->GetWordKey(strOperator);
 		char cType = 0;
@@ -1026,7 +1104,7 @@ namespace zlscript
 	//	}
 	//	CBaseICode::AddICode(nType, pCode);
 	//}
-	bool CCallFunICode::MakeExeCode(stCodeData& vOut)
+	bool CCallFunICode::MakeExeCode(tagCodeData& vOut)
 	{
 		for (unsigned int i = 0; i < vParams.size(); i++)
 		{
@@ -1073,7 +1151,58 @@ namespace zlscript
 		}
 		CBaseICode::AddICode(nType, pCode);
 	}
-	bool CCallClassFunICode::MakeExeCode(stCodeData& vOut)
+	bool CCallFunICode::Compile(SentenceSourceCode& vIn)
+	{
+		SignToPos();
+
+		if (m_pLoader == nullptr)
+		{
+			return false;
+		}
+
+		GetNewWord(nextWord);
+		strFunName = nextWord.word;
+		GetWord(nextWord);
+		if (nextWord.word != "(")
+		{
+			AddErrorInfo(nextWord.nSourceWordsIndex, "CCallFunICode:format error");
+			RevertAll();
+			return false;
+		}
+		GetWord(nextWord);
+		if (nextWord.word != ")")
+		{
+			RevertOne();
+			while (true)
+			{
+				if (!m_pLoader->RunCompileState(vIn, CScriptCodeLoader::E_CODE_SCOPE_EXPRESSION, this, E_PARAM))
+				{
+					AddErrorInfo(nextWord.nSourceWordsIndex, "CCallFunICode:param format error");
+					RevertAll();
+					return false;
+				}
+				GetWord(nextWord);
+				if (nextWord.word == ",")
+				{
+					continue;
+				}
+				else if (nextWord.word == ")")
+				{
+					break;
+				}
+				else
+				{
+					AddErrorInfo(
+						nextWord.nSourceWordsIndex,
+						"CCallFunICode:format error,Parameter");
+					RevertAll();
+					return false;
+				}
+			}
+		}
+		return true;
+	}
+	bool CCallClassFunICode::MakeExeCode(tagCodeData& vOut)
 	{
 		VarInfo* pVarInfo = GetTempVarInfo(strClassVarName.c_str());
 		if (pVarInfo == nullptr)
@@ -1132,8 +1261,131 @@ namespace zlscript
 		CBaseICode::AddICode(nType, pCode);
 	}
 
+	bool CCallClassFunICode::Compile(SentenceSourceCode& vIn)
+	{
+		SignToPos();
 
-	bool CIfICode::MakeExeCode(stCodeData& vOut)
+		if (m_pLoader == nullptr)
+		{
+			return false;
+		}
+
+		GetNewWord(nextWord);
+		strClassVarName = nextWord.word;
+
+		GetWord(nextWord);
+		if (nextWord.word != "->")
+		{
+			AddErrorInfo(nextWord.nSourceWordsIndex, "CCallClassFunICode:format error ->");
+			RevertAll();
+			return false;
+		}
+
+		GetNewWord(nextWord);
+		strFunName = nextWord.word;
+		GetWord(nextWord);
+		if (nextWord.word != "(")
+		{
+			AddErrorInfo(nextWord.nSourceWordsIndex, "CCallFunICode:format error");
+			RevertAll();
+			return false;
+		}
+		GetWord(nextWord);
+		if (nextWord.word != ")")
+		{
+			RevertOne();
+			while (true)
+			{
+				if (!m_pLoader->RunCompileState(vIn, CScriptCodeLoader::E_CODE_SCOPE_EXPRESSION, this, E_PARAM))
+				{
+					AddErrorInfo(nextWord.nSourceWordsIndex, "CCallFunICode:param format error");
+					RevertAll();
+					return false;
+				}
+				GetWord(nextWord);
+				if (nextWord.word == ",")
+				{
+					continue;
+				}
+				else if (nextWord.word == ")")
+				{
+					break;
+				}
+				else
+				{
+					AddErrorInfo(
+						nextWord.nSourceWordsIndex,
+						"CCallFunICode:format error,Parameter");
+					RevertAll();
+					return false;
+				}
+			}
+		}
+		return true;
+	}
+
+	bool CSentenceICode::MakeExeCode(tagCodeData& vOut)
+	{
+		for (auto it = vData.begin(); it != vData.end(); it++)
+		{
+			CBaseICode* pCode = *it;
+			if (pCode)
+			{
+				pCode->MakeExeCode(vOut);
+			}
+		}
+	}
+
+	void CSentenceICode::AddICode(int nType, CBaseICode* pCode)
+	{
+		if (pCode)
+		{
+			vData.push_back(pCode);
+		}
+	}
+
+	bool CSentenceICode::Compile(SentenceSourceCode& vIn)
+	{
+		SignToPos();
+
+		if (m_pLoader == nullptr)
+		{
+			return false;
+		}
+		GetNewWord(nextWord);
+		if (nextWord.word != ";")
+		{
+			RevertOne();
+			while (true)
+			{
+				if (!m_pLoader->RunCompileState(vIn, CScriptCodeLoader::E_CODE_SCOPE_EXPRESSION, this, 0))
+				{
+					AddErrorInfo(nextWord.nSourceWordsIndex, "CSentenceICode:format error");
+					RevertAll();
+					return false;
+				}
+				GetWord(nextWord);
+				if (nextWord.word == ";")
+				{
+					break;
+				}
+				else if (nextWord.word == ",")
+				{
+					continue;
+				}
+				else
+				{
+					AddErrorInfo(nextWord.nSourceWordsIndex, "CSentenceICode:format error");
+					RevertAll();
+					return false;
+				}
+			}
+		}
+		return true;
+	}
+
+
+	bool CIfICode::MakeExeCode(tagCodeData& vOut)
 	{
 		//先压入条件
 		if (pCondCode)
@@ -1183,7 +1435,73 @@ namespace zlscript
 		CBaseICode::AddICode(nType, pCode);
 	}
 
-	bool CWhileICode::MakeExeCode(stCodeData& vOut)
+	bool CIfICode::Compile(SentenceSourceCode& vIn)
+	{
+		SignToPos();
+
+		if (m_pLoader == nullptr)
+		{
+			return false;
+		}
+
+		GetNewWord(nextWord);
+		if (nextWord.word != "if")
+		{
+			RevertAll();
+			return false;
+		}
+
+		GetWord(nextWord);
+		if (nextWord.word != "(")
+		{
+			AddErrorInfo(nextWord.nSourceWordsIndex, "CIfICode:if format error");
+			RevertAll();
+			return false;
+		}
+
+		if (!m_pLoader->RunCompileState(vIn, CScriptCodeLoader::E_CODE_SCOPE_EXPRESSION, this, E_COND))
+		{
+			AddErrorInfo(nextWord.nSourceWordsIndex, "CIfICode:if condition format error");
+			RevertAll();
+			return false;
+		}
+		m_pLoader->ClearErrorInfo();
+
+		GetWord(nextWord);
+		if (nextWord.word != ")")
+		{
+			AddErrorInfo(nextWord.nSourceWordsIndex, "CIfICode:if format error");
+			RevertAll();
+			return false;
+		}
+
+		if (!m_pLoader->RunCompileState(vIn, CScriptCodeLoader::E_CODE_SCOPE_STATEMENT, this, E_TRUE))
+		{
+			AddErrorInfo(nextWord.nSourceWordsIndex, "CIfICode:if true block format error");
+			RevertAll();
+			return false;
+		}
+		m_pLoader->ClearErrorInfo();
+
+		GetWord(nextWord);
+		if (nextWord.word != "else")
+		{
+			RevertOne();
+			return true;
+		}
+
+		if (!m_pLoader->RunCompileState(vIn, CScriptCodeLoader::E_CODE_SCOPE_STATEMENT, this, E_FALSE))
+		{
+			AddErrorInfo(nextWord.nSourceWordsIndex, "CIfICode:if false block format error");
+			RevertAll();
+			return false;
+		}
+		m_pLoader->ClearErrorInfo();
+
+		return true;
+	}
+
+	bool CWhileICode::MakeExeCode(tagCodeData& vOut)
 	{
 		if (pCondCode == nullptr)
 		{
@@ -1248,20 +1566,113 @@ namespace zlscript
 		}
 		CBaseICode::AddICode(nType, pCode);
 	}
-	bool CContinueICode::MakeExeCode(stCodeData& vOut)
+	bool CWhileICode::Compile(SentenceSourceCode& vIn)
+	{
+		SignToPos();
+
+		if (m_pLoader == nullptr)
+		{
+			return false;
+		}
+
+		GetNewWord(nextWord);
+		if (nextWord.word != "while")
+		{
+			RevertAll();
+			return false;
+		}
+
+		GetWord(nextWord);
+		if (nextWord.word != "(")
+		{
+			AddErrorInfo(nextWord.nSourceWordsIndex, "CWhileICode:if format error");
+			RevertAll();
+			return false;
+		}
+
+		if (!m_pLoader->RunCompileState(vIn, CScriptCodeLoader::E_CODE_SCOPE_EXPRESSION, this, E_COND))
+		{
+			AddErrorInfo(nextWord.nSourceWordsIndex, "CWhileICode:if condition format error");
+			RevertAll();
+			return false;
+		}
+		m_pLoader->ClearErrorInfo();
+
+		GetWord(nextWord);
+		if (nextWord.word != ")")
+		{
+			AddErrorInfo(nextWord.nSourceWordsIndex, "CWhileICode:while format error");
+			RevertAll();
+			return false;
+		}
+
+		if (!m_pLoader->RunCompileState(vIn, CScriptCodeLoader::E_CODE_SCOPE_STATEMENT, this, E_BLOCK))
+		{
+			AddErrorInfo(nextWord.nSourceWordsIndex, "CWhileICode:while block format error");
+			RevertAll();
+			return false;
+		}
+		m_pLoader->ClearErrorInfo();
+		return true;
+	}
+	bool CContinueICode::MakeExeCode(tagCodeData& vOut)
 	{
 		CContinueExeCode* pCode = CExeCodeMgr::GetInstance()->New<CContinueExeCode>(m_unBeginSoureIndex);
 		vOut.AddCode(pCode);
 
 		return true;
 	}
-	bool CBreakICode::MakeExeCode(stCodeData& vOut)
+	bool CContinueICode::Compile(SentenceSourceCode& vIn)
+	{
+		SignToPos();
+		if (m_pLoader == nullptr)
+		{
+			return false;
+		}
+		GetNewWord(nextWord);
+		if (nextWord.word != "continue")
+		{
+			RevertAll();
+			return false;
+		}
+		GetNewWord(nextWord);
+		if (nextWord.word != ";")
+		{
+			m_pLoader->AddErrorInfo(nextWord.nSourceWordsIndex, "CContinueICode:format error");
+			RevertAll();
+			return false;
+		}
+		return true;
+	}
+	bool CBreakICode::MakeExeCode(tagCodeData& vOut)
 	{
 		CBreakExeCode* pCode = CExeCodeMgr::GetInstance()->New<CBreakExeCode>(m_unBeginSoureIndex);
 		vOut.AddCode(pCode);
 		return true;
 	}
-	bool CReturnICode::MakeExeCode(stCodeData& vOut)
+	bool CBreakICode::Compile(SentenceSourceCode& vIn)
+	{
+		SignToPos();
+		if (m_pLoader == nullptr)
+		{
+			return false;
+		}
+		GetNewWord(nextWord);
+		if (nextWord.word != "break")
+		{
+			RevertAll();
+			return false;
+		}
+		GetNewWord(nextWord);
+		if (nextWord.word != ";")
+		{
+			m_pLoader->AddErrorInfo(nextWord.nSourceWordsIndex, "CBreakICode:format error");
+			RevertAll();
+			return false;
+		}
+		return true;
+	}
+	bool CReturnICode::MakeExeCode(tagCodeData& vOut)
 	{
 		if (pBodyCode)
 		{
@@ -1282,8 +1693,38 @@ namespace zlscript
 		CBaseICode::AddICode(nType, pCode);
 	}
 
+	bool CReturnICode::Compile(SentenceSourceCode& vIn)
+	{
+		SignToPos();
+		if (m_pLoader == nullptr)
+		{
+			return false;
+		}
+		GetNewWord(nextWord);
+		if (nextWord.word != "return")
+		{
+			RevertAll();
+			return false;
+		}
+		if (!m_pLoader->RunCompileState(vIn, CScriptCodeLoader::E_CODE_SCOPE_EXPRESSION, this, 0))
+		{
+			AddErrorInfo(nextWord.nSourceWordsIndex, "CReturnICode:expression format error");
+			RevertAll();
+			return false;
+		}
+		m_pLoader->ClearErrorInfo();
+		GetNewWord(nextWord);
+		if (nextWord.word != ";")
+		{
+			m_pLoader->AddErrorInfo(nextWord.nSourceWordsIndex, "CReturnICode:format error");
+			RevertAll();
+			return false;
+		}
+		return true;
+	}
 
-	bool CNewICode::MakeExeCode(stCodeData& vOut)
+
+	bool CNewICode::MakeExeCode(tagCodeData& vOut)
 	{
 		unsigned short nClassType = 0;
 		char cType = CScriptCodeLoader::GetInstance()->GetVarType(strClassType, nClassType);
@@ -1304,7 +1745,25 @@ namespace zlscript
 		CBaseICode::AddICode(nType, pCode);
 	}
 
-	bool CDeleteICode::MakeExeCode(stCodeData& vOut)
+	bool CNewICode::Compile(SentenceSourceCode& vIn)
+	{
+		SignToPos();
+		if (m_pLoader == nullptr)
+		{
+			return false;
+		}
+		GetNewWord(nextWord);
+		if (nextWord.word != "new")
+		{
+			RevertAll();
+			return false;
+		}
+		GetNewWord(nextWord);
+		strClassType = nextWord.word;
+		return true;
+	}
+
+	bool CDeleteICode::MakeExeCode(tagCodeData& vOut)
 	{
 		VarInfo* pVarInfo = GetTempVarInfo(m_VarName.c_str());
 		if (pVarInfo == nullptr)
@@ -1335,6 +1794,31 @@ namespace zlscript
 	void CDeleteICode::AddICode(int nType, CBaseICode* pCode)
 	{
 		CBaseICode::AddICode(nType, pCode);
+	}
+
+	bool CDeleteICode::Compile(SentenceSourceCode& vIn)
+	{
+		SignToPos();
+		if (m_pLoader == nullptr)
+		{
+			return false;
+		}
+		GetNewWord(nextWord);
+		if (nextWord.word != "delete")
+		{
+			RevertAll();
+			return false;
+		}
+		GetNewWord(nextWord);
+		m_VarName = nextWord.word;
+		GetNewWord(nextWord);
+		if (nextWord.word != ";")
+		{
+			m_pLoader->AddErrorInfo(nextWord.nSourceWordsIndex, "CDeleteICode:format error");
+			RevertAll();
+			return false;
+		}
+		return true;
 	}
 
 

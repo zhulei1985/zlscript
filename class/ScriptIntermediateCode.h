@@ -91,7 +91,7 @@ namespace zlscript
 		virtual VarInfo* GetTempVarInfo(const char* pVarName);
 
 		virtual void SetRegisterIndex(char val) { cRegisterIndex = val; }
-		virtual bool MakeExeCode(stCodeData& vOut) = 0;
+		virtual bool MakeExeCode(tagCodeData& vOut) = 0;
 		virtual bool Compile(SentenceSourceCode& vIn) = 0;
 
 		virtual void AddICode(int nType, CBaseICode* pCode);
@@ -114,7 +114,7 @@ namespace zlscript
 		{
 
 		}
-		virtual bool MakeExeCode(stCodeData& vOut)
+		virtual bool MakeExeCode(tagCodeData& vOut)
 		{
 			return true;
 		}
@@ -125,14 +125,14 @@ namespace zlscript
 	public:
 		CFunICode()
 		{
-			pBodyCode = nullptr;
+			//pBodyCode = nullptr;
 		}
 	public:
 		virtual bool DefineTempVar(std::string VarType, std::string VarName);
 		//virtual void SetTempVarIndex(const char* pVarName, unsigned int nIndex, int nType, int ClassIndex);
 		virtual unsigned int GetTempVarIndex(const char* pVarName);
 		virtual VarInfo* GetTempVarInfo(const char* pVarName);
-		virtual bool MakeExeCode(stCodeData& vOut);
+		virtual bool MakeExeCode(tagCodeData& vOut);
 
 		bool LoadAttribute(SentenceSourceCode& vIn);
 		bool LoadDefineFunctionParameter(SentenceSourceCode& vIn);
@@ -170,7 +170,10 @@ namespace zlscript
 		//virtual void SetTempVarIndex(const char* pVarName, unsigned int nIndex, int nType, int ClassIndex);
 		virtual unsigned int GetTempVarIndex(const char* pVarName);
 		virtual VarInfo* GetTempVarInfo(const char* pVarName);
-		virtual bool MakeExeCode(stCodeData& vOut);
+		virtual bool MakeExeCode(tagCodeData& vOut);
+
+		virtual bool Compile(SentenceSourceCode& vIn);
+
 		virtual void AddICode(int nType, CBaseICode* pCode);
 	public:
 		std::map<std::string, std::string> m_mapVarNameAndType;
@@ -185,19 +188,21 @@ namespace zlscript
 	public:
 		CLoadVarICode()
 		{
-			cSource = 0;
-			nPos = 0;
+			//cSource = 0;
+			//nPos = 0;
 		}
 		int GetType()
 		{
 			return E_I_CODE_OPERAND;
 		}
 
-		char AnalysisVar(stCodeData& vOut, unsigned int& pos);
-		virtual bool MakeExeCode(stCodeData& vOut);
+		char AnalysisVar(tagCodeData& vOut, unsigned int& pos);
+		virtual bool MakeExeCode(tagCodeData& vOut);
 
-		char cSource;//ESignType
-		int nPos;
+		virtual bool Compile(SentenceSourceCode& vIn);
+
+		//char cSource;//ESignType
+		//int nPos;
 
 		tagSourceWord m_word;
 	};
@@ -209,7 +214,10 @@ namespace zlscript
 			pRightOperand == nullptr;
 		}
 
-		virtual bool MakeExeCode(stCodeData& vOut);
+		virtual bool MakeExeCode(tagCodeData& vOut);
+
+		virtual bool Compile(SentenceSourceCode& vIn);
+
 		virtual void AddICode(int nType, CBaseICode* pCode);
 		CBaseICode* pRightOperand;//右操作数
 		tagSourceWord m_word;
@@ -244,7 +252,7 @@ namespace zlscript
 		CGetClassParamICode()
 		{
 		}
-		virtual bool MakeExeCode(stCodeData& vOut);
+		virtual bool MakeExeCode(tagCodeData& vOut);
 		std::string strClassVarName;//类对象名
 		std::string strParamName;//类成员变量名
 	};
@@ -255,7 +263,7 @@ namespace zlscript
 		{
 			pRightOperand = nullptr;
 		}
-		virtual bool MakeExeCode(stCodeData& vOut);
+		virtual bool MakeExeCode(tagCodeData& vOut);
 		virtual void AddICode(int nType, CBaseICode* pCode);
 
 		std::string strClassVarName;//类对象名
@@ -271,7 +279,7 @@ namespace zlscript
 		{
 			pRightOperand = nullptr;
 		}
-		virtual bool MakeExeCode(stCodeData& vOut);
+		virtual bool MakeExeCode(tagCodeData& vOut);
 		virtual void AddICode(int nType, CBaseICode* pCode);
 		CBaseICode* pRightOperand;//右操作数
 	};
@@ -297,7 +305,7 @@ namespace zlscript
 			E_RIGHT_OPERAND,
 			E_OTHER_OPERAND,
 		};
-		virtual bool MakeExeCode(stCodeData& vOut);
+		virtual bool MakeExeCode(tagCodeData& vOut);
 		virtual void AddICode(int nType, CBaseICode* pCode);
 		virtual CBaseICode* GetICode(int nType, int index);
 	public:
@@ -344,8 +352,9 @@ namespace zlscript
 		{
 			E_PARAM,
 		};
-		virtual bool MakeExeCode(stCodeData& vOut);
+		virtual bool MakeExeCode(tagCodeData& vOut);
 		virtual void AddICode(int nType, CBaseICode* pCode);
+		virtual bool Compile(SentenceSourceCode& vIn);
 	public:
 		std::string strFunName;
 		std::vector<CBaseICode*> vParams;//参数
@@ -363,32 +372,44 @@ namespace zlscript
 			E_POINT,
 			E_PARAM,
 		};
-		virtual bool MakeExeCode(stCodeData& vOut);
+		virtual bool MakeExeCode(tagCodeData& vOut);
 		virtual void AddICode(int nType, CBaseICode* pCode);
+
+		virtual bool Compile(SentenceSourceCode& vIn);
 	public:
 		std::string strClassVarName;
 		std::string strFunName;
 		std::vector<CBaseICode*> vParams;//参数
 	};
 
-	//class CSentenceICode : public CBaseICode
-	//{
-	//public:
-	//	CSentenceICode()
-	//	{
-	//		bClearParm = true;
-	//	}
-	//	virtual bool MakeExeCode(stCodeData& vOut);
-	//	void AddExeCode(CBaseICode* code);
+	class CSentenceICode : public CBaseICode
+	{
+	public:
+		CSentenceICode()
+		{
+		}
+		virtual bool MakeExeCode(tagCodeData& vOut);
+		virtual void AddICode(int nType, CBaseICode* pCode);
 
-	//	void SetClear(bool val)
-	//	{
-	//		bClearParm = val;
-	//	}
-	//protected:
-	//	bool bClearParm;
-	//	std::vector<CBaseICode*> vData;
-	//};
+		virtual bool Compile(SentenceSourceCode& vIn);
+
+	protected:
+		std::vector<CBaseICode*> vData;
+	};
+	class CExpressionICode : public CBaseICode
+	{
+	public:
+		CExpressionICode()
+		{
+
+		}
+		virtual bool MakeExeCode(tagCodeData& vOut);
+		virtual void AddICode(int nType, CBaseICode* pCode);
+
+		virtual bool Compile(SentenceSourceCode& vIn);
+	protected:
+		std::vector<CBaseICode*> vData;
+	};
 	class CIfICode : public CBaseICode
 	{
 	public:
@@ -408,8 +429,10 @@ namespace zlscript
 			E_FALSE,
 		};
 	public:
-		virtual bool MakeExeCode(stCodeData& vOut);
+		virtual bool MakeExeCode(tagCodeData& vOut);
 		virtual void AddICode(int nType, CBaseICode* pCode);
+
+		virtual bool Compile(SentenceSourceCode& vIn);
 	protected:
 		CBaseICode* pCondCode;
 		CBaseICode* pTureCode;
@@ -431,8 +454,10 @@ namespace zlscript
 			E_BLOCK,
 		};
 	public:
-		virtual bool MakeExeCode(stCodeData& vOut);
+		virtual bool MakeExeCode(tagCodeData& vOut);
 		virtual void AddICode(int nType, CBaseICode* pCode);
+
+		virtual bool Compile(SentenceSourceCode& vIn);
 	protected:
 		CBaseICode* pCondCode;
 		CBaseICode* pBodyCode;
@@ -444,7 +469,8 @@ namespace zlscript
 		{
 
 		}
-		virtual bool MakeExeCode(stCodeData& vOut);
+		virtual bool MakeExeCode(tagCodeData& vOut);
+		virtual bool Compile(SentenceSourceCode& vIn);
 	};
 	class CBreakICode : public CBaseICode
 	{
@@ -453,7 +479,8 @@ namespace zlscript
 		{
 
 		}
-		virtual bool MakeExeCode(stCodeData& vOut);
+		virtual bool MakeExeCode(tagCodeData& vOut);
+		virtual bool Compile(SentenceSourceCode& vIn);
 	};
 
 	class CForICode : public CBaseICode
@@ -467,14 +494,15 @@ namespace zlscript
 		CReturnICode()
 		{
 			pBodyCode = nullptr;
-			nVarType = 0;
+			//nVarType = 0;
 		}
-		virtual bool MakeExeCode(stCodeData& vOut);
+		virtual bool MakeExeCode(tagCodeData& vOut);
 		virtual void AddICode(int nType, CBaseICode* pCode);
 
+		virtual bool Compile(SentenceSourceCode& vIn);
 	protected:
 		CBaseICode* pBodyCode;
-		int nVarType;//返回值类型
+		//int nVarType;//返回值类型
 	};
 
 	class CNewICode : public CBaseICode
@@ -484,9 +512,10 @@ namespace zlscript
 		{
 			//nClassType = 0;
 		}
-		virtual bool MakeExeCode(stCodeData& vOut);
+		virtual bool MakeExeCode(tagCodeData& vOut);
 		virtual void AddICode(int nType, CBaseICode* pCode);
 
+		virtual bool Compile(SentenceSourceCode& vIn);
 	public:
 		std::string strClassType;
 	};
@@ -496,16 +525,18 @@ namespace zlscript
 	public:
 		CDeleteICode()
 		{
-			cSource = 0;
-			nPos = 0;
+			//cSource = 0;
+			//nPos = 0;
 		}
-		virtual bool MakeExeCode(stCodeData& vOut);
+		virtual bool MakeExeCode(tagCodeData& vOut);
 		virtual void AddICode(int nType, CBaseICode* pCode);
+
+		virtual bool Compile(SentenceSourceCode& vIn);
 	public:
 		std::string m_VarName;
 
-		char cSource;//ESignType
-		int nPos;
+		//char cSource;//ESignType
+		//int nPos;
 	};
 
 	class CBaseICodeMgr

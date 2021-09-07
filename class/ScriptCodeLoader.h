@@ -98,7 +98,7 @@ namespace zlscript
 		std::vector<StackVarInfo> vGlobalNumVar;//变量
 
 		//代码库
-		std::vector<stCodeData> m_vecCodeData;
+		std::vector<tagCodeData> m_vecCodeData;
 
 		std::unordered_map<std::string, int> m_mapString2CodeIndex;
 	public:
@@ -108,7 +108,7 @@ namespace zlscript
 		{
 			return (int)m_vecCodeData.size();
 		}
-		stCodeData* GetCode(int index)
+		tagCodeData* GetCode(int index)
 		{
 			if (index >= 0 && index < (int)m_vecCodeData.size())
 			{
@@ -116,7 +116,7 @@ namespace zlscript
 			}
 			return nullptr;
 		}
-		stCodeData* GetCode(const char* pName);
+		tagCodeData* GetCode(const char* pName);
 		void LoadXml(std::string filename);
 		void clear();
 		//***************************编译器*******************************
@@ -157,10 +157,11 @@ namespace zlscript
 		enum E_CODE_SCOPE
 		{
 			E_CODE_SCOPE_OUTSIDE = 1,//块外范围
-			E_CODE_SCOPE_BLOCK = 2,//块内范围
-			E_CODE_SCOPE_BRACKET = 4,//括号内范围
+			E_CODE_SCOPE_STATEMENT = 2,//语句
+			E_CODE_SCOPE_EXPRESSION = 4,//表达式
+			E_CODE_SCOPE_MEMBER = 8,//(表达式)成员
 		};
-		bool RunCompileState(SentenceSourceCode& vIn, CBaseICode* pFather, E_CODE_SCOPE type);
+		bool RunCompileState(SentenceSourceCode& vIn, E_CODE_SCOPE scopeType, CBaseICode* pFather, int addType);
 	private:
 		//*******************语法分析状态机********************
 
@@ -249,6 +250,7 @@ namespace zlscript
 		std::unordered_map<std::string, CFunICode*> m_mapString2Code;
 
 	public:
+		bool SetFunICode(std::string name, CFunICode* pCode);
 		//将中间代码树转化成执行代码
 		int MakeICode2Code(int nMode);
 		//清理中间代码
@@ -297,6 +299,10 @@ namespace zlscript
 		{
 			m_vError.push_back(tagErrorInfo(pos, error));
 		}
+		void ClearErrorInfo()
+		{
+			m_vError.clear();
+		}
 	public:
 		struct tagSourceLineInfo
 		{
@@ -342,15 +348,15 @@ namespace zlscript
 			auto pMgr = new CICodeMgr<T>(this);
 			list.push_back(pMgr);
 		}
-		if (nScopeType & E_CODE_SCOPE_BLOCK)
+		if (nScopeType & E_CODE_SCOPE_STATEMENT)
 		{
-			ListICodeMgr& list = m_mapICodeMgr[E_CODE_SCOPE_BLOCK];
+			ListICodeMgr& list = m_mapICodeMgr[E_CODE_SCOPE_STATEMENT];
 			auto pMgr = new CICodeMgr<T>(this);
 			list.push_back(pMgr);
 		}
-		if (nScopeType & E_CODE_SCOPE_BRACKET)
+		if (nScopeType & E_CODE_SCOPE_EXPRESSION)
 		{
-			ListICodeMgr& list = m_mapICodeMgr[E_CODE_SCOPE_BRACKET];
+			ListICodeMgr& list = m_mapICodeMgr[E_CODE_SCOPE_EXPRESSION];
 			auto pMgr = new CICodeMgr<T>(this);
 			list.push_back(pMgr);
 		}
