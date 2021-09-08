@@ -59,8 +59,8 @@ namespace zlscript
 		//***************字典*****************//
 		//map<string,unsigned short> m_mapDicSentenceToEnum;
 		//map<string,unsigned short> m_mapDicSignToEnum;
-		std::map<std::string, unsigned short> m_mapDicSingleSignToEnum;//单元素运算符
-		std::map<std::string, unsigned short> m_mapDicSignToEnum;
+		//std::map<std::string, unsigned short> m_mapDicSingleSignToEnum;//单元素运算符
+		//std::map<std::string, unsigned short> m_mapDicSignToEnum;
 		std::map<std::string, unsigned short> m_mapDicSignToPRI;//计算符的优先级，越高越优先
 
 		std::map<std::string, unsigned short> m_mapDic2KeyWord;
@@ -83,6 +83,15 @@ namespace zlscript
 				return it->second;
 			}
 			return 0;
+		}
+		unsigned short GetSignPRI(std::string str)
+		{
+			auto it = m_mapDicSignToPRI.find(str);
+			if (it != m_mapDicSignToPRI.end())
+			{
+				return it->second;
+			}
+			return 0xffff;
 		}
 	public:
 
@@ -160,56 +169,13 @@ namespace zlscript
 			E_CODE_SCOPE_STATEMENT = 2,//语句
 			E_CODE_SCOPE_EXPRESSION = 4,//表达式
 			E_CODE_SCOPE_MEMBER = 8,//(表达式)成员
+			E_CODE_SCOPE_OPERATOR = 16,//操作符
 		};
 		bool RunCompileState(SentenceSourceCode& vIn, E_CODE_SCOPE scopeType, CBaseICode* pFather, int addType);
-	private:
-		//*******************语法分析状态机********************
+	public:
 
-		//检查是否是操作符
-		bool CheckOperator(std::string word);
 		//检查变量名是否合法
 		bool CheckVarName(std::string varName);
-		//查询临时变量的index
-		int QueryTempVar(std::string varName, CBaseICode *pICode);
-		/////////////////////////////////////////////
-
-		int LoadDefineFunctionParameter(SentenceSourceCode& vIn, CBaseICode *pCode);
-		int LoadDefineTempVar(SentenceSourceCode& vIn, CBaseICode* pCode);
-
-		int LoadDefineFunState(SentenceSourceCode& vIn);
-		//读取{}块的状态机
-		int LoadBlockState(SentenceSourceCode& vIn, CBaseICode* pCode, int nType);
-		//读取if语句
-		int LoadIfSentence(SentenceSourceCode& vIn, CBaseICode* pCode, int nType);
-		//读取for语句
-		int LoadForSentence(SentenceSourceCode& vIn, CBaseICode* pCode, int nType);
-		//读取while语句
-		int LoadWhileSentence(SentenceSourceCode& vIn, CBaseICode* pCode, int nType);
-		//读取switch语句
-		int LoadSwitchSentence(SentenceSourceCode& vIn, CBaseICode* pCode, int nType);
-		//读取switch语句
-		int LoadReturnSentence(SentenceSourceCode& vIn, CBaseICode* pCode, int nType);
-
-		//读取一条语句
-		//int LoadOneSentence(SentenceSourceCode& vIn, CBaseICode* pCode, int nType, std::string endFlag=";");
-		int LoadOperatiorState(SentenceSourceCode& vIn, CBaseICode* pCode, int nType);
-		////读取函数调用
-		//int LoadCallFunState(SentenceSourceCode& vIn, CBaseICode* pCode, int nType);
-		////读取类函数调用
-		//int LoadCallClassFun(SentenceSourceCode& vIn, CBaseICode* pCode, int nType);
-		//////读取算式的状态机
-		//int LoadFormulaSentence(SentenceSourceCode& vIn, CBaseICode* pCode, int nType);
-		////生成一个向堆栈压数值的代码
-		//int LoadAndPushNumVar(SentenceSourceCode& vIn, CBaseICode* pCode, int nType);
-		////读取括号内
-		//int LoadBracket(SentenceSourceCode& vIn, CBaseICode* pCode, int nType);
-
-		CBaseICode* LoadOperator(SentenceSourceCode& vIn, std::string endFlag = "");
-		CBaseICode* LoadCallFun(SentenceSourceCode& vIn);
-		CBaseICode* LoadOperand(tagSourceWord &word);
-
-		bool CheckOperatorTree(CBaseICode**pNode);
-
 
 	public:
 
@@ -345,19 +311,19 @@ namespace zlscript
 		if (nScopeType & E_CODE_SCOPE_OUTSIDE)
 		{
 			ListICodeMgr& list = m_mapICodeMgr[E_CODE_SCOPE_OUTSIDE];
-			auto pMgr = new CICodeMgr<T>(this);
+			auto pMgr = new CICodeMgr<T>();
 			list.push_back(pMgr);
 		}
 		if (nScopeType & E_CODE_SCOPE_STATEMENT)
 		{
 			ListICodeMgr& list = m_mapICodeMgr[E_CODE_SCOPE_STATEMENT];
-			auto pMgr = new CICodeMgr<T>(this);
+			auto pMgr = new CICodeMgr<T>();
 			list.push_back(pMgr);
 		}
 		if (nScopeType & E_CODE_SCOPE_EXPRESSION)
 		{
 			ListICodeMgr& list = m_mapICodeMgr[E_CODE_SCOPE_EXPRESSION];
-			auto pMgr = new CICodeMgr<T>(this);
+			auto pMgr = new CICodeMgr<T>();
 			list.push_back(pMgr);
 		}
 		return false;

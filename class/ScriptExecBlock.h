@@ -34,7 +34,7 @@ namespace zlscript
 	class CScriptExecBlock
 	{
 	public:
-		CScriptExecBlock(CScriptCodeLoader::tagCodeData* pData, CScriptRunState* pMaster);
+		CScriptExecBlock(tagCodeData* pData, CScriptRunState* pMaster);
 		~CScriptExecBlock(void);
 
 		int GetDefaultReturnType();
@@ -45,7 +45,7 @@ namespace zlscript
 		bool SetVal(char cType, unsigned int pos, StackVarInfo& var);
 	private:
 		//指向的代码块
-		CScriptCodeLoader::tagCodeData* m_pCodeData;
+		tagCodeData* m_pCodeData;
 		//执行位置
 		//unsigned int m_nCodePoint;
 		CBaseExeCode* m_pCurCode;

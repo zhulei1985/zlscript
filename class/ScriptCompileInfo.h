@@ -25,8 +25,9 @@
 #include <stack>
 #include <functional> 
 #include <unordered_map>
- //#include "scriptcommon.h"
-
+#include "ScriptVarInfo.h"
+#include "EScriptSentenceType.h"
+#include "EScriptVariableType.h"
 namespace zlscript
 {
 
@@ -115,7 +116,10 @@ namespace zlscript
 	{
 		tagCodeData()
 		{
-
+			nType = EICODE_FUN_DEFAULT;
+			nDefaultReturnType = EScriptVal_None;
+			pBeginCode = nullptr;
+			pEndCode = nullptr;
 		}
 		void AddCode(CBaseExeCode* pCode)
 		{

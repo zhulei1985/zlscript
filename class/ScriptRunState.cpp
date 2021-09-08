@@ -440,7 +440,7 @@ namespace zlscript
 	{
 		int nReturn = ECALLBACK_FINISH;
 		{
-			CScriptCodeLoader::tagCodeData* pCodeData = CScriptCodeLoader::GetInstance()->GetCode(FunIndex);
+			tagCodeData* pCodeData = CScriptCodeLoader::GetInstance()->GetCode(FunIndex);
 			if (pCodeData)
 			{
 				CScriptExecBlock* pBlock =
@@ -485,7 +485,7 @@ namespace zlscript
 	{
 		int nReturn = ERunTime_Complete;
 
-		CScriptCodeLoader::tagCodeData* pCode = CScriptCodeLoader::GetInstance()->GetCode(pFunName);
+		tagCodeData* pCode = CScriptCodeLoader::GetInstance()->GetCode(pFunName);
 		if (pCode)
 		{
 			CScriptExecBlock* pBlock =
@@ -715,7 +715,7 @@ namespace zlscript
 		break;
 		case 1:
 		{
-			CScriptCodeLoader::tagCodeData* pCodeData = CScriptCodeLoader::GetInstance()->GetCode(FunIndex);
+			tagCodeData* pCodeData = CScriptCodeLoader::GetInstance()->GetCode(FunIndex);
 			if (pCodeData)
 			{
 				CScriptExecBlock* pBlock =
@@ -799,7 +799,7 @@ namespace zlscript
 		break;
 		case 1:
 		{
-			CScriptCodeLoader::tagCodeData* pCodeData = CScriptCodeLoader::GetInstance()->GetCode(FunIndex);
+			tagCodeData* pCodeData = CScriptCodeLoader::GetInstance()->GetCode(FunIndex);
 			if (pCodeData)
 			{
 				CScriptExecBlock* pBlock =
@@ -847,7 +847,7 @@ namespace zlscript
 	{
 		int nReturn = ECALLBACK_FINISH;
 
-		CScriptCodeLoader::tagCodeData* pCode = CScriptCodeLoader::GetInstance()->GetCode(pFunName);
+		tagCodeData* pCode = CScriptCodeLoader::GetInstance()->GetCode(pFunName);
 		if (pCode)
 		{
 			CScriptExecBlock* pBlock =

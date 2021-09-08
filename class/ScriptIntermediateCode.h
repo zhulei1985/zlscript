@@ -24,6 +24,7 @@
 
 #include "ScriptCodeStyle.h"
 #include "ScriptCompileInfo.h"
+#include "EMicroCodeType.h"
  //编译时的中间代码
 namespace zlscript
 {
@@ -59,6 +60,7 @@ namespace zlscript
 	{
 		E_I_CODE_NONE,
 		E_I_CODE_DEF_GLOBAL_VAL,
+		E_I_CODE_DEF_TEMP_VAL,
 		E_I_CODE_FUN,
 		E_I_CODE_BLOCK,
 		E_I_CODE_LOADVAR,
@@ -136,6 +138,23 @@ namespace zlscript
 		int GetType()
 		{
 			return E_I_CODE_DEF_GLOBAL_VAL;
+		}
+		virtual bool MakeExeCode(tagCodeData& vOut)
+		{
+			return true;
+		}
+		virtual bool Compile(SentenceSourceCode& vIn);
+	};
+	class CDefTempVarICode : public CBaseICode
+	{
+	public:
+		CDefTempVarICode()
+		{
+
+		}
+		int GetType()
+		{
+			return E_I_CODE_DEF_TEMP_VAL;
 		}
 		virtual bool MakeExeCode(tagCodeData& vOut)
 		{
@@ -342,7 +361,7 @@ namespace zlscript
 			nPriorityLv = 0;
 			pLeftOperand = nullptr;
 			pRightOperand = nullptr;
-			nOperatorFlag = 0;
+			//nOperatorFlag = 0;
 
 			nOperatorCode = 0;
 		}
@@ -359,10 +378,11 @@ namespace zlscript
 		virtual bool MakeExeCode(tagCodeData& vOut);
 		virtual void AddICode(int nType, CBaseICode* pCode);
 		virtual CBaseICode* GetICode(int nType, int index);
+		virtual bool Compile(SentenceSourceCode& vIn);
 	public:
 		std::string strOperator;//操作符
 		int nPriorityLv;//优先级
-		int nOperatorFlag;
+		//int nOperatorFlag;
 		CBaseICode* pLeftOperand;//左操作数
 		CBaseICode* pRightOperand;//右操作数
 		std::vector<CBaseICode*> m_OtherOperand;
@@ -472,7 +492,7 @@ namespace zlscript
 		virtual void AddICode(int nType, CBaseICode* pCode);
 
 		virtual bool Compile(SentenceSourceCode& vIn);
-
+		bool CheckOperatorTree(CBaseICode** pNode);
 		enum
 		{
 			E_STATE_OPERATOR,
@@ -481,8 +501,6 @@ namespace zlscript
 		};
 	protected:
 		COperatorICode* m_pRoot;
-
-		//COperatorICode* m_pCurICode;
 
 		CBaseICode* pOperandCode;
 	};

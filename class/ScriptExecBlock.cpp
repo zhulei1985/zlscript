@@ -13,7 +13,7 @@
 
 namespace zlscript
 {
-	CScriptExecBlock::CScriptExecBlock(CScriptCodeLoader::tagCodeData* pData, CScriptRunState* pMaster):m_stackRegister(256)
+	CScriptExecBlock::CScriptExecBlock(tagCodeData* pData, CScriptRunState* pMaster):m_stackRegister(256)
 	{
 		m_cReturnRegisterIndex = 0;
 		m_pCurCode = nullptr;
