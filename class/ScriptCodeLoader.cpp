@@ -48,6 +48,7 @@ namespace zlscript
 	CScriptCodeLoader CScriptCodeLoader::s_Instance;
 	CScriptCodeLoader::CScriptCodeLoader(void)
 	{
+		//添加顺序很重要，会影响编译结果
 		AddCodeCompile<CDefGlobalVarICode>(E_CODE_SCOPE_OUTSIDE);
 		AddCodeCompile<CFunICode>(E_CODE_SCOPE_OUTSIDE);
 		AddCodeCompile<CBlockICode>(E_CODE_SCOPE_STATEMENT);
@@ -62,8 +63,13 @@ namespace zlscript
 
 		AddCodeCompile<CExpressionICode>(E_CODE_SCOPE_EXPRESSION);
 
+		AddCodeCompile<CBracketsICode>(E_CODE_SCOPE_MEMBER);
 		AddCodeCompile<CNewICode>(E_CODE_SCOPE_MEMBER);
 		AddCodeCompile<CCallFunICode>(E_CODE_SCOPE_MEMBER);
+		AddCodeCompile<CCallClassFunICode>(E_CODE_SCOPE_MEMBER);
+		AddCodeCompile<CMinusICode>(E_CODE_SCOPE_MEMBER);
+		AddCodeCompile<CGetClassParamICode>(E_CODE_SCOPE_MEMBER);
+		AddCodeCompile<CLoadVarICode>(E_CODE_SCOPE_MEMBER);
 		//CScriptCallBackFunion::init();
 		initDic();
 		RegisterCallBack_LoadFun(DefaultLoadFile);

@@ -58,9 +58,28 @@ namespace zlscript
 	enum E_I_CODE_TYPE
 	{
 		E_I_CODE_NONE,
+		E_I_CODE_DEF_GLOBAL_VAL,
+		E_I_CODE_FUN,
+		E_I_CODE_BLOCK,
+		E_I_CODE_LOADVAR,
+		E_I_CODE_SAVEVAR,
+		E_I_CODE_GET_CLASS_PARAM,
+		E_I_CODE_SET_CLASS_PARAM,
+		E_I_CODE_MINUS,
 		E_I_CODE_OPERATOR,
 		E_I_CODE_CALL,
-		E_I_CODE_OPERAND,
+		E_I_CODE_CALL_CLASS_FUN,
+		E_I_CODE_SENTENCE,
+		E_I_CODE_EXPRESSION,
+		E_I_CODE_IF,
+		E_I_CODE_WHILE,
+		E_I_CODE_CONTINUE,
+		E_I_CODE_BREAK,
+		E_I_CODE_RETURN,
+		E_I_CODE_NEW,
+		E_I_CODE_DELETE,
+		E_I_CODE_BRACKETS,
+		//E_I_CODE_OPERAND,
 	};
 	//编译的中间状态
 	class CBaseICode
@@ -114,6 +133,10 @@ namespace zlscript
 		{
 
 		}
+		int GetType()
+		{
+			return E_I_CODE_DEF_GLOBAL_VAL;
+		}
 		virtual bool MakeExeCode(tagCodeData& vOut)
 		{
 			return true;
@@ -126,6 +149,10 @@ namespace zlscript
 		CFunICode()
 		{
 			//pBodyCode = nullptr;
+		}
+		int GetType()
+		{
+			return E_I_CODE_FUN;
 		}
 	public:
 		virtual bool DefineTempVar(std::string VarType, std::string VarName);
@@ -164,6 +191,10 @@ namespace zlscript
 		{
 
 		}
+		int GetType()
+		{
+			return E_I_CODE_BLOCK;
+		}
 	public:
 		virtual bool DefineTempVar(std::string VarType, std::string VarName);
 		virtual bool CheckTempVar(const char* pVarName);
@@ -193,7 +224,7 @@ namespace zlscript
 		}
 		int GetType()
 		{
-			return E_I_CODE_OPERAND;
+			return E_I_CODE_LOADVAR;
 		}
 
 		char AnalysisVar(tagCodeData& vOut, unsigned int& pos);
@@ -206,6 +237,7 @@ namespace zlscript
 
 		tagSourceWord m_word;
 	};
+	//此类并不直接参与编译
 	class CSaveVarICode : public CBaseICode
 	{
 	public:
@@ -213,7 +245,10 @@ namespace zlscript
 		{
 			pRightOperand == nullptr;
 		}
-
+		int GetType()
+		{
+			return E_I_CODE_SAVEVAR;
+		}
 		virtual bool MakeExeCode(tagCodeData& vOut);
 
 		virtual bool Compile(SentenceSourceCode& vIn);
@@ -252,10 +287,16 @@ namespace zlscript
 		CGetClassParamICode()
 		{
 		}
+		int GetType()
+		{
+			return E_I_CODE_GET_CLASS_PARAM;
+		}
 		virtual bool MakeExeCode(tagCodeData& vOut);
+		virtual bool Compile(SentenceSourceCode& vIn);
 		std::string strClassVarName;//类对象名
 		std::string strParamName;//类成员变量名
 	};
+	//此类并不直接参与编译
 	class CSetClassParamICode : public CBaseICode
 	{
 	public:
@@ -263,9 +304,13 @@ namespace zlscript
 		{
 			pRightOperand = nullptr;
 		}
+		int GetType()
+		{
+			return E_I_CODE_SET_CLASS_PARAM;
+		}
 		virtual bool MakeExeCode(tagCodeData& vOut);
 		virtual void AddICode(int nType, CBaseICode* pCode);
-
+		virtual bool Compile(SentenceSourceCode& vIn);
 		std::string strClassVarName;//类对象名
 		std::string strParamName;//类成员变量名
 
@@ -279,8 +324,14 @@ namespace zlscript
 		{
 			pRightOperand = nullptr;
 		}
+		int GetType()
+		{
+			return E_I_CODE_MINUS;
+		}
 		virtual bool MakeExeCode(tagCodeData& vOut);
 		virtual void AddICode(int nType, CBaseICode* pCode);
+
+		virtual bool Compile(SentenceSourceCode& vIn);
 		CBaseICode* pRightOperand;//右操作数
 	};
 	class COperatorICode : public CBaseICode
@@ -367,6 +418,10 @@ namespace zlscript
 		{
 
 		}
+		int GetType()
+		{
+			return E_I_CODE_CALL_CLASS_FUN;
+		}
 		enum
 		{
 			E_POINT,
@@ -388,6 +443,10 @@ namespace zlscript
 		CSentenceICode()
 		{
 		}
+		int GetType()
+		{
+			return E_I_CODE_SENTENCE;
+		}
 		virtual bool MakeExeCode(tagCodeData& vOut);
 		virtual void AddICode(int nType, CBaseICode* pCode);
 
@@ -401,14 +460,31 @@ namespace zlscript
 	public:
 		CExpressionICode()
 		{
-
+			m_pRoot = nullptr;
+			//m_pCurICode = nullptr;
+			pOperandCode = nullptr;
+		}
+		int GetType()
+		{
+			return E_I_CODE_EXPRESSION;
 		}
 		virtual bool MakeExeCode(tagCodeData& vOut);
 		virtual void AddICode(int nType, CBaseICode* pCode);
 
 		virtual bool Compile(SentenceSourceCode& vIn);
+
+		enum
+		{
+			E_STATE_OPERATOR,
+			E_STATE_OPERAND,
+			E_STATE_SIZE,
+		};
 	protected:
-		std::vector<CBaseICode*> vData;
+		COperatorICode* m_pRoot;
+
+		//COperatorICode* m_pCurICode;
+
+		CBaseICode* pOperandCode;
 	};
 	class CIfICode : public CBaseICode
 	{
@@ -419,6 +495,10 @@ namespace zlscript
 			pCondCode = nullptr;
 			pTureCode = nullptr;
 			pFalseCode = nullptr;
+		}
+		int GetType()
+		{
+			return E_I_CODE_IF;
 		}
 		unsigned int m_unElseSoureIndex;
 
@@ -448,6 +528,10 @@ namespace zlscript
 			pCondCode = nullptr;
 			pBodyCode = nullptr;
 		}
+		int GetType()
+		{
+			return E_I_CODE_WHILE;
+		}
 		enum
 		{
 			E_COND,
@@ -469,6 +553,10 @@ namespace zlscript
 		{
 
 		}
+		int GetType()
+		{
+			return E_I_CODE_CONTINUE;
+		}
 		virtual bool MakeExeCode(tagCodeData& vOut);
 		virtual bool Compile(SentenceSourceCode& vIn);
 	};
@@ -478,6 +566,10 @@ namespace zlscript
 		CBreakICode()
 		{
 
+		}
+		int GetType()
+		{
+			return E_I_CODE_BREAK;
 		}
 		virtual bool MakeExeCode(tagCodeData& vOut);
 		virtual bool Compile(SentenceSourceCode& vIn);
@@ -496,6 +588,10 @@ namespace zlscript
 			pBodyCode = nullptr;
 			//nVarType = 0;
 		}
+		int GetType()
+		{
+			return E_I_CODE_RETURN;
+		}
 		virtual bool MakeExeCode(tagCodeData& vOut);
 		virtual void AddICode(int nType, CBaseICode* pCode);
 
@@ -511,6 +607,10 @@ namespace zlscript
 		CNewICode()
 		{
 			//nClassType = 0;
+		}
+		int GetType()
+		{
+			return E_I_CODE_NEW;
 		}
 		virtual bool MakeExeCode(tagCodeData& vOut);
 		virtual void AddICode(int nType, CBaseICode* pCode);
@@ -528,6 +628,10 @@ namespace zlscript
 			//cSource = 0;
 			//nPos = 0;
 		}
+		int GetType()
+		{
+			return E_I_CODE_DELETE;
+		}
 		virtual bool MakeExeCode(tagCodeData& vOut);
 		virtual void AddICode(int nType, CBaseICode* pCode);
 
@@ -538,7 +642,26 @@ namespace zlscript
 		//char cSource;//ESignType
 		//int nPos;
 	};
+	class CBracketsICode : public CBaseICode
+	{
+	public:
+		CBracketsICode()
+		{
+			m_pBody = nullptr;
+			//cSource = 0;
+			//nPos = 0;
+		}
+		int GetType()
+		{
+			return E_I_CODE_BRACKETS;
+		}
+		virtual bool MakeExeCode(tagCodeData& vOut);
+		virtual void AddICode(int nType, CBaseICode* pCode);
 
+		virtual bool Compile(SentenceSourceCode& vIn);
+	public:
+		CBaseICode* m_pBody;
+	};
 	class CBaseICodeMgr
 	{
 	public:
