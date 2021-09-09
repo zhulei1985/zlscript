@@ -42,6 +42,8 @@ namespace zlscript
 
 		inline __int64 GetVal_Int64(char cType, unsigned int pos);
 		StackVarInfo GetVal(char cType, unsigned int pos);
+		bool GetVal(StackVarInfo& var, char cType, unsigned int pos);
+
 		bool SetVal(char cType, unsigned int pos, StackVarInfo& var);
 	private:
 		//指向的代码块

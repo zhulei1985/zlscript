@@ -111,6 +111,55 @@ namespace zlscript
 		}
 		return StackVarInfo();
 	}
+	bool CScriptExecBlock::GetVal(StackVarInfo& var, char cType, unsigned int pos)
+	{
+		switch (cType)
+		{
+		case ESIGN_VALUE_INT:
+			var = (__int64)pos;
+			return true;
+		case ESIGN_POS_GLOBAL_VAR://全局变量
+			var = m_pMaster->m_pMachine->GetGlobalVar(pos);
+			return true;
+		case ESIGN_POS_LOACL_VAR:
+			if (m_pTempVar && pos < m_nTempVarSize)
+			{
+				var = m_pTempVar[pos];
+				return true;
+			}
+			return false;
+		case ESIGN_POS_CONST_STRING:
+			if (pos < m_pCodeData->vStrConst.size())
+			{
+				var = m_pCodeData->vStrConst[pos].c_str();
+				return true;
+			}
+			return false;
+		case ESIGN_POS_CONST_FLOAT:
+			if (pos < m_pCodeData->vFloatConst.size())
+			{
+				var = m_pCodeData->vFloatConst[pos];
+				return true;
+			}
+			return false;
+		case ESIGN_POS_CONST_INT64:
+			if (pos < m_pCodeData->vInt64Const.size())
+			{
+				var = m_pCodeData->vInt64Const[pos];
+				return true;
+			}
+			return false;
+		case ESIGN_REGISTER:
+			if (pos < R_SIZE)
+			{
+				var = m_register[pos];
+				return true;
+			}
+			return false;
+		}
+		return false;
+	}
+
 	bool CScriptExecBlock::SetVal(char cType, unsigned int pos, StackVarInfo& var)
 	{
 		switch (cType)

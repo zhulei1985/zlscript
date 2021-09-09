@@ -25,27 +25,27 @@ namespace zlscript
 
 	int CAddExeCode::Run(CScriptExecBlock* pBlock, CBaseExeCode **pNextPoint)
 	{
-		StackVarInfo rightVar = pBlock->GetVal(cType, dwPos);
+		pBlock->GetVal(pBlock->m_register[R_D], cType, dwPos);
 		switch (pBlock->m_register[R_A].cType)
 		{
 		case EScriptVal_Int:
 		{
-			__int64 nVal1 = GetInt_StackVar(&pBlock->m_register[R_A]);
-			__int64 nVal2 = GetInt_StackVar(&rightVar);
-			pBlock->m_register[cResultRegister] = nVal1 + nVal2;
+			//__int64 nVal1 = GetInt_StackVar(&pBlock->m_register[R_A]);
+			__int64 nVal2 = GetInt_StackVar(&pBlock->m_register[R_D]);
+			pBlock->m_register[cResultRegister] = pBlock->m_register[R_A].Int64 + nVal2;
 		}
 		break;
 		case EScriptVal_Double:
 		{
 			double dVal1 = GetFloat_StackVar(&pBlock->m_register[R_A]);
-			double dVal2 = GetFloat_StackVar(&rightVar);
+			double dVal2 = GetFloat_StackVar(&pBlock->m_register[R_D]);
 			pBlock->m_register[cResultRegister] = dVal1 + dVal2;
 		}
 		break;
 		case EScriptVal_String:
 		{
 			std::string strVal1 = GetString_StackVar(&pBlock->m_register[R_A]);
-			std::string strVal2 = GetString_StackVar(&rightVar);
+			std::string strVal2 = GetString_StackVar(&pBlock->m_register[R_D]);
 			strVal1 = strVal1 + strVal2;
 			pBlock->m_register[cResultRegister] = strVal1.c_str();
 		}
@@ -67,20 +67,20 @@ namespace zlscript
 	}
 	int CSumExeCode::Run(CScriptExecBlock* pBlock, CBaseExeCode **pNextPoint)
 	{
-		StackVarInfo rightVar = pBlock->GetVal(cType, dwPos);
+		pBlock->GetVal(pBlock->m_register[R_D], cType, dwPos);
 		switch (pBlock->m_register[R_A].cType)
 		{
 		case EScriptVal_Int:
 		{
 			__int64 nVal1 = GetInt_StackVar(&pBlock->m_register[R_A]);
-			__int64 nVal2 = GetInt_StackVar(&rightVar);
+			__int64 nVal2 = GetInt_StackVar(&pBlock->m_register[R_D]);
 			pBlock->m_register[cResultRegister] = nVal1 - nVal2;;
 		}
 		break;
 		case EScriptVal_Double:
 		{
 			double dVal1 = GetFloat_StackVar(&pBlock->m_register[R_A]);
-			double dVal2 = GetFloat_StackVar(&rightVar);
+			double dVal2 = GetFloat_StackVar(&pBlock->m_register[R_D]);
 			pBlock->m_register[cResultRegister] = dVal1 - dVal2;
 		}
 		break;
@@ -101,20 +101,20 @@ namespace zlscript
 	}
 	int CMulExeCode::Run(CScriptExecBlock* pBlock, CBaseExeCode **pNextPoint)
 	{
-		StackVarInfo rightVar = pBlock->GetVal(cType, dwPos);
+		pBlock->GetVal(pBlock->m_register[R_D], cType, dwPos);
 		switch (pBlock->m_register[R_A].cType)
 		{
 		case EScriptVal_Int:
 		{
 			__int64 nVal1 = GetInt_StackVar(&pBlock->m_register[R_A]);
-			__int64 nVal2 = GetInt_StackVar(&rightVar);
+			__int64 nVal2 = GetInt_StackVar(&pBlock->m_register[R_D]);
 			pBlock->m_register[cResultRegister] = nVal1 * nVal2;
 		}
 		break;
 		case EScriptVal_Double:
 		{
 			double dVal1 = GetFloat_StackVar(&pBlock->m_register[R_A]);
-			double dVal2 = GetFloat_StackVar(&rightVar);
+			double dVal2 = GetFloat_StackVar(&pBlock->m_register[R_D]);
 			pBlock->m_register[cResultRegister] = dVal1 * dVal2;
 		}
 		break;
