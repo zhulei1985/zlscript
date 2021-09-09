@@ -230,15 +230,15 @@ namespace zlscript
 		{
 			AddErrorInfo(
 				strName.nSourceWordsIndex,
-				"CDefTempVarICode:Callback Function name already exists");
+				"CDefTempVarICode: name error");
 			RevertAll();
 			return false;
 		}
-		if (!this->CheckTempVar(strName.word.c_str()))
+		if (this->CheckTempVar(strName.word.c_str()))
 		{
 			AddErrorInfo(
 				strName.nSourceWordsIndex,
-				"CDefTempVarICode:Callback Function name already exists");
+				"CDefTempVarICode:name already exists");
 			RevertAll();
 			return false;
 		}
@@ -246,7 +246,7 @@ namespace zlscript
 		GetNewWord(strSign);
 		if (strSign.word == ";")
 		{
-			if (!this->DefineTempVar(strType.word,strName.word))
+			if (!this->DefineTempVar(strType.word, strName.word))
 			{
 				AddErrorInfo(
 					strName.nSourceWordsIndex,
@@ -255,11 +255,27 @@ namespace zlscript
 				return false;
 			}
 		}
-		else
+		else if (strSign.word == "=")
 		{
+			if (!this->DefineTempVar(strType.word, strName.word))
+			{
+				AddErrorInfo(
+					strName.nSourceWordsIndex,
+					"CDefTempVarICode:global var cannot add");
+				RevertAll();
+				return false;
+			}
 			RevertOne();
 			RevertOne();
 			return true;
+		}
+		else
+		{
+			AddErrorInfo(
+				strName.nSourceWordsIndex,
+				"CDefTempVarICode:format error");
+			RevertAll();
+			return false;
 		}
 		return true;
 	}
@@ -463,7 +479,7 @@ namespace zlscript
 			RevertAll();
 			return false;
 		}
-
+		funname = strName.word;
 		GetNewWord(strSign);
 		if (strSign.word != "(")
 		{
@@ -518,10 +534,7 @@ namespace zlscript
 					RevertAll();
 					return false;
 				}
-				else
-				{
-					m_pLoader->ClearErrorInfo();
-				}
+
 				GetWord(nextWord);
 				if (nextWord.word == "}")
 				{
@@ -638,31 +651,35 @@ namespace zlscript
 		}
 
 		GetNewWord(nextWord);
-		if (nextWord.word == "{")
+		if (nextWord.word != "{")
 		{
-			while (true)
+			AddErrorInfo(
+				nextWord.nSourceWordsIndex,
+				"CBlockICode:format error");
+			RevertAll();
+			return false;
+		}
+
+		while (true)
+		{
+			//有定义
+			if (!m_pLoader->RunCompileState(vIn, CScriptCodeLoader::E_CODE_SCOPE_STATEMENT, this, 0))
 			{
-				//有定义
-				if (!m_pLoader->RunCompileState(vIn, CScriptCodeLoader::E_CODE_SCOPE_STATEMENT, this, 0))
-				{
-					RevertAll();
-					return false;
-				}
-				else
-				{
-					m_pLoader->ClearErrorInfo();
-				}
-				GetWord(nextWord);
-				if (nextWord.word == "}")
-				{
-					break;
-				}
-				else
-				{
-					RevertOne();
-				}
+				RevertAll();
+				return false;
+			}
+
+			GetWord(nextWord);
+			if (nextWord.word == "}")
+			{
+				break;
+			}
+			else
+			{
+				RevertOne();
 			}
 		}
+
 		return true;
 	}
 
@@ -787,7 +804,7 @@ namespace zlscript
 		pRightOperand->MakeExeCode(vOut);
 
 		CMoveExeCode* pCode = CExeCodeMgr::GetInstance()->New<CMoveExeCode>(m_unBeginSoureIndex);
-		pCode->cResultRegister = cRegisterIndex;
+		pCode->cVarRegister = cRegisterIndex;
 		pCode->cType = cType;
 		pCode->dwPos = pos;
 		vOut.AddCode(pCode);
@@ -1521,6 +1538,10 @@ namespace zlscript
 		{
 			return m_pRoot->MakeExeCode(vOut);
 		}
+		else if(pOperandCode)
+		{
+			return pOperandCode->MakeExeCode(vOut);
+		}
 		return true;
 	}
 	void CExpressionICode::AddICode(int nType, CBaseICode* pCode)
@@ -1611,7 +1632,8 @@ namespace zlscript
 		{
 			return false;
 		}
-		int nState = E_STATE_OPERATOR;
+		int nState = E_STATE_OPERAND;
+		int nNeedOperand = 1;
 		while (true)
 		{
 			CBaseICode* pCurICode = nullptr;
@@ -1619,9 +1641,14 @@ namespace zlscript
 			{
 				if (!m_pLoader->RunCompileState(vIn, CScriptCodeLoader::E_CODE_SCOPE_OPERATOR, this, 0))
 				{
+					if (nNeedOperand <= 0)
+					{
+						break;
+					}
 					RevertAll();
 					return false;
 				}
+				nNeedOperand++;
 			}
 			else if (nState == E_STATE_OPERAND)
 			{
@@ -1630,6 +1657,7 @@ namespace zlscript
 					RevertAll();
 					return false;
 				}
+				nNeedOperand--;
 			}
 			nState++;
 			nState = nState % E_STATE_SIZE;
@@ -1781,7 +1809,6 @@ namespace zlscript
 			RevertAll();
 			return false;
 		}
-		m_pLoader->ClearErrorInfo();
 
 		GetWord(nextWord);
 		if (nextWord.word != ")")
@@ -1797,7 +1824,6 @@ namespace zlscript
 			RevertAll();
 			return false;
 		}
-		m_pLoader->ClearErrorInfo();
 
 		GetWord(nextWord);
 		if (nextWord.word != "else")
@@ -1812,7 +1838,6 @@ namespace zlscript
 			RevertAll();
 			return false;
 		}
-		m_pLoader->ClearErrorInfo();
 
 		return true;
 	}
@@ -1837,7 +1862,10 @@ namespace zlscript
 		pBodyCode->MakeExeCode(vOut);
 		//要在块尾加入返回块头的指令
 		CJumpExeCode* pJumpBeginCode = CExeCodeMgr::GetInstance()->New<CJumpExeCode>(m_unBeginSoureIndex);
-		pJumpBeginCode->pJumpCode = pBegin->m_pNext;
+		if (pBegin)
+			pJumpBeginCode->pJumpCode = pBegin->m_pNext;
+		else
+			pJumpBeginCode->pJumpCode = vOut.pBeginCode;
 		vOut.AddCode(pJumpBeginCode);
 
 		CSignExeCode* pEndCode = CExeCodeMgr::GetInstance()->New<CSignExeCode>(m_unBeginSoureIndex);
@@ -1912,7 +1940,6 @@ namespace zlscript
 			RevertAll();
 			return false;
 		}
-		m_pLoader->ClearErrorInfo();
 
 		GetWord(nextWord);
 		if (nextWord.word != ")")
@@ -1928,7 +1955,7 @@ namespace zlscript
 			RevertAll();
 			return false;
 		}
-		m_pLoader->ClearErrorInfo();
+
 		return true;
 	}
 	bool CContinueICode::MakeExeCode(tagCodeData& vOut)
@@ -2028,7 +2055,7 @@ namespace zlscript
 			RevertAll();
 			return false;
 		}
-		m_pLoader->ClearErrorInfo();
+
 		GetWord(nextWord);
 		if (nextWord.word != ";")
 		{
@@ -2140,7 +2167,15 @@ namespace zlscript
 	{
 		if (m_pBody)
 		{
-			return m_pBody->MakeExeCode(vOut);
+			if (!m_pBody->MakeExeCode(vOut))
+			{
+				return false;
+			}
+			CMoveExeCode* pCode = CExeCodeMgr::GetInstance()->New<CMoveExeCode>(m_unBeginSoureIndex);
+			pCode->cVarRegister = R_A;
+			pCode->cType = ESIGN_REGISTER;
+			pCode->dwPos = cRegisterIndex;
+			vOut.AddCode(pCode);
 		}
 		return true;
 	}

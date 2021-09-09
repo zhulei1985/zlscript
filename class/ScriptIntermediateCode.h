@@ -196,11 +196,12 @@ namespace zlscript
 
 		//CBlockICode* pBodyCode;
 		std::vector<CBaseICode*> vBodyCode;
+		//函数属性
+		std::map<std::string, StackVarInfo> m_mapFunAttribute;
 	protected:
 		std::map<std::string, VarInfo> m_mapTempVarIndex;
 		std::vector<std::string> m_vecTempVarOrder;
-		//函数属性
-		std::map<std::string, StackVarInfo> m_mapFunAttribute;
+
 	};
 
 	class CBlockICode : public CBaseICode

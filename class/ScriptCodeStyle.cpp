@@ -59,6 +59,12 @@ namespace zlscript
 		}
 		return CScriptExecBlock::ERESULT_CONTINUE;
 	}
+	std::string CAddExeCode::GetCodeString()
+	{
+		char strbuff[128] = { 0 };
+		sprintf(strbuff, "ADD\tRegisterIndex:%d\tVarType:%d\tpos:%d", (int)cResultRegister, (int)cType, (int)dwPos);
+		return strbuff;
+	}
 	int CSumExeCode::Run(CScriptExecBlock* pBlock, CBaseExeCode **pNextPoint)
 	{
 		StackVarInfo rightVar = pBlock->GetVal(cType, dwPos);
@@ -87,6 +93,12 @@ namespace zlscript
 		}
 		return CScriptExecBlock::ERESULT_CONTINUE;
 	}
+	std::string CSumExeCode::GetCodeString()
+	{
+		char strbuff[128] = { 0 };
+		sprintf(strbuff, "Sum\tRegisterIndex:%d\tVarType:%d\tpos:%d", (int)cResultRegister, (int)cType, (int)dwPos);
+		return strbuff;
+	}
 	int CMulExeCode::Run(CScriptExecBlock* pBlock, CBaseExeCode **pNextPoint)
 	{
 		StackVarInfo rightVar = pBlock->GetVal(cType, dwPos);
@@ -114,6 +126,12 @@ namespace zlscript
 			*pNextPoint = this->m_pNext;
 		}
 		return CScriptExecBlock::ERESULT_CONTINUE;
+	}
+	std::string CMulExeCode::GetCodeString()
+	{
+		char strbuff[128] = { 0 };
+		sprintf(strbuff, "Mul\tResultRegister:%d\tVarType:%d\tpos:%d", (int)cResultRegister, (int)cType, (int)dwPos);
+		return strbuff;
 	}
 	int CDivExeCode::Run(CScriptExecBlock* pBlock, CBaseExeCode **pNextPoint)
 	{
@@ -157,6 +175,12 @@ namespace zlscript
 		}
 		return CScriptExecBlock::ERESULT_CONTINUE;
 	}
+	std::string CDivExeCode::GetCodeString()
+	{
+		char strbuff[128] = { 0 };
+		sprintf(strbuff, "Div\tRegisterIndex:%d\tVarType:%d\tpos:%d", (int)cResultRegister, (int)cType, (int)dwPos);
+		return strbuff;
+	}
 	int CModExeCode::Run(CScriptExecBlock* pBlock, CBaseExeCode **pNextPoint)
 	{
 		StackVarInfo rightVar = pBlock->GetVal(cType, dwPos);
@@ -176,6 +200,12 @@ namespace zlscript
 			*pNextPoint = this->m_pNext;
 		}
 		return CScriptExecBlock::ERESULT_CONTINUE;
+	}
+	std::string CModExeCode::GetCodeString()
+	{
+		char strbuff[128] = { 0 };
+		sprintf(strbuff, "Mod\tRegisterIndex:%d\tVarType:%d\tpos:%d", (int)cResultRegister, (int)cType, (int)dwPos);
+		return strbuff;
 	}
 	int CMinusExeCode::Run(CScriptExecBlock* pBlock, CBaseExeCode **pNextPoint)
 	{
@@ -199,6 +229,12 @@ namespace zlscript
 			*pNextPoint = this->m_pNext;
 		}
 		return CScriptExecBlock::ERESULT_CONTINUE;
+	}
+	std::string CMinusExeCode::GetCodeString()
+	{
+		char strbuff[128] = { 0 };
+		sprintf(strbuff, "Minus\tRegisterIndex(extend):%d", (int)cResultRegister);
+		return strbuff;
 	}
 	int CCmpEqualExeCode::Run(CScriptExecBlock* pBlock, CBaseExeCode **pNextPoint)
 	{
@@ -242,6 +278,12 @@ namespace zlscript
 		}
 		return CScriptExecBlock::ERESULT_CONTINUE;
 	}
+	std::string CCmpEqualExeCode::GetCodeString()
+	{
+		char strbuff[128] = { 0 };
+		sprintf(strbuff, "CMP_EQUAL\tRegisterIndex:%d\tVarType:%d\tpos:%d", (int)cResultRegister, (int)cType, (int)dwPos);
+		return strbuff;
+	}
 	int CCmpNotEqualExeCode::Run(CScriptExecBlock* pBlock, CBaseExeCode **pNextPoint)
 	{
 		StackVarInfo rightVar = pBlock->GetVal(cType, dwPos);
@@ -284,6 +326,12 @@ namespace zlscript
 		}
 		return CScriptExecBlock::ERESULT_CONTINUE;
 	}
+	std::string CCmpNotEqualExeCode::GetCodeString()
+	{
+		char strbuff[128] = { 0 };
+		sprintf(strbuff, "CMP_NOT_EQUAL\tRegisterIndex:%d\tVarType:%d\tpos:%d", (int)cResultRegister, (int)cType, (int)dwPos);
+		return strbuff;
+	}
 	int CCmpBigExeCode::Run(CScriptExecBlock* pBlock, CBaseExeCode **pNextPoint)
 	{
 		StackVarInfo rightVar = pBlock->GetVal(cType, dwPos);
@@ -311,6 +359,12 @@ namespace zlscript
 			*pNextPoint = this->m_pNext;
 		}
 		return CScriptExecBlock::ERESULT_CONTINUE;
+	}
+	std::string CCmpBigExeCode::GetCodeString()
+	{
+		char strbuff[128] = { 0 };
+		sprintf(strbuff, "CMP_BIG\tRegisterIndex:%d\tVarType:%d\tpos:%d", (int)cResultRegister, (int)cType, (int)dwPos);
+		return strbuff;
 	}
 	int CCmpBigAndEqualExeCode::Run(CScriptExecBlock* pBlock, CBaseExeCode **pNextPoint)
 	{
@@ -340,6 +394,12 @@ namespace zlscript
 		}
 		return CScriptExecBlock::ERESULT_CONTINUE;
 	}
+	std::string CCmpBigAndEqualExeCode::GetCodeString()
+	{
+		char strbuff[128] = { 0 };
+		sprintf(strbuff, "CMP_BIG_EQUAL\tRegisterIndex:%d\tVarType:%d\tpos:%d", (int)cResultRegister, (int)cType, (int)dwPos);
+		return strbuff;
+	}
 	int CCmpLessExeCode::Run(CScriptExecBlock* pBlock, CBaseExeCode **pNextPoint)
 	{
 		StackVarInfo rightVar = pBlock->GetVal(cType, dwPos);
@@ -367,6 +427,12 @@ namespace zlscript
 			*pNextPoint = this->m_pNext;
 		}
 		return CScriptExecBlock::ERESULT_CONTINUE;
+	}
+	std::string CCmpLessExeCode::GetCodeString()
+	{
+		char strbuff[128] = { 0 };
+		sprintf(strbuff, "CMP_LESS\tRegisterIndex:%d\tVarType:%d\tpos:%d", (int)cResultRegister, (int)cType, (int)dwPos);
+		return strbuff;
 	}
 	int CCmpLessAndEqualExeCode::Run(CScriptExecBlock* pBlock, CBaseExeCode **pNextPoint)
 	{
@@ -396,6 +462,12 @@ namespace zlscript
 		}
 		return CScriptExecBlock::ERESULT_CONTINUE;
 	}
+	std::string CCmpLessAndEqualExeCode::GetCodeString()
+	{
+		char strbuff[128] = { 0 };
+		sprintf(strbuff, "CMP_LESS_EQUAL\tRegisterIndex:%d\tVarType:%d\tpos:%d", (int)cResultRegister, (int)cType, (int)dwPos);
+		return strbuff;
+	}
 	int CBitAndExeCode::Run(CScriptExecBlock* pBlock, CBaseExeCode **pNextPoint)
 	{
 		StackVarInfo rightVar = pBlock->GetVal(cType, dwPos);
@@ -416,6 +488,12 @@ namespace zlscript
 			*pNextPoint = this->m_pNext;
 		}
 		return CScriptExecBlock::ERESULT_CONTINUE;
+	}
+	std::string CBitAndExeCode::GetCodeString()
+	{
+		char strbuff[128] = { 0 };
+		sprintf(strbuff, "BIT_AND\tRegisterIndex:%d\tVarType:%d\tpos:%d", (int)cResultRegister, (int)cType, (int)dwPos);
+		return strbuff;
 	}
 	int CBitOrExeCode::Run(CScriptExecBlock* pBlock, CBaseExeCode **pNextPoint)
 	{
@@ -438,6 +516,12 @@ namespace zlscript
 		}
 		return CScriptExecBlock::ERESULT_CONTINUE;
 	}
+	std::string CBitOrExeCode::GetCodeString()
+	{
+		char strbuff[128] = { 0 };
+		sprintf(strbuff, "BIT_OR\tRegisterIndex:%d\tVarType:%d\tpos:%d", (int)cResultRegister, (int)cType, (int)dwPos);
+		return strbuff;
+	}
 	int CBitXorExeCode::Run(CScriptExecBlock* pBlock, CBaseExeCode **pNextPoint)
 	{
 		StackVarInfo rightVar = pBlock->GetVal(cType, dwPos);
@@ -459,6 +543,12 @@ namespace zlscript
 		}
 		return CScriptExecBlock::ERESULT_CONTINUE;
 	}
+	std::string CBitXorExeCode::GetCodeString()
+	{
+		char strbuff[128] = { 0 };
+		sprintf(strbuff, "BIT_XOR\tRegisterIndex:%d\tVarType:%d\tpos:%d", (int)cResultRegister, (int)cType, (int)dwPos);
+		return strbuff;
+	}
 	int CPushExeCode::Run(CScriptExecBlock* pBlock, CBaseExeCode **pNextPoint)
 	{
 		StackVarInfo var = pBlock->GetVal(cType, dwPos);
@@ -468,6 +558,12 @@ namespace zlscript
 			*pNextPoint = this->m_pNext;
 		}
 		return CScriptExecBlock::ERESULT_CONTINUE;
+	}
+	std::string CPushExeCode::GetCodeString()
+	{
+		char strbuff[128] = { 0 };
+		sprintf(strbuff, "PUSH\tVarType:%d\tpos:%d", (int)cType, (int)dwPos);
+		return strbuff;
 	}
 	int CPopExeCode::Run(CScriptExecBlock* pBlock, CBaseExeCode **pNextPoint)
 	{
@@ -482,6 +578,12 @@ namespace zlscript
 		}
 		return CScriptExecBlock::ERESULT_CONTINUE;
 	}
+	std::string CPopExeCode::GetCodeString()
+	{
+		char strbuff[128] = { 0 };
+		sprintf(strbuff, "POP\tVarType:%d\tpos:%d", (int)cType, (int)dwPos);
+		return strbuff;
+	}
 	int CLoadExeCode::Run(CScriptExecBlock* pBlock, CBaseExeCode **pNextPoint)
 	{
 		pBlock->m_register[cResultRegister] = pBlock->GetVal(cType, dwPos);
@@ -491,9 +593,15 @@ namespace zlscript
 		}
 		return CScriptExecBlock::ERESULT_CONTINUE;
 	}
+	std::string CLoadExeCode::GetCodeString()
+	{
+		char strbuff[128] = { 0 };
+		sprintf(strbuff, "LOAD\tRegisterIndex:%d\tVarType:%d\tpos:%d", (int)cResultRegister, (int)cType, (int)dwPos);
+		return strbuff;
+	}
 	int CMoveExeCode::Run(CScriptExecBlock* pBlock, CBaseExeCode **pNextPoint)
 	{
-		if (pBlock->SetVal(cType, dwPos, pBlock->m_register[cResultRegister]) == false)
+		if (pBlock->SetVal(cType, dwPos, pBlock->m_register[cVarRegister]) == false)
 		{
 			return CScriptExecBlock::ERESULT_ERROR;
 		}
@@ -502,6 +610,12 @@ namespace zlscript
 			*pNextPoint = this->m_pNext;
 		}
 		return CScriptExecBlock::ERESULT_CONTINUE;
+	}
+	std::string CMoveExeCode::GetCodeString()
+	{
+		char strbuff[128] = { 0 };
+		sprintf(strbuff, "MOVE\tRegisterIndex:%d\tVarType:%d\tpos:%d", (int)cVarRegister, (int)cType, (int)dwPos);
+		return strbuff;
 	}
 	int CGetClassParamExeCode::Run(CScriptExecBlock* pBlock, CBaseExeCode **pNextPoint)
 	{
@@ -537,6 +651,12 @@ namespace zlscript
 		}
 		return nResult;
 	}
+	std::string CGetClassParamExeCode::GetCodeString()
+	{
+		char strbuff[128] = { 0 };
+		sprintf(strbuff, "GetClassParam\tRegisterIndex:%d\tClassReg:%d\tpos:%d", (int)cResultRegister, (int)cClassRegIndex, (int)dwPos);
+		return strbuff;
+	}
 	int CSetClassParamExeCode::Run(CScriptExecBlock* pBlock, CBaseExeCode **pNextPoint)
 	{
 		int nResult = CScriptExecBlock::ERESULT_CONTINUE;
@@ -570,6 +690,12 @@ namespace zlscript
 			*pNextPoint = this->m_pNext;
 		}
 		return nResult;
+	}
+	std::string CSetClassParamExeCode::GetCodeString()
+	{
+		char strbuff[128] = { 0 };
+		sprintf(strbuff, "SetClassParam\tVarRegister:%d\tClassReg:%d\tpos:%d", (int)cVarRegister, (int)cClassRegIndex, (int)dwPos);
+		return strbuff;
 	}
 	int CCallBackExeCode::Run(CScriptExecBlock* pBlock, CBaseExeCode **pNextPoint)
 	{
@@ -623,6 +749,12 @@ namespace zlscript
 		}
 		return nResult;
 	}
+	std::string CCallBackExeCode::GetCodeString()
+	{
+		char strbuff[128] = { 0 };
+		sprintf(strbuff, "CallBack\tResultRegister:%d\tFunIndex:%d\tParmSize:%d", (int)cResultRegister, (int)unFunIndex, (int)cParmSize);
+		return strbuff;
+	}
 	int CCallScriptExeCode::Run(CScriptExecBlock* pBlock, CBaseExeCode **pNextPoint)
 	{
 		int nResult = CScriptExecBlock::ERESULT_CONTINUE;
@@ -660,6 +792,12 @@ namespace zlscript
 		}
 		return nResult;
 	}
+	std::string CCallScriptExeCode::GetCodeString()
+	{
+		char strbuff[128] = { 0 };
+		sprintf(strbuff, "CallScript\tResultRegister:%d\tFunIndex:%d\tParmSize:%d", (int)cResultRegister, (int)unFunIndex, (int)cParmSize);
+		return strbuff;
+	}
 	int CJumpExeCode::Run(CScriptExecBlock* pBlock, CBaseExeCode **pNextPoint)
 	{
 		if (pNextPoint)
@@ -670,6 +808,12 @@ namespace zlscript
 				*pNextPoint = m_pNext;
 		}
 		return CScriptExecBlock::ERESULT_CONTINUE;
+	}
+	std::string CJumpExeCode::GetCodeString()
+	{
+		char strbuff[128] = { 0 };
+		sprintf(strbuff, "JUMP\tIndex:%d", (int)pJumpCode? pJumpCode->nCodeIndex:0);
+		return strbuff;
 	}
 	int CJumpTrueExeCode::Run(CScriptExecBlock* pBlock, CBaseExeCode** pNextPoint)
 	{
@@ -689,6 +833,12 @@ namespace zlscript
 		}
 		return CScriptExecBlock::ERESULT_CONTINUE;
 	}
+	std::string CJumpTrueExeCode::GetCodeString()
+	{
+		char strbuff[128] = { 0 };
+		sprintf(strbuff, "JUMP_TRUE\tVarRegister:%d\tIndex:%d", (int)cVarRegister,(int)pJumpCode ? pJumpCode->nCodeIndex : 0);
+		return strbuff;
+	}
 	int CJumpFalseExeCode::Run(CScriptExecBlock* pBlock, CBaseExeCode** pNextPoint)
 	{
 		if (!pBlock->CheckRegisterTrue(cVarRegister))
@@ -707,6 +857,12 @@ namespace zlscript
 		}
 		return CScriptExecBlock::ERESULT_CONTINUE;
 	}
+	std::string CJumpFalseExeCode::GetCodeString()
+	{
+		char strbuff[128] = { 0 };
+		sprintf(strbuff, "JUMP_FALSE\tVarRegister:%d\tIndex:%d", (int)cVarRegister, (int)pJumpCode ? pJumpCode->nCodeIndex : 0);
+		return strbuff;
+	}
 	int CReturnExeCode::Run(CScriptExecBlock* pBlock, CBaseExeCode** pNextPoint)
 	{
 		if (pNextPoint)
@@ -715,6 +871,12 @@ namespace zlscript
 		}
 		pBlock->m_varReturnVar = pBlock->m_register[cVarRegister];
 		return CScriptExecBlock::ERESULT_CONTINUE;
+	}
+	std::string CReturnExeCode::GetCodeString()
+	{
+		char strbuff[128] = { 0 };
+		sprintf(strbuff, "RETURN\tVarRegister:%d", (int)cVarRegister);
+		return strbuff;
 	}
 	int CCallClassFunExeCode::Run(CScriptExecBlock* pBlock, CBaseExeCode** pNextPoint)
 	{
@@ -777,6 +939,12 @@ namespace zlscript
 		}
 		return nResult;
 	}
+	std::string CCallClassFunExeCode::GetCodeString()
+	{
+		char strbuff[128] = { 0 };
+		sprintf(strbuff, "CALL_CLASS_FUN\tResultRegister:%d\tClassReg:%d\tFunIndex:%d\tParmSize:%d", (int)cResultRegister,(int)cClassRegIndex,(int)dwPos,(int)cParmSize);
+		return strbuff;
+	}
 	int CNewClassExeCode::Run(CScriptExecBlock* pBlock, CBaseExeCode** pNextPoint)
 	{
 		CBaseScriptClassMgr* pMgr = CScriptSuperPointerMgr::GetInstance()->GetClassMgr(dwClassIndex);
@@ -794,6 +962,12 @@ namespace zlscript
 			*pNextPoint = m_pNext;
 		}
 		return CScriptExecBlock::ERESULT_CONTINUE;
+	}
+	std::string CNewClassExeCode::GetCodeString()
+	{
+		char strbuff[128] = { 0 };
+		sprintf(strbuff, "NEW_CLASS\tResultRegister:%d\tClassIndex:%d", (int)cResultRegister, (int)dwClassIndex);
+		return strbuff;
 	}
 	int CReleaseClassExeCode::Run(CScriptExecBlock* pBlock, CBaseExeCode** pNextPoint)
 	{
@@ -813,6 +987,12 @@ namespace zlscript
 		}
 		return CScriptExecBlock::ERESULT_CONTINUE;
 	}
+	std::string CReleaseClassExeCode::GetCodeString()
+	{
+		char strbuff[128] = { 0 };
+		sprintf(strbuff, "RELEASE_CLASS\tVarRegister:%d", (int)cVarRegister);
+		return strbuff;
+	}
 	int CBreakExeCode::Run(CScriptExecBlock* pBlock, CBaseExeCode** pNextPoint)
 	{
 		if (pNextPoint)
@@ -823,6 +1003,13 @@ namespace zlscript
 				*pNextPoint = m_pNext;
 		}
 		return CScriptExecBlock::ERESULT_CONTINUE;
+	}
+
+	std::string CBreakExeCode::GetCodeString()
+	{
+		char strbuff[128] = { 0 };
+		sprintf(strbuff, "BREAK\tIndex:%d", (int)pJumpCode ? pJumpCode->nCodeIndex : 0);
+		return strbuff;
 	}
 
 	int CContinueExeCode::Run(CScriptExecBlock* pBlock, CBaseExeCode** pNextPoint)
@@ -836,6 +1023,12 @@ namespace zlscript
 		}
 		return CScriptExecBlock::ERESULT_CONTINUE;
 	}
+	std::string CContinueExeCode::GetCodeString()
+	{
+		char strbuff[128] = { 0 };
+		sprintf(strbuff, "CONTINUE\tIndex:%d", (int)pJumpCode ? pJumpCode->nCodeIndex : 0);
+		return strbuff;
+	}
 	int CSignExeCode::Run(CScriptExecBlock* pBlock, CBaseExeCode** pNextPoint)
 	{
 		if (pNextPoint)
@@ -843,6 +1036,13 @@ namespace zlscript
 			*pNextPoint = m_pNext;
 		}
 		return CScriptExecBlock::ERESULT_CONTINUE;
+	}
+
+	std::string CSignExeCode::GetCodeString()
+	{
+		char strbuff[128] = { 0 };
+		sprintf(strbuff, "SIGN");
+		return strbuff;
 	}
 
 	CExeCodeMgr CExeCodeMgr::s_Instance;

@@ -223,11 +223,11 @@ namespace zlscript
 		void ClearICode();
 
 		void PrintAllCode(const char *pFilename);
-		std::string PrintOneCode(CodeStyle code);
+	//	std::string PrintOneCode(CodeStyle code);
 
-	protected:
-		std::string GetSignPosTypeName(char Idx);
-		std::string GetRegisterName(char regIdx);
+	//protected:
+	//	std::string GetSignPosTypeName(char Idx);
+	//	std::string GetRegisterName(char regIdx);
 	protected:
 		//typedef std::map<std::string, int> tagVarName2Pos;
 		//std::list<tagVarName2Pos> m_ListTempVarInfo;;
@@ -323,6 +323,18 @@ namespace zlscript
 		if (nScopeType & E_CODE_SCOPE_EXPRESSION)
 		{
 			ListICodeMgr& list = m_mapICodeMgr[E_CODE_SCOPE_EXPRESSION];
+			auto pMgr = new CICodeMgr<T>();
+			list.push_back(pMgr);
+		}
+		if (nScopeType & E_CODE_SCOPE_MEMBER)
+		{
+			ListICodeMgr& list = m_mapICodeMgr[E_CODE_SCOPE_MEMBER];
+			auto pMgr = new CICodeMgr<T>();
+			list.push_back(pMgr);
+		}
+		if (nScopeType & E_CODE_SCOPE_OPERATOR)
+		{
+			ListICodeMgr& list = m_mapICodeMgr[E_CODE_SCOPE_OPERATOR];
 			auto pMgr = new CICodeMgr<T>();
 			list.push_back(pMgr);
 		}

@@ -155,6 +155,9 @@ namespace zlscript
 		std::string filename;
 		std::string funname;
 
+		//函数属性
+		std::map<std::string, StackVarInfo> m_mapFunAttribute;
+
 		int nDefaultReturnType;//默认返回值类型
 	};
 

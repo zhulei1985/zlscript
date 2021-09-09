@@ -90,6 +90,7 @@ namespace zlscript
 			dwPos = 0;
 		}
 		int Run(CScriptExecBlock * pBlock, CBaseExeCode** pNextPoint);
+		virtual std::string GetCodeString();
 	public:
 		char cResultRegister;
 		char cType;
@@ -106,6 +107,7 @@ namespace zlscript
 			dwPos = 0;
 		}
 		int Run(CScriptExecBlock * pBlock, CBaseExeCode** pNextPoint);
+		virtual std::string GetCodeString();
 	public:
 		char cResultRegister;
 		char cType;
@@ -122,6 +124,7 @@ namespace zlscript
 			dwPos = 0;
 		}
 		int Run(CScriptExecBlock * pBlock, CBaseExeCode** pNextPoint);
+		virtual std::string GetCodeString();
 	public:
 		char cResultRegister;
 		char cType;
@@ -138,6 +141,7 @@ namespace zlscript
 			dwPos = 0;
 		}
 		int Run(CScriptExecBlock * pBlock, CBaseExeCode** pNextPoint);
+		virtual std::string GetCodeString();
 	public:
 		char cResultRegister;
 		char cType;
@@ -154,6 +158,7 @@ namespace zlscript
 			dwPos = 0;
 		}
 		int Run(CScriptExecBlock* pBlock, CBaseExeCode** pNextPoint);
+		virtual std::string GetCodeString();
 	public:
 		char cResultRegister;
 		char cType;
@@ -170,6 +175,7 @@ namespace zlscript
 			//dwPos = 0;
 		}
 		int Run(CScriptExecBlock* pBlock, CBaseExeCode** pNextPoint);
+		virtual std::string GetCodeString();
 	public:
 		char cResultRegister;
 		//char cType;
@@ -186,6 +192,7 @@ namespace zlscript
 			dwPos = 0;
 		}
 		int Run(CScriptExecBlock* pBlock, CBaseExeCode** pNextPoint);
+		virtual std::string GetCodeString();
 	public:
 		char cResultRegister;
 		char cType;
@@ -202,6 +209,7 @@ namespace zlscript
 			dwPos = 0;
 		}
 		int Run(CScriptExecBlock* pBlock, CBaseExeCode** pNextPoint);
+		virtual std::string GetCodeString();
 	public:
 		char cResultRegister;
 		char cType;
@@ -218,6 +226,7 @@ namespace zlscript
 			dwPos = 0;
 		}
 		int Run(CScriptExecBlock * pBlock, CBaseExeCode** pNextPoint);
+		virtual std::string GetCodeString();
 	public:
 		char cResultRegister;
 		char cType;
@@ -234,6 +243,7 @@ namespace zlscript
 			dwPos = 0;
 		}
 		int Run(CScriptExecBlock* pBlock, CBaseExeCode** pNextPoint);
+		virtual std::string GetCodeString();
 	public:
 		char cResultRegister;
 		char cType;
@@ -250,6 +260,7 @@ namespace zlscript
 			dwPos = 0;
 		}
 		int Run(CScriptExecBlock* pBlock, CBaseExeCode** pNextPoint);
+		virtual std::string GetCodeString();
 	public:
 		char cResultRegister;
 		char cType;
@@ -266,6 +277,7 @@ namespace zlscript
 			dwPos = 0;
 		}
 		int Run(CScriptExecBlock* pBlock, CBaseExeCode** pNextPoint);
+		virtual std::string GetCodeString();
 	public:
 		char cResultRegister;
 		char cType;
@@ -282,6 +294,7 @@ namespace zlscript
 			dwPos = 0;
 		}
 		int Run(CScriptExecBlock* pBlock, CBaseExeCode **pNextPoint);
+		virtual std::string GetCodeString();
 	public:
 		char cResultRegister;
 		char cType;
@@ -298,6 +311,7 @@ namespace zlscript
 			dwPos = 0;
 		}
 		int Run(CScriptExecBlock * pBlock, CBaseExeCode** pNextPoint);
+		virtual std::string GetCodeString();
 	public:
 		char cResultRegister;
 		char cType;
@@ -314,6 +328,7 @@ namespace zlscript
 			dwPos = 0;
 		}
 		int Run(CScriptExecBlock * pBlock, CBaseExeCode** pNextPoint);
+		virtual std::string GetCodeString();
 	public:
 		char cResultRegister;
 		char cType;
@@ -330,6 +345,7 @@ namespace zlscript
 			dwPos = 0;
 		}
 		int Run(CScriptExecBlock* pBlock, CBaseExeCode **pNextPoint);
+		virtual std::string GetCodeString();
 	public:
 		//char cResultRegister;
 		char cType;
@@ -346,6 +362,7 @@ namespace zlscript
 			dwPos = 0;
 		}
 		int Run(CScriptExecBlock* pBlock, CBaseExeCode **pNextPoint);
+		virtual std::string GetCodeString();
 	public:
 		//char cResultRegister;
 		char cType;
@@ -363,6 +380,7 @@ namespace zlscript
 			dwPos = 0;
 		}
 		int Run(CScriptExecBlock* pBlock, CBaseExeCode **pNextPoint);
+		virtual std::string GetCodeString();
 	public:
 		char cResultRegister;
 		char cType;
@@ -374,13 +392,14 @@ namespace zlscript
 	public:
 		CMoveExeCode()
 		{
-			cResultRegister = 0;
+			cVarRegister = 0;
 			cType = 0;
 			dwPos = 0;
 		}
 		int Run(CScriptExecBlock* pBlock, CBaseExeCode **pNextPoint);
+		virtual std::string GetCodeString();
 	public:
-		char cResultRegister;
+		char cVarRegister;
 		char cType;
 		unsigned int dwPos;
 	};
@@ -395,6 +414,7 @@ namespace zlscript
 			dwPos = 0;
 		}
 		int Run(CScriptExecBlock* pBlock, CBaseExeCode **pNextPoint);
+		virtual std::string GetCodeString();
 	public:
 		char cResultRegister;
 		char cClassRegIndex;
@@ -411,6 +431,7 @@ namespace zlscript
 			dwPos = 0;
 		}
 		int Run(CScriptExecBlock* pBlock, CBaseExeCode **pNextPoint);
+		virtual std::string GetCodeString();
 	public:
 		char cVarRegister;
 		char cClassRegIndex;
@@ -428,6 +449,7 @@ namespace zlscript
 			unFunIndex = 0;
 		}
 		int Run(CScriptExecBlock * pBlock, CBaseExeCode** pNextPoint);
+		virtual std::string GetCodeString();
 	public:
 		unsigned char cParmSize;
 		char cResultRegister;
@@ -445,6 +467,7 @@ namespace zlscript
 			unFunIndex = 0;
 		}
 		int Run(CScriptExecBlock* pBlock, CBaseExeCode **pNextPoint);
+		virtual std::string GetCodeString();
 	public:
 		unsigned char cParmSize;
 		char cResultRegister;
@@ -459,6 +482,7 @@ namespace zlscript
 			pJumpCode = nullptr;
 		}
 		int Run(CScriptExecBlock* pBlock, CBaseExeCode **pNextPoint);
+		virtual std::string GetCodeString();
 	public:
 		CBaseExeCode* pJumpCode;
 	};
@@ -472,6 +496,7 @@ namespace zlscript
 			pJumpCode = nullptr;
 		}
 		int Run(CScriptExecBlock* pBlock, CBaseExeCode** pNextPoint);
+		virtual std::string GetCodeString();
 	public:
 		char cVarRegister;
 		CBaseExeCode* pJumpCode;
@@ -486,6 +511,7 @@ namespace zlscript
 			pJumpCode = nullptr;
 		}
 		int Run(CScriptExecBlock* pBlock, CBaseExeCode** pNextPoint);
+		virtual std::string GetCodeString();
 	public:
 		char cVarRegister;
 		CBaseExeCode* pJumpCode;
@@ -499,6 +525,7 @@ namespace zlscript
 			cVarRegister = 0;
 		}
 		int Run(CScriptExecBlock* pBlock, CBaseExeCode** pNextPoint);
+		virtual std::string GetCodeString();
 	public:
 		char cVarRegister;
 	};
@@ -515,6 +542,7 @@ namespace zlscript
 			dwPos = 0;
 		}
 		int Run(CScriptExecBlock* pBlock, CBaseExeCode** pNextPoint);
+		virtual std::string GetCodeString();
 	public:
 		char cResultRegister;
 		unsigned char cParmSize;
@@ -531,6 +559,7 @@ namespace zlscript
 			dwClassIndex = 0;
 		}
 		int Run(CScriptExecBlock* pBlock, CBaseExeCode** pNextPoint);
+		virtual std::string GetCodeString();
 	public:
 		char cResultRegister;
 		unsigned int dwClassIndex;
@@ -544,6 +573,7 @@ namespace zlscript
 			cVarRegister = 0;
 		}
 		int Run(CScriptExecBlock* pBlock, CBaseExeCode** pNextPoint);
+		virtual std::string GetCodeString();
 	public:
 		char cVarRegister;
 	};
@@ -556,6 +586,7 @@ namespace zlscript
 			pJumpCode = nullptr;
 		}
 		int Run(CScriptExecBlock * pBlock, CBaseExeCode * *pNextPoint);
+		virtual std::string GetCodeString();
 	public:
 		CBaseExeCode* pJumpCode;
 	};
@@ -568,6 +599,7 @@ namespace zlscript
 			pJumpCode = nullptr;
 		}
 		int Run(CScriptExecBlock* pBlock, CBaseExeCode** pNextPoint);
+		virtual std::string GetCodeString();
 	public:
 		CBaseExeCode* pJumpCode;
 	};
@@ -580,6 +612,7 @@ namespace zlscript
 
 		}
 		int Run(CScriptExecBlock* pBlock, CBaseExeCode** pNextPoint);
+		virtual std::string GetCodeString();
 	};
 
 	class CExeCodeMgr
