@@ -2213,7 +2213,43 @@ namespace zlscript
 		}
 		return true;
 	}
-
+	bool CTestSignICode::MakeExeCode(tagCodeData& vOut)
+	{
+		for (int i = 0; i < nNum; i++)
+		{
+			CSignExeCode *pCode = CExeCodeMgr::GetInstance()->New<CSignExeCode>(m_unBeginSoureIndex);
+			vOut.AddCode(pCode);
+		}
+		return true;
+	}
+	void CTestSignICode::AddICode(int nType, CBaseICode* pCode)
+	{
+		CBaseICode::AddICode(nType, pCode);
+	}
+	bool CTestSignICode::Compile(SentenceSourceCode& vIn)
+	{
+		SignToPos();
+		if (m_pLoader == nullptr)
+		{
+			return false;
+		}
+		GetNewWord(nextWord);
+		if (nextWord.word != "testsign")
+		{
+			RevertAll();
+			return false;
+		}
+		GetWord(nextWord);
+		nNum = atoi(nextWord.word.c_str());
+		GetWord(nextWord);
+		if (nextWord.word != ";")
+		{
+			m_pLoader->AddErrorInfo(nextWord.nSourceWordsIndex, "CTestSignICode:format error");
+			RevertAll();
+			return false;
+		}
+		return true;
+	}
 	//void CICodeMgr::Release(CBaseICode* pPoint)
 	//{
 	//}

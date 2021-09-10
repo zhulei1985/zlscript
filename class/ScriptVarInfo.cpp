@@ -175,10 +175,6 @@ namespace zlscript
 			s_strPool.UseString(Int64);
 		}
 		break;
-		//case EScriptVal_ClassPointIndex:
-		//	Int64 = cls.Int64;
-		//	CScriptSuperPointerMgr::GetInstance()->ScriptUsePointer(Int64);
-		//	break;
 		case EScriptVal_ClassPoint:
 			pPoint = cls.pPoint;
 			CScriptSuperPointerMgr::GetInstance()->PickupPointer(pPoint);

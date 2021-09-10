@@ -116,43 +116,43 @@ namespace zlscript
 		switch (cType)
 		{
 		case ESIGN_VALUE_INT:
-			var = (__int64)pos;
+			SCRIPTVAR_SET_INT(var, (__int64)pos);
 			return true;
 		case ESIGN_POS_GLOBAL_VAR://全局变量
-			var = m_pMaster->m_pMachine->GetGlobalVar(pos);
+			SCRIPTVAR_SET_VAR(var,m_pMaster->m_pMachine->GetGlobalVar(pos));
 			return true;
 		case ESIGN_POS_LOACL_VAR:
 			if (m_pTempVar && pos < m_nTempVarSize)
 			{
-				var = m_pTempVar[pos];
+				SCRIPTVAR_SET_VAR(var , m_pTempVar[pos]);
 				return true;
 			}
 			return false;
 		case ESIGN_POS_CONST_STRING:
 			if (pos < m_pCodeData->vStrConst.size())
 			{
-				var = m_pCodeData->vStrConst[pos].c_str();
+				SCRIPTVAR_SET_STRING(var , m_pCodeData->vStrConst[pos]);
 				return true;
 			}
 			return false;
 		case ESIGN_POS_CONST_FLOAT:
 			if (pos < m_pCodeData->vFloatConst.size())
 			{
-				var = m_pCodeData->vFloatConst[pos];
+				SCRIPTVAR_SET_FLOAT(var , m_pCodeData->vFloatConst[pos]);
 				return true;
 			}
 			return false;
 		case ESIGN_POS_CONST_INT64:
 			if (pos < m_pCodeData->vInt64Const.size())
 			{
-				var = m_pCodeData->vInt64Const[pos];
+				SCRIPTVAR_SET_INT(var , m_pCodeData->vInt64Const[pos]);
 				return true;
 			}
 			return false;
 		case ESIGN_REGISTER:
 			if (pos < R_SIZE)
 			{
-				var = m_register[pos];
+				SCRIPTVAR_SET_VAR(var , m_register[pos]);
 				return true;
 			}
 			return false;
@@ -173,13 +173,13 @@ namespace zlscript
 		{
 			if (m_pTempVar && pos < m_nTempVarSize)
 			{
-				m_pTempVar[pos] = var;
+				SCRIPTVAR_SET_VAR(m_pTempVar[pos] , var);
 			}
 		}
 		break;
 		case ESIGN_REGISTER:
 		{
-			m_register[pos]= var;
+			SCRIPTVAR_SET_VAR(m_register[pos], var);
 		}
 		break;
 		default:

@@ -54,6 +54,7 @@ namespace zlscript
 		AddCodeCompile<CBlockICode>(E_CODE_SCOPE_STATEMENT);
 
 		AddCodeCompile<CDefTempVarICode>(E_CODE_SCOPE_STATEMENT);
+		AddCodeCompile<CTestSignICode>(E_CODE_SCOPE_STATEMENT);
 		AddCodeCompile<CIfICode>(E_CODE_SCOPE_STATEMENT);
 		AddCodeCompile<CWhileICode>(E_CODE_SCOPE_STATEMENT);
 		AddCodeCompile<CContinueICode>(E_CODE_SCOPE_STATEMENT);

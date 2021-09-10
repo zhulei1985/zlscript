@@ -681,6 +681,24 @@ namespace zlscript
 	public:
 		CBaseICode* m_pBody;
 	};
+	class CTestSignICode : public CBaseICode
+	{
+	public:
+		CTestSignICode()
+		{
+			nNum = 0;
+		}
+		int GetType()
+		{
+			return E_I_CODE_NONE;
+		}
+		virtual bool MakeExeCode(tagCodeData& vOut);
+		virtual void AddICode(int nType, CBaseICode* pCode);
+
+		virtual bool Compile(SentenceSourceCode& vIn);
+	public:
+		int nNum;
+	};
 	class CBaseICodeMgr
 	{
 	public:

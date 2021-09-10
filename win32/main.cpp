@@ -109,7 +109,7 @@ int main()
 
 	//zlscript::CScriptStack stackParm;
 	auto t1 = std::chrono::steady_clock::now();
-	int sum = 0;
+	__int64 sum = 0;
 	int i = 1;
 	while (i <= 1000)
 	{
@@ -123,6 +123,7 @@ int main()
 	}
 	auto t2 = std::chrono::steady_clock::now();
 	auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1);
+	printf("Calculation result : %lld\n", sum);
 	printf("Calculation time : %d\n", duration.count());
 
 	//for (int i = 0; i < 10; i++)

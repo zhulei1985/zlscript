@@ -30,7 +30,7 @@ namespace zlscript
 
 		void Clear();
 
-		//赋值重载
+		//赋值重载 操作符重载消耗过大，开始逐步替代
 		StackVarInfo& operator=(__int64 val);
 		StackVarInfo& operator=(double val);
 		StackVarInfo& operator=(const char *pStr);
@@ -53,6 +53,93 @@ namespace zlscript
 			return h1 ^ h2 ^ h3;
 		}
 	};
+#define SCRIPTVAR_CLEAR_NO_SAFE(var) {\
+		if (var.cType == EScriptVal_String)\
+		{\
+			StackVarInfo::s_strPool.ReleaseString(var.Int64);\
+		}\
+		else if (var.cType == EScriptVal_Binary)\
+		{\
+			StackVarInfo::s_binPool.ReleaseBinary(var.Int64);\
+		}\
+		else if (var.cType == EScriptVal_ClassPoint)\
+		{\
+			CScriptSuperPointerMgr::GetInstance()->ReturnPointer(var.pPoint);\
+		}\
+	}
+#define SCRIPTVAR_CLEAR(var) {\
+		SCRIPTVAR_CLEAR_NO_SAFE(var)\
+		var.cType = EScriptVal_None;\
+		var.Int64 = 0;\
+	}
+#define SCRIPTVAR_SET_INT(var, intvar) { \
+		SCRIPTVAR_CLEAR_NO_SAFE(var)\
+		var.cType = EScriptVal_Int;\
+		var.Int64 = (intvar);\
+	}
+#define SCRIPTVAR_SET_FLOAT(var, floatvar) { \
+		SCRIPTVAR_CLEAR_NO_SAFE(var)\
+		var.cType = EScriptVal_Double;\
+		var.Double = (floatvar);\
+	}
+#define SCRIPTVAR_SET_STRING(var, stringvar) { \
+		SCRIPTVAR_CLEAR_NO_SAFE(var)\
+		var.cType = EScriptVal_String;\
+		var.Int64 = StackVarInfo::s_strPool.NewString(stringvar.c_str());\
+	}
+#define SCRIPTVAR_SET_STRING_POINT(var, pStr) { \
+		SCRIPTVAR_CLEAR_NO_SAFE(var)\
+		var.cType = EScriptVal_String;\
+		var.Int64 = StackVarInfo::s_strPool.NewString(pStr);\
+	}
+#define SCRIPTVAR_SET_SUPER_POINT(var, pPoint) { \
+		SCRIPTVAR_CLEAR_NO_SAFE(var)\
+		var.cType = EScriptVal_ClassPoint;\
+		var.pPoint = pPoint;\
+		CScriptSuperPointerMgr::GetInstance()->PickupPointer(pPoint); \
+	}
+#define SCRIPTVAR_SET_INTERFACE_POINT(var, pPoint) { \
+		SCRIPTVAR_CLEAR_NO_SAFE(var)\
+		if (pPoint){\
+			var.cType = EScriptVal_ClassPoint;\
+			var.pPoint = CScriptSuperPointerMgr::GetInstance()->PickupPointer(pPoint->GetScriptPointIndex());\
+		}\
+	}
+#define SCRIPTVAR_SET_BINARY(var, pBin) { \
+		SCRIPTVAR_CLEAR_NO_SAFE(var)\
+		var.cType = EScriptVal_Binary;\
+		var.Int64 = StackVarInfo::s_binPool.NewBinary(pStr);\
+	}
+#define SCRIPTVAR_SET_VAR(var, var2) { \
+		SCRIPTVAR_CLEAR_NO_SAFE(var)\
+		var.cType = var2.cType;\
+		var.cExtend = var2.cExtend;\
+		switch (var.cType)\
+		{\
+		case EScriptVal_Int:\
+			var.Int64 = var2.Int64;\
+			break;\
+		case EScriptVal_Double:\
+			var.Double = var2.Double;\
+			break;\
+		case EScriptVal_String:\
+		{\
+			var.Int64 = var2.Int64;\
+			StackVarInfo::s_strPool.UseString(var.Int64);\
+		}\
+		break;\
+		case EScriptVal_ClassPoint:\
+			var.pPoint = var2.pPoint;\
+			CScriptSuperPointerMgr::GetInstance()->PickupPointer(var.pPoint);\
+			break;\
+		case EScriptVal_Binary:\
+		{\
+			var.Int64 = var2.Int64;\
+			StackVarInfo::s_binPool.UseBinary(var.Int64);\
+		}\
+		break;\
+		}\
+	}
 	struct PointVarInfo
 	{
 		PointVarInfo();
