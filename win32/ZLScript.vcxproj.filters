@@ -73,9 +73,6 @@
     <ClInclude Include="..\class\ScriptIntermediateCode.h">
       <Filter>code</Filter>
     </ClInclude>
-    <ClInclude Include="..\class\ScriptExecCodeMgr.h">
-      <Filter>code</Filter>
-    </ClInclude>
     <ClInclude Include="..\class\ScriptExecFrame.h">
       <Filter>code</Filter>
     </ClInclude>
@@ -151,9 +148,6 @@
       <Filter>code</Filter>
     </ClCompile>
     <ClCompile Include="..\class\ScriptIntermediateCode.cpp">
-      <Filter>code</Filter>
-    </ClCompile>
-    <ClCompile Include="..\class\ScriptExecCodeMgr.cpp">
       <Filter>code</Filter>
     </ClCompile>
     <ClCompile Include="..\class\ScriptExecFrame.cpp">

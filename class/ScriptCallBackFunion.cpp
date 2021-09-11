@@ -172,12 +172,8 @@ namespace zlscript
 		std::string name = pState->GetStringVarFormStack(1);
 
 		//nParmNum -= 2;
-		CScriptStack scriptParm;
-		for (int i = 2; i < nParmNum; i++)
-		{
-			auto var = pState->GetVarFormStack(i);
-			ScriptVector_PushVar(scriptParm, &var);
-		}
+		tagScriptVarStack scriptParm;
+		STACK_MOVE_ALL_BACK(scriptParm, pState->m_stackRegister, 2);
 
 		pMachine->RunTo(name, scriptParm, nIsWaiting>0? pState->GetMasterID():0, 0);
 		
@@ -360,12 +356,9 @@ namespace zlscript
 			nClassPoint = pointVal.pPoint->GetID();
 		}
 
-		CScriptStack vParmVars;
-		for (int i = 4; i < nParmNum; i++)
-		{
-			auto var = pState->GetVarFormStack(i);
-			ScriptVector_PushVar(vParmVars, &var);
-		}
+		tagScriptVarStack vParmVars;
+		STACK_COPY_BEGIN(vParmVars, pState->m_stackRegister, 4);
+
 		CScriptTriggerMgr::GetInstance()->SetEventTrigger(strEvent, nClassPoint, strFlag, pMachine->GetEventIndex(), strScript, vParmVars);
 
 		return ECALLBACK_FINISH;

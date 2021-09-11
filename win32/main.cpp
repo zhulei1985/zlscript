@@ -121,6 +121,13 @@ int main()
 		}
 		i = i + 1;
 	}
+	//double sum = 0;
+	//double i = 0;
+	//while (i < 1000000000.0)
+	//{
+	//	sum = sum + 2.0;
+	//	i = i + 1.0;
+	//}
 	auto t2 = std::chrono::steady_clock::now();
 	auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1);
 	printf("Calculation result : %lld\n", sum);
@@ -138,7 +145,7 @@ int main()
 		std::bind(&zlscript::CScriptVirtualMachine::EventRunScriptFun, &Machine, std::placeholders::_1, std::placeholders::_2));
 	auto oldtime = std::chrono::steady_clock::now();
 	Machine.SetInstance();
-	CScriptStack parm;
+	tagScriptVarStack parm;
 	Machine.RunFunImmediately("init", parm);
 
 	std::this_thread::sleep_for(std::chrono::milliseconds(1000));

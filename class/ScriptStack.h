@@ -501,4 +501,124 @@ namespace zlscript
 		var.Int64 = 0;
 		Stack.push(var);
 	}
+
+	struct tagScriptVarStack
+	{
+		tagScriptVarStack(int size = 16)
+		{
+			m_vData.resize(size);
+			nSize = size;
+			nIndex = 0;
+		}
+		std::vector<StackVarInfo> m_vData;
+
+		unsigned int nSize;
+		unsigned int nIndex;
+	};
+#define STACK_CHECK_SIZE(stack) {\
+		if (stack.nIndex >= stack.nSize)\
+		{\
+			stack.nSize += 16;\
+			stack.m_vData.resize(stack.nSize);\
+		}\
+	}
+#define STACK_PUSH(stack,var) {\
+		STACK_CHECK_SIZE(stack)\
+		SCRIPTVAR_SET_VAR(stack.m_vData[stack.nIndex],var);\
+		stack.nIndex++;\
+	}
+#define STACK_PUSH_FRONT(stack,var) {\
+		STACK_CHECK_SIZE(stack)\
+		memcpy(&stack.m_vData[1],&stack.m_vData[0],sizeof(StackVarInfo)*(stack.nIndex));\
+		SCRIPTVAR_SET_VAR(stack.m_vData[0],var);\
+		stack.nIndex++;\
+	}
+#define STACK_PUSH_FRONT_2(stack,var,var2) {\
+		if (stack.nIndex+1 >= stack.nSize)\
+		{\
+			stack.nSize += 16;\
+			stack.m_vData.resize(stack.nSize);\
+		}\
+		memcpy(&stack.m_vData[1],&stack.m_vData[0],sizeof(StackVarInfo)*(stack.nIndex));\
+		SCRIPTVAR_SET_VAR(stack.m_vData[0],var);\
+		SCRIPTVAR_SET_VAR(stack.m_vData[1],var2);\
+		stack.nIndex+=2;\
+	}
+#define STACK_POP(stack) {\
+		if (stack.nIndex>0)\
+		{\
+			stack.m_vData[stack.nIndex].Clear();\
+			stack.nIndex--;\
+		}\
+	}
+#define STACK_POP_FRONT(stack,num){\
+		unsigned int i = 0;\
+		for (; i < num&&i<stack.nIndex; i++)\
+			stack.m_vData[i].Clear();\
+		if (i < stack.nIndex)\
+			memcpy(&stack.m_vData[0],&stack.m_vData[i],sizeof(StackVarInfo)*(stack.nIndex-i));\
+	}
+#define STACK_GET(stack,var) {\
+		if (stack.nIndex>0)\
+		{\
+			SCRIPTVAR_SET_VAR(var,stack.m_vData[stack.nIndex-1]);\
+		}\
+	}
+#define STACK_GET_INDEX(stack,var,index) {\
+		if (stack.nIndex>index)\
+		{\
+			SCRIPTVAR_SET_VAR(var,stack.m_vData[index]);\
+		}\
+	}
+#define STACK_COPY(stackDes,stackSrc){\
+		for (unsigned int i = 0; i < stackSrc.nIndex; i++)\
+		{\
+			STACK_PUSH(stackDes,stackSrc.m_vData[i]);\
+		}\
+	}
+#define STACK_COPY_BEGIN(stackDes,stackSrc,begin){\
+		for (unsigned int i = begin; i < stackSrc.nIndex; i++)\
+		{\
+			STACK_PUSH(stackDes,stackSrc.m_vData[i]);\
+		}\
+	}
+#define STACK_MOVE_BACK(stackDes,stackSrc,begin,size){\
+		while (stackDes.nIndex+(size) >= stackDes.nSize)\
+		{\
+			stackDes.nSize += 16;\
+			stackDes.m_vData.resize(stackDes.nSize);\
+		}\
+		if (stackSrc.nIndex - (begin) < (size))\
+		{\
+			memcpy(&stackDes.m_vData[stackDes.nIndex], &stackSrc.m_vData[(begin)], sizeof(StackVarInfo)* (stackSrc.nIndex - (begin))); \
+			memset( &stackSrc.m_vData[(begin)],0,sizeof(StackVarInfo)* (stackSrc.nIndex - ((begin))));\
+			stackDes.nIndex += stackSrc.nIndex - (begin);\
+		}\
+		else\
+		{\
+			memcpy(&stackDes.m_vData[stackDes.nIndex], &stackSrc.m_vData[begin], sizeof(StackVarInfo)* (size)); \
+			memset(&stackSrc.m_vData[begin],0,sizeof(StackVarInfo)* (size));\
+			stackDes.nIndex += (size);\
+		}\
+	}
+#define STACK_MOVE_ALL_BACK(stackDes,stackSrc,begin){\
+		while (stackDes.nIndex+stackSrc.nIndex -(begin) >= stackDes.nSize)\
+		{\
+			stackDes.nSize += 16;\
+			stackDes.m_vData.resize(stackDes.nSize);\
+		}\
+		if ((begin) < stackSrc.nIndex){\
+			memcpy(&stackDes.m_vData[stackDes.nIndex], &stackSrc.m_vData[(begin)], sizeof(StackVarInfo)* (stackSrc.nIndex - (begin))); \
+			memset(&stackSrc.m_vData[(begin)],0,sizeof(StackVarInfo)* (stackSrc.nIndex - (begin)));\
+			stackDes.nIndex += stackSrc.nIndex - (begin);\
+			stackSrc.nIndex =(begin);\
+		}\
+	}
+#define STACK_CLEAR(stack) {\
+		while (stack.nIndex>0)\
+		{\
+			stack.m_vData[stack.nIndex].Clear();\
+			stack.nIndex--;\
+		}\
+	}
 }

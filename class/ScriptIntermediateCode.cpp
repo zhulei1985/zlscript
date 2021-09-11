@@ -2215,10 +2215,33 @@ namespace zlscript
 	}
 	bool CTestSignICode::MakeExeCode(tagCodeData& vOut)
 	{
-		for (int i = 0; i < nNum; i++)
+		for (int i = 0; i < nNum/2; i++)
 		{
-			CSignExeCode *pCode = CExeCodeMgr::GetInstance()->New<CSignExeCode>(m_unBeginSoureIndex);
+			//CSignExeCode *pCode = CExeCodeMgr::GetInstance()->New<CSignExeCode>(m_unBeginSoureIndex);
+			//vOut.AddCode(pCode);
+
+			//CAddExeCode* pCode = CExeCodeMgr::GetInstance()->New<CAddExeCode>(m_unBeginSoureIndex);
+			//pCode->cResultRegister = cRegisterIndex;
+			//pCode->cType = 0;
+			//pCode->dwPos = 1;
+			//vOut.AddCode(pCode);
+
+			CCmpLessExeCode* pCode = CExeCodeMgr::GetInstance()->New<CCmpLessExeCode>(m_unBeginSoureIndex);
+			pCode->cResultRegister = cRegisterIndex;
+			pCode->cType = 0;
+			pCode->dwPos = 1;
 			vOut.AddCode(pCode);
+
+			//CPushExeCode* pCode = CExeCodeMgr::GetInstance()->New<CPushExeCode>(m_unBeginSoureIndex);
+			////pCode->cVarRegister = cRegisterIndex;
+			//pCode->cType = 2;
+			//pCode->dwPos = 1;
+			//vOut.AddCode(pCode);
+			//CPopExeCode* pCode2 = CExeCodeMgr::GetInstance()->New<CPopExeCode>(m_unBeginSoureIndex);
+			////pCode->cVarRegister = cRegisterIndex;
+			//pCode2->cType = 6;
+			//pCode2->dwPos = 0;
+			//vOut.AddCode(pCode2);
 		}
 		return true;
 	}

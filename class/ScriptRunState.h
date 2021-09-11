@@ -45,17 +45,17 @@ namespace zlscript
 		}
 		__int64 GetMasterID();
 
-		bool PushEmptyVarToStack();
-		bool PushVarToStack(int nVal);
-		bool PushVarToStack(__int64 nVal);
-		bool PushVarToStack(double Double);
-		bool PushVarToStack(const char* pstr);
-		bool PushClassPointToStack(__int64 nIndex);
-		bool PushClassPointToStack(CScriptBasePointer* pPoint);
-		bool PushVarToStack(StackVarInfo& Val);
+		//bool PushEmptyVarToStack();
+		//bool PushVarToStack(int nVal);
+		//bool PushVarToStack(__int64 nVal);
+		//bool PushVarToStack(double Double);
+		//bool PushVarToStack(const char* pstr);
+		//bool PushClassPointToStack(__int64 nIndex);
+		//bool PushClassPointToStack(CScriptBasePointer* pPoint);
+		//bool PushVarToStack(StackVarInfo& Val);
 
-		template<class T>
-		bool PushClassPointToStack(T* pVal);
+		//template<class T>
+		//bool PushClassPointToStack(T* pVal);
 
 		//virtual __int64 PopIntVarFormStack();
 		//virtual double PopDoubleVarFormStack();
@@ -81,7 +81,7 @@ namespace zlscript
 		template<class T>
 		bool SetClassPointResult(T* pVal);
 	public:
-		CScriptStack m_stackRegister;
+		tagScriptVarStack m_stackRegister;
 		std::string strBuffer;
 		CScriptRunState* m_pMaster;
 
@@ -125,8 +125,7 @@ namespace zlscript
 		
 
 
-		virtual void CopyToStack(CScriptStack* pStack, int nNum);
-		virtual void CopyFromStack(CScriptStack* pStack);
+		virtual void CopyFromStack(tagScriptVarStack &pStack);
 
 		//获取函数变量
 		virtual void ClearFunParam();
@@ -139,13 +138,13 @@ namespace zlscript
 		void ClearAll();
 
 		int CallFun_CallBack(CScriptVirtualMachine* pMachine, int FunIndex, CScriptCallState* pCallState);
-		int CallFun_Script(CScriptVirtualMachine* pMachine, int FunIndex, CScriptStack& ParmStack, int nParmNum, char cRegisterIndex, bool bIsBreak = false);
+		int CallFun_Script(CScriptVirtualMachine* pMachine, int FunIndex, tagScriptVarStack& ParmStack, int nParmNum, char cRegisterIndex, bool bIsBreak = false);
 
 		int CallFun(CScriptVirtualMachine* pMachine, CScriptExecBlock* pCurBlock, int nType, int FunIndex, int nParmNum, bool bIsBreak = false);
-		int CallFun(CScriptVirtualMachine* pMachine, int nType, int FunIndex, CScriptStack& ParmStack, bool bIsBreak = false);
-		int CallFun(CScriptVirtualMachine* pMachine, const char* pFunName, CScriptStack& ParmStack, bool bIsBreak = false);
+		int CallFun(CScriptVirtualMachine* pMachine, int nType, int FunIndex, tagScriptVarStack& ParmStack, bool bIsBreak = false);
+		int CallFun(CScriptVirtualMachine* pMachine, const char* pFunName, tagScriptVarStack& ParmStack, bool bIsBreak = false);
 
-		int CallFunImmediately(CScriptVirtualMachine* pMachine, const char* pFunName, CScriptStack& ParmStack);
+		int CallFunImmediately(CScriptVirtualMachine* pMachine, const char* pFunName, tagScriptVarStack& ParmStack);
 
 		unsigned int Exec(unsigned int unTimeRes, CScriptVirtualMachine* pMachine);
 
@@ -172,21 +171,7 @@ namespace zlscript
 
 		char strbuff[2048];
 	};
-	template<class T>
-	inline bool CScriptCallState::PushClassPointToStack(T* pVal)
-	{
-		if (pVal)
-		{
-			CScriptBasePointer* pPoint = CScriptSuperPointerMgr::GetInstance()->PickupPointer(pVal->GetScriptPointIndex());
-			PushClassPointToStack(pPoint);
-			return true;
-		}
-		else
-		{
-			PushClassPointToStack((CScriptBasePointer*)nullptr);
-		}
-		return false;
-	}
+
 	template<class T>
 	inline bool CScriptCallState::SetClassPointResult(T* pVal)
 	{

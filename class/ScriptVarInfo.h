@@ -140,6 +140,73 @@ namespace zlscript
 		break;\
 		}\
 	}
+
+#define SCRIPTVAR_GET_INT(var, intvar) { \
+		if (var.cType == EScriptVal_Int)\
+		{\
+			intvar = var.Int64;\
+		}\
+		else if (var.cType == EScriptVal_Double)\
+		{\
+			intvar = (__int64)(var.Double + 0.5f);\
+		}\
+		else if (var.cType == EScriptVal_String)\
+		{\
+			const char* pStr = StackVarInfo::s_strPool.GetString(var.Int64);\
+			if (pStr)\
+			{\
+				intvar = _atoi64(pStr);\
+			}\
+			else\
+			{\
+				intvar = 0;\
+			}\
+		}\
+	}
+#define SCRIPTVAR_GET_FLOAT(var, floatvar) { \
+		if (var.cType == EScriptVal_Int)\
+		{\
+			floatvar = (double)var.Int64;\
+		}\
+		else if (var.cType == EScriptVal_Double)\
+		{\
+			floatvar = var.Double;\
+		}\
+		else if (var.cType == EScriptVal_String)\
+		{\
+			const char* pStr = StackVarInfo::s_strPool.GetString(var.Int64);\
+			if (pStr)\
+			{\
+				floatvar = atof(pStr);\
+			}\
+			else\
+			{\
+				floatvar = 0;\
+			}\
+		}\
+	}
+#define SCRIPTVAR_GET_STRING(var, strvar) { \
+		if (var.cType == EScriptVal_Int)\
+		{\
+			char strbuff[64] = {0};\
+			sprintf(strbuff, "%lld", var.Int64);\
+			strvar=strbuff;\
+		}\
+		else if (var.cType == EScriptVal_Double)\
+		{\
+			char strbuff[64] = {0};\
+			sprintf(strbuff, "%f", var.Double);\
+			strvar=strbuff;\
+		}\
+		else if (var.cType == EScriptVal_String)\
+		{\
+			const char* pStr = StackVarInfo::s_strPool.GetString(var.Int64);\
+			if (pStr)\
+			{\
+				strvar = pStr;\
+			}\
+		}\
+	}
 	struct PointVarInfo
 	{
 		PointVarInfo();

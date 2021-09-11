@@ -28,26 +28,29 @@ namespace zlscript
 		StackVarInfo& resultVar = pBlock->m_register[cResultRegister];
 		StackVarInfo& leftVar = pBlock->m_register[R_A];
 		StackVarInfo& rightVar = pBlock->m_register[R_D];
-		pBlock->GetVal(rightVar, cType, dwPos);
+		//pBlock->GetVal(rightVar, cType, dwPos);
 		switch (leftVar.cType)
 		{
 		case EScriptVal_Int:
 		{
 			//__int64 nVal1 = GetInt_StackVar(&pBlock->m_register[R_A]);
-			__int64 nVal2 = GetInt_StackVar(&rightVar);
+			__int64 nVal2 = 0;
+			pBlock->GetVal(nVal2, cType, dwPos);
 			//resultVar = leftVar.Int64 + nVal2;
 			SCRIPTVAR_SET_INT(resultVar, leftVar.Int64 + nVal2);
 		}
 		break;
 		case EScriptVal_Double:
 		{
-			double dVal1 = GetFloat_StackVar(&leftVar);
+			pBlock->GetVal(rightVar, cType, dwPos);
+			//double dVal1 = GetFloat_StackVar(&leftVar);
 			double dVal2 = GetFloat_StackVar(&rightVar);
-			resultVar = dVal1 + dVal2;
+			SCRIPTVAR_SET_FLOAT(resultVar , leftVar.Double + dVal2);
 		}
 		break;
 		case EScriptVal_String:
 		{
+			pBlock->GetVal(rightVar, cType, dwPos);
 			std::string strVal1 = GetString_StackVar(&leftVar);
 			std::string strVal2 = GetString_StackVar(&rightVar);
 			strVal1 = strVal1 + strVal2;
@@ -419,18 +422,20 @@ namespace zlscript
 		StackVarInfo& leftVar = pBlock->m_register[R_A];
 		StackVarInfo& rightVar = pBlock->m_register[R_D];
 		StackVarInfo& resultVar = pBlock->m_register[cResultRegister];
-		pBlock->GetVal(rightVar, cType, dwPos);
+		//pBlock->GetVal(rightVar, cType, dwPos);
 		switch (leftVar.cType)
 		{
 		case EScriptVal_Int:
 		{
 			//__int64 nVal1 = GetInt_StackVar(&leftVar);
-			__int64 nVal2 = GetInt_StackVar(&rightVar);
+			__int64 nVal2 = 0;// GetInt_StackVar(&rightVar);
+			pBlock->GetVal(nVal2, cType, dwPos);
 			SCRIPTVAR_SET_INT(resultVar,(__int64)(leftVar.Int64 < nVal2 ? 1 : 0));
 		}
 		break;
 		case EScriptVal_Double:
 		{
+			pBlock->GetVal(rightVar, cType, dwPos);
 			double dVal1 = GetFloat_StackVar(&leftVar);
 			double dVal2 = GetFloat_StackVar(&rightVar);
 			resultVar = (__int64)(dVal1 < dVal2 ? 1 : 0);
@@ -574,7 +579,7 @@ namespace zlscript
 	{
 		StackVarInfo& var = pBlock->m_register[R_D];
 		pBlock->GetVal(var, cType, dwPos);
-		ScriptVector_PushVar(pBlock->m_stackRegister, &var);
+		STACK_PUSH(pBlock->m_stackRegister, var);
 		if (pNextPoint)
 		{
 			*pNextPoint = this->m_pNext;
@@ -590,7 +595,8 @@ namespace zlscript
 	int CPopExeCode::Run(CScriptExecBlock* pBlock, CBaseExeCode **pNextPoint)
 	{
 		StackVarInfo& var = pBlock->m_register[R_D];
-		var = ScriptStack_GetVar(pBlock->m_stackRegister);
+		STACK_GET(pBlock->m_stackRegister, var);
+		STACK_POP(pBlock->m_stackRegister);
 		if (pBlock->SetVal(cType, dwPos, var) == false)
 		{
 			return CScriptExecBlock::ERESULT_ERROR;
@@ -609,7 +615,7 @@ namespace zlscript
 	}
 	int CLoadExeCode::Run(CScriptExecBlock* pBlock, CBaseExeCode **pNextPoint)
 	{
-		pBlock->m_register[cResultRegister] = pBlock->GetVal(cType, dwPos);
+		pBlock->GetVal(pBlock->m_register[cResultRegister],cType, dwPos);
 		if (pNextPoint)
 		{
 			*pNextPoint = this->m_pNext;
@@ -723,22 +729,24 @@ namespace zlscript
 	int CCallBackExeCode::Run(CScriptExecBlock* pBlock, CBaseExeCode **pNextPoint)
 	{
 		int nResult = CScriptExecBlock::ERESULT_CONTINUE;
-		if (pBlock->m_stackRegister.size() >= cParmSize)
+		if (pBlock->m_stackRegister.nIndex >= cParmSize)
 		{
 			CACHE_NEW(CScriptCallState, pCallState, pBlock->m_pMaster);
 			if (pCallState)
 			{
 				//设置参数
-				for (unsigned int i = pBlock->m_stackRegister.size() - cParmSize; i < pBlock->m_stackRegister.size(); i++)
-				{
-					auto pVar = pBlock->m_stackRegister.GetVal(i);
-					if (pVar)
-						pCallState->PushVarToStack(*pVar);
-				}
-				for (unsigned char i = 0; i < cParmSize; i++)
-				{
-					pBlock->m_stackRegister.pop();
-				}
+				unsigned nBegin = pBlock->m_stackRegister.nIndex - (unsigned int)cParmSize;
+				STACK_MOVE_ALL_BACK(pCallState->m_stackRegister, pBlock->m_stackRegister, nBegin);
+				//for (unsigned int i = pBlock->m_stackRegister.nIndex - cParmSize; i < pBlock->m_stackRegister.nIndex; i++)
+				//{
+				//	StackVarInfo var;
+				//	STACK_GET_INDEX(pBlock->m_stackRegister, var,i);
+				//	STACK_PUSH(pCallState->m_stackRegister, var);
+				//}
+				//for (unsigned char i = 0; i < cParmSize; i++)
+				//{
+				//	STACK_POP(pBlock->m_stackRegister);
+				//}
 				//运行回调函数
 				switch (pBlock->m_pMaster->CallFun_CallBack(pBlock->m_pMaster->m_pMachine, unFunIndex, pCallState))
 				{
@@ -781,7 +789,7 @@ namespace zlscript
 	int CCallScriptExeCode::Run(CScriptExecBlock* pBlock, CBaseExeCode **pNextPoint)
 	{
 		int nResult = CScriptExecBlock::ERESULT_CONTINUE;
-		if (pBlock->m_stackRegister.size() >= cParmSize)
+		if (pBlock->m_stackRegister.nIndex >= cParmSize)
 		{
 			//运行回调函数
 			switch (pBlock->m_pMaster->CallFun_Script(pBlock->m_pMaster->m_pMachine, unFunIndex, pBlock->m_stackRegister, cParmSize, cResultRegister))
@@ -802,7 +810,7 @@ namespace zlscript
 			}
 			for (unsigned char i = 0; i < cParmSize; i++)
 			{
-				pBlock->m_stackRegister.pop();
+				STACK_POP(pBlock->m_stackRegister);
 			}
 		}
 		else
@@ -906,22 +914,24 @@ namespace zlscript
 		int nResult = CScriptExecBlock::ERESULT_CONTINUE;
 		PointVarInfo pointVal = GetPoint_StackVar(&pBlock->m_register[cClassRegIndex]);
 
-		if (pBlock->m_stackRegister.size() >= cParmSize)
+		if (pBlock->m_stackRegister.nIndex >= cParmSize)
 		{
 			CACHE_NEW(CScriptCallState, pCallState, pBlock->m_pMaster);
 			if (pCallState)
 			{
 				//设置参数
-				for (unsigned int i = pBlock->m_stackRegister.size() - cParmSize; i < pBlock->m_stackRegister.size(); i++)
-				{
-					auto pVar = pBlock->m_stackRegister.GetVal(i);
-					if (pVar)
-						pCallState->PushVarToStack(*pVar);
-				}
-				for (unsigned char i = 0; i < cParmSize; i++)
-				{
-					pBlock->m_stackRegister.pop();
-				}
+				unsigned nBegin = pBlock->m_stackRegister.nIndex - (unsigned int)cParmSize;
+				STACK_MOVE_ALL_BACK(pCallState->m_stackRegister, pBlock->m_stackRegister, nBegin);
+				//for (unsigned int i = pBlock->m_stackRegister.nIndex - cParmSize; i < pBlock->m_stackRegister.nIndex; i++)
+				//{
+				//	StackVarInfo var;
+				//	STACK_GET_INDEX(pBlock->m_stackRegister, var, i);
+				//	STACK_PUSH(pCallState->m_stackRegister, var);
+				//}
+				//for (unsigned char i = 0; i < cParmSize; i++)
+				//{
+				//	STACK_POP(pBlock->m_stackRegister);
+				//}
 
 				CScriptBasePointer* pPoint = pointVal.pPoint;
 				if (pPoint)

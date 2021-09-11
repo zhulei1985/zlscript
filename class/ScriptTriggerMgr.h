@@ -40,7 +40,7 @@ namespace zlscript
 		{
 			int nEventnChannel;
 			std::string strScriptName;
-			CScriptStack parm;
+			tagScriptVarStack parm;
 		};
 		struct tagEventTriggers
 		{
@@ -53,7 +53,7 @@ namespace zlscript
 			std::map<std::string, tagEventTriggers> vTriggers;
 		};
 
-		void SetEventTrigger(std::string strEvent, __int64 nClassPoint, std::string flag, int nChannel, std::string strScriptName, CScriptStack& parm);
+		void SetEventTrigger(std::string strEvent, __int64 nClassPoint, std::string flag, int nChannel, std::string strScriptName, tagScriptVarStack& parm);
 		void TriggerEvent(std::string strEvent, __int64 nClassPoint);
 		void RemoveTrigger(std::string strEvent, __int64 nClassPoint, std::string flag);
 	protected:

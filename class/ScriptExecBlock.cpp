@@ -5,7 +5,6 @@
 #include "ScriptVirtualMachine.h"
 #include "EScriptVariableType.h"
 #include "ScriptCallBackFunion.h"
-#include "ScriptExecCodeMgr.h"
 #include "ScriptExecBlock.h"
 #include "ScriptSuperPointer.h"
 #include "ScriptClassMgr.h"
@@ -160,30 +159,75 @@ namespace zlscript
 		return false;
 	}
 
-	bool CScriptExecBlock::SetVal(char cType, unsigned int pos, StackVarInfo& var)
+	bool CScriptExecBlock::GetVal(__int64& var, char cType, unsigned int pos)
 	{
 		switch (cType)
 		{
+		case ESIGN_VALUE_INT:
+			var = (__int64)pos;
+			return true;
 		case ESIGN_POS_GLOBAL_VAR://全局变量
-		{
-			m_pMaster->m_pMachine->SetGlobalVar(pos, var);
-		}
-		break;
+			var = GetInt_StackVar(&m_pMaster->m_pMachine->GetGlobalVar(pos));
+			return true;
 		case ESIGN_POS_LOACL_VAR:
+			if (m_pTempVar && pos < m_nTempVarSize)
+			{
+				var=GetInt_StackVar(&m_pTempVar[pos]);
+				return true;
+			}
+			return false;
+		case ESIGN_POS_CONST_STRING:
+			if (pos < m_pCodeData->vStrConst.size())
+			{
+				var= _atoi64(m_pCodeData->vStrConst[pos].c_str());
+				return true;
+			}
+			return false;
+		case ESIGN_POS_CONST_FLOAT:
+			if (pos < m_pCodeData->vFloatConst.size())
+			{
+				var = (__int64)m_pCodeData->vFloatConst[pos];
+				return true;
+			}
+			return false;
+		case ESIGN_POS_CONST_INT64:
+			if (pos < m_pCodeData->vInt64Const.size())
+			{
+				var = m_pCodeData->vInt64Const[pos];
+				return true;
+			}
+			return false;
+		case ESIGN_REGISTER:
+			if (pos < R_SIZE)
+			{
+				var = GetInt_StackVar(&m_register[pos]);
+				return true;
+			}
+			return false;
+		}
+		return false;
+	}
+
+	bool CScriptExecBlock::SetVal(char cType, unsigned int pos, StackVarInfo& var)
+	{
+		if (cType == ESIGN_POS_LOACL_VAR)
 		{
 			if (m_pTempVar && pos < m_nTempVarSize)
 			{
-				SCRIPTVAR_SET_VAR(m_pTempVar[pos] , var);
+				SCRIPTVAR_SET_VAR(m_pTempVar[pos], var);
 			}
 		}
-		break;
-		case ESIGN_REGISTER:
+		else if (cType == ESIGN_REGISTER)
 		{
 			SCRIPTVAR_SET_VAR(m_register[pos], var);
 		}
-		break;
-		default:
-		return false;
+		else if (cType == ESIGN_POS_GLOBAL_VAR)
+		{
+			m_pMaster->m_pMachine->SetGlobalVar(pos, var);
+		}
+		else
+		{
+			return false;
 		}
 		return true;
 	}
@@ -291,42 +335,39 @@ namespace zlscript
 		return false;
 	}
 
-	void CScriptExecBlock::PushVar(StackVarInfo& var)
-	{
-		m_stackRegister.push(var);
-	}
+	//void CScriptExecBlock::PushVar(StackVarInfo& var)
+	//{
+	//	m_stackRegister.push(var);
+	//}
 
-	StackVarInfo CScriptExecBlock::PopVar()
-	{
-		StackVarInfo var;
-		if (!m_stackRegister.empty())
-		{
-			var = m_stackRegister.top();
-			m_stackRegister.pop();
-		}
-		return var;
-	}
+	//StackVarInfo CScriptExecBlock::PopVar()
+	//{
+	//	StackVarInfo var;
+	//	if (!m_stackRegister.empty())
+	//	{
+	//		var = m_stackRegister.top();
+	//		m_stackRegister.pop();
+	//	}
+	//	return var;
+	//}
 
-	StackVarInfo* CScriptExecBlock::GetVar(unsigned int index)
-	{
-		if (m_stackRegister.size() > index)
-		{
-			return m_stackRegister.GetVal(index);
-		}
-		return nullptr;
-	}
+	//StackVarInfo* CScriptExecBlock::GetVar(unsigned int index)
+	//{
+	//	if (m_stackRegister.size() > index)
+	//	{
+	//		return m_stackRegister.GetVal(index);
+	//	}
+	//	return nullptr;
+	//}
 
-	unsigned int CScriptExecBlock::GetVarSize()
-	{
-		return m_stackRegister.size();
-	}
+	//unsigned int CScriptExecBlock::GetVarSize()
+	//{
+	//	return m_stackRegister.size();
+	//}
 
 	void CScriptExecBlock::ClearStack()
 	{
-		while (!m_stackRegister.empty())
-		{
-			m_stackRegister.pop();
-		}
+		STACK_CLEAR(m_stackRegister);
 	}
 
 	std::string CScriptExecBlock::GetCurSourceWords()

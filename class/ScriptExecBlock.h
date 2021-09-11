@@ -43,7 +43,7 @@ namespace zlscript
 		inline __int64 GetVal_Int64(char cType, unsigned int pos);
 		StackVarInfo GetVal(char cType, unsigned int pos);
 		bool GetVal(StackVarInfo& var, char cType, unsigned int pos);
-
+		bool GetVal(__int64& var, char cType, unsigned int pos);
 		bool SetVal(char cType, unsigned int pos, StackVarInfo& var);
 	private:
 		//指向的代码块
@@ -56,7 +56,8 @@ namespace zlscript
 		//寄存器
 		StackVarInfo m_register[R_SIZE];
 		//堆栈
-		CScriptStack m_stackRegister;
+		//CScriptStack m_stackRegister;
+		tagScriptVarStack m_stackRegister;
 
 		char m_cReturnRegisterIndex;//返回值放入的寄存器索引
 		StackVarInfo m_varReturnVar;//返回值
@@ -77,10 +78,10 @@ namespace zlscript
 
 		bool CheckRegisterTrue(char index);
 
-		void PushVar(StackVarInfo& var);
-		StackVarInfo PopVar();
-		StackVarInfo* GetVar(unsigned int index);
-		unsigned int GetVarSize();
+		//void PushVar(StackVarInfo& var);
+		//StackVarInfo PopVar();
+		//StackVarInfo* GetVar(unsigned int index);
+		//unsigned int GetVarSize();
 
 		StackVarInfo& GetReturnVar()
 		{

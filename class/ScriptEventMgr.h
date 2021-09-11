@@ -47,7 +47,7 @@ namespace zlscript
 		int nEventType;//事件类型
 
 		//传递参数
-		CScriptStack m_Parm;
+		tagScriptVarStack m_Parm;
 	};
 
 	//2020.5.24 新的修改计划：
@@ -65,7 +65,7 @@ namespace zlscript
 		void RemoveChannel(__int64 nChannel);
 
 		//压入事件，如果事件频道无人处理，返回失败
-		bool SendEvent(int nEventType, __int64 nSendID, CScriptStack& vIn, __int64 nRecvID = 0);
+		bool SendEvent(int nEventType, __int64 nSendID, tagScriptVarStack& vIn, __int64 nRecvID = 0);
 
 		void GetEventByType(int nEventType, std::vector<tagScriptEvent*> &vOut, int nSize = 10);
 		void GetEventByChannel(__int64 nChannelID, std::vector<tagScriptEvent*>& vOut);

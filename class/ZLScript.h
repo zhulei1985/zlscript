@@ -56,9 +56,11 @@ namespace zlscript
 		{
 			return;
 		}
-		CScriptStack vRetrunVars;
-		ScriptVector_PushVar(vRetrunVars, (__int64)0);
-		ScriptVector_PushVar(vRetrunVars, pName);
+		tagScriptVarStack vRetrunVars;
+		StackVarInfo var((__int64)0);
+		StackVarInfo var2(pName);
+		STACK_PUSH(vRetrunVars,var);
+		STACK_PUSH(vRetrunVars, var2);
 		CScriptEventMgr::GetInstance()->SendEvent(E_SCRIPT_EVENT_RUNSCRIPT,0, vRetrunVars);
 	}
 
