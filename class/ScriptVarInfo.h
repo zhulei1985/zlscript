@@ -92,17 +92,17 @@ namespace zlscript
 		var.cType = EScriptVal_String;\
 		var.Int64 = StackVarInfo::s_strPool.NewString(pStr);\
 	}
-#define SCRIPTVAR_SET_SUPER_POINT(var, pPoint) { \
+#define SCRIPTVAR_SET_SUPER_POINT(var, point) { \
 		SCRIPTVAR_CLEAR_NO_SAFE(var)\
 		var.cType = EScriptVal_ClassPoint;\
-		var.pPoint = pPoint;\
-		CScriptSuperPointerMgr::GetInstance()->PickupPointer(pPoint); \
+		var.pPoint = point;\
+		CScriptSuperPointerMgr::GetInstance()->PickupPointer(point); \
 	}
-#define SCRIPTVAR_SET_INTERFACE_POINT(var, pPoint) { \
+#define SCRIPTVAR_SET_INTERFACE_POINT(var, point) { \
 		SCRIPTVAR_CLEAR_NO_SAFE(var)\
-		if (pPoint){\
+		if (point){\
 			var.cType = EScriptVal_ClassPoint;\
-			var.pPoint = CScriptSuperPointerMgr::GetInstance()->PickupPointer(pPoint->GetScriptPointIndex());\
+			var.pPoint = CScriptSuperPointerMgr::GetInstance()->PickupPointer(point->GetScriptPointIndex());\
 		}\
 	}
 #define SCRIPTVAR_SET_BINARY(var, pBin) { \

@@ -2050,6 +2050,13 @@ namespace zlscript
 			RevertAll();
 			return false;
 		}
+		GetWord(nextWord);
+		if (nextWord.word == ";")
+		{
+			//不返回
+			return true;
+		}
+		RevertOne();
 		if (!m_pLoader->RunCompileState(vIn, CScriptCodeLoader::E_CODE_SCOPE_EXPRESSION, this, 0))
 		{
 			AddErrorInfo(nextWord.nSourceWordsIndex, "CReturnICode:expression format error");

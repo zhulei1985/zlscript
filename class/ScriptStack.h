@@ -527,9 +527,20 @@ namespace zlscript
 		SCRIPTVAR_SET_VAR(stack.m_vData[stack.nIndex],var);\
 		stack.nIndex++;\
 	}
+#define STACK_PUSH_VAR(stack,intvar) {\
+		StackVarInfo var(intvar);\
+		STACK_PUSH(stack, var);\
+	}
+#define STACK_PUSH_INTERFACE(stack,point) {\
+		StackVarInfo var;\
+		SCRIPTVAR_SET_INTERFACE_POINT(var,point);\
+		STACK_PUSH(stack, var);\
+	}
 #define STACK_PUSH_FRONT(stack,var) {\
 		STACK_CHECK_SIZE(stack)\
 		memcpy(&stack.m_vData[1],&stack.m_vData[0],sizeof(StackVarInfo)*(stack.nIndex));\
+		stack.m_vData[0].cType=EScriptVal_None;\
+		stack.m_vData[0].Int64=0;\
 		SCRIPTVAR_SET_VAR(stack.m_vData[0],var);\
 		stack.nIndex++;\
 	}
@@ -539,7 +550,11 @@ namespace zlscript
 			stack.nSize += 16;\
 			stack.m_vData.resize(stack.nSize);\
 		}\
-		memcpy(&stack.m_vData[1],&stack.m_vData[0],sizeof(StackVarInfo)*(stack.nIndex));\
+		memcpy(&stack.m_vData[2],&stack.m_vData[0],sizeof(StackVarInfo)*(stack.nIndex));\
+		stack.m_vData[0].cType=EScriptVal_None;\
+		stack.m_vData[0].Int64=0;\
+		stack.m_vData[1].cType=EScriptVal_None;\
+		stack.m_vData[1].Int64=0;\
 		SCRIPTVAR_SET_VAR(stack.m_vData[0],var);\
 		SCRIPTVAR_SET_VAR(stack.m_vData[1],var2);\
 		stack.nIndex+=2;\
@@ -555,8 +570,11 @@ namespace zlscript
 		unsigned int i = 0;\
 		for (; i < num&&i<stack.nIndex; i++)\
 			stack.m_vData[i].Clear();\
-		if (i < stack.nIndex)\
+		if (i < stack.nIndex){\
 			memcpy(&stack.m_vData[0],&stack.m_vData[i],sizeof(StackVarInfo)*(stack.nIndex-i));\
+			memset(&stack.m_vData[stack.nIndex-i],0,sizeof(StackVarInfo)*i);\
+			stack.nIndex-=i;\
+		}\
 	}
 #define STACK_GET(stack,var) {\
 		if (stack.nIndex>0)\
