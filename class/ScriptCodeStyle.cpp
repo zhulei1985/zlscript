@@ -27,13 +27,11 @@ namespace zlscript
 	{
 		StackVarInfo& resultVar = pBlock->m_register[cResultRegister];
 		StackVarInfo& leftVar = pBlock->m_register[R_A];
-		StackVarInfo& rightVar = pBlock->m_register[R_D];
 		//pBlock->GetVal(rightVar, cType, dwPos);
 		switch (leftVar.cType)
 		{
 		case EScriptVal_Int:
 		{
-			//__int64 nVal1 = GetInt_StackVar(&pBlock->m_register[R_A]);
 			__int64 nVal2 = 0;
 			pBlock->GetVal(nVal2, cType, dwPos);
 			//resultVar = leftVar.Int64 + nVal2;
@@ -42,19 +40,19 @@ namespace zlscript
 		break;
 		case EScriptVal_Double:
 		{
-			pBlock->GetVal(rightVar, cType, dwPos);
-			//double dVal1 = GetFloat_StackVar(&leftVar);
-			double dVal2 = GetFloat_StackVar(&rightVar);
+			double dVal2 = 0;
+			pBlock->GetVal(dVal2, cType, dwPos);
 			SCRIPTVAR_SET_FLOAT(resultVar , leftVar.Double + dVal2);
 		}
 		break;
 		case EScriptVal_String:
 		{
-			pBlock->GetVal(rightVar, cType, dwPos);
-			std::string strVal1 = GetString_StackVar(&leftVar);
-			std::string strVal2 = GetString_StackVar(&rightVar);
+			std::string strVal1;
+			SCRIPTVAR_GET_STRING(leftVar, strVal1);
+			std::string strVal2;
+			pBlock->GetVal(strVal2, cType, dwPos);
 			strVal1 = strVal1 + strVal2;
-			resultVar = strVal1.c_str();
+			SCRIPTVAR_SET_STRING(resultVar, strVal1);
 		}
 		break;
 		default:
@@ -76,25 +74,21 @@ namespace zlscript
 	{
 		StackVarInfo& resultVar = pBlock->m_register[cResultRegister];
 		StackVarInfo& leftVar = pBlock->m_register[R_A];
-		StackVarInfo& rightVar = pBlock->m_register[R_D];
-		pBlock->GetVal(rightVar, cType, dwPos);
-		switch (leftVar.cType)
+
+		if (leftVar.cType == EScriptVal_Int)
 		{
-		case EScriptVal_Int:
-		{
-			__int64 nVal1 = GetInt_StackVar(&leftVar);
-			__int64 nVal2 = GetInt_StackVar(&rightVar);
-			resultVar = nVal1 - nVal2;;
+			__int64 nVal2 = 0;
+			pBlock->GetVal(nVal2, cType, dwPos);
+			SCRIPTVAR_SET_INT(resultVar,leftVar.Int64-nVal2);
 		}
-		break;
-		case EScriptVal_Double:
+		else if (leftVar.cType == EScriptVal_Double)
 		{
-			double dVal1 = GetFloat_StackVar(&leftVar);
-			double dVal2 = GetFloat_StackVar(&rightVar);
-			resultVar = dVal1 - dVal2;
+			double dVal2 = 0;
+			pBlock->GetVal(dVal2, cType, dwPos);
+			SCRIPTVAR_SET_FLOAT(resultVar, leftVar.Double - dVal2);
 		}
-		break;
-		default:
+		else
+		{
 			return CScriptExecBlock::ERESULT_ERROR;
 		}
 		if (pNextPoint)
@@ -113,26 +107,19 @@ namespace zlscript
 	{
 		StackVarInfo& resultVar = pBlock->m_register[cResultRegister];
 		StackVarInfo& leftVar = pBlock->m_register[R_A];
-		StackVarInfo& rightVar = pBlock->m_register[R_D];
-		pBlock->GetVal(rightVar, cType, dwPos);
-		switch (leftVar.cType)
+		if (leftVar.cType == EScriptVal_Int)
 		{
-		case EScriptVal_Int:
-		{
-			//__int64 nVal1 = GetInt_StackVar(&leftVar);
-			__int64 nVal2 = GetInt_StackVar(&rightVar);
-			//resultVar = leftVar.Int64 * nVal2;
+			__int64 nVal2 = 0;
+			pBlock->GetVal(nVal2, cType, dwPos);
 			SCRIPTVAR_SET_INT(resultVar, leftVar.Int64 * nVal2);
 		}
-		break;
-		case EScriptVal_Double:
+		else if (leftVar.cType == EScriptVal_Double)
 		{
-			//double dVal1 = GetFloat_StackVar(&leftVar);
-			double dVal2 = GetFloat_StackVar(&rightVar);
-			resultVar = leftVar.Double * dVal2;
+			double dVal2 = 0;
+			pBlock->GetVal(dVal2, cType, dwPos);
+			SCRIPTVAR_SET_FLOAT(resultVar ,leftVar.Double * dVal2);
 		}
-		break;
-		default:
+		else{
 			return CScriptExecBlock::ERESULT_ERROR;
 		}
 		if (pNextPoint)
@@ -149,38 +136,36 @@ namespace zlscript
 	}
 	int CDivExeCode::Run(CScriptExecBlock* pBlock, CBaseExeCode **pNextPoint)
 	{
-		pBlock->GetVal(pBlock->m_register[R_D], cType, dwPos);
-		switch (pBlock->m_register[R_A].cType)
+		StackVarInfo& resultVar = pBlock->m_register[cResultRegister];
+		StackVarInfo& leftVar = pBlock->m_register[R_A];
+		
+		if (leftVar.cType == EScriptVal_Int)
 		{
-		case EScriptVal_Int:
-		{
-			__int64 nVal1 = GetInt_StackVar(&pBlock->m_register[R_A]);
-			__int64 nVal2 = GetInt_StackVar(&pBlock->m_register[R_D]);
+			__int64 nVal2 = 0; GetInt_StackVar(&pBlock->m_register[R_D]);
+			pBlock->GetVal(nVal2, cType, dwPos);
 			if (nVal2 == 0)
 			{
-				pBlock->m_register[cResultRegister] = (__int64)0xffffffff;
+				SCRIPTVAR_SET_INT(resultVar, (__int64)0xffffffffffffffff);
 			}
 			else
 			{
-				pBlock->m_register[cResultRegister] = nVal1 / nVal2;
+				SCRIPTVAR_SET_INT(resultVar, leftVar.Int64 / nVal2);
 			}
 		}
-		break;
-		case EScriptVal_Double:
+		else if (leftVar.cType == EScriptVal_Double)
 		{
-			double dVal1 = GetFloat_StackVar(&pBlock->m_register[R_A]);
-			double dVal2 = GetFloat_StackVar(&pBlock->m_register[R_D]);
-			if (dVal1 <= 0.00000001f && dVal1 >= -0.00000001f)
+			double dVal2 = 0;
+			pBlock->GetVal(dVal2, cType, dwPos);
+			if (dVal2 <= 0.00000001f && dVal2 >= -0.00000001f)
 			{
-				pBlock->m_register[cResultRegister] = (double)1.7976931348623158e+308;
+				SCRIPTVAR_SET_FLOAT(resultVar, (double)1.7976931348623158e+308);
 			}
 			else
 			{
-				pBlock->m_register[cResultRegister] = dVal1 / dVal2;
+				SCRIPTVAR_SET_FLOAT(resultVar, leftVar.Double / dVal2);
 			}
 		}
-		break;
-		default:
+		else{
 			return CScriptExecBlock::ERESULT_ERROR;
 		}
 		if (pNextPoint)
@@ -197,17 +182,19 @@ namespace zlscript
 	}
 	int CModExeCode::Run(CScriptExecBlock* pBlock, CBaseExeCode **pNextPoint)
 	{
-		pBlock->GetVal(pBlock->m_register[R_D], cType, dwPos);
-
-		__int64 nVal1 = GetInt_StackVar(&pBlock->m_register[R_A]);
-		__int64 nVal2 = GetInt_StackVar(&pBlock->m_register[R_D]);
+		StackVarInfo& resultVar = pBlock->m_register[cResultRegister];
+		StackVarInfo& leftVar = pBlock->m_register[R_A];
+		__int64 nVal1 = 0;
+		SCRIPTVAR_GET_INT(leftVar,nVal1);
+		__int64 nVal2 = 0;
+		pBlock->GetVal(nVal2, cType, dwPos);
 		if (nVal2 == 0)
 		{
-			pBlock->m_register[cResultRegister] = (__int64)0;
+			resultVar = (__int64)0;
 		}
 		else
 		{
-			pBlock->m_register[cResultRegister] = nVal1 % nVal2;
+			resultVar = nVal1 % nVal2;
 		}
 		if (pNextPoint)
 		{
@@ -223,19 +210,17 @@ namespace zlscript
 	}
 	int CMinusExeCode::Run(CScriptExecBlock* pBlock, CBaseExeCode **pNextPoint)
 	{
-		switch (pBlock->m_register[R_A].cType)
+		StackVarInfo& resultVar = pBlock->m_register[cResultRegister];
+		StackVarInfo& leftVar = pBlock->m_register[R_A];
+		if (leftVar.cType == EScriptVal_Int)
 		{
-		case EScriptVal_Int:
-		{
-			pBlock->m_register[cResultRegister] = -pBlock->m_register[R_A].Int64;
+			SCRIPTVAR_SET_INT(resultVar, -leftVar.Int64);
 		}
-		break;
-		case EScriptVal_Double:
+		if (leftVar.cType == EScriptVal_Double)
 		{
-			pBlock->m_register[cResultRegister] = -pBlock->m_register[R_A].Double;
+			SCRIPTVAR_SET_FLOAT(resultVar, -leftVar.Double);
 		}
-		break;
-		default:
+		else{
 			return CScriptExecBlock::ERESULT_ERROR;
 		}
 		if (pNextPoint)
@@ -252,35 +237,49 @@ namespace zlscript
 	}
 	int CCmpEqualExeCode::Run(CScriptExecBlock* pBlock, CBaseExeCode **pNextPoint)
 	{
-		pBlock->GetVal(pBlock->m_register[R_D], cType, dwPos);
-		switch (pBlock->m_register[R_A].cType)
+		StackVarInfo& resultVar = pBlock->m_register[cResultRegister];
+		StackVarInfo& leftVar = pBlock->m_register[R_A];
+		switch (leftVar.cType)
 		{
 		case EScriptVal_Int:
 		{
-			__int64 nVal1 = GetInt_StackVar(&pBlock->m_register[R_A]);
-			__int64 nVal2 = GetInt_StackVar(&pBlock->m_register[R_D]);
-			pBlock->m_register[cResultRegister] = (__int64)(nVal1 == nVal2 ? 1 : 0);
+			__int64 nVal2 = 0;
+			pBlock->GetVal(nVal2, cType, dwPos);
+			SCRIPTVAR_SET_INT(resultVar, (__int64)(leftVar.Int64 == nVal2 ? 1 : 0));
 		}
 		break;
 		case EScriptVal_Double:
 		{
-			double dVal1 = GetFloat_StackVar(&pBlock->m_register[R_A]);
-			double dVal2 = GetFloat_StackVar(&pBlock->m_register[R_D]);
-			pBlock->m_register[cResultRegister] = (__int64)(dVal1 == dVal2 ? 1 : 0);
+			double dVal2 = 0;
+			pBlock->GetVal(dVal2, cType, dwPos);
+			SCRIPTVAR_SET_INT(resultVar, (__int64)(leftVar.Double == dVal2 ? 1 : 0));
 		}
 		break;
 		case EScriptVal_String:
 		{
-			std::string strVal1 = GetString_StackVar(&pBlock->m_register[R_A]);
-			std::string strVal2 = GetString_StackVar(&pBlock->m_register[R_D]);
-			pBlock->m_register[cResultRegister] = (__int64)(strVal1 == strVal2 ? 1 : 0);
+			std::string strVal1;
+			SCRIPTVAR_GET_STRING(leftVar, strVal1);
+			std::string strVal2;
+			pBlock->GetVal(strVal2, cType, dwPos);
+			SCRIPTVAR_SET_INT(resultVar, (__int64)(strVal1 == strVal2 ? 1 : 0));
 		}
 		break;
 		case EScriptVal_ClassPoint:
 		{
-			__int64 nVal1 = GetPointIndex_StackVar(&pBlock->m_register[R_A]);
-			__int64 nVal2 = GetPointIndex_StackVar(&pBlock->m_register[R_D]);
-			pBlock->m_register[cResultRegister] = (__int64)(nVal1 == nVal2 ? 1 : 0);
+			StackVarInfo rightVar;
+			pBlock->GetVal(rightVar, cType, dwPos);
+			if (leftVar.pPoint == nullptr && (rightVar.cType == EScriptVal_None || rightVar.cType == EScriptVal_Void))
+			{
+				SCRIPTVAR_SET_INT(resultVar, (__int64)(1));
+			}
+			else if (rightVar.cType == EScriptVal_ClassPoint && leftVar.pPoint == rightVar.pPoint)
+			{
+				SCRIPTVAR_SET_INT(resultVar, (__int64)(1));
+			}
+			else
+			{
+				SCRIPTVAR_SET_INT(resultVar, (__int64)(0));
+			}
 		}
 		break;
 		default:
@@ -300,36 +299,49 @@ namespace zlscript
 	}
 	int CCmpNotEqualExeCode::Run(CScriptExecBlock* pBlock, CBaseExeCode **pNextPoint)
 	{
-		StackVarInfo& rightVar = pBlock->m_register[R_D];
-		pBlock->GetVal(rightVar, cType, dwPos);
-		switch (pBlock->m_register[R_A].cType)
+		StackVarInfo& resultVar = pBlock->m_register[cResultRegister];
+		StackVarInfo& leftVar = pBlock->m_register[R_A];
+		switch (leftVar.cType)
 		{
 		case EScriptVal_Int:
 		{
-			__int64 nVal1 = GetInt_StackVar(&pBlock->m_register[R_A]);
-			__int64 nVal2 = GetInt_StackVar(&rightVar);
-			pBlock->m_register[cResultRegister] = (__int64)(nVal1 != nVal2 ? 1 : 0);
+			__int64 nVal2 = 0;
+			pBlock->GetVal(nVal2, cType, dwPos);
+			SCRIPTVAR_SET_INT(resultVar, (__int64)(leftVar.Int64 != nVal2 ? 1 : 0));
 		}
 		break;
 		case EScriptVal_Double:
 		{
-			double dVal1 = GetFloat_StackVar(&pBlock->m_register[R_A]);
-			double dVal2 = GetFloat_StackVar(&rightVar);
-			pBlock->m_register[cResultRegister] = (__int64)(dVal1 != dVal2 ? 1 : 0);
+			double dVal2 = 0;
+			pBlock->GetVal(dVal2, cType, dwPos);
+			SCRIPTVAR_SET_INT(resultVar, (__int64)(leftVar.Double != dVal2 ? 1 : 0));
 		}
 		break;
 		case EScriptVal_String:
 		{
-			std::string strVal1 = GetString_StackVar(&pBlock->m_register[R_A]);
-			std::string strVal2 = GetString_StackVar(&rightVar);
-			pBlock->m_register[cResultRegister] = (__int64)(strVal1 != strVal2 ? 1 : 0);
+			std::string strVal1;
+			SCRIPTVAR_GET_STRING(leftVar, strVal1);
+			std::string strVal2;
+			pBlock->GetVal(strVal2, cType, dwPos);
+			SCRIPTVAR_SET_INT(resultVar, (__int64)(strVal1 != strVal2 ? 1 : 0));
 		}
 		break;
 		case EScriptVal_ClassPoint:
 		{
-			__int64 nVal1 = GetPointIndex_StackVar(&pBlock->m_register[R_A]);
-			__int64 nVal2 = GetPointIndex_StackVar(&rightVar);
-			pBlock->m_register[cResultRegister] = (__int64)(nVal1 != nVal2 ? 1 : 0);
+			StackVarInfo rightVar;
+			pBlock->GetVal(rightVar, cType, dwPos);
+			if (leftVar.pPoint == nullptr && (rightVar.cType == EScriptVal_None || rightVar.cType == EScriptVal_Void))
+			{
+				SCRIPTVAR_SET_INT(resultVar, (__int64)(0));
+			}
+			else if (rightVar.cType == EScriptVal_ClassPoint && leftVar.pPoint == rightVar.pPoint)
+			{
+				SCRIPTVAR_SET_INT(resultVar, (__int64)(0));
+			}
+			else
+			{
+				SCRIPTVAR_SET_INT(resultVar, (__int64)(1));
+			}
 		}
 		break;
 		default:
@@ -349,25 +361,22 @@ namespace zlscript
 	}
 	int CCmpBigExeCode::Run(CScriptExecBlock* pBlock, CBaseExeCode **pNextPoint)
 	{
-		StackVarInfo& rightVar = pBlock->m_register[R_D];
-		pBlock->GetVal(rightVar, cType, dwPos);
-		switch (pBlock->m_register[R_A].cType)
+		StackVarInfo& resultVar = pBlock->m_register[cResultRegister];
+		StackVarInfo& leftVar = pBlock->m_register[R_A];
+
+		if (leftVar.cType==EScriptVal_Int)
 		{
-		case EScriptVal_Int:
-		{
-			__int64 nVal1 = GetInt_StackVar(&pBlock->m_register[R_A]);
-			__int64 nVal2 = GetInt_StackVar(&rightVar);
-			pBlock->m_register[cResultRegister] = (__int64)(nVal1 > nVal2 ? 1 : 0);
+			__int64 nVal2 = 0;
+			pBlock->GetVal(nVal2, cType, dwPos);
+			SCRIPTVAR_SET_INT(resultVar, (__int64)(leftVar.Int64 > nVal2 ? 1 : 0));
 		}
-		break;
-		case EScriptVal_Double:
+		else if (leftVar.cType == EScriptVal_Double)
 		{
-			double dVal1 = GetFloat_StackVar(&pBlock->m_register[R_A]);
-			double dVal2 = GetFloat_StackVar(&rightVar);
-			pBlock->m_register[cResultRegister] = (__int64)(dVal1 > dVal2 ? 1 : 0);
+			double dVal2 = 0;
+			pBlock->GetVal(dVal2, cType, dwPos);
+			SCRIPTVAR_SET_INT(resultVar, (__int64)(leftVar.Double > dVal2 ? 1 : 0));
 		}
-		break;
-		default:
+		else{
 			return CScriptExecBlock::ERESULT_ERROR;
 		}
 		if (pNextPoint)
@@ -384,27 +393,25 @@ namespace zlscript
 	}
 	int CCmpBigAndEqualExeCode::Run(CScriptExecBlock* pBlock, CBaseExeCode **pNextPoint)
 	{
-		StackVarInfo& rightVar = pBlock->m_register[R_D];
-		pBlock->GetVal(rightVar, cType, dwPos);
-		switch (pBlock->m_register[R_A].cType)
+		StackVarInfo& resultVar = pBlock->m_register[cResultRegister];
+		StackVarInfo& leftVar = pBlock->m_register[R_A];
+
+		if (leftVar.cType == EScriptVal_Int)
 		{
-		case EScriptVal_Int:
-		{
-			__int64 nVal1 = GetInt_StackVar(&pBlock->m_register[R_A]);
-			__int64 nVal2 = GetInt_StackVar(&rightVar);
-			pBlock->m_register[cResultRegister] = (__int64)(nVal1 >= nVal2 ? 1 : 0);
+			__int64 nVal2 = 0;
+			pBlock->GetVal(nVal2, cType, dwPos);
+			SCRIPTVAR_SET_INT(resultVar, (__int64)(leftVar.Int64 >= nVal2 ? 1 : 0));
 		}
-		break;
-		case EScriptVal_Double:
+		else if (leftVar.cType == EScriptVal_Double)
 		{
-			double dVal1 = GetFloat_StackVar(&pBlock->m_register[R_A]);
-			double dVal2 = GetFloat_StackVar(&rightVar);
-			pBlock->m_register[cResultRegister] = (__int64)(dVal1 >= dVal2 ? 1 : 0);
+			double dVal2 = 0;
+			pBlock->GetVal(dVal2, cType, dwPos);
+			SCRIPTVAR_SET_INT(resultVar, (__int64)(leftVar.Double >= dVal2 ? 1 : 0));
 		}
-		break;
-		default:
+		else {
 			return CScriptExecBlock::ERESULT_ERROR;
 		}
+
 		if (pNextPoint)
 		{
 			*pNextPoint = this->m_pNext;
@@ -419,31 +426,25 @@ namespace zlscript
 	}
 	int CCmpLessExeCode::Run(CScriptExecBlock* pBlock, CBaseExeCode **pNextPoint)
 	{
-		StackVarInfo& leftVar = pBlock->m_register[R_A];
-		StackVarInfo& rightVar = pBlock->m_register[R_D];
 		StackVarInfo& resultVar = pBlock->m_register[cResultRegister];
-		//pBlock->GetVal(rightVar, cType, dwPos);
-		switch (leftVar.cType)
+		StackVarInfo& leftVar = pBlock->m_register[R_A];
+
+		if (leftVar.cType == EScriptVal_Int)
 		{
-		case EScriptVal_Int:
-		{
-			//__int64 nVal1 = GetInt_StackVar(&leftVar);
-			__int64 nVal2 = 0;// GetInt_StackVar(&rightVar);
+			__int64 nVal2 = 0;
 			pBlock->GetVal(nVal2, cType, dwPos);
-			SCRIPTVAR_SET_INT(resultVar,(__int64)(leftVar.Int64 < nVal2 ? 1 : 0));
+			SCRIPTVAR_SET_INT(resultVar, (__int64)(leftVar.Int64 < nVal2 ? 1 : 0));
 		}
-		break;
-		case EScriptVal_Double:
+		else if (leftVar.cType == EScriptVal_Double)
 		{
-			pBlock->GetVal(rightVar, cType, dwPos);
-			double dVal1 = GetFloat_StackVar(&leftVar);
-			double dVal2 = GetFloat_StackVar(&rightVar);
-			resultVar = (__int64)(dVal1 < dVal2 ? 1 : 0);
+			double dVal2 = 0;
+			pBlock->GetVal(dVal2, cType, dwPos);
+			SCRIPTVAR_SET_INT(resultVar, (__int64)(leftVar.Double < dVal2 ? 1 : 0));
 		}
-		break;
-		default:
+		else {
 			return CScriptExecBlock::ERESULT_ERROR;
 		}
+
 		if (pNextPoint)
 		{
 			*pNextPoint = this->m_pNext;
@@ -458,27 +459,25 @@ namespace zlscript
 	}
 	int CCmpLessAndEqualExeCode::Run(CScriptExecBlock* pBlock, CBaseExeCode **pNextPoint)
 	{
-		StackVarInfo& rightVar = pBlock->m_register[R_D];
-		pBlock->GetVal(rightVar, cType, dwPos);
-		switch (pBlock->m_register[R_A].cType)
+		StackVarInfo& resultVar = pBlock->m_register[cResultRegister];
+		StackVarInfo& leftVar = pBlock->m_register[R_A];
+
+		if (leftVar.cType == EScriptVal_Int)
 		{
-		case EScriptVal_Int:
-		{
-			__int64 nVal1 = GetInt_StackVar(&pBlock->m_register[R_A]);
-			__int64 nVal2 = GetInt_StackVar(&rightVar);
-			pBlock->m_register[cResultRegister] = (__int64)(nVal1 <= nVal2 ? 1 : 0);
+			__int64 nVal2 = 0;
+			pBlock->GetVal(nVal2, cType, dwPos);
+			SCRIPTVAR_SET_INT(resultVar, (__int64)(leftVar.Int64 <= nVal2 ? 1 : 0));
 		}
-		break;
-		case EScriptVal_Double:
+		else if (leftVar.cType == EScriptVal_Double)
 		{
-			double dVal1 = GetFloat_StackVar(&pBlock->m_register[R_A]);
-			double dVal2 = GetFloat_StackVar(&rightVar);
-			pBlock->m_register[cResultRegister] = (__int64)(dVal1 <= dVal2 ? 1 : 0);
+			double dVal2 = 0;
+			pBlock->GetVal(dVal2, cType, dwPos);
+			SCRIPTVAR_SET_INT(resultVar, (__int64)(leftVar.Double <= dVal2 ? 1 : 0));
 		}
-		break;
-		default:
+		else {
 			return CScriptExecBlock::ERESULT_ERROR;
 		}
+
 		if (pNextPoint)
 		{
 			*pNextPoint = this->m_pNext;
@@ -493,18 +492,15 @@ namespace zlscript
 	}
 	int CBitAndExeCode::Run(CScriptExecBlock* pBlock, CBaseExeCode **pNextPoint)
 	{
-		StackVarInfo& rightVar = pBlock->m_register[R_D];
-		pBlock->GetVal(rightVar, cType, dwPos);
-		switch (pBlock->m_register[R_A].cType)
+		StackVarInfo& resultVar = pBlock->m_register[cResultRegister];
+		StackVarInfo& leftVar = pBlock->m_register[R_A];
+		if (leftVar.cType == EScriptVal_Int)
 		{
-		case EScriptVal_Int:
-		{
-			__int64 nVal1 = GetInt_StackVar(&pBlock->m_register[R_A]);
-			__int64 nVal2 = GetInt_StackVar(&rightVar);
-			pBlock->m_register[cResultRegister] = nVal1 & nVal2;
+			__int64 nVal2 = 0;
+			pBlock->GetVal(nVal2, cType, dwPos);
+			SCRIPTVAR_SET_INT(resultVar, leftVar.Int64 & nVal2);
 		}
-		break;
-		default:
+		else{
 			return CScriptExecBlock::ERESULT_ERROR;
 		}
 		if (pNextPoint)
@@ -521,20 +517,18 @@ namespace zlscript
 	}
 	int CBitOrExeCode::Run(CScriptExecBlock* pBlock, CBaseExeCode **pNextPoint)
 	{
-		StackVarInfo& rightVar = pBlock->m_register[R_D];
-		pBlock->GetVal(rightVar, cType, dwPos);
-		switch (pBlock->m_register[R_A].cType)
+		StackVarInfo& resultVar = pBlock->m_register[cResultRegister];
+		StackVarInfo& leftVar = pBlock->m_register[R_A];
+		if (leftVar.cType == EScriptVal_Int)
 		{
-		case EScriptVal_Int:
-		{
-			__int64 nVal1 = GetInt_StackVar(&pBlock->m_register[R_A]);
-			__int64 nVal2 = GetInt_StackVar(&rightVar);
-			pBlock->m_register[cResultRegister] = nVal1 | nVal2;
+			__int64 nVal2 = 0;
+			pBlock->GetVal(nVal2, cType, dwPos);
+			SCRIPTVAR_SET_INT(resultVar, leftVar.Int64 | nVal2);
 		}
-		break;
-		default:
+		else {
 			return CScriptExecBlock::ERESULT_ERROR;
 		}
+
 		if (pNextPoint)
 		{
 			*pNextPoint = this->m_pNext;
@@ -549,20 +543,18 @@ namespace zlscript
 	}
 	int CBitXorExeCode::Run(CScriptExecBlock* pBlock, CBaseExeCode **pNextPoint)
 	{
-		StackVarInfo& rightVar = pBlock->m_register[R_D];
-		pBlock->GetVal(rightVar, cType, dwPos);
-		switch (pBlock->m_register[R_A].cType)
+		StackVarInfo& resultVar = pBlock->m_register[cResultRegister];
+		StackVarInfo& leftVar = pBlock->m_register[R_A];
+		if (leftVar.cType == EScriptVal_Int)
 		{
-		case EScriptVal_Int:
-		{
-			__int64 nVal1 = GetInt_StackVar(&pBlock->m_register[R_A]);
-			__int64 nVal2 = GetInt_StackVar(&rightVar);
-			pBlock->m_register[cResultRegister] = nVal1 ^ nVal2;
+			__int64 nVal2 = 0;
+			pBlock->GetVal(nVal2, cType, dwPos);
+			SCRIPTVAR_SET_INT(resultVar, leftVar.Int64 ^ nVal2);
 		}
-		break;
-		default:
+		else {
 			return CScriptExecBlock::ERESULT_ERROR;
 		}
+
 		if (pNextPoint)
 		{
 			*pNextPoint = this->m_pNext;
@@ -649,17 +641,19 @@ namespace zlscript
 	int CGetClassParamExeCode::Run(CScriptExecBlock* pBlock, CBaseExeCode **pNextPoint)
 	{
 		int nResult = CScriptExecBlock::ERESULT_CONTINUE;
-		if (pBlock->m_register[cClassRegIndex].cType == EScriptVal_ClassPoint)
+
+		StackVarInfo& var = pBlock->m_register[cClassRegIndex];
+		if (var.cType == EScriptVal_ClassPoint)
 		{
 			//PointVarInfo pointVal = GetPointIndex_StackVar(&m_register[code.cSign]);
-			CScriptBasePointer* pPoint = pBlock->m_register[cClassRegIndex].pPoint;
+			CScriptBasePointer* pPoint = var.pPoint;
 			if (pPoint)
 			{
 				pPoint->Lock();
 				auto pAttribute = pPoint->GetAttribute(dwPos);
 				if (pAttribute)
 				{
-					pBlock->m_register[cResultRegister] = pAttribute->ToScriptVal();
+					var = pAttribute->ToScriptVal();
 				}
 				else
 				{
@@ -689,17 +683,18 @@ namespace zlscript
 	int CSetClassParamExeCode::Run(CScriptExecBlock* pBlock, CBaseExeCode **pNextPoint)
 	{
 		int nResult = CScriptExecBlock::ERESULT_CONTINUE;
-		if (pBlock->m_register[cClassRegIndex].cType == EScriptVal_ClassPoint)
+		StackVarInfo& var = pBlock->m_register[cClassRegIndex];
+		if (var.cType == EScriptVal_ClassPoint)
 		{
 			//PointVarInfo pointVal = GetPointIndex_StackVar(&m_register[code.cSign]);
-			CScriptBasePointer* pPoint = pBlock->m_register[cClassRegIndex].pPoint;
+			CScriptBasePointer* pPoint = var.pPoint;
 			if (pPoint)
 			{
 				pPoint->Lock();
 				auto pAttribute = pPoint->GetAttribute(dwPos);
 				if (pAttribute)
 				{
-					pAttribute->SetVal(pBlock->m_register[cVarRegister]);
+					pAttribute->SetVal(var);
 				}
 				else
 				{

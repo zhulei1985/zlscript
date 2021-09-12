@@ -148,7 +148,6 @@ namespace zlscript
 
 	StackVarInfo& StackVarInfo::operator=(const PointVarInfo& info)
 	{
-		// TODO: 在此处插入 return 语句
 		Clear();
 		this->pPoint = info.pPoint;
 		CScriptSuperPointerMgr::GetInstance()->PickupPointer(info.pPoint);
@@ -187,7 +186,6 @@ namespace zlscript
 		break;
 		}
 
-		// TODO: 在此处插入 return 语句
 		return *this;
 	}
 

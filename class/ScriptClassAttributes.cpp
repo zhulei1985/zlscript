@@ -758,7 +758,6 @@ namespace zlscript
 
 	PointVarInfo& CScriptClassPointAttribute::operator=(CScriptPointInterface* pPoint)
 	{
-		// TODO: 在此处插入 return 语句
 		std::lock_guard<std::mutex> Lock(m_lock);
 		if (pPoint)
 		{
@@ -782,7 +781,6 @@ namespace zlscript
 
 	PointVarInfo& CScriptClassPointAttribute::operator=(__int64 val)
 	{
-		// TODO: 在此处插入 return 语句
 		std::lock_guard<std::mutex> Lock(m_lock);
 
 		m_val = val;

@@ -44,6 +44,8 @@ namespace zlscript
 		StackVarInfo GetVal(char cType, unsigned int pos);
 		bool GetVal(StackVarInfo& var, char cType, unsigned int pos);
 		bool GetVal(__int64& var, char cType, unsigned int pos);
+		bool GetVal(double& var, char cType, unsigned int pos);
+		bool GetVal(std::string& var, char cType, unsigned int pos);
 		bool SetVal(char cType, unsigned int pos, StackVarInfo& var);
 	private:
 		//指向的代码块

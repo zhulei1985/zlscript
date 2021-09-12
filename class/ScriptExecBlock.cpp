@@ -12,7 +12,7 @@
 
 namespace zlscript
 {
-	CScriptExecBlock::CScriptExecBlock(tagCodeData* pData, CScriptRunState* pMaster):m_stackRegister(256)
+	CScriptExecBlock::CScriptExecBlock(tagCodeData* pData, CScriptRunState* pMaster):m_stackRegister(16)
 	{
 		m_cReturnRegisterIndex = 0;
 		m_pCurCode = nullptr;
@@ -172,7 +172,7 @@ namespace zlscript
 		case ESIGN_POS_LOACL_VAR:
 			if (m_pTempVar && pos < m_nTempVarSize)
 			{
-				var=GetInt_StackVar(&m_pTempVar[pos]);
+				SCRIPTVAR_GET_INT(m_pTempVar[pos], var);
 				return true;
 			}
 			return false;
@@ -200,7 +200,113 @@ namespace zlscript
 		case ESIGN_REGISTER:
 			if (pos < R_SIZE)
 			{
-				var = GetInt_StackVar(&m_register[pos]);
+				SCRIPTVAR_GET_INT(m_register[pos], var);
+				return true;
+			}
+			return false;
+		}
+		return false;
+	}
+
+	bool CScriptExecBlock::GetVal(double& var, char cType, unsigned int pos)
+	{
+		switch (cType)
+		{
+		case ESIGN_VALUE_INT:
+			var = (double)pos;
+			return true;
+		case ESIGN_POS_GLOBAL_VAR://全局变量
+			var = GetFloat_StackVar(&m_pMaster->m_pMachine->GetGlobalVar(pos));
+			return true;
+		case ESIGN_POS_LOACL_VAR:
+			if (m_pTempVar && pos < m_nTempVarSize)
+			{
+				SCRIPTVAR_GET_FLOAT(m_pTempVar[pos], var);
+				return true;
+			}
+			return false;
+		case ESIGN_POS_CONST_STRING:
+			if (pos < m_pCodeData->vStrConst.size())
+			{
+				var = atof(m_pCodeData->vStrConst[pos].c_str());
+				return true;
+			}
+			return false;
+		case ESIGN_POS_CONST_FLOAT:
+			if (pos < m_pCodeData->vFloatConst.size())
+			{
+				var = m_pCodeData->vFloatConst[pos];
+				return true;
+			}
+			return false;
+		case ESIGN_POS_CONST_INT64:
+			if (pos < m_pCodeData->vInt64Const.size())
+			{
+				var = (double)m_pCodeData->vInt64Const[pos];
+				return true;
+			}
+			return false;
+		case ESIGN_REGISTER:
+			if (pos < R_SIZE)
+			{
+				SCRIPTVAR_GET_FLOAT(m_register[pos], var);
+				return true;
+			}
+			return false;
+		}
+		return false;
+	}
+
+	bool CScriptExecBlock::GetVal(std::string& var, char cType, unsigned int pos)
+	{
+		switch (cType)
+		{
+		case ESIGN_VALUE_INT:
+			{
+				char strbuff[64] = { 0 };
+				sprintf(strbuff, "%d", pos);
+				var = strbuff;
+			}
+			return true;
+		case ESIGN_POS_GLOBAL_VAR://全局变量
+			var = GetString_StackVar(&m_pMaster->m_pMachine->GetGlobalVar(pos));
+			return true;
+		case ESIGN_POS_LOACL_VAR:
+			if (m_pTempVar && pos < m_nTempVarSize)
+			{
+				SCRIPTVAR_GET_STRING(m_pTempVar[pos], var);
+				return true;
+			}
+			return false;
+		case ESIGN_POS_CONST_STRING:
+			if (pos < m_pCodeData->vStrConst.size())
+			{
+				var = m_pCodeData->vStrConst[pos];
+				return true;
+			}
+			return false;
+		case ESIGN_POS_CONST_FLOAT:
+			if (pos < m_pCodeData->vFloatConst.size())
+			{
+				char strbuff[64] = { 0 };
+				sprintf(strbuff, "%f", m_pCodeData->vFloatConst[pos]);
+				var = strbuff;
+				return true;
+			}
+			return false;
+		case ESIGN_POS_CONST_INT64:
+			if (pos < m_pCodeData->vInt64Const.size())
+			{
+				char strbuff[64] = { 0 };
+				sprintf(strbuff, "%lld", m_pCodeData->vInt64Const[pos]);
+				var = strbuff;
+				return true;
+			}
+			return false;
+		case ESIGN_REGISTER:
+			if (pos < R_SIZE)
+			{
+				SCRIPTVAR_GET_STRING(m_register[pos], var);
 				return true;
 			}
 			return false;
