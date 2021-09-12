@@ -1,6 +1,6 @@
 ﻿#include "EScriptVariableType.h"
 #include "ScriptSuperPointer.h"
-#include "StackVarInfo.h"
+#include "ScriptVarInfo.h"
 
 namespace zlscript
 {
@@ -148,7 +148,6 @@ namespace zlscript
 
 	StackVarInfo& StackVarInfo::operator=(const PointVarInfo& info)
 	{
-		// TODO: 在此处插入 return 语句
 		Clear();
 		cType = EScriptVal_ClassPoint;
 		this->pPoint = info.pPoint;
@@ -176,10 +175,6 @@ namespace zlscript
 			s_strPool.UseString(Int64);
 		}
 		break;
-		//case EScriptVal_ClassPointIndex:
-		//	Int64 = cls.Int64;
-		//	CScriptSuperPointerMgr::GetInstance()->ScriptUsePointer(Int64);
-		//	break;
 		case EScriptVal_ClassPoint:
 			pPoint = cls.pPoint;
 			CScriptSuperPointerMgr::GetInstance()->PickupPointer(pPoint);
@@ -192,7 +187,6 @@ namespace zlscript
 		break;
 		}
 
-		// TODO: 在此处插入 return 语句
 		return *this;
 	}
 

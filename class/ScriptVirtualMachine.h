@@ -36,7 +36,7 @@
 #include <mutex>
 namespace zlscript
 {
-	class CScriptStack;
+	struct tagScriptVarStack;
 	class CScriptVarialbe;
 	class CCriticalSection;
 	class CScriptVirtualMachine;
@@ -93,10 +93,10 @@ namespace zlscript
 		virtual unsigned int Exec(unsigned int nDelay, unsigned int unTimeRes = 1);
 
 		//主要用于初始化等需要立即执行的脚本，不能异步执行，不要有异步调用的函数什么的，也不要有wait什么的
-		bool RunFunImmediately(std::string name, CScriptStack& ParmStack);
+		bool RunFunImmediately(std::string name, tagScriptVarStack& ParmStack);
 
 		bool RunFun(CScriptRunState* pState, std::string funname, const char* sFormat, ...);
-		bool RunFun(CScriptRunState* pState, std::string funname, CScriptStack& ParmStack, bool bIsBreak = false);
+		bool RunFun(CScriptRunState* pState, std::string funname, tagScriptVarStack& ParmStack, bool bIsBreak = false);
 
 		bool HasWaitingScript(unsigned long id);
 
@@ -144,17 +144,13 @@ namespace zlscript
 		friend class CScriptExecBlock;
 
 
-		void EventReturnFun(int nSendID, CScriptStack& ParmInfo);
-		void EventRunScriptFun(int nSendID, CScriptStack& ParmInfo);
+		void EventReturnFun(int nSendID, tagScriptVarStack& ParmInfo);
+		void EventRunScriptFun(int nSendID, tagScriptVarStack& ParmInfo);
 
 		//"我"要求"别人"执行脚本
-		virtual void RunTo(std::string funName, CScriptStack& pram, __int64 nReturnID, __int64 nEventIndex);
+		virtual void RunTo(std::string funName, tagScriptVarStack& pram, __int64 nReturnID, __int64 nEventIndex);
 		//"我"向"别人"返回执行脚本的结果
-		virtual void ResultTo(CScriptStack& pram, __int64 nReturnID, __int64 nEventIndex);
-		////"别人"要求"我"执行脚本
-		//virtual void RunFrom(std::string funName, CScriptStack& pram, __int64 nReturnID, __int64 nEventIndex);
-		////"别人"向"我"返回执行脚本的结果
-		//virtual void ResultFrom(CScriptStack& pram, __int64 nReturnID);
+		virtual void ResultTo(tagScriptVarStack& pram, __int64 nReturnID, __int64 nEventIndex);
 	};
 
 }

@@ -153,8 +153,8 @@ namespace zlscript
 			case ERunTime_Complete:
 				if (pState->m_CallReturnId != 0)
 				{
-					CScriptStack vRetrunVars;
-					ScriptVector_PushVar(vRetrunVars, &pState->m_varReturn);
+					tagScriptVarStack vRetrunVars;
+					STACK_PUSH(vRetrunVars, pState->m_varReturn);
 					ResultTo(vRetrunVars, pState->m_CallReturnId, pState->nCallEventIndex);
 
 				}
@@ -221,8 +221,8 @@ namespace zlscript
 			case ERunTime_Complete:
 				if (pState->m_CallReturnId != 0)
 				{
-					CScriptStack vRetrunVars;
-					ScriptVector_PushVar(vRetrunVars, &pState->m_varReturn);
+					tagScriptVarStack vRetrunVars;
+					STACK_PUSH(vRetrunVars, pState->m_varReturn);
 					ResultTo(vRetrunVars, pState->m_CallReturnId, pState->nCallEventIndex);
 
 				}
@@ -256,7 +256,7 @@ namespace zlscript
 		}
 	}
 
-	bool CScriptVirtualMachine::RunFunImmediately(std::string name, CScriptStack& ParmStack)
+	bool CScriptVirtualMachine::RunFunImmediately(std::string name, tagScriptVarStack& ParmStack)
 	{
 		//TODO 日后添加缓存
 		CScriptRunState* pState = new CScriptRunState();
@@ -290,7 +290,7 @@ namespace zlscript
 		{
 			return false;
 		}
-		CScriptStack varRegister;
+		tagScriptVarStack varRegister;
 		if (sFormat)
 		{
 			int nlen = strlen(sFormat);
@@ -312,10 +312,16 @@ namespace zlscript
 						switch (*(sFormat + i))
 						{
 						case 'd':
-							ScriptVector_PushVar(varRegister, *(__int64*)pPoint);
+							{
+								StackVarInfo var(*(__int64*)pPoint);
+								STACK_PUSH(varRegister, var);
+							}
 							break;
 						case 's':
-							ScriptVector_PushVar(varRegister, (const char*)pPoint);
+							{
+								StackVarInfo var((const char*)pPoint);
+								STACK_PUSH(varRegister, var);
+							}
 							break;
 						}
 					}
@@ -347,7 +353,7 @@ namespace zlscript
 		return true;
 	}
 
-	bool CScriptVirtualMachine::RunFun(CScriptRunState* pState, std::string funname, CScriptStack& ParmStack, bool bIsBreak)
+	bool CScriptVirtualMachine::RunFun(CScriptRunState* pState, std::string funname, tagScriptVarStack& ParmStack, bool bIsBreak)
 	{
 		pState->m_pMachine = this;
 		pState->FunName = funname;
@@ -615,68 +621,58 @@ namespace zlscript
 		}
 	}
 
-	void CScriptVirtualMachine::EventReturnFun(int nSendID, CScriptStack& ParmInfo)
+	void CScriptVirtualMachine::EventReturnFun(int nSendID, tagScriptVarStack& ParmInfo)
 	{
-		__int64 nScriptStateID = GetInt_StackVar(ParmInfo.GetVal(0));
-		//ParmInfo.pop_front(1);
+		StackVarInfo varStateID;
+		STACK_GET_INDEX(ParmInfo, varStateID, 0);
+		__int64 nScriptStateID = 0;
+		SCRIPTVAR_GET_INT(varStateID, nScriptStateID);
+		STACK_POP_FRONT(ParmInfo, 1);
 		auto pState = PopStateFormWaitingReturnMap(nScriptStateID);
 		if (pState)
 		{
-			auto pReturnVal = ParmInfo.GetVal(1);
-			if (pReturnVal && pState->m_BlockStack.size() > 0)
-			{
-				auto pBlock = pState->m_BlockStack.top();
-				if (pBlock)
-				{
-					pBlock->m_register[R_A] = *pReturnVal;
-				}
-			}
-			//pState->CopyFromStack(&ParmInfo);
+			pState->CopyFromStack(ParmInfo);
 			PushStateToRunList(pState);
 		}
 	}
-	void CScriptVirtualMachine::EventRunScriptFun(int nSendID, CScriptStack& ParmInfo)
+	void CScriptVirtualMachine::EventRunScriptFun(int nSendID, tagScriptVarStack& ParmInfo)
 	{
-		__int64 nScriptStateID = GetInt_StackVar(ParmInfo.GetVal(0));
+		StackVarInfo varStateID;
+		STACK_GET_INDEX(ParmInfo, varStateID,0);
 
 		CScriptRunState* m_pScriptState = new CScriptRunState;
 		if (m_pScriptState)
 		{
-			//__int64 nCallStateID = ScriptStack_GetInt(ParmInfo);
-			std::string strScript = GetString_StackVar(ParmInfo.GetVal(1));
-			if (nScriptStateID != 0)
+			std::string strScript;
+			StackVarInfo varScriptName;
+			STACK_GET_INDEX(ParmInfo, varScriptName, 1);
+			SCRIPTVAR_GET_STRING(varScriptName, strScript);
+			if (varStateID.cType == EScriptVal_Int && varStateID.Int64 != 0)
 			{
 				m_pScriptState->nCallEventIndex = nSendID;
-				m_pScriptState->m_CallReturnId = nScriptStateID;
+				//m_pScriptState->m_CallReturnId = nScriptStateID;
+				SCRIPTVAR_GET_INT(varStateID, m_pScriptState->m_CallReturnId);
 			}
-			ParmInfo.pop_front(2);
+			STACK_POP_FRONT(ParmInfo, 2);
 			RunFun(m_pScriptState, strScript, ParmInfo);
 		}
 	}
 
-	void CScriptVirtualMachine::RunTo(std::string funName, CScriptStack& pram, __int64 nReturnID, __int64 nEventIndex)
+	void CScriptVirtualMachine::RunTo(std::string funName, tagScriptVarStack& pram, __int64 nReturnID, __int64 nEventIndex)
 	{
 		//ScriptVector_PushVar(m_scriptParm, GetEventIndex());
+		StackVarInfo var(nReturnID);
+		StackVarInfo var2(funName.c_str());
 
-		CScriptStack m_scriptParm;
-		ScriptVector_PushVar(m_scriptParm, nReturnID);
-		ScriptVector_PushVar(m_scriptParm, funName.c_str());
-
-		for (unsigned int i = 0; i < pram.size(); i++)
-		{
-			ScriptVector_PushVar(m_scriptParm, pram.GetVal(i));
-		}
-		CScriptEventMgr::GetInstance()->SendEvent(E_SCRIPT_EVENT_RUNSCRIPT, GetEventIndex(), m_scriptParm, nEventIndex);
+		STACK_PUSH_FRONT_2(pram, var, var2);
+		CScriptEventMgr::GetInstance()->SendEvent(E_SCRIPT_EVENT_RUNSCRIPT, GetEventIndex(), pram, nEventIndex);
 	}
-	void CScriptVirtualMachine::ResultTo(CScriptStack& pram, __int64 nReturnID, __int64 nEventIndex)
+	void CScriptVirtualMachine::ResultTo(tagScriptVarStack& pram, __int64 nReturnID, __int64 nEventIndex)
 	{
-		CScriptStack vRetrunVars;
+		StackVarInfo var(nReturnID);
 
-		ScriptVector_PushVar(vRetrunVars, nReturnID);
-		for (unsigned int i = 0; i < pram.size(); i++)
-		{
-			ScriptVector_PushVar(vRetrunVars, pram.GetVal(i));
-		}
-		CScriptEventMgr::GetInstance()->SendEvent(E_SCRIPT_EVENT_RETURN, GetEventIndex(), vRetrunVars, nEventIndex);
+		STACK_PUSH_FRONT(pram, var);
+
+		CScriptEventMgr::GetInstance()->SendEvent(E_SCRIPT_EVENT_RETURN, GetEventIndex(), pram, nEventIndex);
 	}
 }

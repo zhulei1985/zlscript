@@ -5,7 +5,7 @@
 #include <atomic>
 #include <mutex>
 #include <functional> 
-#include "StackVarInfo.h"
+#include "ScriptVarInfo.h"
 namespace zlscript
 {
 	class CScriptPointInterface;

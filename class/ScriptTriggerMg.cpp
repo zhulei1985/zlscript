@@ -32,7 +32,7 @@ namespace zlscript
 	}
 
 
-	void CScriptTriggerMgr::SetEventTrigger(std::string strEvent, __int64 nClassPoint, std::string flag, int nChannel, std::string strScriptName, CScriptStack& parm)
+	void CScriptTriggerMgr::SetEventTrigger(std::string strEvent, __int64 nClassPoint, std::string flag, int nChannel, std::string strScriptName, tagScriptVarStack& parm)
 	{
 		m_TriggerLock.lock();
 		auto & classTrigger = m_mapTriggers[nClassPoint];
@@ -51,15 +51,12 @@ namespace zlscript
 		auto& eventTrigger = classTrigger.vTriggers[strEvent];
 		for (auto it = eventTrigger.vTriggers.begin(); it != eventTrigger.vTriggers.end(); it++)
 		{
-			CScriptStack vRetrunVars;
-
-			//ScriptVector_PushVar(vRetrunVars, (__int64)E_SCRIPT_EVENT_RUNSCRIPT);
-			ScriptVector_PushVar(vRetrunVars, (__int64)0);
-			ScriptVector_PushVar(vRetrunVars, it->second.strScriptName.c_str());
-			for (int i = 0; i < it->second.parm.size(); i++)
-			{
-				ScriptVector_PushVar(vRetrunVars, it->second.parm.GetVal(i));
-			}
+			tagScriptVarStack vRetrunVars;
+			StackVarInfo var((__int64)0);
+			StackVarInfo var2(it->second.strScriptName.c_str());
+			STACK_PUSH(vRetrunVars, var);
+			STACK_PUSH(vRetrunVars, var2);
+			STACK_COPY(vRetrunVars, it->second.parm);
 
 			CScriptEventMgr::GetInstance()->SendEvent(E_SCRIPT_EVENT_RUNSCRIPT,it->second.nEventnChannel, vRetrunVars);
 		}

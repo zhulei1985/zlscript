@@ -19,7 +19,7 @@
 
 namespace zlscript
 {
-	typedef std::function<void(int, zlscript::CScriptStack&)> EventProcessFun;
+	typedef std::function<void(int, zlscript::tagScriptVarStack&)> EventProcessFun;
 
 	//用于脚本执行，返回确认,事件接收处理的接口
 	class CScriptExecFrame
@@ -49,16 +49,16 @@ namespace zlscript
 		std::vector<int> m_vecActiveEvent;
 	public:
 		//"我"要求"别人"执行脚本
-		virtual void RunTo(std::string funName, CScriptStack& pram, __int64 nReturnID, __int64 nEventIndex) = 0;
+		virtual void RunTo(std::string funName, tagScriptVarStack& pram, __int64 nReturnID, __int64 nEventIndex) = 0;
 		//"我"向"别人"返回执行脚本的结果
-		virtual void ResultTo(CScriptStack& pram, __int64 nReturnID, __int64 nEventIndex) = 0;
+		virtual void ResultTo(tagScriptVarStack& pram, __int64 nReturnID, __int64 nEventIndex) = 0;
 
 		//"别人"要求"我"执行脚本
-		virtual void RunFrom(std::string funName, CScriptStack& pram, __int64 nReturnID, __int64 nEventIndex)
+		virtual void RunFrom(std::string funName, tagScriptVarStack& pram, __int64 nReturnID, __int64 nEventIndex)
 		{
 		}
 		//"别人"向"我"返回执行脚本的结果
-		virtual void ResultFrom(CScriptStack& pram, __int64 nReturnID)
+		virtual void ResultFrom(tagScriptVarStack& pram, __int64 nReturnID)
 		{
 
 		}

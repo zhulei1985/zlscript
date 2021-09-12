@@ -70,9 +70,9 @@ int CTest::Add2Script(CScriptCallState* pState)
 	}
 	int nVal1 = pState->GetIntVarFormStack(0);
 	int nVal2 = pState->GetIntVarFormStack(1);
-	aaa = nVal1 + nVal2;
+	//int aaa = nVal1 + nVal2;
 	//printf("event %d\n", pState->m_pMachine->GetEventIndex());
-	pState->SetResult((__int64)aaa);
+	pState->SetResult((__int64)(nVal1 + nVal2));
 	return ECALLBACK_FINISH;
 }
 void DebugPrint(const char* pStr)
@@ -109,7 +109,7 @@ int main()
 
 	//zlscript::CScriptStack stackParm;
 	auto t1 = std::chrono::steady_clock::now();
-	int sum = 0;
+	__int64 sum = 0;
 	int i = 1;
 	while (i <= 1000)
 	{
@@ -121,8 +121,16 @@ int main()
 		}
 		i = i + 1;
 	}
+	//double sum = 0;
+	//double i = 0;
+	//while (i < 1000000000.0)
+	//{
+	//	sum = sum + 2.0;
+	//	i = i + 1.0;
+	//}
 	auto t2 = std::chrono::steady_clock::now();
 	auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1);
+	printf("Calculation result : %lld\n", sum);
 	printf("Calculation time : %d\n", duration.count());
 
 	//for (int i = 0; i < 10; i++)
@@ -137,7 +145,7 @@ int main()
 		std::bind(&zlscript::CScriptVirtualMachine::EventRunScriptFun, &Machine, std::placeholders::_1, std::placeholders::_2));
 	auto oldtime = std::chrono::steady_clock::now();
 	Machine.SetInstance();
-	CScriptStack parm;
+	tagScriptVarStack parm;
 	Machine.RunFunImmediately("init", parm);
 
 	std::this_thread::sleep_for(std::chrono::milliseconds(1000));

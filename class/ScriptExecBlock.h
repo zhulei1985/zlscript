@@ -34,7 +34,7 @@ namespace zlscript
 	class CScriptExecBlock
 	{
 	public:
-		CScriptExecBlock(CScriptCodeLoader::tagCodeData* pData, CScriptRunState* pMaster);
+		CScriptExecBlock(tagCodeData* pData, CScriptRunState* pMaster);
 		~CScriptExecBlock(void);
 
 		int GetDefaultReturnType();
@@ -42,23 +42,28 @@ namespace zlscript
 
 		inline __int64 GetVal_Int64(char cType, unsigned int pos);
 		StackVarInfo GetVal(char cType, unsigned int pos);
+		bool GetVal(StackVarInfo& var, char cType, unsigned int pos);
+		bool GetVal(__int64& var, char cType, unsigned int pos);
+		bool GetVal(double& var, char cType, unsigned int pos);
+		bool GetVal(std::string& var, char cType, unsigned int pos);
+		bool SetVal(char cType, unsigned int pos, StackVarInfo& var);
 	private:
-
-		CScriptRunState* m_pMaster;
 		//指向的代码块
-		CScriptCodeLoader::tagCodeData* m_pCodeData;
+		tagCodeData* m_pCodeData;
 		//执行位置
-		unsigned int m_nCodePoint;
-
-	private:
-
+		//unsigned int m_nCodePoint;
+		CBaseExeCode* m_pCurCode;
+	public:
+		CScriptRunState* m_pMaster;
 		//寄存器
 		StackVarInfo m_register[R_SIZE];
 		//堆栈
-		CScriptStack m_stackRegister;
+		//CScriptStack m_stackRegister;
+		tagScriptVarStack m_stackRegister;
 
 		char m_cReturnRegisterIndex;//返回值放入的寄存器索引
 		StackVarInfo m_varReturnVar;//返回值
+
 	public:
 		enum ERESULT_TYPE
 		{
@@ -70,15 +75,15 @@ namespace zlscript
 			ERESULT_CALLSCRIPTFUN,
 			ERESULT_NEXTCONTINUE
 		};
-		CodeStyle GetCurCode();
+		int GetCurCodeSoureIndex();
 		unsigned int ExecBlock(CScriptVirtualMachine* pMachine);
 
-		inline bool CheckRegisterTrue(char index);
+		bool CheckRegisterTrue(char index);
 
-		void PushVar(StackVarInfo& var);
-		StackVarInfo PopVar();
-		StackVarInfo* GetVar(unsigned int index);
-		unsigned int GetVarSize();
+		//void PushVar(StackVarInfo& var);
+		//StackVarInfo PopVar();
+		//StackVarInfo* GetVar(unsigned int index);
+		//unsigned int GetVarSize();
 
 		StackVarInfo& GetReturnVar()
 		{

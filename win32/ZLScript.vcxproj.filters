@@ -73,9 +73,6 @@
     <ClInclude Include="..\class\ScriptIntermediateCode.h">
       <Filter>code</Filter>
     </ClInclude>
-    <ClInclude Include="..\class\ScriptExecCodeMgr.h">
-      <Filter>code</Filter>
-    </ClInclude>
     <ClInclude Include="..\class\ScriptExecFrame.h">
       <Filter>code</Filter>
     </ClInclude>
@@ -91,13 +88,16 @@
     <ClInclude Include="..\class\TempScriptRunState.h">
       <Filter>code</Filter>
     </ClInclude>
-    <ClInclude Include="..\class\StackVarInfo.h">
-      <Filter>code</Filter>
-    </ClInclude>
     <ClInclude Include="..\class\ScriptCodeStyle.h">
       <Filter>code</Filter>
     </ClInclude>
     <ClInclude Include="..\class\ScriptClassFunion.h">
+      <Filter>code</Filter>
+    </ClInclude>
+    <ClInclude Include="..\class\ScriptVarInfo.h">
+      <Filter>code</Filter>
+    </ClInclude>
+    <ClInclude Include="..\class\ScriptCompileInfo.h">
       <Filter>code</Filter>
     </ClInclude>
   </ItemGroup>
@@ -150,9 +150,6 @@
     <ClCompile Include="..\class\ScriptIntermediateCode.cpp">
       <Filter>code</Filter>
     </ClCompile>
-    <ClCompile Include="..\class\ScriptExecCodeMgr.cpp">
-      <Filter>code</Filter>
-    </ClCompile>
     <ClCompile Include="..\class\ScriptExecFrame.cpp">
       <Filter>code</Filter>
     </ClCompile>
@@ -168,10 +165,13 @@
     <ClCompile Include="..\class\TempScriptRunState.cpp">
       <Filter>code</Filter>
     </ClCompile>
-    <ClCompile Include="..\class\StackVarInfo.cpp">
+    <ClCompile Include="..\class\ScriptClassFunion.cpp">
       <Filter>code</Filter>
     </ClCompile>
-    <ClCompile Include="..\class\ScriptClassFunion.cpp">
+    <ClCompile Include="..\class\ScriptCodeStyle.cpp">
+      <Filter>code</Filter>
+    </ClCompile>
+    <ClCompile Include="..\class\ScriptVarInfo.cpp">
       <Filter>code</Filter>
     </ClCompile>
   </ItemGroup>

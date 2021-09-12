@@ -86,7 +86,7 @@ namespace zlscript
 	{
 		if (nIndex < m_vData.size())
 		{
-			m_vData[nIndex] = val;
+			SCRIPTVAR_SET_VAR(m_vData[nIndex], val);
 			nIndex++;
 			return true;
 		}
@@ -136,7 +136,7 @@ namespace zlscript
 
 		for (unsigned int i = 0; i < info.nIndex; i++)
 		{
-			this->m_vData[i] = info.m_vData[i];
+			SCRIPTVAR_SET_VAR(this->m_vData[i] , info.m_vData[i]);
 		}
 		return *this;
 	}

@@ -22,10 +22,10 @@ void CalculationTest()
 
 	int sum = 0;
 	int i = 1;
-	while (i <= 100)
+	while (i <= 1000)
 	{
 		int j = 1;
-		while (j <= 100)
+		while (j <= 1000)
 		{
 			sum = sum + i*j;
 			j = j + 1;
@@ -128,12 +128,12 @@ void main()
 	CalculationTest2();
 	CalculationTest3(test);
 	CalculationTest4();
-	RunScript(0,"CalculationTest");
-	RunScript(0,"CalculationTest2");
-	RunScript(0,"CalculationTest3",test);
-	RunScript(0,"CalculationTest3",test);
-	RunScript(0,"CalculationTest4",test);
-	RunScript(0,"CalculationTest4",test);
+	//RunScript(0,"CalculationTest");
+	//RunScript(0,"CalculationTest2");
+	//RunScript(0,"CalculationTest3",test);
+	//RunScript(0,"CalculationTest3",test);
+	//RunScript(0,"CalculationTest4",test);
+	//RunScript(0,"CalculationTest4",test);
 	//int nVal2 = test->Add(1,2);
 	print(nVal2);
 	//CalculationTest2();

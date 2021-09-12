@@ -26,48 +26,14 @@
 #include <functional> 
 #include <unordered_map>
  //#include "scriptcommon.h"
-//#include "ScriptIntermediateCode.h"
+#include "ScriptIntermediateCode.h"
 #include "ScriptStack.h"
 #include "ScriptCodeStyle.h"
+#include "ScriptCompileInfo.h"
 namespace zlscript
 {
-	struct VarInfo
-	{
-		VarInfo()
-		{
-			cType = 0;
-			cGlobal = 0;
-			wExtend = 0;
-			dwPos = 0;
-		}
-		//__int64 nVarInfo;
 
-		unsigned char cType; // 1,整数,2 浮点 3,字符 4 类指针
-		unsigned char cGlobal;// 1 表示全局变量
-		unsigned short wExtend; // 大于1表示是数组下标,不再使用
-		unsigned int dwPos;//位置ID
 
-	};
-	//一句源码
-	enum E_SOURCE_WORD_FLAG
-	{
-		E_WORD_FLAG_NORMAL,
-		E_WORD_FLAG_STRING,
-	};
-	struct tagSourceWord
-	{
-		tagSourceWord()
-		{
-			nFlag = E_WORD_FLAG_NORMAL;
-			nSourceWordsIndex = -1;
-		}
-		int nFlag;
-		std::string word;
-		unsigned int nSourceWordsIndex;
-	};
-	typedef std::list<tagSourceWord> SentenceSourceCode;
-	class CBaseICode;
-	class CFunICode;
 	class CScriptCodeLoader
 	{
 	public:
@@ -93,8 +59,8 @@ namespace zlscript
 		//***************字典*****************//
 		//map<string,unsigned short> m_mapDicSentenceToEnum;
 		//map<string,unsigned short> m_mapDicSignToEnum;
-		std::map<std::string, unsigned short> m_mapDicSingleSignToEnum;//单元素运算符
-		std::map<std::string, unsigned short> m_mapDicSignToEnum;
+		//std::map<std::string, unsigned short> m_mapDicSingleSignToEnum;//单元素运算符
+		//std::map<std::string, unsigned short> m_mapDicSignToEnum;
 		std::map<std::string, unsigned short> m_mapDicSignToPRI;//计算符的优先级，越高越优先
 
 		std::map<std::string, unsigned short> m_mapDic2KeyWord;
@@ -107,7 +73,8 @@ namespace zlscript
 
 		void initDic();
 	public:
-		char GetVarType(std::string type, unsigned short& classtype);
+		unsigned short GetVarType(tagSourceWord varWord);
+		unsigned short GetVarType(std::string type, unsigned short& classtype);
 		unsigned short GetWordKey(std::string str)
 		{
 			auto it = m_mapDic2KeyWord.find(str);
@@ -117,27 +84,20 @@ namespace zlscript
 			}
 			return 0;
 		}
-	public:
-		//*****************代码*******************//
-
-		struct tagCodeData
+		unsigned short GetSignPRI(std::string str)
 		{
-			tagCodeData();
-			int nType;
+			auto it = m_mapDicSignToPRI.find(str);
+			if (it != m_mapDicSignToPRI.end())
+			{
+				return it->second;
+			}
+			return 0xffff;
+		}
+	public:
 
-			std::vector<StackVarInfo> vNumVar;//临时变量
-			std::vector<CodeStyle> vCodeData;
-			std::vector<__int64> vInt64Const;//64位整形常量
-			std::vector<double> vFloatConst;//浮点常量
-			std::vector<std::string> vStrConst;//字符常量
-
-			std::vector<std::string> vCallFunName;//会调用的函数的名称
-
-			std::string filename;
-			std::string funname;
-
-			int nDefaultReturnType;//默认返回值类型
-		};
+		bool AddGlobalVar(std::string name, unsigned short type, unsigned short typeExtend);
+		bool SetGlobalVar(std::string name, StackVarInfo& var);
+		//*****************代码*******************//
 
 		unsigned int GetCodeIndex(const char* pStr);
 	private:
@@ -202,55 +162,28 @@ namespace zlscript
 		std::stack<int> m_stackLexical;//词法分析机的状态堆栈
 		SentenceSourceCode m_vCurSourceSentence;
 		//vector<SentenceSourceCode> m_vLexicalData;//存放词法分析机的生成结果
-	private:
-		//*******************语法分析状态机********************
+	public:
+		enum E_CODE_SCOPE
+		{
+			E_CODE_SCOPE_OUTSIDE = 1,//块外范围
+			E_CODE_SCOPE_STATEMENT = 2,//语句
+			E_CODE_SCOPE_EXPRESSION = 4,//表达式
+			E_CODE_SCOPE_MEMBER = 8,//(表达式)成员
+			E_CODE_SCOPE_OPERATOR = 16,//操作符
+		};
+		bool RunCompileState(SentenceSourceCode& vIn, E_CODE_SCOPE scopeType, CBaseICode* pFather, int addType);
+	public:
 
-		//检查是否是操作符
-		bool CheckOperator(std::string word);
 		//检查变量名是否合法
 		bool CheckVarName(std::string varName);
-		//查询临时变量的index
-		int QueryTempVar(std::string varName, CBaseICode *pICode);
-		/////////////////////////////////////////////
 
-		bool RunCompileState(SentenceSourceCode& vIn);
+	public:
 
-		int LoadDefineFunctionParameter(SentenceSourceCode& vIn, CBaseICode *pCode);
-		int LoadDefineTempVar(SentenceSourceCode& vIn, CBaseICode* pCode);
-
-		int LoadDefineFunState(SentenceSourceCode& vIn);
-		//读取{}块的状态机
-		int LoadBlockState(SentenceSourceCode& vIn, CBaseICode* pCode, int nType);
-		//读取if语句
-		int LoadIfSentence(SentenceSourceCode& vIn, CBaseICode* pCode, int nType);
-		//读取for语句
-		int LoadForSentence(SentenceSourceCode& vIn, CBaseICode* pCode, int nType);
-		//读取while语句
-		int LoadWhileSentence(SentenceSourceCode& vIn, CBaseICode* pCode, int nType);
-		//读取switch语句
-		int LoadSwitchSentence(SentenceSourceCode& vIn, CBaseICode* pCode, int nType);
-		//读取switch语句
-		int LoadReturnSentence(SentenceSourceCode& vIn, CBaseICode* pCode, int nType);
-
-		//读取一条语句
-		//int LoadOneSentence(SentenceSourceCode& vIn, CBaseICode* pCode, int nType, std::string endFlag=";");
-		int LoadOperatiorState(SentenceSourceCode& vIn, CBaseICode* pCode, int nType);
-		////读取函数调用
-		//int LoadCallFunState(SentenceSourceCode& vIn, CBaseICode* pCode, int nType);
-		////读取类函数调用
-		//int LoadCallClassFun(SentenceSourceCode& vIn, CBaseICode* pCode, int nType);
-		//////读取算式的状态机
-		//int LoadFormulaSentence(SentenceSourceCode& vIn, CBaseICode* pCode, int nType);
-		////生成一个向堆栈压数值的代码
-		//int LoadAndPushNumVar(SentenceSourceCode& vIn, CBaseICode* pCode, int nType);
-		////读取括号内
-		//int LoadBracket(SentenceSourceCode& vIn, CBaseICode* pCode, int nType);
-
-		CBaseICode* LoadOperator(SentenceSourceCode& vIn, std::string endFlag = "");
-		CBaseICode* LoadCallFun(SentenceSourceCode& vIn);
-		CBaseICode* LoadOperand(tagSourceWord &word);
-
-		bool CheckOperatorTree(CBaseICode**pNode);
+		template<class T>
+		bool AddCodeCompile(int nScopeType);
+	private:
+		typedef std::list<CBaseICodeMgr*> ListICodeMgr;
+		std::unordered_map<int, ListICodeMgr> m_mapICodeMgr;
 	private:
 		//编译时的中间指令
 		enum EICodeType
@@ -283,17 +216,18 @@ namespace zlscript
 		std::unordered_map<std::string, CFunICode*> m_mapString2Code;
 
 	public:
+		bool SetFunICode(std::string name, CFunICode* pCode);
 		//将中间代码树转化成执行代码
 		int MakeICode2Code(int nMode);
 		//清理中间代码
 		void ClearICode();
 
 		void PrintAllCode(const char *pFilename);
-		std::string PrintOneCode(CodeStyle code);
+	//	std::string PrintOneCode(CodeStyle code);
 
-	protected:
-		std::string GetSignPosTypeName(char Idx);
-		std::string GetRegisterName(char regIdx);
+	//protected:
+	//	std::string GetSignPosTypeName(char Idx);
+	//	std::string GetRegisterName(char regIdx);
 	protected:
 		//typedef std::map<std::string, int> tagVarName2Pos;
 		//std::list<tagVarName2Pos> m_ListTempVarInfo;;
@@ -326,9 +260,14 @@ namespace zlscript
 			std::string strError;
 		};
 		std::vector<tagErrorInfo> m_vError;
+	public:
 		void AddErrorInfo(unsigned int pos, std::string error)
 		{
 			m_vError.push_back(tagErrorInfo(pos, error));
+		}
+		void ClearErrorInfo()
+		{
+			m_vError.clear();
 		}
 	public:
 		struct tagSourceLineInfo
@@ -366,4 +305,39 @@ namespace zlscript
 
 		friend class CScriptVirtualMachine;
 	};
+	template<class T>
+	inline bool CScriptCodeLoader::AddCodeCompile(int nScopeType)
+	{
+		if (nScopeType & E_CODE_SCOPE_OUTSIDE)
+		{
+			ListICodeMgr& list = m_mapICodeMgr[E_CODE_SCOPE_OUTSIDE];
+			auto pMgr = new CICodeMgr<T>();
+			list.push_back(pMgr);
+		}
+		if (nScopeType & E_CODE_SCOPE_STATEMENT)
+		{
+			ListICodeMgr& list = m_mapICodeMgr[E_CODE_SCOPE_STATEMENT];
+			auto pMgr = new CICodeMgr<T>();
+			list.push_back(pMgr);
+		}
+		if (nScopeType & E_CODE_SCOPE_EXPRESSION)
+		{
+			ListICodeMgr& list = m_mapICodeMgr[E_CODE_SCOPE_EXPRESSION];
+			auto pMgr = new CICodeMgr<T>();
+			list.push_back(pMgr);
+		}
+		if (nScopeType & E_CODE_SCOPE_MEMBER)
+		{
+			ListICodeMgr& list = m_mapICodeMgr[E_CODE_SCOPE_MEMBER];
+			auto pMgr = new CICodeMgr<T>();
+			list.push_back(pMgr);
+		}
+		if (nScopeType & E_CODE_SCOPE_OPERATOR)
+		{
+			ListICodeMgr& list = m_mapICodeMgr[E_CODE_SCOPE_OPERATOR];
+			auto pMgr = new CICodeMgr<T>();
+			list.push_back(pMgr);
+		}
+		return false;
+	}
 }

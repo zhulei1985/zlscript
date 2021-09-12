@@ -20,6 +20,7 @@ namespace zlscript
 	enum
 	{
 		EScriptVal_None,
+
 		EScriptVal_Int,
 		EScriptVal_Double,
 		EScriptVal_String,
@@ -28,5 +29,7 @@ namespace zlscript
 
 		EScriptVal_SyncClassPoint,
 		EScriptVal_Binary,
+
+		EScriptVal_Void,
 	};
 }

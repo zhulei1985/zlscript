@@ -65,7 +65,7 @@ namespace zlscript
 		}
 	}
 
-	bool CScriptEventMgr::SendEvent(int nEventType, __int64 nSendID, CScriptStack& vIn, __int64 nRecvID)
+	bool CScriptEventMgr::SendEvent(int nEventType, __int64 nSendID, tagScriptVarStack& vIn, __int64 nRecvID)
 	{
 		auto nowTime = std::chrono::steady_clock::now();
 		//查找一个合适的频道
