@@ -167,8 +167,11 @@ namespace zlscript
 			var = (__int64)pos;
 			return true;
 		case ESIGN_POS_GLOBAL_VAR://全局变量
-			var = GetInt_StackVar(&m_pMaster->m_pMachine->GetGlobalVar(pos));
-			return true;
+			{
+				auto scriptval = m_pMaster->m_pMachine->GetGlobalVar(pos);
+				SCRIPTVAR_GET_INT(scriptval, var);
+				return true;
+			}
 		case ESIGN_POS_LOACL_VAR:
 			if (m_pTempVar && pos < m_nTempVarSize)
 			{
@@ -216,8 +219,11 @@ namespace zlscript
 			var = (double)pos;
 			return true;
 		case ESIGN_POS_GLOBAL_VAR://全局变量
-			var = GetFloat_StackVar(&m_pMaster->m_pMachine->GetGlobalVar(pos));
-			return true;
+			{
+				auto scriptval = m_pMaster->m_pMachine->GetGlobalVar(pos);
+				SCRIPTVAR_GET_FLOAT(scriptval, var);
+				return true;
+			}
 		case ESIGN_POS_LOACL_VAR:
 			if (m_pTempVar && pos < m_nTempVarSize)
 			{
@@ -269,8 +275,12 @@ namespace zlscript
 			}
 			return true;
 		case ESIGN_POS_GLOBAL_VAR://全局变量
-			var = GetString_StackVar(&m_pMaster->m_pMachine->GetGlobalVar(pos));
-			return true;
+			{
+				auto scriptval = m_pMaster->m_pMachine->GetGlobalVar(pos);
+				//var =  GetString_StackVar(&m_pMaster->m_pMachine->GetGlobalVar(pos));
+				SCRIPTVAR_GET_STRING(scriptval, var);
+				return true;
+			}
 		case ESIGN_POS_LOACL_VAR:
 			if (m_pTempVar && pos < m_nTempVarSize)
 			{
