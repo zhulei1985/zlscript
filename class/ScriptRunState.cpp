@@ -240,6 +240,19 @@ namespace zlscript
 	//	}
 	//}
 
+
+	void CScriptRunState::SetResultRegister(StackVarInfo& var)
+	{
+		if (m_BlockStack.size() > 0)
+		{
+			CScriptExecBlock* pBlock = m_BlockStack.top();
+			if (pBlock && pBlock->m_cReturnRegisterIndex < R_SIZE)
+			{
+				SCRIPTVAR_SET_VAR(pBlock->m_register[pBlock->m_cReturnRegisterIndex], var);
+			}
+		}
+	}
+
 	void CScriptRunState::CopyFromStack(tagScriptVarStack& stack)
 	{		
 		if (m_BlockStack.size() > 0)

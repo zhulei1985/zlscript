@@ -389,6 +389,10 @@ namespace zlscript
 		auto nowTime = std::chrono::steady_clock::now();
 		auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(nowTime - oldTime);
 		m_msRunningTime += duration;
+		if (nResult == ERESULT_CALLSCRIPTFUN)
+		{
+			return nResult;
+		}
 		if (m_pCurCode == nullptr)
 		{
 			nResult = ERESULT_END;

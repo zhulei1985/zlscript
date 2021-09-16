@@ -260,6 +260,7 @@ namespace zlscript
 	{
 		//TODO 日后添加缓存
 		CScriptRunState* pState = new CScriptRunState();
+		pState->m_pMachine = this;
 		pState->CallFunImmediately(this, name.c_str(), ParmStack);
 		delete pState;
 		return false;
@@ -631,7 +632,10 @@ namespace zlscript
 		auto pState = PopStateFormWaitingReturnMap(nScriptStateID);
 		if (pState)
 		{
-			pState->CopyFromStack(ParmInfo);
+			StackVarInfo var;
+			STACK_GET(ParmInfo, var);
+			pState->SetResultRegister(var);
+			//pState->CopyFromStack(ParmInfo);
 			PushStateToRunList(pState);
 		}
 	}

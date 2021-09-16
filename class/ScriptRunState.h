@@ -124,7 +124,7 @@ namespace zlscript
 	public:
 		
 
-
+		virtual void SetResultRegister(StackVarInfo& var);
 		virtual void CopyFromStack(tagScriptVarStack &pStack);
 
 		//获取函数变量

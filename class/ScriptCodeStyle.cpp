@@ -749,6 +749,7 @@ namespace zlscript
 					nResult = CScriptExecBlock::ERESULT_ERROR;
 					break;
 				case ECALLBACK_WAITING:
+					pBlock->m_cReturnRegisterIndex = cResultRegister;
 					nResult = CScriptExecBlock::ERESULT_WAITING;
 					break;
 				case ECALLBACK_CALLSCRIPTFUN:
@@ -757,10 +758,13 @@ namespace zlscript
 					break;
 				case ECALLBACK_NEXTCONTINUE:
 					nResult = CScriptExecBlock::ERESULT_NEXTCONTINUE;
+					break; 
+				case ECALLBACK_FINISH:
+					pBlock->m_register[cResultRegister] = pCallState->GetResult();
 					break;
 				}
 				//执行完将结果放入寄存器
-				pBlock->m_register[cResultRegister] = pCallState->GetResult();
+				//pBlock->m_register[cResultRegister] = pCallState->GetResult();
 			}
 			CACHE_DELETE(pCallState);
 		}
@@ -917,16 +921,6 @@ namespace zlscript
 				//设置参数
 				unsigned nBegin = pBlock->m_stackRegister.nIndex - (unsigned int)cParmSize;
 				STACK_MOVE_ALL_BACK(pCallState->m_stackRegister, pBlock->m_stackRegister, nBegin);
-				//for (unsigned int i = pBlock->m_stackRegister.nIndex - cParmSize; i < pBlock->m_stackRegister.nIndex; i++)
-				//{
-				//	StackVarInfo var;
-				//	STACK_GET_INDEX(pBlock->m_stackRegister, var, i);
-				//	STACK_PUSH(pCallState->m_stackRegister, var);
-				//}
-				//for (unsigned char i = 0; i < cParmSize; i++)
-				//{
-				//	STACK_POP(pBlock->m_stackRegister);
-				//}
 
 				CScriptBasePointer* pPoint = pointVal.pPoint;
 				if (pPoint)
@@ -937,6 +931,7 @@ namespace zlscript
 						nResult = CScriptExecBlock::ERESULT_ERROR;
 						break;
 					case ECALLBACK_WAITING:
+						pBlock->m_cReturnRegisterIndex = cResultRegister;
 						nResult = CScriptExecBlock::ERESULT_WAITING;
 						break;
 					case ECALLBACK_CALLSCRIPTFUN:
@@ -946,13 +941,18 @@ namespace zlscript
 					case ECALLBACK_NEXTCONTINUE:
 						nResult = CScriptExecBlock::ERESULT_NEXTCONTINUE;
 						break;
+					case ECALLBACK_FINISH:
+						//执行完将结果放入寄存器
+						pBlock->m_register[cResultRegister] = pCallState->GetResult();
+						break;
 					}
 					if (pNextPoint)
 					{
 						*pNextPoint = m_pNext;
 					}
-					//执行完将结果放入寄存器
-					pBlock->m_register[cResultRegister] = pCallState->GetResult();
+					////执行完将结果放入寄存器
+					//pBlock->m_register[cResultRegister] = pCallState->GetResult();
+					//pBlock->m_cReturnRegisterIndex = cResultRegister; 
 				}
 				else
 				{
