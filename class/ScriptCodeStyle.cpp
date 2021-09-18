@@ -642,11 +642,12 @@ namespace zlscript
 	{
 		int nResult = CScriptExecBlock::ERESULT_CONTINUE;
 
-		StackVarInfo& var = pBlock->m_register[cClassRegIndex];
-		if (var.cType == EScriptVal_ClassPoint)
+		StackVarInfo& pointVar = pBlock->m_register[cClassRegIndex];
+		StackVarInfo& var = pBlock->m_register[cResultRegister];
+		if (pointVar.cType == EScriptVal_ClassPoint)
 		{
 			//PointVarInfo pointVal = GetPointIndex_StackVar(&m_register[code.cSign]);
-			CScriptBasePointer* pPoint = var.pPoint;
+			CScriptBasePointer* pPoint = pointVar.pPoint;
 			if (pPoint)
 			{
 				pPoint->Lock();
@@ -683,11 +684,12 @@ namespace zlscript
 	int CSetClassParamExeCode::Run(CScriptExecBlock* pBlock, CBaseExeCode **pNextPoint)
 	{
 		int nResult = CScriptExecBlock::ERESULT_CONTINUE;
-		StackVarInfo& var = pBlock->m_register[cClassRegIndex];
-		if (var.cType == EScriptVal_ClassPoint)
+		StackVarInfo& pointVar = pBlock->m_register[cClassRegIndex];
+		StackVarInfo& var = pBlock->m_register[cVarRegister];
+		if (pointVar.cType == EScriptVal_ClassPoint)
 		{
 			//PointVarInfo pointVal = GetPointIndex_StackVar(&m_register[code.cSign]);
-			CScriptBasePointer* pPoint = var.pPoint;
+			CScriptBasePointer* pPoint = pointVar.pPoint;
 			if (pPoint)
 			{
 				pPoint->Lock();
