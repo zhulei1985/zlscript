@@ -112,9 +112,20 @@ void CalculationTest4()
 	print("Calculation 4 result:" + sum);
 	print("Calculation 4 time:" + t2 +"ms");
 }
+void testClass()
+{
+	CTest test = new CTest;
+	CSubTest subtest = new CSubTest;
+	test->Fun1();
+	test->Fun2();
+	subtest->Fun1();
+	subtest->Fun2();
+	subtest->Fun3();
+}
 void main()
 {
 	print("begin");
+	testClass();
 	int nVal = 0;
 	int t1 = GetMsTime();
 	//nVal = FibTest(40);

@@ -48,19 +48,8 @@ public:
 
 	CLASS_SCRIPT_FUN(CTest, Add);
 
-	//int Add2Script(CScriptCallState* pState)
-	//{
-	//	if (pState == nullptr)
-	//	{
-	//		return ECALLBACK_ERROR;
-	//	}
-	//	int nVal1 = pState->PopIntVarFormStack();
-	//	int nVal2 = pState->PopIntVarFormStack();
-	//	aaa = nVal1 + nVal2;
-	//	//printf("event %d\n", pState->m_pMachine->GetEventIndex());
-	//	pState->SetResult((__int64)aaa);
-	//	return ECALLBACK_FINISH;
-	//}
+	CLASS_SCRIPT_FUN(CTest, Fun1);
+	CLASS_SCRIPT_FUN(CTest, Fun2);
 };
 int CTest::Add2Script(CScriptCallState* pState)
 {
@@ -73,6 +62,62 @@ int CTest::Add2Script(CScriptCallState* pState)
 	//int aaa = nVal1 + nVal2;
 	//printf("event %d\n", pState->m_pMachine->GetEventIndex());
 	pState->SetResult((__int64)(nVal1 + nVal2));
+	return ECALLBACK_FINISH;
+}
+int CTest::Fun12Script(CScriptCallState* pState)
+{
+	if (pState == nullptr)
+	{
+		return ECALLBACK_ERROR;
+	}
+	printf("this is test fun1\n");
+	return ECALLBACK_FINISH;
+}
+int CTest::Fun22Script(CScriptCallState* pState)
+{
+	if (pState == nullptr)
+	{
+		return ECALLBACK_ERROR;
+	}
+	printf("this is test fun2\n");
+	return ECALLBACK_FINISH;
+}
+class CSubTest : public CTest
+{
+public:
+	CSubTest()
+	{
+		//AddClassObject(CScriptPointInterface::GetScriptPointIndex(), this);
+
+		//RegisterClassFun(Add, this, &CTest::Add2Script);
+	}
+	~CSubTest()
+	{
+
+	}
+	ATTR_INT(aaa, 1);
+	ATTR_INT(bbb, 2);
+
+
+	CLASS_SCRIPT_FUN(CSubTest, Fun1);
+	CLASS_SCRIPT_FUN(CSubTest, Fun3);
+};
+int CSubTest::Fun12Script(CScriptCallState* pState)
+{
+	if (pState == nullptr)
+	{
+		return ECALLBACK_ERROR;
+	}
+	printf("this is sub test fun1\n");
+	return ECALLBACK_FINISH;
+}
+int CSubTest::Fun32Script(CScriptCallState* pState)
+{
+	if (pState == nullptr)
+	{
+		return ECALLBACK_ERROR;
+	}
+	printf("this is sub test fun3\n");
 	return ECALLBACK_FINISH;
 }
 void DebugPrint(const char* pStr)
@@ -99,6 +144,7 @@ int main()
 	//zlscript::CScriptDebugPrintMgr::GetInstance()->RegisterCallBack_PrintFun(DebugPrintToFile);
 	//注册类和类函数
 	RegisterClassType("CTest", CTest);
+	RegisterClassType("CSubTest", CSubTest);
 	//RegisterClassFun1("Add", CTest);
 
 	zlscript::LoadFile("test.script");
