@@ -68,8 +68,8 @@ int CTest::Add2Script(CScriptCallState* pState)
 	{
 		return ECALLBACK_ERROR;
 	}
-	int nVal1 = pState->GetIntVarFormStack(0);
-	int nVal2 = pState->GetIntVarFormStack(1);
+	__int64 nVal1 = pState->GetIntVarFormStack(0);
+	__int64 nVal2 = pState->GetIntVarFormStack(1);
 	//int aaa = nVal1 + nVal2;
 	//printf("event %d\n", pState->m_pMachine->GetEventIndex());
 	pState->SetResult((__int64)(nVal1 + nVal2));

@@ -26,6 +26,7 @@ namespace zlscript
 		ESIGN_POS_CONST_FLOAT,//浮点数常量地址
 		ESIGN_POS_CONST_INT64,//64位整形常量地址
 		ESIGN_REGISTER,//寄存器
+		ESIGN_POINT_NULLPTR,
 	};
 	enum ERegisterIndex
 	{

@@ -155,6 +155,9 @@ namespace zlscript
 				return true;
 			}
 			return false;
+		case ESIGN_POINT_NULLPTR:
+			var.Clear();
+			return true;
 		}
 		return false;
 	}
