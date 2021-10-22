@@ -250,7 +250,8 @@ namespace zlscript
 		if (pClassFun)
 		{
 			pClassFun->m_index = m_vecScriptClassFun.size();
-			m_mapFun2Index.insert(std::pair<std::string, unsigned int>(pClassFun->m_name, pClassFun->m_index));
+			m_mapFun2Index[pClassFun->m_name] = pClassFun->m_index;
+			//m_mapFun2Index.insert(std::pair<std::string, unsigned int>(pClassFun->m_name, pClassFun->m_index));
 			m_vecScriptClassFun.push_back(pClassFun);
 		}
 
