@@ -18,19 +18,19 @@ namespace zlscript
 		virtual void RegisterScriptFun(CBaseScriptClassFun* pClassFun) = 0;
 	};
 
-	struct CScriptBaseClassFunInfo
-	{
-		struct tagParameterInfo
-		{
-			int type;//1 数值 2 浮点 3 字符串 4 类指针
-			int classtype;//如果是类指针，类类型值
-		};
-		//virtual void init() = 0;
-		std::vector<tagParameterInfo> vParmeterInfo;
-		virtual int RunFun(CScriptCallState* pState) = 0;
-		virtual CScriptBaseClassFunInfo* Copy() = 0;
-		virtual const char* GetFunName() = 0;
-	};
+	//struct CScriptBaseClassFunInfo
+	//{
+	//	struct tagParameterInfo
+	//	{
+	//		int type;//1 数值 2 浮点 3 字符串 4 类指针
+	//		int classtype;//如果是类指针，类类型值
+	//	};
+	//	//virtual void init() = 0;
+	//	std::vector<tagParameterInfo> vParmeterInfo;
+	//	virtual int RunFun(CScriptCallState* pState) = 0;
+	//	virtual CScriptBaseClassFunInfo* Copy() = 0;
+	//	virtual const char* GetFunName() = 0;
+	//};
 
 	struct CBaseScriptClassFun
 	{

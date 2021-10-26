@@ -66,19 +66,9 @@ namespace zlscript
 			}
 		}
 		m_MutexLock.unlock();
-		m_MutexTypeLock.lock();
-		{
-			std::map<__int64, CScriptBasePointer*>::iterator it = m_mapTypePointer.begin();
-			for (; it != m_mapTypePointer.end(); it++)
-			{
-				CScriptBasePointer* pPoint = it->second;
-				if (pPoint)
-				{
-					delete pPoint;
-				}
-			}
-		}
 
+		m_MutexTypeLock.lock();
+		m_mapTypeInfo.clear();
 		m_MutexTypeLock.unlock();
 	}
 
@@ -342,37 +332,51 @@ namespace zlscript
 	//	return false;
 	//}
 
+	void CScriptSuperPointerMgr::SetClassInfo(int classindex, stScriptClassInfo* pInfo)
+	{
+		//m_MutexTypeLock.lock();
+		m_mapTypeInfo[classindex] = pInfo;
+		//m_MutexTypeLock.unlock();
+	}
+
 	int CScriptSuperPointerMgr::GetClassFunIndex(int classindex, std::string funname)
 	{
 		int nResult = -1;
-		m_MutexTypeLock.lock();
-		std::map<__int64, CScriptBasePointer*>::iterator it = m_mapTypePointer.find(classindex);
-		if (it != m_mapTypePointer.end())
+		//m_MutexTypeLock.lock();
+		auto it = m_mapTypeInfo.find(classindex);
+		if (it != m_mapTypeInfo.end())
 		{
-			CScriptBasePointer* pPointer = it->second;
-			if (pPointer)
+			stScriptClassInfo* pInfo = it->second;
+			if (pInfo)
 			{
-				nResult = pPointer->GetFunIndex(funname);
+				auto itFun = pInfo->mapDicFunString2Index.find(funname);
+				if (itFun != pInfo->mapDicFunString2Index.end())
+				{
+					nResult = itFun->second;
+				}
 			}
 		}
-		m_MutexTypeLock.unlock();
+		//m_MutexTypeLock.unlock();
 		return nResult;
 	}
-	int CScriptSuperPointerMgr::GetClassParamIndex(int classindex, std::string paramname)
+	stScriptClassParamInfo const* CScriptSuperPointerMgr::GetClassParamInfo(int classindex, std::string paramname)
 	{
-		int nResult = -1;
-		m_MutexTypeLock.lock();
-		std::map<__int64, CScriptBasePointer*>::iterator it = m_mapTypePointer.find(classindex);
-		if (it != m_mapTypePointer.end())
+		stScriptClassParamInfo* pResult = nullptr;
+		auto it = m_mapTypeInfo.find(classindex);
+		if (it != m_mapTypeInfo.end())
 		{
-			CScriptBasePointer* pPointer = it->second;
-			if (pPointer)
+			stScriptClassInfo* pInfo = it->second;
+			if (pInfo)
 			{
-				nResult = pPointer->GetAttributeIndex(paramname);
+				auto itParam = pInfo->mapDicString2ParamInfo.find(paramname);
+				if (itParam != pInfo->mapDicString2ParamInfo.end())
+				{
+					pResult = &itParam->second;
+				}
 			}
 		}
-		m_MutexTypeLock.unlock();
-		return nResult;
+
+		return pResult;
 	}
 	CBaseScriptClassMgr* CScriptSuperPointerMgr::GetClassMgr(int nType)
 	{

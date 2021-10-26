@@ -30,7 +30,29 @@
 namespace zlscript
 {
 	class CBaseScriptClassMgr;
-	struct stScriptClassInfo;
+	struct stScriptClassParamInfo
+	{
+		unsigned short m_flag;
+		unsigned short m_index;
+		std::string m_strAttrName;
+		std::string strType;//MYSQL 字段类型
+	};
+	struct stScriptClassInfo
+	{
+		stScriptClassInfo()
+		{
+			nFunSize = 0;
+			nClassType = 0;
+			nDB_Id_Count = 0;
+		}
+		std::map<std::string, int> mapDicFunString2Index;
+		std::atomic_int nFunSize;
+		std::atomic_int nClassType;
+		std::string strClassName;
+		std::atomic_int64_t nDB_Id_Count;
+
+		std::map<std::string, stScriptClassParamInfo> mapDicString2ParamInfo;
+	};
 
 	template<class T>
 	class CScriptAbstractClassMgr;
@@ -108,6 +130,7 @@ namespace zlscript
 	int funname##2Script(CScriptCallState* pState); \
 	CBaseScriptClassFun funname##Fun{#funname,std::bind(&classname::funname##2Script,this,std::placeholders::_1),this, CBaseScriptClassFun::E_FLAG_NONE};
 
+	class stScriptClassInfo;
 	class CScriptPointInterface : public IClassAttributeObserver , public IClassFunObserver
 	{
 	public:
@@ -139,8 +162,8 @@ namespace zlscript
 		virtual int RunFun(unsigned int id, CScriptCallState* pState);
 		//virtual int CallFun(const char*pFunName, CScriptStack &parms);
 
-		CScriptPointInterface(const CScriptPointInterface& val);
-		virtual CScriptPointInterface& operator=(const CScriptPointInterface& val);
+		//CScriptPointInterface(const CScriptPointInterface& val);
+		//virtual CScriptPointInterface& operator=(const CScriptPointInterface& val);
 
 		virtual const std::map<std::string, CBaseScriptClassAttribute*>& GetDBAttributes()
 		{
@@ -190,7 +213,8 @@ namespace zlscript
 
 		std::mutex m_FunLock;
 		//std::shared_ptr<std::mutex> m_FunLock;
-
+	public:
+		void GetBaseClassInfo(stScriptClassInfo& info);
 	};
 
 }

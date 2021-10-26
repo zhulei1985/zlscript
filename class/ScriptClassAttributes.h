@@ -38,6 +38,7 @@ namespace zlscript
 			E_FLAG_DB = 2,
 			E_FLAG_DB_PRIMARY = 4,
 			E_FLAG_DB_UNIQUE = 8,
+			E_FLAG_DB_INDEX = 16,
 		};
 		void init(const char* pName, unsigned short flag, unsigned short index, CScriptPointInterface* pMaster);
 		virtual void AddData2Bytes(std::vector<char>& vBuff, std::vector<PointVarInfo>& vOutClassPoint) = 0;

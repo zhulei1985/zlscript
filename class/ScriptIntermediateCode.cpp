@@ -887,8 +887,8 @@ namespace zlscript
 		{
 			return false;
 		}
-		int nParamIndex = CScriptSuperPointerMgr::GetInstance()->GetClassParamIndex(pVarInfo->wExtend, strParamName);
-		if (nParamIndex < 0)
+		auto pParamInfo = CScriptSuperPointerMgr::GetInstance()->GetClassParamInfo(pVarInfo->wExtend, strParamName);
+		if (pParamInfo == nullptr)
 		{
 			return false;
 		}
@@ -901,7 +901,7 @@ namespace zlscript
 		CGetClassParamExeCode* pGetCode = CExeCodeMgr::GetInstance()->New<CGetClassParamExeCode>(m_unBeginSoureIndex);
 		pGetCode->cClassRegIndex = R_C;
 		pGetCode->cResultRegister = cRegisterIndex;
-		pGetCode->dwPos = nParamIndex;
+		pGetCode->dwPos = pParamInfo->m_index;
 		vOut.AddCode(pGetCode);
 		return true;
 	}
@@ -940,8 +940,8 @@ namespace zlscript
 		{
 			return false;
 		}
-		int nParamIndex = CScriptSuperPointerMgr::GetInstance()->GetClassParamIndex(pVarInfo->wExtend, strParamName);
-		if (nParamIndex < 0)
+		auto pParamInfo = CScriptSuperPointerMgr::GetInstance()->GetClassParamInfo(pVarInfo->wExtend, strParamName);
+		if (pParamInfo == nullptr)
 		{
 			return false;
 		}
@@ -959,7 +959,7 @@ namespace zlscript
 		CSetClassParamExeCode* pGetCode = CExeCodeMgr::GetInstance()->New<CSetClassParamExeCode>(m_unBeginSoureIndex);
 		pGetCode->cClassRegIndex = R_C;
 		pGetCode->cVarRegister = cRegisterIndex;
-		pGetCode->dwPos = nParamIndex;
+		pGetCode->dwPos = pParamInfo->m_index;
 		vOut.AddCode(pGetCode);
 
 		return true;
