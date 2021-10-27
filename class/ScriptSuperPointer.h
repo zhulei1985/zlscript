@@ -243,6 +243,7 @@ namespace zlscript
 		void SetClassInfo(int classindex, stScriptClassInfo* pInfo);
 		int GetClassFunIndex(int classindex, std::string funname);
 		stScriptClassParamInfo const* GetClassParamInfo(int classindex, std::string paramname);
+		stScriptClassInfo const* GetBaseClassInfo(int classindex);
 
 		CBaseScriptClassMgr* GetClassMgr(int nType);
 		CBaseScriptClassMgr* GetClassMgr(std::string strType);

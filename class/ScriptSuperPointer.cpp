@@ -378,6 +378,15 @@ namespace zlscript
 
 		return pResult;
 	}
+	stScriptClassInfo const* CScriptSuperPointerMgr::GetBaseClassInfo(int classindex)
+	{
+		auto it = m_mapTypeInfo.find(classindex);
+		if (it != m_mapTypeInfo.end())
+		{
+			return it->second;
+		}
+		return nullptr;
+	}
 	CBaseScriptClassMgr* CScriptSuperPointerMgr::GetClassMgr(int nType)
 	{
 		auto it = m_mapClassMgr.find(nType);
