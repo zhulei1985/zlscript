@@ -1,4 +1,4 @@
-﻿/****************************************************************************
+/****************************************************************************
 	Copyright (c) 2019 ZhuLei
 	Email:zhulei1985@foxmail.com
 
@@ -38,6 +38,8 @@ namespace zlscript
 	public:
 		CLASS_SCRIPT_FUN(CScriptHashMap, GetVal);
 		CLASS_SCRIPT_FUN(CScriptHashMap, SetVal);
+		CLASS_SCRIPT_FUN(CScriptHashMap, Get);
+		CLASS_SCRIPT_FUN(CScriptHashMap, Put);
 		CLASS_SCRIPT_FUN(CScriptHashMap, Remove);
 		CLASS_SCRIPT_FUN(CScriptHashMap, Clear);
 		//int GetVal2Script(CScriptCallState* pState);
@@ -88,7 +90,7 @@ namespace zlscript
 
 	public:
 		StackVarInfo m_var;
-		std::map<std::string, CScriptSubData*> m_mapChild;
+		std::unordered_map<StackVarInfo, CScriptSubData*, hash_SV> m_mapChild;
 	};
 	class CScriptData : public CScriptPointInterface
 	{
@@ -99,43 +101,14 @@ namespace zlscript
 
 		CLASS_SCRIPT_FUN(CScriptData, GetVal);
 		CLASS_SCRIPT_FUN(CScriptData, SetVal);
+		CLASS_SCRIPT_FUN(CScriptData, GetArray);
 		CLASS_SCRIPT_FUN(CScriptData, SaveFile);
 		CLASS_SCRIPT_FUN(CScriptData, LoadFile);
 
-		std::map<std::string, CScriptSubData*> m_mapChild;
+		std::unordered_map<StackVarInfo, CScriptSubData*, hash_SV> m_mapChild;
 
 		std::mutex m_Lock;
 
-		std::string strFlag;
-		std::atomic_int m_nUseCount;
 	};
-	class CScriptDataMgr
-	{
-	public:
-		CScriptDataMgr();
-		~CScriptDataMgr();
 
-		CScriptData* GetData(const char* pFlag);
-		void ReleaseData(CScriptData* pData);
-
-		void Clear();
-	public:
-		std::map<std::string, CScriptData*> m_mapScriptData;
-
-		std::mutex m_Lock;
-
-	public:
-		CScriptArray* NewArray();
-		void ReleaseArray(CScriptArray*);
-	private:
-		std::set<CScriptArray*> m_setArray;
-
-	public:
-		static CScriptDataMgr* GetInstance()
-		{
-			return &s_Instance;
-		}
-	private:
-		static CScriptDataMgr s_Instance;
-	};
 }

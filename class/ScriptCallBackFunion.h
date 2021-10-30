@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include <vector>
 /****************************************************************************
 	Copyright (c) 2019 ZhuLei
@@ -71,12 +71,6 @@ namespace zlscript
 		static int SetEventTrigger(CScriptVirtualMachine* pMachine, CScriptCallState* pState);
 		static int TriggerEvent(CScriptVirtualMachine* pMachine, CScriptCallState* pState);
 		static int RemoveEventTrigger(CScriptVirtualMachine* pMachine, CScriptCallState* pState);
-
-		static int InitData(CScriptVirtualMachine* pMachine, CScriptCallState* pState);
-		static int ReleaseData(CScriptVirtualMachine* pMachine, CScriptCallState* pState);
-		static int GetVal4Data(CScriptVirtualMachine* pMachine, CScriptCallState* pState);
-		static int SetVal2Data(CScriptVirtualMachine* pMachine, CScriptCallState* pState);
-
 
 	};
 }

@@ -1,4 +1,4 @@
-﻿/****************************************************************************
+/****************************************************************************
 	Copyright (c) 2019 ZhuLei
 	Email:zhulei1985@foxmail.com
 
@@ -75,7 +75,37 @@ namespace zlscript
 		//pState->ClearFunParam();
 		return ECALLBACK_FINISH;
 	}
+	int CScriptHashMap::Get2Script(CScriptCallState* pState)
+	{
+		if (pState == nullptr)
+		{
+			return ECALLBACK_ERROR;
+		}
+		auto key = pState->GetVarFormStack(0);
 
+		//pState->ClearFunParam();
+		auto it = m_mapData.find(key);
+		if (it != m_mapData.end())
+		{
+			pState->SetResult(it->second);
+			return ECALLBACK_FINISH;
+		}
+		//pState->PushEmptyVarToStack();
+		return ECALLBACK_FINISH;
+	}
+
+	int CScriptHashMap::Put2Script(CScriptCallState* pState)
+	{
+		if (pState == nullptr)
+		{
+			return ECALLBACK_ERROR;
+		}
+		auto key = pState->GetVarFormStack(0);
+		m_mapData[key] = pState->GetVarFormStack(1);
+
+		//pState->ClearFunParam();
+		return ECALLBACK_FINISH;
+	}
 	int CScriptHashMap::Remove2Script(CScriptCallState* pState)
 	{
 		if (pState == nullptr)
@@ -262,14 +292,9 @@ namespace zlscript
 
 	}
 
-	CScriptDataMgr CScriptDataMgr::s_Instance;
-
 	CScriptData::CScriptData()
 	{
-		m_nUseCount = 0;
-		//AddClassObject(CScriptPointInterface::GetScriptPointIndex(), this);
-		//RegisterClassFun(GetVal, this, &CScriptData::GetVal2Script);
-		//RegisterClassFun(SetVal, this, &CScriptData::SetVal2Script);
+
 	}
 
 	CScriptData::~CScriptData()
@@ -281,8 +306,6 @@ namespace zlscript
 	{
 		RegisterClassType("CData", CScriptData);
 
-		//RegisterClassFun1("GetVal", CScriptData);
-		//RegisterClassFun1("SetVal", CScriptData);
 	}
 
 	int CScriptData::GetVal2Script(CScriptCallState* pState)
@@ -293,7 +316,7 @@ namespace zlscript
 		}
 		m_Lock.lock();
 		StackVarInfo result;
-		std::map<std::string, CScriptSubData*>* pMap = &m_mapChild;
+		auto* pMap = &m_mapChild;
 		int nParmSize = pState->GetParamNum();
 		for (int i = 0; i < nParmSize; i++)
 		{
@@ -302,8 +325,8 @@ namespace zlscript
 				result.Clear();
 				break;
 			}
-			std::string strKey = pState->GetStringVarFormStack(i);
-			auto it = pMap->find(strKey);
+			StackVarInfo key = pState->GetVarFormStack(i);
+			auto it = pMap->find(key);
 			if (it != pMap->end())
 			{
 				if (it->second)
@@ -314,6 +337,7 @@ namespace zlscript
 				else
 				{
 					result.Clear();
+					break;
 				}
 			}
 			else
@@ -336,7 +360,7 @@ namespace zlscript
 		}
 		m_Lock.lock();
 		CScriptSubData* pArray = nullptr;
-		std::map<std::string, CScriptSubData*>* pMap = &m_mapChild;
+		auto* pMap = &m_mapChild;
 		int nParmSize = pState->GetParamNum() - 1;
 		for (int i = 0; i < nParmSize; i++)
 		{
@@ -344,9 +368,9 @@ namespace zlscript
 			{
 				break;
 			}
-			std::string strKey = pState->GetStringVarFormStack(i);
+			StackVarInfo key = pState->GetVarFormStack(i);
 
-			pArray = (*pMap)[strKey];
+			pArray = (*pMap)[key];
 			if (pArray)
 			{
 				pMap = &pArray->m_mapChild;
@@ -354,7 +378,7 @@ namespace zlscript
 			else
 			{
 				pArray = new CScriptSubData;
-				pMap->insert(std::make_pair(strKey, pArray));
+				pMap->insert(std::make_pair(key, pArray));
 				pMap = &pArray->m_mapChild;
 			}
 		}
@@ -367,7 +391,60 @@ namespace zlscript
 
 		return ECALLBACK_FINISH;
 	}
-
+	int CScriptData::GetArray2Script(CScriptCallState* pState)
+	{
+		if (pState == nullptr)
+		{
+			return ECALLBACK_ERROR;
+		}
+		std::lock_guard<std::mutex> Lock(m_Lock);
+		auto* pMap = &m_mapChild;
+		int nParmSize = pState->GetParamNum();
+		for (int i = 0; i < nParmSize; i++)
+		{
+			if (pMap == nullptr)
+			{
+				break;
+			}
+			StackVarInfo key = pState->GetVarFormStack(i);
+			auto it = pMap->find(key);
+			if (it != pMap->end())
+			{
+				if (it->second)
+				{
+					pMap = &it->second->m_mapChild;
+				}
+				else
+				{
+					pMap = nullptr;
+					break;
+				}
+			}
+			else
+			{
+				pMap = nullptr;
+				break;
+			}
+		}
+		int nArrayClassType = CScriptSuperPointerMgr::GetInstance()->GetClassType(std::string("CArray"));
+		auto pArrayMgr = CScriptSuperPointerMgr::GetInstance()->GetClassMgr(nArrayClassType);
+		CScriptArray* pArray = nullptr;
+		if (pArrayMgr)
+		{
+			pArray = dynamic_cast<CScriptArray*>(pArrayMgr->New(SCRIPT_NO_USED_AUTO_RELEASE));
+		}
+		if (pArray && pMap)
+		{
+			auto it = pMap->begin();
+			for (; it != pMap->end(); it++)
+			{
+				if (it->second)
+					pArray->GetVars().push_back(it->second->m_var);
+			}
+		}
+		pState->SetClassPointResult(pArray);
+		return ECALLBACK_FINISH;
+	}
 	int CScriptData::SaveFile2Script(CScriptCallState* pState)
 	{
 
@@ -378,109 +455,6 @@ namespace zlscript
 	{
 
 		return ECALLBACK_FINISH;
-	}
-
-	CScriptDataMgr::CScriptDataMgr()
-	{
-
-	}
-
-	CScriptDataMgr::~CScriptDataMgr()
-	{
-		Clear();
-	}
-
-	CScriptData* CScriptDataMgr::GetData(const char* pFlag)
-	{
-		if (pFlag == nullptr)
-		{
-			return nullptr;
-		}
-		m_Lock.lock();
-		CScriptData* pData = nullptr;
-		auto it = m_mapScriptData.find(pFlag);
-		if (it != m_mapScriptData.end())
-		{
-			pData = it->second;
-		}
-		if (pData == nullptr)
-		{
-			pData = new CScriptData;
-			pData->strFlag = pFlag;
-			m_mapScriptData[pFlag] = pData;
-		}
-		if (pData)
-		{
-			pData->m_nUseCount++;
-		}
-		m_Lock.unlock();
-		return pData;
-	}
-
-	void CScriptDataMgr::ReleaseData(CScriptData* pData)
-	{
-		if (pData == nullptr)
-		{
-			return;
-		}
-		m_Lock.lock();
-		pData->m_nUseCount--;
-		if (pData->m_nUseCount <= 0)
-		{
-			auto it = m_mapScriptData.find(pData->strFlag);
-			if (it != m_mapScriptData.end())
-			{
-				m_mapScriptData.erase(it);
-			}
-			delete pData;
-		}
-		m_Lock.unlock();
-	}
-
-	void CScriptDataMgr::Clear()
-	{
-		std::map<std::string, CScriptData*>::iterator it = m_mapScriptData.begin();
-		for (; it != m_mapScriptData.end(); it++)
-		{
-			CScriptData* pData = it->second;
-			if (pData)
-			{
-				delete pData;
-			}
-		}
-		m_mapScriptData.clear();
-
-		std::set<CScriptArray*>::iterator itSet = m_setArray.begin();
-		for (; itSet != m_setArray.end(); itSet++)
-		{
-			CScriptArray* pArray = *itSet;
-			if (pArray)
-			{
-				delete pArray;
-			}
-		}
-		m_setArray.clear();
-	}
-
-	CScriptArray* CScriptDataMgr::NewArray()
-	{
-		auto pArray = new CScriptArray;
-		if (pArray)
-			m_setArray.insert(pArray);
-		return pArray;
-	}
-
-	void CScriptDataMgr::ReleaseArray(CScriptArray* pArray)
-	{
-		if (pArray)
-		{
-			auto it = m_setArray.find(pArray);
-			if (it != m_setArray.end())
-			{
-				m_setArray.erase(it);
-			}
-			delete pArray;
-		}
 	}
 
 }

@@ -1,4 +1,4 @@
-﻿/****************************************************************************
+/****************************************************************************
 	Copyright (c) 2019 ZhuLei
 	Email:zhulei1985@foxmail.com
 
@@ -85,18 +85,6 @@ namespace zlscript
 
 		//RegisterFun("ReleaseArray", (C_CallBackScriptFunion)ReleaseArray);
 		//RegisterFun("releasearray", (C_CallBackScriptFunion)ReleaseArray);
-
-		RegisterFun("InitData", (C_CallBackScriptFunion)InitData);
-		RegisterFun("initdata", (C_CallBackScriptFunion)InitData);
-
-		RegisterFun("ReleaseData", (C_CallBackScriptFunion)ReleaseData);
-		RegisterFun("releasedata", (C_CallBackScriptFunion)ReleaseData);
-
-		RegisterFun("GetVal4Data", (C_CallBackScriptFunion)GetVal4Data);
-		RegisterFun("getval4data", (C_CallBackScriptFunion)GetVal4Data);
-
-		RegisterFun("SetVal2Data", (C_CallBackScriptFunion)SetVal2Data);
-		RegisterFun("setval2data", (C_CallBackScriptFunion)SetVal2Data);
 	}
 	C_CallBackScriptFunion CScriptCallBackFunion::GetFun(unsigned int index)
 	{
@@ -397,120 +385,6 @@ namespace zlscript
 			nClassPoint = pointVal.pPoint->GetID();
 		}
 		CScriptTriggerMgr::GetInstance()->RemoveTrigger(strEvent, nClassPoint, strFlag);
-
-		return ECALLBACK_FINISH;
-	}
-
-	int CScriptCallBackFunion::InitData(CScriptVirtualMachine* pMachine, CScriptCallState* pState)
-	{
-		if (pState == nullptr)
-		{
-			return ECALLBACK_ERROR;
-		}
-
-		std::string strFlag = pState->GetStringVarFormStack(0);
-		auto pData = CScriptDataMgr::GetInstance()->GetData(strFlag.c_str());
-
-		pState->SetClassPointResult(pData);
-		return ECALLBACK_FINISH;
-	}
-
-	int CScriptCallBackFunion::ReleaseData(CScriptVirtualMachine* pMachine, CScriptCallState* pState)
-	{
-		if (pState == nullptr)
-		{
-			return ECALLBACK_ERROR;
-		}
-		PointVarInfo pointVal = pState->GetClassPointFormStack(0);
-		CScriptBasePointer* pPoint = pointVal.pPoint;
-		if (pPoint)
-		{
-			auto pData = dynamic_cast<CScriptData*>(pPoint->GetPoint());
-		}
-
-		return ECALLBACK_FINISH;
-	}
-
-	int CScriptCallBackFunion::GetVal4Data(CScriptVirtualMachine* pMachine, CScriptCallState* pState)
-	{
-		if (pState == nullptr)
-		{
-			return ECALLBACK_ERROR;
-		}
-		int nParmNum = pState->GetParamNum();
-		std::string strFlag = pState->GetStringVarFormStack(0);
-		auto pData = CScriptDataMgr::GetInstance()->GetData(strFlag.c_str());
-		CScriptSubData* pArray = nullptr;
-		if (nParmNum >= 2)
-		{
-			std::string strName = pState->GetStringVarFormStack(1);
-			auto it = pData->m_mapChild.find(strName);
-			if (it != pData->m_mapChild.end())
-			{
-				pArray = it->second;
-			}
-		}
-		if (pArray)
-		{
-			for (int i = 2; i < nParmNum; i++)
-			{
-				std::string strName = pState->GetStringVarFormStack(i);
-				auto it = pArray->m_mapChild.find(strName);
-				if (it != pArray->m_mapChild.end())
-				{
-					pArray = it->second;
-				}
-				else
-				{
-					pArray = nullptr;
-					break;
-				}
-			}
-		}
-
-		if (pArray)
-			pState->SetResult(pArray->m_var);
-		//else
-			//pState->PushEmptyVarToStack();
-		CScriptDataMgr::GetInstance()->ReleaseData(pData);
-		return ECALLBACK_FINISH;
-	}
-
-	int CScriptCallBackFunion::SetVal2Data(CScriptVirtualMachine* pMachine, CScriptCallState* pState)
-	{
-		if (pState == nullptr)
-		{
-			return ECALLBACK_ERROR;
-		}
-		int nParmNum = pState->GetParamNum();
-		std::string strFlag = pState->GetStringVarFormStack(0);
-		auto pData = CScriptDataMgr::GetInstance()->GetData(strFlag.c_str());
-		CScriptSubData* pArray = nullptr;
-		if (nParmNum > 2)
-		{
-			std::string strName = pState->GetStringVarFormStack(1);
-			pArray = pData->m_mapChild[strName];
-			if (pArray == nullptr)
-			{
-				pArray = new CScriptSubData;
-				pData->m_mapChild[strName] = pArray;
-			}
-		}
-
-		for (int i = 2; i < nParmNum - 1; i++)
-		{
-			std::string strName = pState->GetStringVarFormStack(i);
-			auto& subMap = pArray->m_mapChild;
-			pArray = subMap[strName];
-			if (pArray == nullptr)
-			{
-				pArray = new CScriptSubData;
-				subMap[strName] = pArray;
-			}
-		}
-
-		pArray->m_var = pState->GetVarFormStack(nParmNum - 1);
-		CScriptDataMgr::GetInstance()->ReleaseData(pData);
 
 		return ECALLBACK_FINISH;
 	}
