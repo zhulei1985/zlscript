@@ -46,6 +46,9 @@ namespace zlscript
 		//int SetVal2Script(CScriptCallState* pState);
 		//int Remove2Script(CScriptCallState* pState);
 		//int Clear2Script(CScriptCallState* pState);
+	public:
+		virtual bool AddAllData2Bytes(std::vector<char>& vBuff, std::vector<PointVarInfo>& vOutClassPoint);
+		virtual bool DecodeData4Bytes(char* pBuff, int& pos, unsigned int len, std::vector<PointVarInfo>& vOutClassPoint);
 	private:
 		std::unordered_map<StackVarInfo, StackVarInfo, hash_SV> m_mapData;
 	};

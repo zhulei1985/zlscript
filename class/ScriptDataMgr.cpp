@@ -134,6 +134,30 @@ namespace zlscript
 		//pState->ClearFunParam();
 		return ECALLBACK_FINISH;
 	}
+	bool CScriptHashMap::AddAllData2Bytes(std::vector<char>& vBuff, std::vector<PointVarInfo>& vOutClassPoint)
+	{
+		AddUInt2Bytes(vBuff, m_mapData.size());
+		for (auto it = m_mapData.begin(); it != m_mapData.end(); it++)
+		{
+			AddVar2Bytes(vBuff, &(it->first), vOutClassPoint);
+			AddVar2Bytes(vBuff, &(it->second), vOutClassPoint);
+		}
+		return true;
+	}
+
+	bool CScriptHashMap::DecodeData4Bytes(char* pBuff, int& pos, unsigned int len, std::vector<PointVarInfo>& vOutClassPoint)
+	{
+		unsigned int nSize = DecodeBytes2Int(pBuff, pos, len);
+		m_mapData.clear();
+		for (unsigned int i = 0; i < nSize; i++)
+		{
+			auto first = DecodeVar4Bytes(pBuff, pos, len, vOutClassPoint);
+			m_mapData[first] = DecodeVar4Bytes(pBuff, pos, len, vOutClassPoint);
+		}
+		return true;
+	}
+
+
 	CScriptArray::CScriptArray()
 	{
 		//AddClassObject(CScriptPointInterface::GetScriptPointIndex(), this);
@@ -456,5 +480,7 @@ namespace zlscript
 
 		return ECALLBACK_FINISH;
 	}
+
+
 
 }

@@ -1,4 +1,4 @@
-﻿/****************************************************************************
+/****************************************************************************
 	Copyright (c) 2019 ZhuLei
 	Email:zhulei1985@foxmail.com
 
@@ -179,7 +179,7 @@ namespace zlscript
 		return m_vecScriptClassFun[id];
 	}
 
-	bool CScriptPointInterface::AddVar2Bytes(std::vector<char>& vBuff, StackVarInfo* pVal, std::vector<PointVarInfo>& vOutClassPoint)
+	bool CScriptPointInterface::AddVar2Bytes(std::vector<char>& vBuff, const StackVarInfo* pVal, std::vector<PointVarInfo>& vOutClassPoint)
 	{
 		if (!pVal)
 		{
@@ -236,7 +236,7 @@ namespace zlscript
 		return true;
 	}
 
-	bool CScriptPointInterface::AddVar2Bytes(std::vector<char>& vBuff, PointVarInfo* pVal, std::vector<PointVarInfo>& vOutClassPoint)
+	bool CScriptPointInterface::AddVar2Bytes(std::vector<char>& vBuff, const PointVarInfo* pVal, std::vector<PointVarInfo>& vOutClassPoint)
 	{
 		if (!pVal)
 		{

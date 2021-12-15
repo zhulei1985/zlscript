@@ -1,4 +1,4 @@
-﻿/****************************************************************************
+/****************************************************************************
 	Copyright (c) 2019 ZhuLei
 	Email:zhulei1985@foxmail.com
 
@@ -180,8 +180,8 @@ namespace zlscript
 		//virtual unsigned int GetSyncInfo_ClassPoint2Index(CScriptBasePointer* point) { return 0; }
 		//virtual PointVarInfo GetSyncInfo_Index2ClassPoint(unsigned int index) { return PointVarInfo(); }
 
-		bool AddVar2Bytes(std::vector<char>& vBuff, StackVarInfo* pVal, std::vector<PointVarInfo>& vOutClassPoint);
-		bool AddVar2Bytes(std::vector<char>& vBuff, PointVarInfo* pVal, std::vector<PointVarInfo>& vOutClassPoint);
+		bool AddVar2Bytes(std::vector<char>& vBuff, const StackVarInfo* pVal, std::vector<PointVarInfo>& vOutClassPoint);
+		bool AddVar2Bytes(std::vector<char>& vBuff, const PointVarInfo* pVal, std::vector<PointVarInfo>& vOutClassPoint);
 
 		StackVarInfo DecodeVar4Bytes(char* pBuff, int& pos, unsigned int len, std::vector<PointVarInfo>& vOutClassPoint);
 		PointVarInfo DecodePointVar4Bytes(char* pBuff, int& pos, unsigned int len, std::vector<PointVarInfo>& vOutClassPoint);
