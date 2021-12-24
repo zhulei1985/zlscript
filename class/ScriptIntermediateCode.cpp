@@ -1,4 +1,4 @@
-﻿/****************************************************************************
+/****************************************************************************
 	Copyright (c) 2019 ZhuLei
 	Email:zhulei1985@foxmail.com
 
@@ -912,7 +912,7 @@ namespace zlscript
 		GetNewWord(nextWord);
 		strClassVarName = nextWord.word;
 		GetWord(nextWord);
-		if (nextWord.word != "->")
+		if (nextWord.word != "->" && nextWord.word != ".")
 		{
 			AddErrorInfo(
 				nextWord.nSourceWordsIndex,
@@ -1446,7 +1446,7 @@ namespace zlscript
 		strClassVarName = nextWord.word;
 
 		GetWord(nextWord);
-		if (nextWord.word != "->")
+		if (nextWord.word != "->" && nextWord.word != ".")
 		{
 			AddErrorInfo(nextWord.nSourceWordsIndex, "CCallClassFunICode:format error ->");
 			RevertAll();

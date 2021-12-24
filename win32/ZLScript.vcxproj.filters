@@ -100,6 +100,9 @@
     <ClInclude Include="..\class\ScriptCompileInfo.h">
       <Filter>code</Filter>
     </ClInclude>
+    <ClInclude Include="..\class\ScriptCompiler.h">
+      <Filter>code</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\class\ScriptCallBackFunion.cpp">
@@ -172,6 +175,9 @@
       <Filter>code</Filter>
     </ClCompile>
     <ClCompile Include="..\class\ScriptVarInfo.cpp">
+      <Filter>code</Filter>
+    </ClCompile>
+    <ClCompile Include="..\class\ScriptCompiler.cpp">
       <Filter>code</Filter>
     </ClCompile>
   </ItemGroup>

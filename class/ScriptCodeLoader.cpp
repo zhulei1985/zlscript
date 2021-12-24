@@ -1,4 +1,4 @@
-﻿/****************************************************************************
+/****************************************************************************
 	Copyright (c) 2019 ZhuLei
 	Email:zhulei1985@foxmail.com
 
@@ -1372,7 +1372,10 @@ namespace zlscript
 			else
 			{
 				ch[0] = vSource[i];
-				strCurWord += ch;
+				if (strCurWord.size() > 0 || ((unsigned int)ch[0]) > 32)//过滤多余的空格
+				{
+					strCurWord += ch;
+				}
 				m_vCharIndex2LineIndex[i] = m_vScoureLines.size();
 			}
 
