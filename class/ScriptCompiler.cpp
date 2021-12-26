@@ -7,7 +7,6 @@ namespace zlscript
 	CScriptCompiler::CScriptCompiler()
 	{
 		InitLexicalAnalysisFun();
-		m_mapLAFun.insert({'_',std::bind(&CScriptCompiler::LoadKeyState,this,std::placeholders::_1,std::placeholders::_2,std::placeholders::_3)});
 	}
 	CScriptCompiler::~CScriptCompiler()
 	{
@@ -18,16 +17,17 @@ namespace zlscript
 		std::string strbuff;
 		for (unsigned int i = 0; i < size; )
 		{
-			auto range = m_mapLAFun.equal_range(pData[i]);
-			if (range.first == range.second)
+			auto listIt = m_mapLAFun.find(pData[i]);
+			if (listIt != m_mapLAFun.end() && listIt->second.empty())
 			{
 				i++;
 			}
 			else
 			{
-				for (auto it = range.first; it != range.second; it++)
+				auto list = listIt->second;
+				for (auto it = list.begin(); it != list.end(); it++)
 				{
-					LexicalAnalysisFun pFun = it->second;
+					LexicalAnalysisFun pFun = *it;
 					unsigned int beginIndex = i;
 					if (pFun(pData, size, i))
 					{
@@ -60,11 +60,52 @@ namespace zlscript
 
 	void CScriptCompiler::InitLexicalAnalysisFun()
 	{
-		auto RegisterFun = [&](char ch,auto fun) {
-			m_mapLAFun.insert({ ch,std::bind(fun,this,std::placeholders::_1,std::placeholders::_2,std::placeholders::_3) });
-
+		auto RegisterFun = [&](char ch,auto fun, bool bPushFront = false) {
+			auto list = m_mapLAFun[ch];
+			if (bPushFront)
+			{
+				list.push_front(std::bind(fun, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
+			}
+			else
+			{
+				list.push_back(std::bind(fun, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
+			}
 		};
-		RegisterFun('ch',&CScriptCompiler::LoadKeyState);
+		RegisterFun('_',&CScriptCompiler::LoadKeyState);
+		for (char ch = '0'; ch <= '9'; ch++)
+		{
+			RegisterFun(ch, &CScriptCompiler::LoadNumberState);
+		}
+		for (char ch = 'A'; ch <= 'Z'; ch++)
+		{
+			RegisterFun(ch, &CScriptCompiler::LoadKeyState);
+		}
+		for (char ch = 'a'; ch <= 'z'; ch++)
+		{
+			RegisterFun(ch, &CScriptCompiler::LoadKeyState);
+		}
+
+		RegisterFun('"', &CScriptCompiler::LoadStringState);
+		RegisterFun('/', &CScriptCompiler::LoadSkipAnnotateState);
+		RegisterFun('/', &CScriptCompiler::LoadSkipAnnotate2State);
+
+		RegisterFun('+', &CScriptCompiler::LoadSignState);
+		RegisterFun('-', &CScriptCompiler::LoadSignState);
+		RegisterFun('!', &CScriptCompiler::LoadSignState);
+		RegisterFun('=', &CScriptCompiler::LoadSignState);
+		RegisterFun('<', &CScriptCompiler::LoadSignState);
+		RegisterFun('>', &CScriptCompiler::LoadSignState);
+		RegisterFun('*', &CScriptCompiler::LoadSignState);
+		RegisterFun('/', &CScriptCompiler::LoadSignState);
+		RegisterFun('%', &CScriptCompiler::LoadSignState);
+		RegisterFun('(', &CScriptCompiler::LoadSignState);
+		RegisterFun(')', &CScriptCompiler::LoadSignState);
+		RegisterFun('[', &CScriptCompiler::LoadSignState);
+		RegisterFun(']', &CScriptCompiler::LoadSignState);
+		RegisterFun('@', &CScriptCompiler::LoadSignState);
+		RegisterFun(';', &CScriptCompiler::LoadSignState);
+		RegisterFun(':', &CScriptCompiler::LoadSignState);
+		RegisterFun('.', &CScriptCompiler::LoadSignState);
 	}
 
 	bool CScriptCompiler::LoadSignState(char* pData, unsigned int size, unsigned int& index)
@@ -73,42 +114,84 @@ namespace zlscript
 		char ch = pData[index];
 		switch (ch)
 		{
+		case '+':
+			strOut.push_back(ch);
+			index++;
+			if (pData[index] == '+')
+			{
+				strOut.push_back(pData[index]);
+				index++;
+			}
+			break;
+		case '-':
+			strOut.push_back(ch);
+			index++;
+			if (pData[index] == '>')
+			{
+				strOut.push_back(pData[index]);
+				index++;
+			}
+			break;
 		case '!':
 			strOut.push_back(ch);
-			if (pData[index + 1] == '=')
+			index++;
+			if (pData[index] == '=')
 			{
+				strOut.push_back(pData[index]);
 				index++;
-				//strOut.p
+			}
+			break;
+		case '=':
+			strOut.push_back(ch);
+			index++;
+			if (pData[index] == '=')
+			{
+				strOut.push_back(pData[index]);
+				index++;
 			}
 			break;
 		case '<':
-		case '=':
+			strOut.push_back(ch);
+			index++;
+			if (pData[index] == '=')
+			{
+				strOut.push_back(pData[index]);
+				index++;
+			}
+			break;
+		case '>':
+			strOut.push_back(ch);
+			index++;
+			if (pData[index] == '=')
+			{
+				strOut.push_back(pData[index]);
+				index++;
+			}
+			break;
+		case '*':
 		case '/':
-		case '-':
+		case '%':
+		case '(':
+		case ')':
+		case '[':
+		case ']':
+		case '@':
+		case ';':
+		case ':':
+		case '.':
+			index++;
 			strOut.push_back(ch);
 			break;
-		case '(':
-			break;
+		default:
+			return false;
 		}
-		while (true)
-		{
-			char ch = pData[index];
-			switch (ch)
-			{
-			case '>':
-			case '<':
-			case '=':
-			case '!':
-			case '/':
-			case '-':
-				strOut.push_back(ch);
-				if (strOut.size() == 1)
-				{
-					index++;
-				}
-				break;
-			}
-		}
+		tagSourceWord word;
+		word.word = strOut;
+		word.nFlag = E_WORD_FLAG_NORMAL;
+#if _SCRIPT_DEBUG
+		word.nSourceWordsIndex = GetSourceWordsIndex(index);
+#endif
+		m_vCurSourceSentence.push_back(word);
 		return true;
 	}
 
@@ -154,6 +237,64 @@ namespace zlscript
 			}
 		}
 		return false;
+	}
+
+	bool CScriptCompiler::LoadNumberState(char* pData, unsigned int size, unsigned int& index)
+	{
+		auto checkFun = [](char ch) {
+			if (ch >= '0' && ch <= '9')
+			{
+				return true;
+			}
+			return false;
+		};
+		std::string strOut;
+		if (pData[index] == '0' && (index+1 < size))
+		{
+			if (pData[index + 1] == 'x')
+			{
+				strOut.push_back(pData[index++]);
+				strOut.push_back(pData[index++]);
+			}
+			else if (!checkFun(pData[index + 1]))
+			{
+				return false;
+			}
+		}
+
+		bool hasPoint = false;
+		while (index < size)
+		{
+			if (pData[index] == '.')
+			{
+				if (hasPoint == false)
+				{
+					hasPoint = true;
+					strOut.push_back(pData[index++]);
+				}
+				else
+				{
+					//只能有一个‘.’
+					return false;
+				}
+			}
+			else if (checkFun(pData[index]))
+			{
+				strOut.push_back(pData[index++]);
+			}
+			else
+			{
+				break;
+			}
+		}
+		tagSourceWord word;
+		word.word = strOut;
+		word.nFlag = E_WORD_FLAG_NUMBER;
+#if _SCRIPT_DEBUG
+		word.nSourceWordsIndex = GetSourceWordsIndex(index);
+#endif
+		m_vCurSourceSentence.push_back(word);
+		return true;
 	}
 
 	bool CScriptCompiler::LoadStringState(char* pData, unsigned int size, unsigned int& index)

@@ -18,6 +18,7 @@ namespace zlscript
 	enum E_SOURCE_WORD_FLAG
 	{
 		E_WORD_FLAG_NORMAL,
+		E_WORD_FLAG_NUMBER,
 		E_WORD_FLAG_STRING,
 	};
 	//词法分析后的
@@ -51,6 +52,8 @@ namespace zlscript
 		bool LoadSignState(char* pData, unsigned int size, unsigned int& index);
 		//读取关键字
 		bool LoadKeyState(char* pData, unsigned int size, unsigned int& index);
+		//读取数值
+		bool LoadNumberState(char* pData, unsigned int size, unsigned int& index);
 		//读取字符串
 		bool LoadStringState(char* pData, unsigned int size, unsigned int& index);
 		//略过注释 一行注释
@@ -59,7 +62,8 @@ namespace zlscript
 		bool LoadSkipAnnotate2State(char* pData, unsigned int size, unsigned int& index);
 
 		typedef std::function< bool(char* pData,unsigned int size,unsigned int &index)> LexicalAnalysisFun;
-		std::unordered_multimap<char, LexicalAnalysisFun> m_mapLAFun;
+		typedef std::list<LexicalAnalysisFun> ListLexicalAnalysisFun;
+		std::unordered_map<char, ListLexicalAnalysisFun> m_mapLAFun;
 	private:
 #if _SCRIPT_DEBUG
 		std::vector<unsigned int> m_vCharIndex2LineIndex;
