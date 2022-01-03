@@ -32,13 +32,13 @@ namespace zlscript
 	{
 		m_pFather = pCode;
 	}
-	CScriptCodeLoader* CBaseICode::GetLoader()
+	CScriptCompiler* CBaseICode::GetCompiler()
 	{
-		return m_pLoader;
+		return m_pCompiler;
 	}
-	void CBaseICode::SetLoader(CScriptCodeLoader* pLoader)
+	void CBaseICode::SetCompiler(CScriptCompiler* pCompiler)
 	{
-		m_pLoader = pLoader;
+		m_pCompiler = pCompiler;
 	}
 	bool CBaseICode::DefineTempVar(std::string VarType, std::string VarName)
 	{
@@ -90,15 +90,15 @@ namespace zlscript
 
 	void CBaseICode::AddErrorInfo(unsigned int pos, std::string error)
 	{
-		if (m_pLoader)
-			m_pLoader->AddErrorInfo(pos, error);
+		if (m_pCompiler)
+			m_pCompiler->AddErrorInfo(pos, error);
 	}
 
 	bool CDefGlobalVarICode::Compile(SentenceSourceCode& vIn)
 	{
 		SignToPos();
 
-		if (m_pLoader == nullptr)
+		if (m_pCompiler == nullptr)
 		{
 			return false;
 		}
@@ -106,7 +106,7 @@ namespace zlscript
 		GetNewWord(strType);
 		unsigned short unVarType = 0;
 		unsigned short unClassType = 0;
-		unVarType = m_pLoader->GetVarType(strType.word, unClassType);
+		unVarType = CScriptCodeLoader::GetInstance()->GetVarType(strType.word, unClassType);
 		if (unVarType == EScriptVal_None)
 		{
 			AddErrorInfo(
@@ -117,7 +117,7 @@ namespace zlscript
 		}
 		GetNewWord(strName);
 
-		if (!m_pLoader->CheckVarName(strName.word))
+		if (!CScriptCodeLoader::GetInstance()->CheckVarName(strName.word))
 		{
 			AddErrorInfo(
 				strName.nSourceWordsIndex,
@@ -130,7 +130,7 @@ namespace zlscript
 
 		if (strSign.word == ";")
 		{
-			if (!m_pLoader->AddGlobalVar(strName.word, unVarType, unClassType))
+			if (!CScriptCodeLoader::GetInstance()->AddGlobalVar(strName.word, unVarType, unClassType))
 			{
 				AddErrorInfo(
 					strName.nSourceWordsIndex,
@@ -188,7 +188,7 @@ namespace zlscript
 				}
 			}
 			}
-			if (!m_pLoader->AddGlobalVar(strName.word, unVarType, unClassType))
+			if (!CScriptCodeLoader::GetInstance()->AddGlobalVar(strName.word, unVarType, unClassType))
 			{
 				AddErrorInfo(
 					strName.nSourceWordsIndex,
@@ -196,7 +196,7 @@ namespace zlscript
 				RevertAll();
 				return false;
 			}
-			if (!m_pLoader->SetGlobalVar(strName.word, defVar))
+			if (!CScriptCodeLoader::GetInstance()->SetGlobalVar(strName.word, defVar))
 			{
 				AddErrorInfo(
 					strName.nSourceWordsIndex,
@@ -226,7 +226,7 @@ namespace zlscript
 	{
 		SignToPos();
 
-		if (m_pLoader == nullptr)
+		if (m_pCompiler == nullptr)
 		{
 			return false;
 		}
@@ -234,7 +234,7 @@ namespace zlscript
 		GetNewWord(strType);
 		unsigned short unVarType = 0;
 		unsigned short unClassType = 0;
-		unVarType = m_pLoader->GetVarType(strType.word, unClassType);
+		unVarType = CScriptCodeLoader::GetInstance()->GetVarType(strType.word, unClassType);
 		if (unVarType == EScriptVal_None)
 		{
 			AddErrorInfo(
@@ -246,7 +246,7 @@ namespace zlscript
 		GetNewWord(strName);
 
 		//检测名字是否与回调函数名冲突
-		if (!m_pLoader->CheckVarName(strName.word))
+		if (!CScriptCodeLoader::GetInstance()->CheckVarName(strName.word))
 		{
 			AddErrorInfo(
 				strName.nSourceWordsIndex,
@@ -398,7 +398,7 @@ namespace zlscript
 		if (nextWord.word == "(")
 		{
 			GetWord(nextWord);
-			switch (m_pLoader->GetVarType(nextWord))
+			switch (m_pCompiler->GetVarType(nextWord))
 			{
 			case EScriptVal_Int:
 			{
@@ -459,7 +459,7 @@ namespace zlscript
 	{
 		SignToPos();
 
-		if (m_pLoader == nullptr)
+		if (m_pCompiler == nullptr)
 		{
 			return false;
 		}
@@ -479,7 +479,7 @@ namespace zlscript
 		std::string strType = nextWord.word;
 		unsigned short unVarType = 0;
 		unsigned short unClassType = 0;
-		unVarType = m_pLoader->GetVarType(strType, unClassType);
+		unVarType = CScriptCodeLoader::GetInstance()->GetVarType(strType, unClassType);
 		if (unVarType == EScriptVal_None)
 		{
 			AddErrorInfo(
@@ -549,7 +549,7 @@ namespace zlscript
 			while (true)
 			{
 				//有定义
-				if (!m_pLoader->RunCompileState(vIn, CScriptCodeLoader::E_CODE_SCOPE_STATEMENT, this, 0))
+				if (!m_pCompiler->RunCompileState(vIn, CScriptCompiler::E_CODE_SCOPE_STATEMENT, this, 0))
 				{
 					RevertAll();
 					return false;
@@ -566,7 +566,7 @@ namespace zlscript
 				}
 			}
 		}
-		m_pLoader->SetFunICode(strName.word, this);
+		CScriptCodeLoader::GetInstance()->SetFunICode(strName.word, this);
 		return true;
 	}
 
@@ -665,7 +665,7 @@ namespace zlscript
 	{
 		SignToPos();
 
-		if (m_pLoader == nullptr)
+		if (m_pCompiler == nullptr)
 		{
 			return false;
 		}
@@ -683,7 +683,7 @@ namespace zlscript
 		while (true)
 		{
 			//有定义
-			if (!m_pLoader->RunCompileState(vIn, CScriptCodeLoader::E_CODE_SCOPE_STATEMENT, this, 0))
+			if (!m_pCompiler->RunCompileState(vIn, CScriptCompiler::E_CODE_SCOPE_STATEMENT, this, 0))
 			{
 				RevertAll();
 				return false;
@@ -1003,7 +1003,7 @@ namespace zlscript
 			RevertAll();
 			return false;
 		}
-		if (!m_pLoader->RunCompileState(vIn, CScriptCodeLoader::E_CODE_SCOPE_MEMBER, this, 0))
+		if (!m_pCompiler->RunCompileState(vIn, CScriptCompiler::E_CODE_SCOPE_MEMBER, this, 0))
 		{
 			AddErrorInfo(
 				nextWord.nSourceWordsIndex,
@@ -1230,13 +1230,13 @@ namespace zlscript
 	{
 		SignToPos();
 
-		if (m_pLoader == nullptr)
+		if (m_pCompiler == nullptr)
 		{
 			return false;
 		}
 
 		GetNewWord(nextWord);
-		int nPRI = m_pLoader->GetSignPRI(nextWord.word);
+		int nPRI = CScriptCodeLoader::GetInstance()->GetSignPRI(nextWord.word);
 		if (nPRI == 0xffff)
 		{
 			AddErrorInfo(
@@ -1326,7 +1326,7 @@ namespace zlscript
 	{
 		SignToPos();
 
-		if (m_pLoader == nullptr)
+		if (m_pCompiler == nullptr)
 		{
 			return false;
 		}
@@ -1346,7 +1346,7 @@ namespace zlscript
 			RevertOne();
 			while (true)
 			{
-				if (!m_pLoader->RunCompileState(vIn, CScriptCodeLoader::E_CODE_SCOPE_EXPRESSION, this, E_PARAM))
+				if (!m_pCompiler->RunCompileState(vIn, CScriptCompiler::E_CODE_SCOPE_EXPRESSION, this, E_PARAM))
 				{
 					AddErrorInfo(nextWord.nSourceWordsIndex, "CCallFunICode:param format error");
 					RevertAll();
@@ -1437,7 +1437,7 @@ namespace zlscript
 	{
 		SignToPos();
 
-		if (m_pLoader == nullptr)
+		if (m_pCompiler == nullptr)
 		{
 			return false;
 		}
@@ -1468,7 +1468,7 @@ namespace zlscript
 			RevertOne();
 			while (true)
 			{
-				if (!m_pLoader->RunCompileState(vIn, CScriptCodeLoader::E_CODE_SCOPE_EXPRESSION, this, E_PARAM))
+				if (!m_pCompiler->RunCompileState(vIn, CScriptCompiler::E_CODE_SCOPE_EXPRESSION, this, E_PARAM))
 				{
 					AddErrorInfo(nextWord.nSourceWordsIndex, "CCallFunICode:param format error");
 					RevertAll();
@@ -1524,7 +1524,7 @@ namespace zlscript
 	{
 		SignToPos();
 
-		if (m_pLoader == nullptr)
+		if (m_pCompiler == nullptr)
 		{
 			return false;
 		}
@@ -1534,7 +1534,7 @@ namespace zlscript
 			RevertOne();
 			while (true)
 			{
-				if (!m_pLoader->RunCompileState(vIn, CScriptCodeLoader::E_CODE_SCOPE_EXPRESSION, this, 0))
+				if (!m_pCompiler->RunCompileState(vIn, CScriptCompiler::E_CODE_SCOPE_EXPRESSION, this, 0))
 				{
 					AddErrorInfo(nextWord.nSourceWordsIndex, "CSentenceICode:format error");
 					RevertAll();
@@ -1656,7 +1656,7 @@ namespace zlscript
 	{
 		SignToPos();
 
-		if (m_pLoader == nullptr)
+		if (m_pCompiler == nullptr)
 		{
 			return false;
 		}
@@ -1667,7 +1667,7 @@ namespace zlscript
 			CBaseICode* pCurICode = nullptr;
 			if (nState == E_STATE_OPERATOR)
 			{
-				if (!m_pLoader->RunCompileState(vIn, CScriptCodeLoader::E_CODE_SCOPE_OPERATOR, this, 0))
+				if (!m_pCompiler->RunCompileState(vIn, CScriptCompiler::E_CODE_SCOPE_OPERATOR, this, 0))
 				{
 					if (nNeedOperand <= 0)
 					{
@@ -1680,7 +1680,7 @@ namespace zlscript
 			}
 			else if (nState == E_STATE_OPERAND)
 			{
-				if (!m_pLoader->RunCompileState(vIn, CScriptCodeLoader::E_CODE_SCOPE_MEMBER, this, 0))
+				if (!m_pCompiler->RunCompileState(vIn, CScriptCompiler::E_CODE_SCOPE_MEMBER, this, 0))
 				{
 					RevertAll();
 					return false;
@@ -1708,7 +1708,7 @@ namespace zlscript
 				CICodeMgr<CSetClassParamICode> mgr;
 				CGetClassParamICode* pLeftOperand = (CGetClassParamICode*)pOperNode->pLeftOperand;
 				//设置类变量值
-				CSetClassParamICode* pSetCode = (CSetClassParamICode*)mgr.New(m_pLoader, pLeftOperand->m_unBeginSoureIndex);
+				CSetClassParamICode* pSetCode = (CSetClassParamICode*)mgr.New(m_pCompiler, pLeftOperand->m_unBeginSoureIndex);
 				pSetCode->strClassVarName = pLeftOperand->strClassVarName;
 				pSetCode->strParamName = pLeftOperand->strParamName;
 
@@ -1726,7 +1726,7 @@ namespace zlscript
 			{
 				CICodeMgr<CSaveVarICode> mgr;
 				CLoadVarICode* pLeftOperand = (CLoadVarICode*)pOperNode->pLeftOperand;
-				CSaveVarICode* pSaveCode = (CSaveVarICode*)mgr.New(m_pLoader, pLeftOperand->m_unBeginSoureIndex);
+				CSaveVarICode* pSaveCode = (CSaveVarICode*)mgr.New(m_pCompiler, pLeftOperand->m_unBeginSoureIndex);
 
 				pSaveCode->m_word = pLeftOperand->m_word;
 				if (CheckOperatorTree(&pOperNode->pRightOperand) == false)
@@ -1811,7 +1811,7 @@ namespace zlscript
 	{
 		SignToPos();
 
-		if (m_pLoader == nullptr)
+		if (m_pCompiler == nullptr)
 		{
 			return false;
 		}
@@ -1831,7 +1831,7 @@ namespace zlscript
 			return false;
 		}
 
-		if (!m_pLoader->RunCompileState(vIn, CScriptCodeLoader::E_CODE_SCOPE_EXPRESSION, this, E_COND))
+		if (!m_pCompiler->RunCompileState(vIn, CScriptCompiler::E_CODE_SCOPE_EXPRESSION, this, E_COND))
 		{
 			AddErrorInfo(nextWord.nSourceWordsIndex, "CIfICode:if condition format error");
 			RevertAll();
@@ -1846,7 +1846,7 @@ namespace zlscript
 			return false;
 		}
 
-		if (!m_pLoader->RunCompileState(vIn, CScriptCodeLoader::E_CODE_SCOPE_STATEMENT, this, E_TRUE))
+		if (!m_pCompiler->RunCompileState(vIn, CScriptCompiler::E_CODE_SCOPE_STATEMENT, this, E_TRUE))
 		{
 			AddErrorInfo(nextWord.nSourceWordsIndex, "CIfICode:if true block format error");
 			RevertAll();
@@ -1860,7 +1860,7 @@ namespace zlscript
 			return true;
 		}
 
-		if (!m_pLoader->RunCompileState(vIn, CScriptCodeLoader::E_CODE_SCOPE_STATEMENT, this, E_FALSE))
+		if (!m_pCompiler->RunCompileState(vIn, CScriptCompiler::E_CODE_SCOPE_STATEMENT, this, E_FALSE))
 		{
 			AddErrorInfo(nextWord.nSourceWordsIndex, "CIfICode:if false block format error");
 			RevertAll();
@@ -1942,7 +1942,7 @@ namespace zlscript
 	{
 		SignToPos();
 
-		if (m_pLoader == nullptr)
+		if (m_pCompiler == nullptr)
 		{
 			return false;
 		}
@@ -1962,7 +1962,7 @@ namespace zlscript
 			return false;
 		}
 
-		if (!m_pLoader->RunCompileState(vIn, CScriptCodeLoader::E_CODE_SCOPE_EXPRESSION, this, E_COND))
+		if (!m_pCompiler->RunCompileState(vIn, CScriptCompiler::E_CODE_SCOPE_EXPRESSION, this, E_COND))
 		{
 			AddErrorInfo(nextWord.nSourceWordsIndex, "CWhileICode:if condition format error");
 			RevertAll();
@@ -1977,7 +1977,7 @@ namespace zlscript
 			return false;
 		}
 
-		if (!m_pLoader->RunCompileState(vIn, CScriptCodeLoader::E_CODE_SCOPE_STATEMENT, this, E_BLOCK))
+		if (!m_pCompiler->RunCompileState(vIn, CScriptCompiler::E_CODE_SCOPE_STATEMENT, this, E_BLOCK))
 		{
 			AddErrorInfo(nextWord.nSourceWordsIndex, "CWhileICode:while block format error");
 			RevertAll();
@@ -1996,7 +1996,7 @@ namespace zlscript
 	bool CContinueICode::Compile(SentenceSourceCode& vIn)
 	{
 		SignToPos();
-		if (m_pLoader == nullptr)
+		if (m_pCompiler == nullptr)
 		{
 			return false;
 		}
@@ -2009,7 +2009,7 @@ namespace zlscript
 		GetWord(nextWord);
 		if (nextWord.word != ";")
 		{
-			m_pLoader->AddErrorInfo(nextWord.nSourceWordsIndex, "CContinueICode:format error");
+			m_pCompiler->AddErrorInfo(nextWord.nSourceWordsIndex, "CContinueICode:format error");
 			RevertAll();
 			return false;
 		}
@@ -2024,7 +2024,7 @@ namespace zlscript
 	bool CBreakICode::Compile(SentenceSourceCode& vIn)
 	{
 		SignToPos();
-		if (m_pLoader == nullptr)
+		if (m_pCompiler == nullptr)
 		{
 			return false;
 		}
@@ -2037,7 +2037,7 @@ namespace zlscript
 		GetWord(nextWord);
 		if (nextWord.word != ";")
 		{
-			m_pLoader->AddErrorInfo(nextWord.nSourceWordsIndex, "CBreakICode:format error");
+			m_pCompiler->AddErrorInfo(nextWord.nSourceWordsIndex, "CBreakICode:format error");
 			RevertAll();
 			return false;
 		}
@@ -2067,7 +2067,7 @@ namespace zlscript
 	bool CReturnICode::Compile(SentenceSourceCode& vIn)
 	{
 		SignToPos();
-		if (m_pLoader == nullptr)
+		if (m_pCompiler == nullptr)
 		{
 			return false;
 		}
@@ -2084,7 +2084,7 @@ namespace zlscript
 			return true;
 		}
 		RevertOne();
-		if (!m_pLoader->RunCompileState(vIn, CScriptCodeLoader::E_CODE_SCOPE_EXPRESSION, this, 0))
+		if (!m_pCompiler->RunCompileState(vIn, CScriptCompiler::E_CODE_SCOPE_EXPRESSION, this, 0))
 		{
 			AddErrorInfo(nextWord.nSourceWordsIndex, "CReturnICode:expression format error");
 			RevertAll();
@@ -2094,7 +2094,7 @@ namespace zlscript
 		GetWord(nextWord);
 		if (nextWord.word != ";")
 		{
-			m_pLoader->AddErrorInfo(nextWord.nSourceWordsIndex, "CReturnICode:format error");
+			m_pCompiler->AddErrorInfo(nextWord.nSourceWordsIndex, "CReturnICode:format error");
 			RevertAll();
 			return false;
 		}
@@ -2126,7 +2126,7 @@ namespace zlscript
 	bool CNewICode::Compile(SentenceSourceCode& vIn)
 	{
 		SignToPos();
-		if (m_pLoader == nullptr)
+		if (m_pCompiler == nullptr)
 		{
 			return false;
 		}
@@ -2177,7 +2177,7 @@ namespace zlscript
 	bool CDeleteICode::Compile(SentenceSourceCode& vIn)
 	{
 		SignToPos();
-		if (m_pLoader == nullptr)
+		if (m_pCompiler == nullptr)
 		{
 			return false;
 		}
@@ -2192,7 +2192,7 @@ namespace zlscript
 		GetWord(nextWord);
 		if (nextWord.word != ";")
 		{
-			m_pLoader->AddErrorInfo(nextWord.nSourceWordsIndex, "CDeleteICode:format error");
+			m_pCompiler->AddErrorInfo(nextWord.nSourceWordsIndex, "CDeleteICode:format error");
 			RevertAll();
 			return false;
 		}
@@ -2223,7 +2223,7 @@ namespace zlscript
 	bool CBracketsICode::Compile(SentenceSourceCode& vIn)
 	{
 		SignToPos();
-		if (m_pLoader == nullptr)
+		if (m_pCompiler == nullptr)
 		{
 			return false;
 		}
@@ -2233,16 +2233,16 @@ namespace zlscript
 			RevertAll();
 			return false;
 		}
-		if (!m_pLoader->RunCompileState(vIn, CScriptCodeLoader::E_CODE_SCOPE_EXPRESSION, this, 0))
+		if (!m_pCompiler->RunCompileState(vIn, CScriptCompiler::E_CODE_SCOPE_EXPRESSION, this, 0))
 		{
-			m_pLoader->AddErrorInfo(nextWord.nSourceWordsIndex, "CBracketsICode:expression error");
+			m_pCompiler->AddErrorInfo(nextWord.nSourceWordsIndex, "CBracketsICode:expression error");
 			RevertAll();
 			return false;
 		}
 		GetWord(nextWord);
 		if (nextWord.word != ")")
 		{
-			m_pLoader->AddErrorInfo(nextWord.nSourceWordsIndex, "CBracketsICode:format error");
+			m_pCompiler->AddErrorInfo(nextWord.nSourceWordsIndex, "CBracketsICode:format error");
 			RevertAll();
 			return false;
 		}
@@ -2287,7 +2287,7 @@ namespace zlscript
 	bool CTestSignICode::Compile(SentenceSourceCode& vIn)
 	{
 		SignToPos();
-		if (m_pLoader == nullptr)
+		if (m_pCompiler == nullptr)
 		{
 			return false;
 		}
@@ -2302,7 +2302,7 @@ namespace zlscript
 		GetWord(nextWord);
 		if (nextWord.word != ";")
 		{
-			m_pLoader->AddErrorInfo(nextWord.nSourceWordsIndex, "CTestSignICode:format error");
+			m_pCompiler->AddErrorInfo(nextWord.nSourceWordsIndex, "CTestSignICode:format error");
 			RevertAll();
 			return false;
 		}

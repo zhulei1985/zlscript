@@ -1,4 +1,4 @@
-﻿/****************************************************************************
+/****************************************************************************
 	Copyright (c) 2019 ZhuLei
 	Email:zhulei1985@foxmail.com
 
@@ -30,13 +30,24 @@
 #include "EScriptVariableType.h"
 namespace zlscript
 {
+	//一行源码
+	struct tagSourceLineInfo
+	{
+		tagSourceLineInfo()
+		{
+			nLineNum = 0;
+		}
+		unsigned int nLineNum;
+		std::string strLineWords;
+	};
 
-	//一句源码
 	enum E_SOURCE_WORD_FLAG
 	{
 		E_WORD_FLAG_NORMAL,
+		E_WORD_FLAG_NUMBER,
 		E_WORD_FLAG_STRING,
 	};
+	//词法分析后的
 	struct tagSourceWord
 	{
 		tagSourceWord()

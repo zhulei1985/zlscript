@@ -7,9 +7,31 @@ namespace zlscript
 	CScriptCompiler::CScriptCompiler()
 	{
 		InitLexicalAnalysisFun();
+		InitCodeCompile();
 	}
 	CScriptCompiler::~CScriptCompiler()
 	{
+	}
+
+	unsigned short CScriptCompiler::GetVarType(tagSourceWord varWord)
+	{
+		if (varWord.nFlag == E_WORD_FLAG_STRING)
+		{
+			return EScriptVal_String;
+		}
+		else if (varWord.nFlag == E_WORD_FLAG_NUMBER)
+		{
+			for (unsigned int i = 0; i < varWord.word.size(); i++)
+			{
+				if (varWord.word[i] == '.')
+				{
+					//是浮点
+					return EScriptVal_Double;
+				}
+			}
+			return EScriptVal_Int;
+		}
+		return EScriptVal_None;
 	}
 
 	bool CScriptCompiler::LexicalAnalysis(char* pData, unsigned int size)
@@ -55,6 +77,25 @@ namespace zlscript
 			return false;
 		}
 		
+		while (m_vCurSourceSentence.size())
+		{
+			if (!RunCompileState(m_vCurSourceSentence, E_CODE_SCOPE_OUTSIDE, nullptr, 0))
+			{
+//				zlscript::CScriptDebugPrintMgr::GetInstance()->Print("ScriptLoad Error:");
+//
+//				for (unsigned int i = 0; i < m_vError.size(); i++)
+//				{
+//					zlscript::CScriptDebugPrintMgr::GetInstance()->Print(strCurFileName + ":" + m_vError[i].strError);
+//#ifdef  _SCRIPT_DEBUG
+//					auto souceInfo = GetSourceWords(m_vError[i].nErrorWordPos);
+//					zlscript::CScriptDebugPrintMgr::GetInstance()->Print("Debug", "file:%s,line:%d,word:%s",
+//						souceInfo.strCurFileName.c_str(), souceInfo.nLineNum, souceInfo.strLineWords.c_str());
+//#endif //  _SCRIPT_DEBUG
+//				}
+
+				break;
+			}
+		}
 		return false;
 	}
 
@@ -376,7 +417,77 @@ namespace zlscript
 	}
 
 
-#if _SCRIPT_DEBUG
+	bool CScriptCompiler::RunCompileState(SentenceSourceCode& vIn, E_CODE_SCOPE scopeType, CBaseICode* pFather, int addType)
+	{
+		SignToPos();
+
+		auto& list = m_mapICodeMgr[scopeType];
+		bool bResult = false;
+		for (auto it = list.begin(); it != list.end(); it++)
+		{
+			auto pMgr = *it;
+			if (pMgr)
+			{
+				auto pICode = pMgr->New(this, nBeginSourceWordIndex);
+				if (pICode)
+				{
+					pICode->SetFather(pFather);
+					if (pICode->Compile(vIn))
+					{
+						if (pFather)
+						{
+							pFather->AddICode(addType, pICode);
+						}
+						bResult = true;
+						break;
+					}
+					pMgr->Release(pICode);
+				}
+			}
+		}
+		//if (LoadDefineFunState(vIn) == ECompile_ERROR)
+		//{
+		//	return false;
+		//}
+		if (bResult)
+		{
+			ClearErrorInfo();
+		}
+		return bResult;
+	}
+
+	void CScriptCompiler::InitCodeCompile()
+	{
+		//添加顺序很重要，会影响编译结果
+		AddCodeCompile<CDefGlobalVarICode>(E_CODE_SCOPE_OUTSIDE);
+		AddCodeCompile<CFunICode>(E_CODE_SCOPE_OUTSIDE);
+		AddCodeCompile<CBlockICode>(E_CODE_SCOPE_STATEMENT);
+
+		AddCodeCompile<CDefTempVarICode>(E_CODE_SCOPE_STATEMENT);
+		AddCodeCompile<CTestSignICode>(E_CODE_SCOPE_STATEMENT);
+		AddCodeCompile<CIfICode>(E_CODE_SCOPE_STATEMENT);
+		AddCodeCompile<CWhileICode>(E_CODE_SCOPE_STATEMENT);
+		AddCodeCompile<CContinueICode>(E_CODE_SCOPE_STATEMENT);
+		AddCodeCompile<CBreakICode>(E_CODE_SCOPE_STATEMENT);
+		AddCodeCompile<CReturnICode>(E_CODE_SCOPE_STATEMENT);
+		AddCodeCompile<CDeleteICode>(E_CODE_SCOPE_STATEMENT);
+		AddCodeCompile<CSentenceICode>(E_CODE_SCOPE_STATEMENT);
+
+		AddCodeCompile<CExpressionICode>(E_CODE_SCOPE_EXPRESSION);
+
+		AddCodeCompile<CBracketsICode>(E_CODE_SCOPE_MEMBER);
+		AddCodeCompile<CNewICode>(E_CODE_SCOPE_MEMBER);
+		AddCodeCompile<CCallFunICode>(E_CODE_SCOPE_MEMBER);
+		AddCodeCompile<CCallClassFunICode>(E_CODE_SCOPE_MEMBER);
+		AddCodeCompile<CMinusICode>(E_CODE_SCOPE_MEMBER);
+		AddCodeCompile<CGetClassParamICode>(E_CODE_SCOPE_MEMBER);
+		AddCodeCompile<CLoadVarICode>(E_CODE_SCOPE_MEMBER);
+
+		AddCodeCompile<COperatorICode>(E_CODE_SCOPE_OPERATOR);
+	}
+
+
+
 	void CScriptCompiler::PartitionSourceWords(char* pSource, unsigned int size)
 	{
 		m_vCharIndex2LineIndex.resize(size, 0);
@@ -438,7 +549,5 @@ namespace zlscript
 		}
 		return 0;
 	}
-
-#endif
 
 }

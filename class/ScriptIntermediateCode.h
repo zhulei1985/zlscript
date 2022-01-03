@@ -1,4 +1,4 @@
-﻿/****************************************************************************
+/****************************************************************************
 	Copyright (c) 2019 ZhuLei
 	Email:zhulei1985@foxmail.com
 
@@ -23,7 +23,7 @@
 #include <set>
 
 #include "ScriptCodeStyle.h"
-#include "ScriptCompileInfo.h"
+#include "ScriptCompiler.h"
 #include "EMicroCodeType.h"
  //编译时的中间代码
 namespace zlscript
@@ -48,7 +48,7 @@ namespace zlscript
 
 	const unsigned int g_nTempVarIndexError = -1;
 
-	class CScriptCodeLoader;
+	//class CScriptCodeLoader;
 	//struct stVarDefine
 	//{
 	//	std::string strType;
@@ -89,7 +89,7 @@ namespace zlscript
 	public:
 		CBaseICode() {
 			m_pFather = nullptr;
-			m_pLoader = nullptr;
+			m_pCompiler = nullptr;
 			cRegisterIndex = R_A;
 		}
 		virtual int GetType()
@@ -100,8 +100,8 @@ namespace zlscript
 		virtual CBaseICode* GetFather();
 		virtual void SetFather(CBaseICode* pCode);
 
-		CScriptCodeLoader* GetLoader();
-		void SetLoader(CScriptCodeLoader* pLoader);
+		CScriptCompiler* GetCompiler();
+		void SetCompiler(CScriptCompiler* pCompiler);
 
 		virtual bool DefineTempVar(std::string VarType, std::string VarName);
 		virtual bool CheckTempVar(const char* pVarName);
@@ -120,7 +120,7 @@ namespace zlscript
 	private:
 		CBaseICode* m_pFather;
 	protected:
-		CScriptCodeLoader* m_pLoader;
+		CScriptCompiler* m_pCompiler;
 		void AddErrorInfo(unsigned int pos, std::string error);
 	public:
 		unsigned int m_unBeginSoureIndex;
@@ -699,10 +699,11 @@ namespace zlscript
 	public:
 		int nNum;
 	};
+
 	class CBaseICodeMgr
 	{
 	public:
-		virtual CBaseICode* New(CScriptCodeLoader* pLoader, unsigned int index) = 0;
+		virtual CBaseICode* New(CScriptCompiler* pLoader, unsigned int index) = 0;
 		virtual bool Release(CBaseICode* pCode);
 
 	public:
@@ -718,7 +719,7 @@ namespace zlscript
 		CICodeMgr();
 		~CICodeMgr();
 
-		CBaseICode* New(CScriptCodeLoader* pLoader, unsigned int index);
+		CBaseICode* New(CScriptCompiler* pLoader, unsigned int index);
 
 	};
 
@@ -733,13 +734,13 @@ namespace zlscript
 	}
 
 	template<class T>
-	inline CBaseICode* CICodeMgr<T>::New(CScriptCodeLoader* pLoader,unsigned int index)
+	inline CBaseICode* CICodeMgr<T>::New(CScriptCompiler* pCompiler,unsigned int index)
 	{
 		T* pResult = new T;
 		CBaseICode* pCode = dynamic_cast<CBaseICode*>(pResult);
 		if (pCode)
 		{
-			pCode->SetLoader(pLoader);
+			pCode->SetLoader(pCompiler);
 			pCode->m_unBeginSoureIndex = index;
 			m_listICode.push_front(pCode);
 		}

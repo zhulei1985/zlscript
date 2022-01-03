@@ -622,7 +622,7 @@ namespace zlscript
 		return bResult;
 	}
 
-
+	//TODO 多线程支持
 	bool CScriptCodeLoader::AddGlobalVar(std::string name, unsigned short type, unsigned short typeExtend)
 	{
 		if (m_mapDicGlobalVar.find(name) != m_mapDicGlobalVar.end())
@@ -650,7 +650,7 @@ namespace zlscript
 		}
 		return true;
 	}
-
+	//TODO 多线程支持
 	bool CScriptCodeLoader::SetGlobalVar(std::string name, StackVarInfo& var)
 	{
 		auto it = m_mapDicGlobalVar.find(name);
@@ -770,7 +770,7 @@ namespace zlscript
 #endif
 	}
 
-
+	//TODO 多线程支持
 	bool CScriptCodeLoader::SetFunICode(std::string name, CFunICode* pCode)
 	{
 		CFunICode* pOld = m_mapString2Code[name];
