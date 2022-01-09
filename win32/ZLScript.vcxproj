@@ -135,6 +135,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\class\CBaseICodeMgr.h" />
+    <ClInclude Include="..\class\CICodeMgr.h" />
+    <ClInclude Include="..\class\ScriptBaseICode.h" />
     <ClInclude Include="..\class\ScriptClassFunion.h" />
     <ClInclude Include="..\class\ScriptCodeStyle.h" />
     <ClInclude Include="..\class\ScriptClassAttributes.h" />
@@ -167,6 +170,8 @@
     <ClInclude Include="..\class\zStringBuffer.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\class\CBaseICodeMgr.cpp" />
+    <ClCompile Include="..\class\ScriptBaseICode.cpp" />
     <ClCompile Include="..\class\ScriptCallBackFunion.cpp" />
     <ClCompile Include="..\class\ScriptClassAttributes.cpp" />
     <ClCompile Include="..\class\ScriptClassFunion.cpp" />

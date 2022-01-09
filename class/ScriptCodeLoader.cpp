@@ -583,44 +583,44 @@ namespace zlscript
 
 
 
-	bool CScriptCodeLoader::RunCompileState(SentenceSourceCode& vIn, E_CODE_SCOPE scopeType, CBaseICode* pFather, int addType)
-	{
-		SignToPos();
+	//bool CScriptCodeLoader::RunCompileState(SentenceSourceCode& vIn, E_CODE_SCOPE scopeType, CBaseICode* pFather, int addType)
+	//{
+	//	SignToPos();
 
-		auto& list = m_mapICodeMgr[scopeType];
-		bool bResult = false;
-		for (auto it = list.begin(); it != list.end(); it++)
-		{
-			auto pMgr = *it;
-			if (pMgr)
-			{
-				auto pICode = pMgr->New(this, nBeginSourceWordIndex);
-				if (pICode)
-				{
-					pICode->SetFather(pFather);
-					if (pICode->Compile(vIn))
-					{
-						if (pFather)
-						{
-							pFather->AddICode(addType, pICode);
-						}
-						bResult = true;
-						break;
-					}
-					pMgr->Release(pICode);
-				}
-			}
-		}
-		//if (LoadDefineFunState(vIn) == ECompile_ERROR)
-		//{
-		//	return false;
-		//}
-		if (bResult)
-		{
-			ClearErrorInfo();
-		}
-		return bResult;
-	}
+	//	auto& list = m_mapICodeMgr[scopeType];
+	//	bool bResult = false;
+	//	for (auto it = list.begin(); it != list.end(); it++)
+	//	{
+	//		auto pMgr = *it;
+	//		if (pMgr)
+	//		{
+	//			auto pICode = pMgr->New(this, nBeginSourceWordIndex);
+	//			if (pICode)
+	//			{
+	//				pICode->SetFather(pFather);
+	//				if (pICode->Compile(vIn))
+	//				{
+	//					if (pFather)
+	//					{
+	//						pFather->AddICode(addType, pICode);
+	//					}
+	//					bResult = true;
+	//					break;
+	//				}
+	//				pMgr->Release(pICode);
+	//			}
+	//		}
+	//	}
+	//	//if (LoadDefineFunState(vIn) == ECompile_ERROR)
+	//	//{
+	//	//	return false;
+	//	//}
+	//	if (bResult)
+	//	{
+	//		ClearErrorInfo();
+	//	}
+	//	return bResult;
+	//}
 
 	//TODO 多线程支持
 	bool CScriptCodeLoader::AddGlobalVar(std::string name, unsigned short type, unsigned short typeExtend)

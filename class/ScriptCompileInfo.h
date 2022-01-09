@@ -28,6 +28,7 @@
 #include "ScriptVarInfo.h"
 #include "EScriptSentenceType.h"
 #include "EScriptVariableType.h"
+#include "ScriptCodeStyle.h"
 namespace zlscript
 {
 	//一行源码

@@ -3,11 +3,13 @@
 #include <unordered_map>
 #include <functional>
 #include "ScriptCompileInfo.h"
-#include "ScriptIntermediateCode.h"
+#include "CICodeMgr.h"
 namespace zlscript
 {
-
-
+	class CBaseICode;
+	class CBaseICodeMgr;
+	template<class T>
+	class CICodeMgr;
 	class CScriptCompiler
 	{
 	public:

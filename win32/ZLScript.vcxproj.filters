@@ -103,6 +103,15 @@
     <ClInclude Include="..\class\ScriptCompiler.h">
       <Filter>code</Filter>
     </ClInclude>
+    <ClInclude Include="..\class\CBaseICodeMgr.h">
+      <Filter>code</Filter>
+    </ClInclude>
+    <ClInclude Include="..\class\CICodeMgr.h">
+      <Filter>code</Filter>
+    </ClInclude>
+    <ClInclude Include="..\class\ScriptBaseICode.h">
+      <Filter>code</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\class\ScriptCallBackFunion.cpp">
@@ -178,6 +187,12 @@
       <Filter>code</Filter>
     </ClCompile>
     <ClCompile Include="..\class\ScriptCompiler.cpp">
+      <Filter>code</Filter>
+    </ClCompile>
+    <ClCompile Include="..\class\CBaseICodeMgr.cpp">
+      <Filter>code</Filter>
+    </ClCompile>
+    <ClCompile Include="..\class\ScriptBaseICode.cpp">
       <Filter>code</Filter>
     </ClCompile>
   </ItemGroup>

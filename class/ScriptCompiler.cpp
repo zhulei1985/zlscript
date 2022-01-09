@@ -1,5 +1,5 @@
 #include <string>
-
+#include "ScriptIntermediateCode.h"
 #include "ScriptCompiler.h"
 
 namespace zlscript
