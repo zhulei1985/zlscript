@@ -32,6 +32,8 @@
 #include "ScriptSuperPointer.h"
 #include "ScriptIntermediateCode.h"
 
+#include "ScriptCompiler.h"
+
 #pragma warning(disable : 4996) 
 
 using namespace std;
@@ -48,32 +50,7 @@ namespace zlscript
 	CScriptCodeLoader CScriptCodeLoader::s_Instance;
 	CScriptCodeLoader::CScriptCodeLoader(void)
 	{
-		//添加顺序很重要，会影响编译结果
-		AddCodeCompile<CDefGlobalVarICode>(E_CODE_SCOPE_OUTSIDE);
-		AddCodeCompile<CFunICode>(E_CODE_SCOPE_OUTSIDE);
-		AddCodeCompile<CBlockICode>(E_CODE_SCOPE_STATEMENT);
-
-		AddCodeCompile<CDefTempVarICode>(E_CODE_SCOPE_STATEMENT);
-		AddCodeCompile<CTestSignICode>(E_CODE_SCOPE_STATEMENT);
-		AddCodeCompile<CIfICode>(E_CODE_SCOPE_STATEMENT);
-		AddCodeCompile<CWhileICode>(E_CODE_SCOPE_STATEMENT);
-		AddCodeCompile<CContinueICode>(E_CODE_SCOPE_STATEMENT);
-		AddCodeCompile<CBreakICode>(E_CODE_SCOPE_STATEMENT);
-		AddCodeCompile<CReturnICode>(E_CODE_SCOPE_STATEMENT);
-		AddCodeCompile<CDeleteICode>(E_CODE_SCOPE_STATEMENT);
-		AddCodeCompile<CSentenceICode>(E_CODE_SCOPE_STATEMENT);
-
-		AddCodeCompile<CExpressionICode>(E_CODE_SCOPE_EXPRESSION);
-
-		AddCodeCompile<CBracketsICode>(E_CODE_SCOPE_MEMBER);
-		AddCodeCompile<CNewICode>(E_CODE_SCOPE_MEMBER);
-		AddCodeCompile<CCallFunICode>(E_CODE_SCOPE_MEMBER);
-		AddCodeCompile<CCallClassFunICode>(E_CODE_SCOPE_MEMBER);
-		AddCodeCompile<CMinusICode>(E_CODE_SCOPE_MEMBER);
-		AddCodeCompile<CGetClassParamICode>(E_CODE_SCOPE_MEMBER);
-		AddCodeCompile<CLoadVarICode>(E_CODE_SCOPE_MEMBER);
-
-		AddCodeCompile<COperatorICode>(E_CODE_SCOPE_OPERATOR);
+	
 		//CScriptCallBackFunion::init();
 		initDic();
 		RegisterCallBack_LoadFun(DefaultLoadFile);
@@ -88,13 +65,6 @@ namespace zlscript
 	}
 	bool CScriptCodeLoader::LoadFile(const char* filename)
 	{
-		clearAllCompileData();
-#if _SCRIPT_DEBUG
-		strCurFileName = filename;
-		//nErrorWordPos = 0;
-		m_vError.clear();
-#endif
-
 		std::vector<char> vBuff;
 		auto rit = m_vLoadFun.rbegin();
 		for (; rit != m_vLoadFun.rend(); rit++)
@@ -105,47 +75,50 @@ namespace zlscript
 				break;
 			}
 		}
-#if _SCRIPT_DEBUG
-		PartitionSourceWords(vBuff);
-#endif
-		string strbuff;
-		for (unsigned int i = 0; i < vBuff.size(); )
-		{
-			if (RunLexical(strbuff, vBuff[i], i))
-			{
-				i++;
-			}
-		}
+		CScriptCompiler compiler;
 
-
-		if (m_vCurSourceSentence.empty())
-		{
-			//空文件,或者是没有有意义字符的文件
-			return false;
-		}
-
-		//词法分析完成，开始语法分析
-		unsigned int nStrIndex = 0;
-
-		while (m_vCurSourceSentence.size())
-		{
-			if (!RunCompileState(m_vCurSourceSentence, E_CODE_SCOPE_OUTSIDE, nullptr,0))
-			{
-				zlscript::CScriptDebugPrintMgr::GetInstance()->Print("ScriptLoad Error:");
-
-				for (unsigned int i = 0; i < m_vError.size(); i++)
-				{
-					zlscript::CScriptDebugPrintMgr::GetInstance()->Print(strCurFileName + ":" + m_vError[i].strError);
-#ifdef  _SCRIPT_DEBUG
-					auto souceInfo = GetSourceWords(m_vError[i].nErrorWordPos);
-					zlscript::CScriptDebugPrintMgr::GetInstance()->Print("Debug", "file:%s,line:%d,word:%s",
-						souceInfo.strCurFileName.c_str(), souceInfo.nLineNum, souceInfo.strLineWords.c_str());
-#endif //  _SCRIPT_DEBUG
-				}
-
-				break;
-			}
-		}
+		compiler.Compile(&vBuff[0], vBuff.size());
+//#if _SCRIPT_DEBUG
+//		PartitionSourceWords(vBuff);
+//#endif
+//		string strbuff;
+//		for (unsigned int i = 0; i < vBuff.size(); )
+//		{
+//			if (RunLexical(strbuff, vBuff[i], i))
+//			{
+//				i++;
+//			}
+//		}
+//
+//
+//		if (m_vCurSourceSentence.empty())
+//		{
+//			//空文件,或者是没有有意义字符的文件
+//			return false;
+//		}
+//
+//		//词法分析完成，开始语法分析
+//		unsigned int nStrIndex = 0;
+//
+//		while (m_vCurSourceSentence.size())
+//		{
+//			if (!RunCompileState(m_vCurSourceSentence, E_CODE_SCOPE_OUTSIDE, nullptr,0))
+//			{
+//				zlscript::CScriptDebugPrintMgr::GetInstance()->Print("ScriptLoad Error:");
+//
+//				for (unsigned int i = 0; i < m_vError.size(); i++)
+//				{
+//					zlscript::CScriptDebugPrintMgr::GetInstance()->Print(strCurFileName + ":" + m_vError[i].strError);
+//#ifdef  _SCRIPT_DEBUG
+//					auto souceInfo = GetSourceWords(m_vError[i].nErrorWordPos);
+//					zlscript::CScriptDebugPrintMgr::GetInstance()->Print("Debug", "file:%s,line:%d,word:%s",
+//						souceInfo.strCurFileName.c_str(), souceInfo.nLineNum, souceInfo.strLineWords.c_str());
+//#endif //  _SCRIPT_DEBUG
+//				}
+//
+//				break;
+//			}
+//		}
 
 		//#if _SCRIPT_DEBUG
 		//			sprintf("编译失败 %s,%s",filename,strErrorWord.size());
@@ -232,7 +205,7 @@ namespace zlscript
 		//m_mapDic2KeyWord["float"] = EScriptVal_Double;
 		//m_mapDic2KeyWord["string"] = EScriptVal_String;
 		//*********************中间码的字典**************************//
-		m_mapDicSentenceToICode["global"] = EICode_Global_Define;
+		//m_mapDicSentenceToICode["global"] = EICode_Global_Define;
 		m_mapDicVarTypeToICode["void"] = EScriptVal_Void;
 		m_mapDicVarTypeToICode["int"] = EScriptVal_Int;
 		m_mapDicVarTypeToICode["float"] = EScriptVal_Double;
@@ -297,278 +270,7 @@ namespace zlscript
 
 		vGlobalNumVar.clear();
 	}
-	void CScriptCodeLoader::clearAllCompileData()
-	{
-		//清空词法分析机的一些临时
-		while (!m_stackLexical.empty())
-		{
-			m_stackLexical.pop();
-		}
-		//m_vLexicalData.clear();
-		m_vCurSourceSentence.clear();
-	}
-	bool CScriptCodeLoader::RunLexical(string& strOut, char ch, unsigned int nSourceIndex)
-	{
-		if (m_stackLexical.empty())
-		{
-			m_stackLexical.push(ESkipState);
-		}
 
-		if (m_stackLexical.size())
-		{
-			int nState = m_stackLexical.top();
-
-			int nResult = 0;
-			switch (nState)
-			{
-			case ESkipState:
-				nResult = LoadSkipState(strOut, ch);
-				break;
-			case ESignState:
-				nResult = LoadSignState(strOut, ch);
-				break;
-			case EKeyState:
-				nResult = LoadKeyState(strOut, ch);
-				break;
-			case EStringState:
-				nResult = LoadStringState(strOut, ch);
-				break;
-			case ESkipAnnotateState:
-				nResult = LoadSkipAnnotateState(strOut, ch);
-				break;
-			}
-
-			switch (nResult & 0x7fff)
-			{
-			case EReturn:
-				if (strOut.size() > 0)
-				{
-					tagSourceWord word;
-					word.word = strOut;
-					if (nState == EStringState)
-					{
-						word.nFlag = E_WORD_FLAG_STRING;
-					}
-#if _SCRIPT_DEBUG
-					word.nSourceWordsIndex = GetSourceWordsIndex(nSourceIndex);
-#endif
-					m_vCurSourceSentence.push_back(word);
-					strOut.clear();
-				}
-				else if (nState == EStringState)
-				{
-					//允许空字符串
-					tagSourceWord word;
-					word.word = strOut;
-					word.nFlag = E_WORD_FLAG_STRING;
-#if _SCRIPT_DEBUG
-					word.nSourceWordsIndex = GetSourceWordsIndex(nSourceIndex);
-#endif
-					m_vCurSourceSentence.push_back(word);
-				}
-				m_stackLexical.pop();
-				if (nResult & ENeedLoadNewChar)
-				{
-					return true;
-				}
-				return false;
-			case EContinue:
-				return true;
-			default:
-				if (strOut.size() > 0)
-				{
-					tagSourceWord word;
-					word.word = strOut;
-#if _SCRIPT_DEBUG
-					word.nSourceWordsIndex = GetSourceWordsIndex(nSourceIndex);
-#endif
-					m_vCurSourceSentence.push_back(word);
-					strOut.clear();
-				}
-				m_stackLexical.push(nResult & 0x7fff);
-				if (nResult & ENeedLoadNewChar)
-				{
-					return true;
-				}
-				return false;
-			}
-		}
-		return true;
-	}
-	int CScriptCodeLoader::LoadSkipState(string& strOut, char ch)
-	{
-		//如果是字符
-		switch (ch)
-		{
-		case ' '://跳过空格
-			return EContinue;
-		case 13://跳过回车
-		case 10://跳过换行
-			return EContinue;
-
-		case '_'://这个字符转到LoadKeyState
-			return EKeyState;
-		case '"'://双引号转到LoadStringState
-			//strOut.push_back(ch);
-			return EStringState | ENeedLoadNewChar;
-
-		}
-
-		//所有大些字母转到LoadKeyState
-		if (ch >= 'A' && ch <= 'Z')
-		{
-			return EKeyState;
-		}
-		//所有小写字母转到LoadKeyState
-		if (ch >= 'a' && ch <= 'z')
-		{
-			return EKeyState;
-		}
-		//所有数字转到LoadKeyState
-		if (ch >= '0' && ch <= '9')
-		{
-			return EKeyState;
-		}
-
-		//剩下的字符
-		//以下符号转到LoadSignState
-		// ! ~ # $ % & ' ( ) * + , - . /
-		// : ; < = > ? @
-		// [ \ ] ^ _ '
-		// { | } ~
-		if (ch >= 33 && ch <= 126)
-		{
-			return ESignState;
-		}
-
-
-		return EReturn | ENeedLoadNewChar;
-	}
-	//读取符号
-	int CScriptCodeLoader::LoadSignState(string& strOut, char ch)
-	{
-		//排除一些特别字符
-		switch (ch)
-		{
-		case ' '://跳过空格
-		case 13://跳过回车
-		case 10://跳过换行
-			return EReturn | ENeedLoadNewChar;
-		case '_'://这个字符转到LoadKeyState
-			return EKeyState;
-		case '"'://双引号转到LoadStringState
-			//strOut.push_back(ch);
-			return EStringState | ENeedLoadNewChar;
-			//case ';'://分号作为一句的结束
-			//	//m_vLexicalData.push_back(m_vCurSourceSentence);
-			//	//m_vCurSourceSentence.clear();
-			//	return EReturn | ENeedLoadNewChar;
-		}
-
-		//排除所有大些字母
-		if (ch >= 'A' && ch <= 'Z')
-		{
-			return EReturn;
-		}
-		//排除所有小写字母
-		if (ch >= 'a' && ch <= 'z')
-		{
-			return EReturn;
-		}
-		//排除所有数字
-		if (ch >= '0' && ch <= '9')
-		{
-			return EReturn;
-		}
-
-		//剩下的字符
-		//以下符号转到LoadSignState
-		// ! ~ # $ % & ' ( ) * + , - . /
-		// : ; < = > ? @
-		// [ \ ] ^ _ '
-		// { | } ~
-		if (ch >= 33 && ch <= 126)
-		{
-			strOut.push_back(ch);
-			//可能存在多个符号字符组成的符号，比如 >= <= ==
-			if (strOut.size() == 1)
-			{
-				switch (ch)
-				{
-				case '>':
-				case '<':
-				case '=':
-				case '!':
-				case '/':
-				case '-':
-					return EContinue;
-				}
-			}
-			else if (strOut.size() == 2)
-			{
-				if (strOut == "//")
-				{
-					//这个是注释
-					strOut.clear();
-					return ESkipAnnotateState;
-				}
-			}
-		}
-		return EReturn | ENeedLoadNewChar;
-	}
-	//读取数据
-	int CScriptCodeLoader::LoadKeyState(string& strOut, char ch)
-	{
-		if (ch == '_')
-		{
-			strOut.push_back(ch);
-			return EContinue;
-		}
-		//所有大些字母转到LoadKeyState
-		if (ch >= 'A' && ch <= 'Z')
-		{
-			strOut.push_back(ch);
-			return EContinue;
-		}
-		//所有小写字母转到LoadKeyState
-		if (ch >= 'a' && ch <= 'z')
-		{
-			strOut.push_back(ch);
-			return EContinue;
-		}
-		//所有数字转到LoadKeyState
-		if (ch >= '0' && ch <= '9')
-		{
-			strOut.push_back(ch);
-			return EContinue;
-		}
-		if (ch == '.')
-		{
-			strOut.push_back(ch);
-			return EContinue;
-		}
-		return EReturn;
-	}
-	//读取字符串
-	int CScriptCodeLoader::LoadStringState(string& strOut, char ch)
-	{
-		if (ch == '"')
-		{
-			return EReturn | ENeedLoadNewChar;
-		}
-		strOut.push_back(ch);
-		return EContinue;
-	}
-	int CScriptCodeLoader::LoadSkipAnnotateState(string& strOut, char ch)
-	{
-		switch (ch)
-		{
-		case 13://回车
-		case 10://换行
-			return EReturn | ENeedLoadNewChar;
-		}
-		return EContinue;
-	}
 
 	bool CScriptCodeLoader::CheckVarName(string varName)
 	{
@@ -828,61 +530,45 @@ namespace zlscript
 		return 0;
 	}
 
-	void CScriptCodeLoader::ClearICode()
-	{
-		m_mapString2Code.clear();
-		//CICodeMgr::GetInstance()->Clear();
-		for (auto itMap = m_mapICodeMgr.begin(); itMap != m_mapICodeMgr.end(); itMap++)
-		{
-			ListICodeMgr &listMgr = itMap->second;
-			for (auto itList = listMgr.begin(); itList != listMgr.end(); itList++)
-			{
-				CBaseICodeMgr* pMgr = *itList;
-				if (pMgr)
-				{
-					pMgr->Clear();
-				}
-			}
-		}
-	}
 
-	void CScriptCodeLoader::PrintAllCode(const char* pFilename)
-	{
-		FILE* fp = fopen(pFilename, "wb");
-		if (fp == nullptr)
-		{
-			return;
-		}
-		for (auto it = m_vecCodeData.begin(); it != m_vecCodeData.end(); it++)
-		{
-			tagCodeData& data = *it;
-			fputs("********************************\n", fp);
-			fputs(data.funname.c_str(), fp);
-			fputc('\n', fp);
-			fputs("********************************\n", fp);
-			unsigned int curSoureWordIndex = -1;
-			for (auto pCode = data.pBeginCode; pCode; pCode = pCode->m_pNext)
-			{
-
-				std::string str = pCode->GetCodeString();// = PrintOneCode(pCode);
-				char strbuff[32] = { 0 };
-				sprintf(strbuff, "[%d]\t", pCode->nCodeIndex);
-				fputs(strbuff, fp);
-				fputs(str.c_str(), fp);
-#ifdef _SCRIPT_DEBUG
-				if (curSoureWordIndex != pCode->nSoureWordIndex)
-				{
-					curSoureWordIndex = pCode->nSoureWordIndex;
-					auto souceInfo = GetSourceWords(curSoureWordIndex);
-					fputc('\t', fp);
-					fputs(souceInfo.strLineWords.c_str(), fp);
-				}
-#endif
-				fputc('\n', fp);
-			}
-		}
-		fclose(fp);
-	}
+//
+//	void CScriptCodeLoader::PrintAllCode(const char* pFilename)
+//	{
+//		FILE* fp = fopen(pFilename, "wb");
+//		if (fp == nullptr)
+//		{
+//			return;
+//		}
+//		for (auto it = m_vecCodeData.begin(); it != m_vecCodeData.end(); it++)
+//		{
+//			tagCodeData& data = *it;
+//			fputs("********************************\n", fp);
+//			fputs(data.funname.c_str(), fp);
+//			fputc('\n', fp);
+//			fputs("********************************\n", fp);
+//			unsigned int curSoureWordIndex = -1;
+//			for (auto pCode = data.pBeginCode; pCode; pCode = pCode->m_pNext)
+//			{
+//
+//				std::string str = pCode->GetCodeString();// = PrintOneCode(pCode);
+//				char strbuff[32] = { 0 };
+//				sprintf(strbuff, "[%d]\t", pCode->nCodeIndex);
+//				fputs(strbuff, fp);
+//				fputs(str.c_str(), fp);
+//#ifdef _SCRIPT_DEBUG
+//				if (curSoureWordIndex != pCode->nSoureWordIndex)
+//				{
+//					curSoureWordIndex = pCode->nSoureWordIndex;
+//					auto souceInfo = GetSourceWords(curSoureWordIndex);
+//					fputc('\t', fp);
+//					fputs(souceInfo.strLineWords.c_str(), fp);
+//				}
+//#endif
+//				fputc('\n', fp);
+//			}
+//		}
+//		fclose(fp);
+//	}
 
 	//std::string CScriptCodeLoader::PrintOneCode(CodeStyle code)
 	//{
@@ -1334,84 +1020,84 @@ namespace zlscript
 		}
 #endif
 	}
-
-#if _SCRIPT_DEBUG
-	void CScriptCodeLoader::PartitionSourceWords(std::vector<char>& vSource)
-	{
-		m_vCharIndex2LineIndex.resize(vSource.size(), 0);
-		unsigned int nLineIndex = 1;
-		char ch[2] = { 0,0 };
-		std::string strCurWord;
-		for (size_t i = 0; i < vSource.size(); i++)
-		{
-			bool bNewLine = false;
-			if (vSource[i] == 10)
-			{
-				bNewLine = true;
-			}
-			else if (vSource[i] == 13)
-			{
-				if (i + 1 < vSource.size())
-				{
-					if (vSource[i + 1] == 10)
-					{
-						i++;
-					}
-				}
-				bNewLine = true;
-			}
-			if (bNewLine)
-			{
-				tagSourceLineInfo info;
-				info.strCurFileName = strCurFileName;
-				info.nLineNum = nLineIndex++;
-				info.strLineWords = strCurWord;
-				m_vScoureLines.push_back(info);
-				strCurWord.clear();
-			}
-			else
-			{
-				ch[0] = vSource[i];
-				if (strCurWord.size() > 0 || ((unsigned int)ch[0]) > 32)//过滤多余的空格
-				{
-					strCurWord += ch;
-				}
-				m_vCharIndex2LineIndex[i] = m_vScoureLines.size();
-			}
-
-		}
-		if (strCurWord.size() > 0)
-		{
-			tagSourceLineInfo info;
-			info.strCurFileName = strCurFileName;
-			info.nLineNum = nLineIndex++;
-			info.strLineWords = strCurWord;
-			m_vScoureLines.push_back(info);
-			strCurWord.clear();
-		}
-	}
-
-	unsigned int CScriptCodeLoader::GetSourceWordsIndex(unsigned int nIndex)
-	{
-		if (m_vCharIndex2LineIndex.size() > nIndex)
-		{
-			return m_vCharIndex2LineIndex[nIndex];
-		}
-		return 0;
-	}
-
-#endif
-
-	const CScriptCodeLoader::tagSourceLineInfo& CScriptCodeLoader::GetSourceWords(unsigned int nIndex)
-	{
-#if _SCRIPT_DEBUG
-		if (m_vScoureLines.size() > nIndex)
-		{
-			return m_vScoureLines[nIndex];
-		}
-#endif
-		static tagSourceLineInfo emtpy;
-		return emtpy;
-	}
+//
+//#if _SCRIPT_DEBUG
+//	void CScriptCodeLoader::PartitionSourceWords(std::vector<char>& vSource)
+//	{
+//		m_vCharIndex2LineIndex.resize(vSource.size(), 0);
+//		unsigned int nLineIndex = 1;
+//		char ch[2] = { 0,0 };
+//		std::string strCurWord;
+//		for (size_t i = 0; i < vSource.size(); i++)
+//		{
+//			bool bNewLine = false;
+//			if (vSource[i] == 10)
+//			{
+//				bNewLine = true;
+//			}
+//			else if (vSource[i] == 13)
+//			{
+//				if (i + 1 < vSource.size())
+//				{
+//					if (vSource[i + 1] == 10)
+//					{
+//						i++;
+//					}
+//				}
+//				bNewLine = true;
+//			}
+//			if (bNewLine)
+//			{
+//				tagSourceLineInfo info;
+//				info.strCurFileName = strCurFileName;
+//				info.nLineNum = nLineIndex++;
+//				info.strLineWords = strCurWord;
+//				m_vScoureLines.push_back(info);
+//				strCurWord.clear();
+//			}
+//			else
+//			{
+//				ch[0] = vSource[i];
+//				if (strCurWord.size() > 0 || ((unsigned int)ch[0]) > 32)//过滤多余的空格
+//				{
+//					strCurWord += ch;
+//				}
+//				m_vCharIndex2LineIndex[i] = m_vScoureLines.size();
+//			}
+//
+//		}
+//		if (strCurWord.size() > 0)
+//		{
+//			tagSourceLineInfo info;
+//			info.strCurFileName = strCurFileName;
+//			info.nLineNum = nLineIndex++;
+//			info.strLineWords = strCurWord;
+//			m_vScoureLines.push_back(info);
+//			strCurWord.clear();
+//		}
+//	}
+//
+//	unsigned int CScriptCodeLoader::GetSourceWordsIndex(unsigned int nIndex)
+//	{
+//		if (m_vCharIndex2LineIndex.size() > nIndex)
+//		{
+//			return m_vCharIndex2LineIndex[nIndex];
+//		}
+//		return 0;
+//	}
+//
+//#endif
+//
+//	const CScriptCodeLoader::tagSourceLineInfo& CScriptCodeLoader::GetSourceWords(unsigned int nIndex)
+//	{
+//#if _SCRIPT_DEBUG
+//		if (m_vScoureLines.size() > nIndex)
+//		{
+//			return m_vScoureLines[nIndex];
+//		}
+//#endif
+//		static tagSourceLineInfo emtpy;
+//		return emtpy;
+//	}
 
 }

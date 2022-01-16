@@ -128,88 +128,10 @@ namespace zlscript
 		tagCodeData* GetCode(const char* pName);
 		void LoadXml(std::string filename);
 		void clear();
-		//***************************编译器*******************************
-	private:
-		void clearAllCompileData();
-		//*******************词法分析机*****************
-	private:
-		enum
-		{
-			EReturn,
-			EContinue,
-			ESkipState,
-			ESignState,
-			EKeyState,
-			EStringState,
-			ESkipAnnotateState,
-
-			ENeedLoadNewChar = 0x8000,
-		};
-		int LoadSkipState(std::string& strOut, char ch);
-		//读取符号
-		int LoadSignState(std::string& strOut, char ch);
-		//读取关键字
-		int LoadKeyState(std::string& strOut, char ch);
-		//读取字符串
-		int LoadStringState(std::string& strOut, char ch);
-		//略过注释
-		int LoadSkipAnnotateState(std::string& strOut, char ch);
-
-		//返回true表示该字符处理完毕
-		bool RunLexical(std::string& strOut, char ch, unsigned int nSourceIndex);
-	private:
-
-		std::stack<int> m_stackLexical;//词法分析机的状态堆栈
-		SentenceSourceCode m_vCurSourceSentence;
-		//vector<SentenceSourceCode> m_vLexicalData;//存放词法分析机的生成结果
-	public:
-		enum E_CODE_SCOPE
-		{
-			E_CODE_SCOPE_OUTSIDE = 1,//块外范围
-			E_CODE_SCOPE_STATEMENT = 2,//语句
-			E_CODE_SCOPE_EXPRESSION = 4,//表达式
-			E_CODE_SCOPE_MEMBER = 8,//(表达式)成员
-			E_CODE_SCOPE_OPERATOR = 16,//操作符
-		};
-		bool RunCompileState(SentenceSourceCode& vIn, E_CODE_SCOPE scopeType, CBaseICode* pFather, int addType);
-	public:
 
 		//检查变量名是否合法
 		bool CheckVarName(std::string varName);
 
-	public:
-
-		template<class T>
-		bool AddCodeCompile(int nScopeType);
-	private:
-		typedef std::list<CBaseICodeMgr*> ListICodeMgr;
-		std::unordered_map<int, ListICodeMgr> m_mapICodeMgr;
-	private:
-		//编译时的中间指令
-		enum EICodeType
-		{
-			EICode_NONE = 0,
-			EICode_Define_Int,
-			EICode_Define_Double,
-			EICode_Define_String,
-
-			EICode_Global_Define,//全局定义
-		};
-		enum
-		{
-			ECompile_ERROR,
-			ECompile_Return,
-			ECompile_Continue,
-			ECompile_DefineState,
-			ECompile_DefineFunState,
-			ECompile_BlockState,
-			ECompile_BracketState,
-			ECompile_FormulaState,
-
-			ECompile_Next = 0x8000,
-		};
-
-		std::stack<int> m_stackCompile;//语法分析机的状态堆栈
 
 		typedef std::vector<CodeStyle> tagCodeSection;
 
@@ -238,106 +160,8 @@ namespace zlscript
 	public:
 		void SaveToBin();
 		void LoadFormBin();
-		//临时变量库
-	//*************************************************************//
-
-	private:
-		
-
-		//****************编译以及调试用信息*****************//
-		bool bCompileStop;//编译终止
-		std::string strCurFileName;
-		std::string strCurFunName;
-
-		struct tagErrorInfo
-		{
-			tagErrorInfo(unsigned int pos, std::string error)
-			{
-				nErrorWordPos = pos;
-				strError = error;
-			}
-			unsigned int nErrorWordPos;
-			std::string strError;
-		};
-		std::vector<tagErrorInfo> m_vError;
-	public:
-		void AddErrorInfo(unsigned int pos, std::string error)
-		{
-			m_vError.push_back(tagErrorInfo(pos, error));
-		}
-		void ClearErrorInfo()
-		{
-			m_vError.clear();
-		}
-	public:
-		struct tagSourceLineInfo
-		{
-			tagSourceLineInfo()
-			{
-				nLineNum = 0;
-			}
-			std::string strCurFileName;
-			unsigned int nLineNum;
-			std::string strLineWords;
-		};
-	private:
-#if _SCRIPT_DEBUG
-		std::vector<unsigned int> m_vCharIndex2LineIndex;
-
-		std::vector<tagSourceLineInfo> m_vScoureLines;
-
-		void PartitionSourceWords(std::vector<char> &vSource);
-		unsigned int GetSourceWordsIndex(unsigned int nIndex);
-#endif
-	public:
-		
-		const tagSourceLineInfo& GetSourceWords(unsigned int nIndex);
-		//struct tagDebugInfo
-		//{
-		//	std::string strFileName;
-		//	std::string strFunName;
-		//	std::string strWords;
-		//};
-		//std::vector<tagDebugInfo> m_vDebugInfo;
-
-	private:
-
 
 		friend class CScriptVirtualMachine;
 	};
-	template<class T>
-	inline bool CScriptCodeLoader::AddCodeCompile(int nScopeType)
-	{
-		if (nScopeType & E_CODE_SCOPE_OUTSIDE)
-		{
-			ListICodeMgr& list = m_mapICodeMgr[E_CODE_SCOPE_OUTSIDE];
-			auto pMgr = new CICodeMgr<T>();
-			list.push_back(pMgr);
-		}
-		if (nScopeType & E_CODE_SCOPE_STATEMENT)
-		{
-			ListICodeMgr& list = m_mapICodeMgr[E_CODE_SCOPE_STATEMENT];
-			auto pMgr = new CICodeMgr<T>();
-			list.push_back(pMgr);
-		}
-		if (nScopeType & E_CODE_SCOPE_EXPRESSION)
-		{
-			ListICodeMgr& list = m_mapICodeMgr[E_CODE_SCOPE_EXPRESSION];
-			auto pMgr = new CICodeMgr<T>();
-			list.push_back(pMgr);
-		}
-		if (nScopeType & E_CODE_SCOPE_MEMBER)
-		{
-			ListICodeMgr& list = m_mapICodeMgr[E_CODE_SCOPE_MEMBER];
-			auto pMgr = new CICodeMgr<T>();
-			list.push_back(pMgr);
-		}
-		if (nScopeType & E_CODE_SCOPE_OPERATOR)
-		{
-			ListICodeMgr& list = m_mapICodeMgr[E_CODE_SCOPE_OPERATOR];
-			auto pMgr = new CICodeMgr<T>();
-			list.push_back(pMgr);
-		}
-		return false;
-	}
+
 }

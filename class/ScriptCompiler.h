@@ -62,6 +62,8 @@ namespace zlscript
 		template<class T>
 		bool AddCodeCompile(int nScopeType);
 		bool RunCompileState(SentenceSourceCode& vIn, E_CODE_SCOPE scopeType, CBaseICode* pFather, int addType);
+
+		//bool CheckVarName(string varName);
 	private:
 		typedef std::list<CBaseICodeMgr*> ListICodeMgr;
 		std::unordered_map<int, ListICodeMgr> m_mapICodeMgr;

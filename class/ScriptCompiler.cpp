@@ -96,7 +96,7 @@ namespace zlscript
 				break;
 			}
 		}
-		return false;
+		return true;
 	}
 
 	void CScriptCompiler::InitLexicalAnalysisFun()

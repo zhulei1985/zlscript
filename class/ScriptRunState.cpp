@@ -613,9 +613,9 @@ namespace zlscript
 						auto pBlock = m_BlockStack.get(i);
 						if (pBlock->m_pCurCode)
 						{
-							auto souceInfo = CScriptCodeLoader::GetInstance()->GetSourceWords(pBlock->m_pCurCode->nSoureWordIndex);
-							SCRIPT_PRINT("script", "Stack %d|file:%s,line:%d,word:%s", i, souceInfo.strCurFileName.c_str(),
-								souceInfo.nLineNum, souceInfo.strLineWords.c_str());
+							//auto souceInfo = CScriptCodeLoader::GetInstance()->GetSourceWords(pBlock->m_pCurCode->nSoureWordIndex);
+							//SCRIPT_PRINT("script", "Stack %d|file:%s,line:%d,word:%s", i, souceInfo.strCurFileName.c_str(),
+							//	souceInfo.nLineNum, souceInfo.strLineWords.c_str());
 						}
 					}
 #endif
