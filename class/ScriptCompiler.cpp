@@ -39,8 +39,9 @@ namespace zlscript
 		std::string strbuff;
 		for (unsigned int i = 0; i < size; )
 		{
+			char ch = pData[i];
 			auto listIt = m_mapLAFun.find(pData[i]);
-			if (listIt != m_mapLAFun.end() && listIt->second.empty())
+			if (listIt == m_mapLAFun.end() || listIt->second.empty())
 			{
 				i++;
 			}
@@ -102,7 +103,7 @@ namespace zlscript
 	void CScriptCompiler::InitLexicalAnalysisFun()
 	{
 		auto RegisterFun = [&](char ch,auto fun, bool bPushFront = false) {
-			auto list = m_mapLAFun[ch];
+			auto &list = m_mapLAFun[ch];
 			if (bPushFront)
 			{
 				list.push_front(std::bind(fun, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
@@ -263,6 +264,7 @@ namespace zlscript
 			char ch = pData[index];
 			if (checkFun(ch))
 			{
+				index++;
 				strOut.push_back(ch);
 			}
 			else
