@@ -142,6 +142,8 @@ namespace zlscript
 		RegisterFun('%', &CScriptCompiler::LoadSignState);
 		RegisterFun('(', &CScriptCompiler::LoadSignState);
 		RegisterFun(')', &CScriptCompiler::LoadSignState);
+		RegisterFun('{', &CScriptCompiler::LoadSignState);
+		RegisterFun('}', &CScriptCompiler::LoadSignState);
 		RegisterFun('[', &CScriptCompiler::LoadSignState);
 		RegisterFun(']', &CScriptCompiler::LoadSignState);
 		RegisterFun('@', &CScriptCompiler::LoadSignState);
@@ -217,6 +219,8 @@ namespace zlscript
 		case ')':
 		case '[':
 		case ']':
+		case '{':
+		case '}':
 		case '@':
 		case ';':
 		case ':':
@@ -301,7 +305,15 @@ namespace zlscript
 			}
 			else if (!checkFun(pData[index + 1]))
 			{
-				return false;
+				strOut.push_back(pData[index++]);
+				tagSourceWord word;
+				word.word = strOut;
+				word.nFlag = E_WORD_FLAG_NUMBER;
+#if _SCRIPT_DEBUG
+				word.nSourceWordsIndex = GetSourceWordsIndex(index);
+#endif
+				m_vCurSourceSentence.push_back(word);
+				return true;
 			}
 		}
 
@@ -352,6 +364,7 @@ namespace zlscript
 		{
 			if (pData[index] == '"')
 			{
+				index++;
 				tagSourceWord word;
 				word.word = strOut;
 				word.nFlag = E_WORD_FLAG_STRING;
