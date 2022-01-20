@@ -150,6 +150,7 @@ namespace zlscript
 		RegisterFun(';', &CScriptCompiler::LoadSignState);
 		RegisterFun(':', &CScriptCompiler::LoadSignState);
 		RegisterFun('.', &CScriptCompiler::LoadSignState);
+		RegisterFun(',', &CScriptCompiler::LoadSignState);
 	}
 
 	bool CScriptCompiler::LoadSignState(char* pData, unsigned int size, unsigned int& index)
@@ -225,6 +226,7 @@ namespace zlscript
 		case ';':
 		case ':':
 		case '.':
+		case ',':
 			index++;
 			strOut.push_back(ch);
 			break;
