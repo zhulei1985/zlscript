@@ -7,31 +7,24 @@ namespace zlscript
 	{
 		VarInfo()
 		{
-			cType = 0;
-			cGlobal = 0;
-			wExtend = 0;
-			dwPos = 0;
+			nType = 0;
+			index = 0;
 		}
-		//__int64 nVarInfo;
 
-		unsigned char cType; // 1,ÕûÊı,2 ¸¡µã 3,×Ö·û 4 ÀàÖ¸Õë
-		unsigned char cGlobal;// 1 ±íÊ¾È«¾Ö±äÁ¿
-		unsigned short wExtend; // ´óÓÚ1±íÊ¾ÊÇÊı×éÏÂ±ê,²»ÔÙÊ¹ÓÃ
-		unsigned int dwPos;//Î»ÖÃID
+		unsigned int nType; //ç±»å‹
+		unsigned int index;//ä½ç½®ID
 
 	};
 
 	const unsigned int g_nTempVarIndexError = -1;
 	class CScriptCompiler;
-
-	//±àÒëµÄÖĞ¼ä×´Ì¬
+	class CScriptExecBlock;
+	//ç¼–è¯‘çš„ä¸­é—´çŠ¶æ€
 	class CBaseICode
 	{
 	public:
 		CBaseICode() {
 			m_pFather = nullptr;
-			m_pCompiler = nullptr;
-			cRegisterIndex = R_A;
 		}
 		virtual int GetType()
 		{
@@ -41,31 +34,30 @@ namespace zlscript
 		virtual CBaseICode* GetFather();
 		virtual void SetFather(CBaseICode* pCode);
 
-		CScriptCompiler* GetCompiler();
-		void SetCompiler(CScriptCompiler* pCompiler);
+		//CScriptCompiler* GetCompiler();
+		//void SetCompiler(CScriptCompiler* pCompiler);
 
-		virtual bool DefineTempVar(std::string VarType, std::string VarName);
+		virtual bool DefineTempVar(int type, std::string VarName);
 		virtual bool CheckTempVar(const char* pVarName);
-		//virtual void SetTempVarIndex(const char* pVarName, unsigned int nIndex, int nType, int ClassIndex) {
-		//	return;
-		//}
-		virtual unsigned int GetTempVarIndex(const char* pVarName);
-		virtual VarInfo* GetTempVarInfo(const char* pVarName);
 
-		virtual void SetRegisterIndex(char val) { cRegisterIndex = val; }
-		virtual bool MakeExeCode(tagCodeData& vOut) = 0;
-		virtual bool Compile(SentenceSourceCode& vIn) = 0;
+		virtual VarInfo* GetTempVarInfo(const char* pVarName);
+		virtual bool Compile(SentenceSourceCode& vIn, CScriptCompiler* pCompiler) = 0;
 
 		virtual void AddICode(int nType, CBaseICode* pCode);
 		virtual CBaseICode* GetICode(int nType, int index);
 	private:
 		CBaseICode* m_pFather;
 	protected:
-		CScriptCompiler* m_pCompiler;
+		//CScriptCompiler* m_pCompiler;
 		void AddErrorInfo(unsigned int pos, std::string error);
 	public:
 		unsigned int m_unBeginSoureIndex;
 
-		unsigned char cRegisterIndex;
+	public:
+		//ç›´æ¥åŸºäºä¸­é—´ä»£ç æ¥æ‰§è¡Œ
+		virtual int Run(CScriptExecBlock* pBlock) { return 0; };
+
+	protected:
+		int m_nRunStateIndex;//è¿è¡ŒçŠ¶æ€ç´¢å¼•
 	};
 }

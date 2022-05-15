@@ -1,4 +1,4 @@
-﻿/****************************************************************************
+/****************************************************************************
 	Copyright (c) 2019 ZhuLei
 	Email:zhulei1985@foxmail.com
 
@@ -75,7 +75,7 @@ namespace zlscript
 	{
 		clear();
 
-		CScriptCodeLoader::GetInstance()->GetGlobalVar(vGlobalNumVar);
+		//CScriptCodeLoader::GetInstance()->GetGlobalVar(vGlobalNumVar);
 
 		CScriptExecFrame::OnInit();
 		m_nThreadRunState = 1;
@@ -154,7 +154,10 @@ namespace zlscript
 				if (pState->m_CallReturnId != 0)
 				{
 					tagScriptVarStack vRetrunVars;
-					STACK_PUSH(vRetrunVars, pState->m_varReturn);
+					if (pState->m_varReturn)
+					{
+						STACK_PUSH_COPY(vRetrunVars, pState->m_varReturn);
+					}
 					ResultTo(vRetrunVars, pState->m_CallReturnId, pState->nCallEventIndex);
 
 				}
@@ -222,7 +225,10 @@ namespace zlscript
 				if (pState->m_CallReturnId != 0)
 				{
 					tagScriptVarStack vRetrunVars;
-					STACK_PUSH(vRetrunVars, pState->m_varReturn);
+					if (pState->m_varReturn)
+					{
+						STACK_PUSH_COPY(vRetrunVars, pState->m_varReturn);
+					}
 					ResultTo(vRetrunVars, pState->m_CallReturnId, pState->nCallEventIndex);
 
 				}
@@ -314,14 +320,18 @@ namespace zlscript
 						{
 						case 'd':
 							{
-								StackVarInfo var(*(__int64*)pPoint);
-								STACK_PUSH(varRegister, var);
+								CIntVar var;
+								var.Set(*(__int64*)pPoint);
+								CBaseVar* pVar = &var;
+								STACK_PUSH_COPY(varRegister, pVar);
 							}
 							break;
 						case 's':
 							{
-								StackVarInfo var((const char*)pPoint);
-								STACK_PUSH(varRegister, var);
+								CStringVar var;
+								var.Set((const char*)pPoint);
+								CBaseVar* pVar = &var;
+								STACK_PUSH_COPY(varRegister, pVar);
 							}
 							break;
 						}
@@ -381,7 +391,7 @@ namespace zlscript
 	{
 		CScriptExecFrame::OnUpdate();
 
-		CScriptSuperPointerMgr::GetInstance()->ReleaseAutoPoint();
+		//CScriptSuperPointerMgr::GetInstance()->ReleaseAutoPoint();
 
 		auto nowTime = std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now());
 		unsigned int nNowTime = nowTime.time_since_epoch().count();
@@ -517,22 +527,7 @@ namespace zlscript
 	//	}
 	//	return nullptr;
 	//}
-	StackVarInfo CScriptVirtualMachine::GetGlobalVar(unsigned int pos)
-	{
-		if (pos < vGlobalNumVar.size())
-		{
-			return vGlobalNumVar[pos];
-		}
-		return StackVarInfo();
-	}
 
-	void CScriptVirtualMachine::SetGlobalVar(unsigned int pos, StackVarInfo& val)
-	{
-		if (pos < vGlobalNumVar.size())
-		{
-			vGlobalNumVar[pos] = val;
-		}
-	}
 
 	CScriptRunState* CScriptVirtualMachine::PopStateFormRunList()
 	{
@@ -624,38 +619,49 @@ namespace zlscript
 
 	void CScriptVirtualMachine::EventReturnFun(int nSendID, tagScriptVarStack& ParmInfo)
 	{
-		StackVarInfo varStateID;
-		STACK_GET_INDEX(ParmInfo, varStateID, 0);
-		__int64 nScriptStateID = 0;
-		SCRIPTVAR_GET_INT(varStateID, nScriptStateID);
+		CBaseVar *pVarStateID = nullptr;
+		STACK_GET_INDEX(ParmInfo, pVarStateID, 0);
+		CIntVar *pScriptStateID = dynamic_cast<CIntVar*>(pVarStateID);
 		STACK_POP_FRONT(ParmInfo, 1);
-		auto pState = PopStateFormWaitingReturnMap(nScriptStateID);
-		if (pState)
+		if (pScriptStateID)
 		{
-			StackVarInfo var;
-			STACK_GET(ParmInfo, var);
-			pState->SetResultRegister(var);
-			//pState->CopyFromStack(ParmInfo);
-			PushStateToRunList(pState);
+			auto pState = PopStateFormWaitingReturnMap(pScriptStateID->ToInt());
+			if (pState)
+			{
+				CBaseVar *var = nullptr;
+				STACK_GET(ParmInfo, var);
+				//pState->CopyFromStack(ParmInfo);
+				PushStateToRunList(pState);
+			}
 		}
+
 	}
 	void CScriptVirtualMachine::EventRunScriptFun(int nSendID, tagScriptVarStack& ParmInfo)
 	{
-		StackVarInfo varStateID;
-		STACK_GET_INDEX(ParmInfo, varStateID,0);
-
+		//StackVarInfo varStateID;
+		//STACK_GET_INDEX(ParmInfo, varStateID,0);
+		CBaseVar* pVarStateID = nullptr;
+		STACK_GET_INDEX(ParmInfo, pVarStateID, 0);
+		CIntVar* pScriptStateID = dynamic_cast<CIntVar*>(pVarStateID);
+		if (pScriptStateID == nullptr)
+		{
+			return;
+		}
 		CScriptRunState* m_pScriptState = new CScriptRunState;
 		if (m_pScriptState)
 		{
 			std::string strScript;
-			StackVarInfo varScriptName;
-			STACK_GET_INDEX(ParmInfo, varScriptName, 1);
-			SCRIPTVAR_GET_STRING(varScriptName, strScript);
-			if (varStateID.cType == EScriptVal_Int && varStateID.Int64 != 0)
+			CBaseVar* pVarScriptName = nullptr;
+			STACK_GET_INDEX(ParmInfo, pVarScriptName, 1);
+			CStringVar* pStrScript = dynamic_cast<CStringVar*>(pVarScriptName);
+			if (pStrScript == nullptr)
+			{
+				return;
+			}
+			if (pScriptStateID->ToInt() != 0)
 			{
 				m_pScriptState->nCallEventIndex = nSendID;
-				//m_pScriptState->m_CallReturnId = nScriptStateID;
-				SCRIPTVAR_GET_INT(varStateID, m_pScriptState->m_CallReturnId);
+				m_pScriptState->m_CallReturnId = pScriptStateID->ToInt();
 			}
 			STACK_POP_FRONT(ParmInfo, 2);
 			RunFun(m_pScriptState, strScript, ParmInfo);
@@ -665,15 +671,24 @@ namespace zlscript
 	void CScriptVirtualMachine::RunTo(std::string funName, tagScriptVarStack& pram, __int64 nReturnID, __int64 nEventIndex)
 	{
 		//ScriptVector_PushVar(m_scriptParm, GetEventIndex());
-		StackVarInfo var(nReturnID);
-		StackVarInfo var2(funName.c_str());
+		CIntVar varReturnID;
+		varReturnID.Set(nReturnID);
+
+		CStringVar varString;
+		varString.Set(funName);
+
+		CBaseVar* var = &varReturnID;
+		CBaseVar* var2 = &varString;
 
 		STACK_PUSH_FRONT_2(pram, var, var2);
 		CScriptEventMgr::GetInstance()->SendEvent(E_SCRIPT_EVENT_RUNSCRIPT, GetEventIndex(), pram, nEventIndex);
 	}
 	void CScriptVirtualMachine::ResultTo(tagScriptVarStack& pram, __int64 nReturnID, __int64 nEventIndex)
 	{
-		StackVarInfo var(nReturnID);
+		//StackVarInfo var(nReturnID);
+		CIntVar varReturnID;
+		varReturnID.Set(nReturnID);
+		CBaseVar* var = &varReturnID;
 
 		STACK_PUSH_FRONT(pram, var);
 

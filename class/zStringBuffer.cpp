@@ -86,16 +86,16 @@ namespace zlscript
 		}
 		m_Lock.unlock();
 	}
-	const char* CStringPool::GetString(__int64 nIndex)
+	std::string& CStringPool::GetString(__int64 nIndex)
 	{
-		const char* pStr = nullptr;
-		m_Lock.lock();
+		std::lock_guard<std::mutex> Lock(m_Lock);
+
 		auto it = m_StringPool.find(nIndex);
 		if (it != m_StringPool.end())
 		{
-			pStr = it->second.str.c_str();
+			return it->second.str;
 		}
-		m_Lock.unlock();
-		return pStr;
+
+		return strEmpty;
 	}
 }

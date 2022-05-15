@@ -27,46 +27,24 @@
 #include <unordered_map>
 #include "ScriptClassAttributes.h"
 #include "ScriptClassFunion.h"
+#include "ScriptClassInfo.h"
 namespace zlscript
 {
-	class CBaseScriptClassMgr;
-	struct stScriptClassParamInfo
-	{
-		unsigned short m_flag;
-		unsigned short m_index;
-		std::string m_strAttrName;
-		std::string strType;//MYSQL 字段类型
-	};
-	struct stScriptClassInfo
-	{
-		stScriptClassInfo()
-		{
-			nFunSize = 0;
-			nClassType = 0;
-			nDB_Id_Count = 0;
-		}
-		std::map<std::string, int> mapDicFunString2Index;
-		std::atomic_int nFunSize;
-		std::atomic_int nClassType;
-		std::string strClassName;
-		std::atomic_int64_t nDB_Id_Count;
-
-		std::map<std::string, stScriptClassParamInfo> mapDicString2ParamInfo;
-	};
+	class CBaseScriptVarMgr;
 
 	template<class T>
 	class CScriptAbstractClassMgr;
 	template<class T>
-	class CScriptClassMgr;
+	class CScriptClassVarMgr;
 	template<class T>
-	CBaseScriptClassMgr* GetScriptClassMgr();
+	CBaseScriptVarMgr* GetScriptClassMgr();
 
 	enum
 	{
 		ECALLBACK_ERROR,
 		ECALLBACK_FINISH,
 		ECALLBACK_WAITING,
-		ECALLBACK_CALLSCRIPTFUN,
+		//ECALLBACK_CALLSCRIPTFUN,
 		ECALLBACK_NEXTCONTINUE,
 	};
 	template<typename TFuncAddr, typename TFunc>
@@ -130,8 +108,8 @@ namespace zlscript
 	int funname##2Script(CScriptCallState* pState); \
 	CBaseScriptClassFun funname##Fun{#funname,std::bind(&classname::funname##2Script,this,std::placeholders::_1),this, CBaseScriptClassFun::E_FLAG_NONE};
 
-	class stScriptClassInfo;
-	class CScriptPointInterface : public IClassAttributeObserver , public IClassFunObserver
+	class CBaseScriptClassInfo;
+	class CScriptPointInterface : /*public CBaseVar,*/public IClassAttributeObserver , public IClassFunObserver
 	{
 	public:
 		CScriptPointInterface();
@@ -139,37 +117,42 @@ namespace zlscript
 		//	m_nID = 0;
 		//}
 		virtual ~CScriptPointInterface();
-		virtual void InitScriptPointIndex();
-		bool IsInitScriptPointIndex();
-		__int64 GetScriptPointIndex();
-		void ClearScriptPointIndex();
-		virtual bool CanRelease()
+	public:
+		void PickUp();
+		void PickDown();
+	private:
+		std::mutex m_UseLock;
+		std::mutex m_CountLock;
+		std::atomic_int nUsedCount{ 0 };
+	public:
+		void Lock()
 		{
-			return true;
+			m_UseLock.lock();
 		}
-		void SetClassInfo(stScriptClassInfo* pInfo)
+		void UnLock()
+		{
+			m_UseLock.unlock();
+		}
+		void SetClassInfo(CBaseScriptClassInfo* pInfo)
 		{
 			m_pClassInfo = pInfo;
 		}
-		stScriptClassInfo* getClassInfo()
+		CBaseScriptClassInfo* getClassInfo()
 		{
 			return m_pClassInfo;
 		}
 
 		unsigned int GetAttributeIndex(std::string name);
 		CBaseScriptClassAttribute* GetAttribute(unsigned int index);
-		//void SetFun(int id, CScriptBaseClassFunInfo* pInfo);
-		virtual int RunFun(unsigned int id, CScriptCallState* pState);
-		//virtual int CallFun(const char*pFunName, CScriptStack &parms);
 
-		//CScriptPointInterface(const CScriptPointInterface& val);
-		//virtual CScriptPointInterface& operator=(const CScriptPointInterface& val);
+		virtual int RunFun(unsigned int id, CScriptCallState* pState);
+
 
 		virtual const std::map<std::string, CBaseScriptClassAttribute*>& GetDBAttributes()
 		{
 			return m_mapDBAttributes;
 		}
-		virtual void ChangeScriptAttribute(CBaseScriptClassAttribute* pAttr, StackVarInfo& old);
+		virtual void ChangeScriptAttribute(CBaseScriptClassAttribute* pAttr, CBaseVar* old);
 		virtual void RegisterScriptAttribute(CBaseScriptClassAttribute* pAttr);
 		virtual void RemoveScriptAttribute(CBaseScriptClassAttribute* pAttr);
 
@@ -180,41 +163,39 @@ namespace zlscript
 		//virtual unsigned int GetSyncInfo_ClassPoint2Index(CScriptBasePointer* point) { return 0; }
 		//virtual PointVarInfo GetSyncInfo_Index2ClassPoint(unsigned int index) { return PointVarInfo(); }
 
-		bool AddVar2Bytes(std::vector<char>& vBuff, const StackVarInfo* pVal, std::vector<PointVarInfo>& vOutClassPoint);
-		bool AddVar2Bytes(std::vector<char>& vBuff, const PointVarInfo* pVal, std::vector<PointVarInfo>& vOutClassPoint);
+		bool AddVar2Bytes(std::vector<char>& vBuff, const CBaseVar* pVal, std::vector<CPointVar*>& vOutClassPoint);
+		bool AddVar2Bytes(std::vector<char>& vBuff, const CPointVar* pVal, std::vector<CPointVar*>& vOutClassPoint);
 
-		StackVarInfo DecodeVar4Bytes(char* pBuff, int& pos, unsigned int len, std::vector<PointVarInfo>& vOutClassPoint);
-		PointVarInfo DecodePointVar4Bytes(char* pBuff, int& pos, unsigned int len, std::vector<PointVarInfo>& vOutClassPoint);
+		//返回值需要接收方控制释放与否
+		CBaseVar* DecodeVar4Bytes(char* pBuff, int& pos, unsigned int len, std::vector<CPointVar*>& vOutClassPoint);
+		CPointVar* DecodePointVar4Bytes(char* pBuff, int& pos, unsigned int len, std::vector<CPointVar*>& vOutClassPoint);
 
 		//vOutClassPoint 当成员变量中包含了可用于脚本的类实例指针时，将指针放入vOutClassPoint单独进行传递
-		virtual bool AddAllData2Bytes(std::vector<char>& vBuff, std::vector<PointVarInfo>& vOutClassPoint)
+		virtual bool AddAllData2Bytes(std::vector<char>& vBuff, std::vector<CPointVar*>& vOutClassPoint)
 		{
 			return true;
 		}
-		virtual bool DecodeData4Bytes(char* pBuff, int& pos, unsigned int len, std::vector<PointVarInfo>& vOutClassPoint)
+		virtual bool DecodeData4Bytes(char* pBuff, int& pos, unsigned int len, std::vector<CPointVar*>& vOutClassPoint)
 		{
 			return true;
 		}
 	protected:
-		//用于所有脚本可用的类实例索引，作用范围是本地
-		__int64 m_nScriptPointIndex;
-		static __int64 s_nScriptPointIndexCount;
 
-		stScriptClassInfo* m_pClassInfo;
+		CBaseScriptClassInfo* m_pClassInfo;
 
 
 		std::map<std::string, CBaseScriptClassAttribute*> m_mapDBAttributes;
 
 		std::unordered_map<unsigned int, CBaseScriptClassAttribute*> m_mapAllAttributes;
-		std::unordered_map<std::string, unsigned int> m_mapAttributeName2Index;
+		//std::unordered_map<std::string, unsigned int> m_mapAttributeName2Index;
 
 		std::vector<CBaseScriptClassFun*> m_vecScriptClassFun;
-		std::unordered_map<std::string, unsigned int> m_mapFun2Index;
+		//std::unordered_map<std::string, unsigned int> m_mapFun2Index;
 
 		std::mutex m_FunLock;
 		//std::shared_ptr<std::mutex> m_FunLock;
 	public:
-		void GetBaseClassInfo(stScriptClassInfo& info);
+		void GetBaseClassInfo(CBaseScriptClassInfo& info);
 	};
 
 }

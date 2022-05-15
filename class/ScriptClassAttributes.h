@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
@@ -14,7 +14,7 @@ namespace zlscript
 	class IClassAttributeObserver
 	{
 	public:
-		virtual void ChangeScriptAttribute(CBaseScriptClassAttribute* pAttr, StackVarInfo& old) = 0;
+		virtual void ChangeScriptAttribute(CBaseScriptClassAttribute* pAttr, CBaseVar* pOld) = 0;
 		virtual void RegisterScriptAttribute(CBaseScriptClassAttribute* pAttr) = 0;
 		virtual void RemoveScriptAttribute(CBaseScriptClassAttribute* pAttr) = 0;
 	};
@@ -41,9 +41,9 @@ namespace zlscript
 			E_FLAG_DB_INDEX = 16,
 		};
 		void init(const char* pName, unsigned short flag, unsigned short index, CScriptPointInterface* pMaster);
-		virtual void AddData2Bytes(std::vector<char>& vBuff, std::vector<PointVarInfo>& vOutClassPoint) = 0;
-		virtual bool DecodeData4Bytes(char* pBuff, int& pos, unsigned int len, std::vector<PointVarInfo>& vOutClassPoint) = 0;
-		virtual void AddChangeData2Bytes(std::vector<char>& vBuff, std::vector<PointVarInfo>& vOutClassPoint)
+		virtual void AddData2Bytes(std::vector<char>& vBuff, std::vector<CPointVar*>& vOutClassPoint) = 0;
+		virtual bool DecodeData4Bytes(char* pBuff, int& pos, unsigned int len, std::vector<CPointVar*>& vOutClassPoint) = 0;
+		virtual void AddChangeData2Bytes(std::vector<char>& vBuff, std::vector<CPointVar*>& vOutClassPoint)
 		{
 			AddData2Bytes(vBuff, vOutClassPoint);
 		}
@@ -53,8 +53,8 @@ namespace zlscript
 		//}
 		virtual std::string ToType() = 0;
 		virtual std::string ToString() = 0;
-		virtual StackVarInfo ToScriptVal() { return StackVarInfo(); }
-		virtual bool SetVal(StackVarInfo& var) { return false; }
+		virtual CBaseVar* ToScriptVal() { return nullptr; }
+		virtual bool SetVal(CBaseVar* var) { return false; }
 		virtual bool SetVal(std::string str) =0;
 		virtual void ClearChangeFlag(){}
 		unsigned short m_flag;
@@ -63,12 +63,19 @@ namespace zlscript
 		CScriptPointInterface* m_pMaster;
 
 		void AddObserver(IClassAttributeObserver* pObserver);
-		void NotifyObserver(StackVarInfo old);
+		void NotifyObserver(CBaseVar* pOld);
 		void RemoveObserver(IClassAttributeObserver* pObserver);
 
 	private:
 		std::vector<IClassAttributeObserver*> m_vObserver;
 		std::mutex m_ObserverLock;
+	};
+	template<class ScriptVarTemp, class RealVarTemp>
+	class CScriptClassAttribute : public CBaseScriptClassAttribute
+	{
+
+	public:
+		RealVarTemp m_val;
 	};
 	//struct CScriptCharAttribute : public CBaseScriptClassAttribute
 	//{
@@ -92,74 +99,71 @@ namespace zlscript
 		CScriptIntAttribute(const char* pName, unsigned short flag, unsigned short index, CScriptPointInterface* master):
 			CBaseScriptClassAttribute(pName, flag, index, master)
 		{
-			m_val = 0;
+
 		}
-		std::atomic_int m_val;
+		CIntVar m_val;
 		operator int();
 		int operator =(int val);
 		virtual std::string ToType();
 		virtual std::string ToString();
-		virtual StackVarInfo ToScriptVal();
+		virtual CBaseVar* ToScriptVal();
 		bool SetVal(std::string str);
-		bool SetVal(StackVarInfo& var);
-		virtual void AddData2Bytes(std::vector<char>& vBuff, std::vector<PointVarInfo>& vOutClassPoint);
-		virtual bool DecodeData4Bytes(char* pBuff, int& pos, unsigned int len, std::vector<PointVarInfo>& vOutClassPoint);
+		bool SetVal(CBaseVar* var);
+		virtual void AddData2Bytes(std::vector<char>& vBuff, std::vector<CPointVar*>& vOutClassPoint);
+		virtual bool DecodeData4Bytes(char* pBuff, int& pos, unsigned int len, std::vector<CPointVar*>& vOutClassPoint);
 	};
 	struct CScriptInt64Attribute : public CBaseScriptClassAttribute
 	{
 		CScriptInt64Attribute(const char* pName, unsigned short flag, unsigned short index, CScriptPointInterface* master) :
 			CBaseScriptClassAttribute(pName, flag, index, master)
 		{
-			m_val = 0;
 		}
-		std::atomic_int64_t m_val;
+		CIntVar m_val;
 		operator __int64();
 		__int64 operator =(__int64 val);
 		virtual std::string ToType();
 		virtual std::string ToString();
-		virtual StackVarInfo ToScriptVal();
+		virtual CBaseVar* ToScriptVal();
 		bool SetVal(std::string str);
-		bool SetVal(StackVarInfo& var);
-		virtual void AddData2Bytes(std::vector<char>& vBuff, std::vector<PointVarInfo>& vOutClassPoint);
-		virtual bool DecodeData4Bytes(char* pBuff, int& pos, unsigned int len, std::vector<PointVarInfo>& vOutClassPoint);
+		bool SetVal(CBaseVar* var);
+		virtual void AddData2Bytes(std::vector<char>& vBuff, std::vector<CPointVar*>& vOutClassPoint);
+		virtual bool DecodeData4Bytes(char* pBuff, int& pos, unsigned int len, std::vector<CPointVar*>& vOutClassPoint);
 	};
 	struct CScriptFloatAttribute : public CBaseScriptClassAttribute
 	{
 		CScriptFloatAttribute(const char* pName, unsigned short flag, unsigned short index, CScriptPointInterface* master) :
 			CBaseScriptClassAttribute(pName, flag, index, master)
 		{
-			m_val = 0;
 		}
-		float m_val;
-		std::mutex m_lock;
+		CFloatVar m_val;
+
 		operator float();
 		float operator =(float val);
 		virtual std::string ToType();
 		virtual std::string ToString();
-		virtual StackVarInfo ToScriptVal();
+		virtual CBaseVar* ToScriptVal();
 		bool SetVal(std::string str);
-		bool SetVal(StackVarInfo& var);
-		virtual void AddData2Bytes(std::vector<char>& vBuff, std::vector<PointVarInfo>& vOutClassPoint);
-		virtual bool DecodeData4Bytes(char* pBuff, int& pos, unsigned int len, std::vector<PointVarInfo>& vOutClassPoint);
+		bool SetVal(CBaseVar* var);
+		virtual void AddData2Bytes(std::vector<char>& vBuff, std::vector<CPointVar*>& vOutClassPoint);
+		virtual bool DecodeData4Bytes(char* pBuff, int& pos, unsigned int len, std::vector<CPointVar*>& vOutClassPoint);
 	};
 	struct CScriptDoubleAttribute : public CBaseScriptClassAttribute
 	{
 		CScriptDoubleAttribute(const char* pName, unsigned short flag, unsigned short index, CScriptPointInterface* master) :
 			CBaseScriptClassAttribute(pName, flag, index, master)
 		{
-			m_val = 0;
 		}
-		double m_val;
-		std::mutex m_lock;
+		CFloatVar m_val;
+
 		operator double();
 		double operator =(double val);
 		virtual std::string ToType();
 		virtual std::string ToString();
-		virtual StackVarInfo ToScriptVal();
+		virtual CBaseVar* ToScriptVal();
 		bool SetVal(std::string str);
-		bool SetVal(StackVarInfo& var);
-		virtual void AddData2Bytes(std::vector<char>& vBuff, std::vector<PointVarInfo>& vOutClassPoint);
-		virtual bool DecodeData4Bytes(char* pBuff, int& pos, unsigned int len, std::vector<PointVarInfo>& vOutClassPoint);
+		bool SetVal(CBaseVar* var);
+		virtual void AddData2Bytes(std::vector<char>& vBuff, std::vector<CPointVar*>& vOutClassPoint);
+		virtual bool DecodeData4Bytes(char* pBuff, int& pos, unsigned int len, std::vector<CPointVar*>& vOutClassPoint);
 	};
 	struct CScriptStringAttribute : public CBaseScriptClassAttribute
 	{
@@ -169,20 +173,19 @@ namespace zlscript
 			//m_val = 0;
 		}
 		static const int s_maxStrLen;
-		std::string m_val;
-		std::mutex m_lock;
+		CStringVar m_val;
 		operator std::string&();
 		std::string& operator =(std::string& val);
 		std::string& operator =(char* val);
 		std::string& operator =(const char* val);
 		virtual std::string ToType();
 		virtual std::string ToString();
-		virtual StackVarInfo ToScriptVal();
+		virtual CBaseVar* ToScriptVal();
 		const char* c_str();
 		bool SetVal(std::string str);
-		bool SetVal(StackVarInfo& var);
-		virtual void AddData2Bytes(std::vector<char>& vBuff, std::vector<PointVarInfo>& vOutClassPoint);
-		virtual bool DecodeData4Bytes(char* pBuff, int& pos, unsigned int len, std::vector<PointVarInfo>& vOutClassPoint);
+		bool SetVal(CBaseVar* var);
+		virtual void AddData2Bytes(std::vector<char>& vBuff, std::vector<CPointVar*>& vOutClassPoint);
+		virtual bool DecodeData4Bytes(char* pBuff, int& pos, unsigned int len, std::vector<CPointVar*>& vOutClassPoint);
 	};
 
 	struct CScriptInt64ArrayAttribute : public CBaseScriptClassAttribute
@@ -204,9 +207,9 @@ namespace zlscript
 		virtual std::string ToString();
 		bool SetVal(std::string str);
 		virtual void ClearChangeFlag();
-		virtual void AddData2Bytes(std::vector<char>& vBuff, std::vector<PointVarInfo>& vOutClassPoint);
-		virtual void AddChangeData2Bytes(std::vector<char>& vBuff, std::vector<PointVarInfo>& vOutClassPoint);
-		virtual bool DecodeData4Bytes(char* pBuff, int& pos, unsigned int len, std::vector<PointVarInfo>& vOutClassPoint);
+		virtual void AddData2Bytes(std::vector<char>& vBuff, std::vector<CPointVar*>& vOutClassPoint);
+		virtual void AddChangeData2Bytes(std::vector<char>& vBuff, std::vector<CPointVar*>& vOutClassPoint);
+		virtual bool DecodeData4Bytes(char* pBuff, int& pos, unsigned int len, std::vector<CPointVar*>& vOutClassPoint);
 	};
 	struct CScriptInt64toInt64MapAttribute : public CBaseScriptClassAttribute
 	{
@@ -228,9 +231,9 @@ namespace zlscript
 		virtual std::string ToString();
 		bool SetVal(std::string str);
 		virtual void ClearChangeFlag();
-		virtual void AddData2Bytes(std::vector<char>& vBuff, std::vector<PointVarInfo>& vOutClassPoint);
-		virtual void AddChangeData2Bytes(std::vector<char>& vBuff, std::vector<PointVarInfo>& vOutClassPoint);
-		virtual bool DecodeData4Bytes(char* pBuff, int& pos, unsigned int len, std::vector<PointVarInfo>& vOutClassPoint);
+		virtual void AddData2Bytes(std::vector<char>& vBuff, std::vector<CPointVar*>& vOutClassPoint);
+		virtual void AddChangeData2Bytes(std::vector<char>& vBuff, std::vector<CPointVar*>& vOutClassPoint);
+		virtual bool DecodeData4Bytes(char* pBuff, int& pos, unsigned int len, std::vector<CPointVar*>& vOutClassPoint);
 	};
 
 	//指针不能用于存档，只能用于同步
@@ -243,19 +246,17 @@ namespace zlscript
 			unsigned short noflag = ~(E_FLAG_DB | E_FLAG_DB_PRIMARY | E_FLAG_DB_UNIQUE);
 			m_flag = m_flag & noflag;
 		}
-		PointVarInfo m_val;
-		std::mutex m_lock;
-		operator PointVarInfo& ();
-		PointVarInfo& operator =(CScriptPointInterface* pPoint);
-		PointVarInfo& operator =(CScriptBasePointer* pPoint);
-		PointVarInfo& operator =(__int64 val);
+		CPointVar m_val;
+		//std::mutex m_lock;
+		operator CScriptPointInterface* ();
+		CScriptPointInterface* operator =(CScriptPointInterface* pPoint);
 
 		virtual std::string ToType();
 		virtual std::string ToString();
 		bool SetVal(std::string str);
-		bool SetVal(StackVarInfo& var);
-		virtual void AddData2Bytes(std::vector<char>& vBuff, std::vector<PointVarInfo>& vOutClassPoint);
-		virtual bool DecodeData4Bytes(char* pBuff, int& pos, unsigned int len, std::vector<PointVarInfo>& vOutClassPoint);
+		bool SetVal(CBaseVar* var);
+		virtual void AddData2Bytes(std::vector<char>& vBuff, std::vector<CPointVar*>& vOutClassPoint);
+		virtual bool DecodeData4Bytes(char* pBuff, int& pos, unsigned int len, std::vector<CPointVar*>& vOutClassPoint);
 	};
 
 	struct CScriptVarAttribute : public CBaseScriptClassAttribute
@@ -267,17 +268,17 @@ namespace zlscript
 			unsigned short noflag = ~(E_FLAG_DB | E_FLAG_DB_PRIMARY | E_FLAG_DB_UNIQUE);
 			m_flag = m_flag & noflag;
 		}
-		StackVarInfo m_val;
-		std::mutex m_lock;
-		operator StackVarInfo&();
-		StackVarInfo& operator =(StackVarInfo val);
+		CBaseVar* m_pVal;
+		//std::mutex m_lock;
+		operator CBaseVar*();
+		CBaseVar* operator =(CBaseVar* val);
 
 		virtual std::string ToType();
 		virtual std::string ToString();
 		bool SetVal(std::string str);
-		bool SetVal(StackVarInfo& var);
-		virtual void AddData2Bytes(std::vector<char>& vBuff, std::vector<PointVarInfo>& vOutClassPoint);
-		virtual bool DecodeData4Bytes(char* pBuff, int& pos, unsigned int len, std::vector<PointVarInfo>& vOutClassPoint);
+		bool SetVal(CBaseVar* var);
+		virtual void AddData2Bytes(std::vector<char>& vBuff, std::vector<CPointVar*>& vOutClassPoint);
+		virtual bool DecodeData4Bytes(char* pBuff, int& pos, unsigned int len, std::vector<CPointVar*>& vOutClassPoint);
 	};
 
 	struct CScriptVarArrayAttribute : public CBaseScriptClassAttribute
@@ -290,15 +291,15 @@ namespace zlscript
 			unsigned short noflag = ~(E_FLAG_DB | E_FLAG_DB_PRIMARY | E_FLAG_DB_UNIQUE);
 			m_flag = m_flag & noflag;
 		}
-		std::vector<StackVarInfo> m_vecVal;
+		std::vector<CBaseVar*> m_vecVal;
 		std::set<unsigned int> m_setFlag;
-		std::mutex m_lock;
+		//std::mutex m_lock;
 		void SetSize(unsigned int size);
 		unsigned int GetSize();
-		bool SetVal(unsigned int index, StackVarInfo Val);
-		StackVarInfo GetVal(unsigned int index);
+		bool SetVal(unsigned int index, CBaseVar* Val);
+		CBaseVar* GetVal(unsigned int index);
 
-		void PushBack(StackVarInfo Val);
+		void PushBack(CBaseVar* Val);
 		bool Remove(unsigned int index);
 
 		void clear();
@@ -306,35 +307,35 @@ namespace zlscript
 		virtual std::string ToString();
 		bool SetVal(std::string str);
 		virtual void ClearChangeFlag();
-		virtual void AddData2Bytes(std::vector<char>& vBuff, std::vector<PointVarInfo>& vOutClassPoint);
-		virtual void AddChangeData2Bytes(std::vector<char>& vBuff, std::vector<PointVarInfo>& vOutClassPoint);
-		virtual bool DecodeData4Bytes(char* pBuff, int& pos, unsigned int len, std::vector<PointVarInfo>& vOutClassPoint);
+		virtual void AddData2Bytes(std::vector<char>& vBuff, std::vector<CPointVar*>& vOutClassPoint);
+		virtual void AddChangeData2Bytes(std::vector<char>& vBuff, std::vector<CPointVar*>& vOutClassPoint);
+		virtual bool DecodeData4Bytes(char* pBuff, int& pos, unsigned int len, std::vector<CPointVar*>& vOutClassPoint);
 	};
-	struct CScriptVar2VarMapAttribute : public CBaseScriptClassAttribute
-	{
-		CScriptVar2VarMapAttribute(const char* pName, unsigned short flag, unsigned short index, CScriptPointInterface* master) :
-			CBaseScriptClassAttribute(pName, flag, index, master)
-		{
-			//m_val = 0;
-			//指针不能用于存档，只能用于同步
-			unsigned short noflag = ~(E_FLAG_DB | E_FLAG_DB_PRIMARY | E_FLAG_DB_UNIQUE);
-			m_flag = m_flag & noflag;
-		}
-		std::unordered_map<StackVarInfo, StackVarInfo, hash_SV> m_val;
-		std::unordered_set<StackVarInfo, hash_SV> m_setFlag;
-		std::mutex m_lock;
-		unsigned int GetSize();
-		bool SetVal(StackVarInfo index, StackVarInfo val);
-		StackVarInfo GetVal(StackVarInfo index);
-		bool Remove(StackVarInfo index);
+	//struct CScriptVar2VarMapAttribute : public CBaseScriptClassAttribute
+	//{
+	//	CScriptVar2VarMapAttribute(const char* pName, unsigned short flag, unsigned short index, CScriptPointInterface* master) :
+	//		CBaseScriptClassAttribute(pName, flag, index, master)
+	//	{
+	//		//m_val = 0;
+	//		//指针不能用于存档，只能用于同步
+	//		unsigned short noflag = ~(E_FLAG_DB | E_FLAG_DB_PRIMARY | E_FLAG_DB_UNIQUE);
+	//		m_flag = m_flag & noflag;
+	//	}
+	//	std::unordered_map<ScriptVarKey, CBaseVar*, hash_BaseVar> m_val;
+	//	std::unordered_set<ScriptVarKey, hash_BaseVar> m_setFlag;
+	//	//std::mutex m_lock;
+	//	unsigned int GetSize();
+	//	bool SetVal(CBaseVar* index, CBaseVar* val);
+	//	CBaseVar* GetVal(CBaseVar* index);
+	//	bool Remove(CBaseVar* index);
 
-		void clear();
-		virtual std::string ToType();
-		virtual std::string ToString();
-		bool SetVal(std::string str);
-		virtual void ClearChangeFlag();
-		virtual void AddData2Bytes(std::vector<char>& vBuff, std::vector<PointVarInfo>& vOutClassPoint);
-		virtual void AddChangeData2Bytes(std::vector<char>& vBuff, std::vector<PointVarInfo>& vOutClassPoint);
-		virtual bool DecodeData4Bytes(char* pBuff, int& pos, unsigned int len, std::vector<PointVarInfo>& vOutClassPoint);
-	};
+	//	void clear();
+	//	virtual std::string ToType();
+	//	virtual std::string ToString();
+	//	bool SetVal(std::string str);
+	//	virtual void ClearChangeFlag();
+	//	virtual void AddData2Bytes(std::vector<char>& vBuff, std::vector<CPointVar*>& vOutClassPoint);
+	//	virtual void AddChangeData2Bytes(std::vector<char>& vBuff, std::vector<CPointVar*>& vOutClassPoint);
+	//	virtual bool DecodeData4Bytes(char* pBuff, int& pos, unsigned int len, std::vector<CPointVar*>& vOutClassPoint);
+	//};
 }

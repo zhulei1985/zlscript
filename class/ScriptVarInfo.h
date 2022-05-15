@@ -1,234 +1,222 @@
-﻿#pragma once
+#pragma once
 #include "scriptcommon.h"
 #include "zStringBuffer.h"
 #include "zBinaryBuffer.h"
-
+#include <zByteArray.h>
+//基础变量对象
 namespace zlscript
 {
-	class CScriptBasePointer;
+	//class CScriptBasePointer;
 	class CScriptPointInterface;
-	struct PointVarInfo;
-	struct StackVarInfo
+	//struct PointVarInfo;
+
+	class CBaseVar
 	{
-		unsigned char cType;
-		unsigned char cExtend;
-		union
+	public:
+		int GetType() 
 		{
-			double Double;
-			__int64 Int64;
-			//const char *pStr;
-			CScriptBasePointer* pPoint;
-		};
+			return m_nType;
+		}
+		void SetType(int type)
+		{
+			m_nType = type;
+		}
+	protected:
+		int m_nType;
+	public:
 
-		StackVarInfo();
-		StackVarInfo(const StackVarInfo& cls);
-		StackVarInfo(__int64 val);
-		StackVarInfo(double val);
-		StackVarInfo(const char* pStr);
-		StackVarInfo(CScriptBasePointer* pPoint);
-		~StackVarInfo();
+		virtual std::size_t GetHash() const = 0;
 
-		void Clear();
+		virtual bool Set(std::string val) { return false; }
+		virtual bool Set(CScriptPointInterface* pVal) { return false; }
+		virtual bool Set(CBaseVar* pVar)
+		{
+			return false;
+		}
 
-		//赋值重载 操作符重载消耗过大，开始逐步替代
-		StackVarInfo& operator=(__int64 val);
-		StackVarInfo& operator=(double val);
-		StackVarInfo& operator=(const char *pStr);
-		StackVarInfo& operator=(CScriptBasePointer* pPoint);
-		StackVarInfo& operator=(CScriptPointInterface* pPoint);
-		StackVarInfo& operator=(const PointVarInfo& info);
-		StackVarInfo& operator=(const StackVarInfo& cls);
-		bool operator==(const StackVarInfo& cls) const;
+	};
+	class CIntVar : public CBaseVar
+	{
+	public:
+		CIntVar(){}
+		CIntVar(CIntVar& var)
+		{
+			nValue = var.nValue;
+		}
+	public:
+		std::size_t GetHash() const
+		{
+			std::size_t h1 = std::hash<char>()(m_nType);
+			std::size_t h2 = std::hash<__int64>()(nValue);
+			return h1 ^ h2;
+		}
 
+		virtual __int64 ToInt();
+		virtual double ToFloat();
+		virtual std::string ToString();
+		virtual tagByteArray ToBinary();
+
+		virtual bool Set(CBaseVar* pVar);
+		virtual bool Set(__int64 val);
+		virtual bool Set(double val);
+		virtual bool Set(std::string val);
+		virtual bool Set(tagByteArray data);
+		virtual bool Set(CScriptPointInterface* pVal);
+
+	private:
+		__int64 nValue{0};
+	};
+
+	class CFloatVar : public CBaseVar
+	{
+	public:
+		CFloatVar() {}
+		CFloatVar(CFloatVar& var)
+		{
+			fValue = var.fValue;
+		}
+	public:
+
+		std::size_t GetHash() const
+		{
+			std::size_t h1 = std::hash<char>()(m_nType);
+			std::size_t h2 = std::hash<double>()(fValue);
+			return h1 ^ h2;
+		}
+
+		virtual __int64 ToInt();
+		virtual double ToFloat();
+		virtual std::string ToString();
+		virtual tagByteArray ToBinary();
+
+		virtual bool Set(CBaseVar* pVar);
+		virtual bool Set(__int64 val);
+		virtual bool Set(double val);
+		virtual bool Set(std::string val);
+		virtual bool Set(tagByteArray data);
+		virtual bool Set(CScriptPointInterface* pVal);
+
+	private:
+		double fValue{ 0.f };
+	};
+	class CStringVar : public CBaseVar
+	{
+	public:
+		CStringVar() {}
+		CStringVar(CStringVar &var)
+		{
+			s_strPool.UseString(nStringIndex);
+			nStringIndex = var.nStringIndex;
+		}
+		~CStringVar();
+	public:
+		std::size_t GetHash() const
+		{
+			std::size_t h1 = std::hash<char>()(m_nType);
+			std::size_t h2 = std::hash<__int64>()(nStringIndex);
+			return h1 ^ h2;
+		}
+
+		virtual __int64 ToInt();
+		virtual double ToFloat();
+		virtual std::string& ToString();
+		virtual tagByteArray ToBinary();
+
+		virtual bool Set(CBaseVar* pVar);
+		virtual bool Set(__int64 val);
+		virtual bool Set(double val);
+		virtual bool Set(std::string val);
+		virtual bool Set(tagByteArray data);
+		virtual bool Set(CScriptPointInterface* pVal);
+
+	private:
+		void clear();
+		__int64 nStringIndex{ 0 };
 		static zlscript::CStringPool s_strPool;
+	};
+	class CBinaryVar : public CBaseVar
+	{
+	public:
+		CBinaryVar() {}
+		~CBinaryVar();
+	public:
+
+		std::size_t GetHash() const
+		{
+			std::size_t h1 = std::hash<char>()(m_nType);
+			std::size_t h2 = std::hash<__int64>()(nBinaryIndex);
+			return h1 ^ h2;
+		}
+
+		virtual tagByteArray ToBinary();
+
+		virtual bool Set(CBaseVar* pVar);
+		virtual bool Set(CScriptPointInterface* pVal);
+
+	private:
+		void clear();
+		__int64 nBinaryIndex{ 0 };
 		static zlscript::CBinaryPool s_binPool;
 	};
-	struct hash_SV
+
+	class CPointVar : public CBaseVar
 	{
-		size_t operator() (const zlscript::StackVarInfo& cls) const
+	public:
+		CPointVar() {}
+		~CPointVar();
+	public:
+		std::size_t GetHash() const
 		{
-			std::size_t h1 = std::hash<char>()(cls.cType);
-			std::size_t h2 = std::hash<char>()(cls.cExtend);
-			std::size_t h3 = std::hash<__int64>()(cls.Int64);
-			return h1 ^ h2 ^ h3;
+			std::size_t h1 = std::hash<char>()(m_nType);
+			std::size_t h2 = std::hash<CScriptPointInterface*>()(pPoint);
+			return h1 ^ h2;
+		}
+
+		virtual CScriptPointInterface* ToPoint();
+
+		virtual bool Set(CBaseVar* pVar);
+		virtual bool Set(CScriptPointInterface* pVal);
+
+	private:
+		void clear();
+		CScriptPointInterface* pPoint{nullptr};
+	};
+
+	//此类用于将CBaseVar的子类实例包装成unordered_map和unordered_set的key
+	//注意，此类不负责CBaseVar的子类实例的生命周期管理
+	struct ScriptVarKey
+	{
+		ScriptVarKey(CBaseVar* pVar)
+		{
+			m_pVar = pVar;
+		}
+		bool operator==(const ScriptVarKey& key) const {
+			if (m_pVar == key.m_pVar)
+			{
+				return true;
+			}
+			if (m_pVar == nullptr || key.m_pVar == nullptr)
+			{
+				return false;
+			}
+			if (m_pVar->GetHash() == key.m_pVar->GetHash())
+			{
+				return true;
+			}
+			return false;
+		}
+		CBaseVar* m_pVar{nullptr};
+	};
+	struct hash_BaseVar
+	{
+		size_t operator() (zlscript::ScriptVarKey& key)
+		{
+			if (key.m_pVar == nullptr)
+			{
+				return 0;
+			}
+			return key.m_pVar->GetHash();
 		}
 	};
-#define SCRIPTVAR_CLEAR_NO_SAFE(var) {\
-		if (var.cType == EScriptVal_String)\
-		{\
-			StackVarInfo::s_strPool.ReleaseString(var.Int64);\
-		}\
-		else if (var.cType == EScriptVal_Binary)\
-		{\
-			StackVarInfo::s_binPool.ReleaseBinary(var.Int64);\
-		}\
-		else if (var.cType == EScriptVal_ClassPoint)\
-		{\
-			CScriptSuperPointerMgr::GetInstance()->ReturnPointer(var.pPoint);\
-		}\
-	}
-#define SCRIPTVAR_CLEAR(var) {\
-		SCRIPTVAR_CLEAR_NO_SAFE(var)\
-		var.cType = EScriptVal_None;\
-		var.Int64 = 0;\
-	}
-#define SCRIPTVAR_SET_INT(var, intvar) { \
-		SCRIPTVAR_CLEAR_NO_SAFE(var)\
-		var.cType = EScriptVal_Int;\
-		var.Int64 = (intvar);\
-	}
-#define SCRIPTVAR_SET_FLOAT(var, floatvar) { \
-		SCRIPTVAR_CLEAR_NO_SAFE(var)\
-		var.cType = EScriptVal_Double;\
-		var.Double = (floatvar);\
-	}
-#define SCRIPTVAR_SET_STRING(var, stringvar) { \
-		SCRIPTVAR_CLEAR_NO_SAFE(var)\
-		var.cType = EScriptVal_String;\
-		var.Int64 = StackVarInfo::s_strPool.NewString(stringvar.c_str());\
-	}
-#define SCRIPTVAR_SET_STRING_POINT(var, pStr) { \
-		SCRIPTVAR_CLEAR_NO_SAFE(var)\
-		var.cType = EScriptVal_String;\
-		var.Int64 = StackVarInfo::s_strPool.NewString(pStr);\
-	}
-#define SCRIPTVAR_SET_SUPER_POINT(var, point) { \
-		SCRIPTVAR_CLEAR_NO_SAFE(var)\
-		var.cType = EScriptVal_ClassPoint;\
-		var.pPoint = point;\
-		CScriptSuperPointerMgr::GetInstance()->PickupPointer(point); \
-	}
-#define SCRIPTVAR_SET_INTERFACE_POINT(var, point) { \
-		SCRIPTVAR_CLEAR_NO_SAFE(var)\
-		if (point){\
-			var.cType = EScriptVal_ClassPoint;\
-			var.pPoint = CScriptSuperPointerMgr::GetInstance()->PickupPointer(point->GetScriptPointIndex());\
-		}\
-	}
-#define SCRIPTVAR_SET_BINARY(var, pBin) { \
-		SCRIPTVAR_CLEAR_NO_SAFE(var)\
-		var.cType = EScriptVal_Binary;\
-		var.Int64 = StackVarInfo::s_binPool.NewBinary(pStr);\
-	}
-#define SCRIPTVAR_SET_VAR(var, var2) { \
-		SCRIPTVAR_CLEAR_NO_SAFE(var)\
-		var.cType = var2.cType;\
-		var.cExtend = var2.cExtend;\
-		switch (var.cType)\
-		{\
-		case EScriptVal_Int:\
-			var.Int64 = var2.Int64;\
-			break;\
-		case EScriptVal_Double:\
-			var.Double = var2.Double;\
-			break;\
-		case EScriptVal_String:\
-		{\
-			var.Int64 = var2.Int64;\
-			StackVarInfo::s_strPool.UseString(var.Int64);\
-		}\
-		break;\
-		case EScriptVal_ClassPoint:\
-			var.pPoint = var2.pPoint;\
-			CScriptSuperPointerMgr::GetInstance()->PickupPointer(var.pPoint);\
-			break;\
-		case EScriptVal_Binary:\
-		{\
-			var.Int64 = var2.Int64;\
-			StackVarInfo::s_binPool.UseBinary(var.Int64);\
-		}\
-		break;\
-		}\
-	}
 
-#define SCRIPTVAR_GET_INT(var, intvar) { \
-		if (var.cType == EScriptVal_Int)\
-		{\
-			intvar = var.Int64;\
-		}\
-		else if (var.cType == EScriptVal_Double)\
-		{\
-			intvar = (__int64)(var.Double + 0.5f);\
-		}\
-		else if (var.cType == EScriptVal_String)\
-		{\
-			const char* pStr = StackVarInfo::s_strPool.GetString(var.Int64);\
-			if (pStr)\
-			{\
-				intvar = _atoi64(pStr);\
-			}\
-			else\
-			{\
-				intvar = 0;\
-			}\
-		}\
-	}
-#define SCRIPTVAR_GET_FLOAT(var, floatvar) { \
-		if (var.cType == EScriptVal_Int)\
-		{\
-			floatvar = (double)var.Int64;\
-		}\
-		else if (var.cType == EScriptVal_Double)\
-		{\
-			floatvar = var.Double;\
-		}\
-		else if (var.cType == EScriptVal_String)\
-		{\
-			const char* pStr = StackVarInfo::s_strPool.GetString(var.Int64);\
-			if (pStr)\
-			{\
-				floatvar = atof(pStr);\
-			}\
-			else\
-			{\
-				floatvar = 0;\
-			}\
-		}\
-	}
-#define SCRIPTVAR_GET_STRING(var, strvar) { \
-		if (var.cType == EScriptVal_Int)\
-		{\
-			char strbuff[64] = {0};\
-			sprintf(strbuff, "%lld", var.Int64);\
-			strvar=strbuff;\
-		}\
-		else if (var.cType == EScriptVal_Double)\
-		{\
-			char strbuff[64] = {0};\
-			sprintf(strbuff, "%f", var.Double);\
-			strvar=strbuff;\
-		}\
-		else if (var.cType == EScriptVal_String)\
-		{\
-			const char* pStr = StackVarInfo::s_strPool.GetString(var.Int64);\
-			if (pStr)\
-			{\
-				strvar = pStr;\
-			}\
-		}\
-	}
-	struct PointVarInfo
-	{
-		PointVarInfo();
-		PointVarInfo(const PointVarInfo& info);
-		PointVarInfo(__int64 nPointIndex);
-		PointVarInfo(CScriptBasePointer *pPoint);
-		~PointVarInfo();
-
-		void Clear();
-
-		PointVarInfo& operator=(__int64 nPointIndex);
-		PointVarInfo& operator=(CScriptBasePointer* pPoint);
-		PointVarInfo& operator=(const PointVarInfo& info);
-		bool operator==(const PointVarInfo& cls) const;
-		CScriptBasePointer* pPoint;
-	};
-	struct hash_PV
-	{
-		size_t operator() (const zlscript::PointVarInfo& cls) const
-		{
-			std::size_t h1 = std::hash<CScriptBasePointer*>()(cls.pPoint);
-			return h1;
-		}
-	};
 }

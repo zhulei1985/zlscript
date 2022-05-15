@@ -1,4 +1,4 @@
-﻿/****************************************************************************
+/****************************************************************************
 	Copyright (c) 2019 ZhuLei
 	Email:zhulei1985@foxmail.com
 
@@ -31,10 +31,10 @@ namespace zlscript
 	inline void InitScript()
 	{
 		CScriptCallBackFunion::GetInstance()->init();
-		CScriptSuperPointerMgr::GetInstance()->Init();
-		CScriptData::Init2Script();
-		CScriptHashMap::Init2Script();
-		CScriptArray::Init2Script();
+		//CScriptSuperPointerMgr::GetInstance()->Init();
+		//CScriptData::Init2Script();
+		//CScriptHashMap::Init2Script();
+		//CScriptArray::Init2Script();
 	}
 	inline void LoadFile(const char * filename)
 	{
@@ -57,10 +57,14 @@ namespace zlscript
 			return;
 		}
 		tagScriptVarStack vRetrunVars;
-		StackVarInfo var((__int64)0);
-		StackVarInfo var2(pName);
-		STACK_PUSH(vRetrunVars,var);
-		STACK_PUSH(vRetrunVars, var2);
+		CIntVar var;
+		var.Set((__int64)0);
+		CStringVar var2;
+		var2.Set(pName);
+		CBaseVar* pVar = &var;
+		CBaseVar* pVar2 = &var2;
+		STACK_PUSH_COPY(vRetrunVars, pVar);
+		STACK_PUSH_COPY(vRetrunVars, pVar2);
 		CScriptEventMgr::GetInstance()->SendEvent(E_SCRIPT_EVENT_RUNSCRIPT,0, vRetrunVars);
 	}
 

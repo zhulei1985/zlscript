@@ -16,7 +16,7 @@ namespace zlscript
 		CScriptCompiler();
 		~CScriptCompiler();
 
-		unsigned short GetVarType(tagSourceWord varWord);
+		//unsigned short GetVarType(tagSourceWord varWord);
 
 		bool LexicalAnalysis(char* pData, unsigned int size);
 
@@ -40,7 +40,11 @@ namespace zlscript
 		typedef std::function< bool(char* pData,unsigned int size,unsigned int &index)> LexicalAnalysisFun;
 		typedef std::list<LexicalAnalysisFun> ListLexicalAnalysisFun;
 		std::unordered_map<char, ListLexicalAnalysisFun> m_mapLAFun;
+	public:
+		int AddTempVarIndex();
+		void ClearTempVarIndex();
 	private:
+		int nTempVarIndex{ 0 };
 
 		std::string strFileName;
 		//词法分析后的源码

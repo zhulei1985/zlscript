@@ -124,54 +124,54 @@ namespace zlscript
 	rollBackList.push_back(word);
 
 
-	struct tagCodeData
-	{
-		tagCodeData()
-		{
-			nType = EICODE_FUN_DEFAULT;
-			nDefaultReturnType = EScriptVal_None;
-			pBeginCode = nullptr;
-			pEndCode = nullptr;
-		}
-		void AddCode(CBaseExeCode* pCode)
-		{
-			if (pCode == nullptr)
-			{
-				return;
-			}
-			if (pBeginCode == nullptr)
-			{
-				pBeginCode = pCode;
-				pEndCode = pCode;
-			}
-			else
-			{
-				pCode->nCodeIndex = pEndCode->nCodeIndex + 1;
-				pEndCode->m_pNext = pCode;
-				pEndCode = pCode;
-			}
-		}
-		CBaseExeCode* pBeginCode;
-		CBaseExeCode* pEndCode;
-		int nType;
+	//struct tagCodeData
+	//{
+	//	tagCodeData()
+	//	{
+	//		nType = EICODE_FUN_DEFAULT;
+	//		nDefaultReturnType = EScriptVal_None;
+	//		pBeginCode = nullptr;
+	//		pEndCode = nullptr;
+	//	}
+	//	void AddCode(CBaseExeCode* pCode)
+	//	{
+	//		if (pCode == nullptr)
+	//		{
+	//			return;
+	//		}
+	//		if (pBeginCode == nullptr)
+	//		{
+	//			pBeginCode = pCode;
+	//			pEndCode = pCode;
+	//		}
+	//		else
+	//		{
+	//			pCode->nCodeIndex = pEndCode->nCodeIndex + 1;
+	//			pEndCode->m_pNext = pCode;
+	//			pEndCode = pCode;
+	//		}
+	//	}
+	//	CBaseExeCode* pBeginCode;
+	//	CBaseExeCode* pEndCode;
+	//	int nType;
 
-		std::vector<StackVarInfo> vNumVar;//临时变量
-		//std::vector<CodeStyle> vCodeData;
+	//	std::vector<StackVarInfo> vNumVar;//临时变量
+	//	//std::vector<CodeStyle> vCodeData;
 
-		std::vector<__int64> vInt64Const;//64位整形常量
-		std::vector<double> vFloatConst;//浮点常量
-		std::vector<std::string> vStrConst;//字符常量
+	//	std::vector<__int64> vInt64Const;//64位整形常量
+	//	std::vector<double> vFloatConst;//浮点常量
+	//	std::vector<std::string> vStrConst;//字符常量
 
-		std::vector<std::string> vCallFunName;//会调用的函数的名称
+	//	std::vector<std::string> vCallFunName;//会调用的函数的名称
 
-		std::string filename;
-		std::string funname;
+	//	std::string filename;
+	//	std::string funname;
 
-		//函数属性
-		std::map<std::string, StackVarInfo> m_mapFunAttribute;
+	//	//函数属性
+	//	std::map<std::string, StackVarInfo> m_mapFunAttribute;
 
-		int nDefaultReturnType;//默认返回值类型
-	};
+	//	int nDefaultReturnType;//默认返回值类型
+	//};
 
 
 }

@@ -206,61 +206,14 @@ namespace zlscript
 		//m_mapDic2KeyWord["string"] = EScriptVal_String;
 		//*********************中间码的字典**************************//
 		//m_mapDicSentenceToICode["global"] = EICode_Global_Define;
-		m_mapDicVarTypeToICode["void"] = EScriptVal_Void;
-		m_mapDicVarTypeToICode["int"] = EScriptVal_Int;
-		m_mapDicVarTypeToICode["float"] = EScriptVal_Double;
-		m_mapDicVarTypeToICode["string"] = EScriptVal_String;
+		//m_mapDicVarTypeToICode["void"] = EScriptVal_Void;
+		//m_mapDicVarTypeToICode["int"] = EScriptVal_Int;
+		//m_mapDicVarTypeToICode["float"] = EScriptVal_Double;
+		//m_mapDicVarTypeToICode["string"] = EScriptVal_String;
 
 		m_mapDicFunToICode["intact"] = EICODE_FUN_CAN_BREAK;
 	}
-	unsigned short CScriptCodeLoader::GetVarType(tagSourceWord varWord)
-	{
-		if (varWord.nFlag == E_WORD_FLAG_STRING)
-		{
-			return EScriptVal_String;
-		}
-		bool isFloat = false;
-		for (unsigned int i = 0; i < varWord.word.size(); i++)
-		{
-			if ((varWord.word[i] >= '0' && varWord.word[i] <= '9'))
-			{
-				//是数字
-			}
-			else if (varWord.word[i] == '.')
-			{
-				//是点
-				isFloat = true;
-			}
-			else
-			{
-				return EScriptVal_None;
-			}
-		}
-		if (isFloat)
-		{
-			return EScriptVal_Double;
-		}
 
-		return EScriptVal_Int;
-	}
-	unsigned short CScriptCodeLoader::GetVarType(std::string type, unsigned short& classtype)
-	{
-		auto itType = m_mapDicVarTypeToICode.find(type);
-		if (itType == m_mapDicVarTypeToICode.end())
-		{
-			int nClassType = CScriptSuperPointerMgr::GetInstance()->GetClassType(type);
-			if (nClassType)
-			{
-				classtype = nClassType;
-				return EScriptVal_ClassPoint;
-			}
-		}
-		else
-		{
-			return (char)itType->second;
-		}
-		return EScriptVal_None;
-	}
 	void CScriptCodeLoader::clear()
 	{
 		//m_mapNewString2CodeIndex.clear();
@@ -268,7 +221,6 @@ namespace zlscript
 
 		m_vecCodeData.clear();
 
-		vGlobalNumVar.clear();
 	}
 
 
@@ -324,49 +276,6 @@ namespace zlscript
 	//	return bResult;
 	//}
 
-	//TODO 多线程支持
-	bool CScriptCodeLoader::AddGlobalVar(std::string name, unsigned short type, unsigned short typeExtend)
-	{
-		if (m_mapDicGlobalVar.find(name) != m_mapDicGlobalVar.end())
-		{
-			if ((int)m_mapDicGlobalVar[name].cType != (char)type
-				|| m_mapDicGlobalVar[name].wExtend != typeExtend)
-			{
-				return false;
-			}
-		}
-		else
-		{
-			VarInfo info;
-			info.cType = (char)type;
-			info.cGlobal = 1;
-			if ((char)type == EScriptVal_ClassPoint)
-				info.wExtend = typeExtend;
-			else
-				info.wExtend = 0;
-			info.dwPos = vGlobalNumVar.size();
-			m_mapDicGlobalVar[name] = info;
-			StackVarInfo defVar;//默认值
-			defVar.cType = (char)type;
-			vGlobalNumVar.push_back(defVar);
-		}
-		return true;
-	}
-	//TODO 多线程支持
-	bool CScriptCodeLoader::SetGlobalVar(std::string name, StackVarInfo& var)
-	{
-		auto it = m_mapDicGlobalVar.find(name);
-		if (it != m_mapDicGlobalVar.end())
-		{
-			if (it->second.dwPos >= vGlobalNumVar.size())
-			{
-				return false;
-			}
-			vGlobalNumVar[it->second.dwPos] = var;
-			return true;
-		}
-		return false;
-	}
 
 	unsigned int CScriptCodeLoader::GetCodeIndex(const char* pStr)
 	{
@@ -378,21 +287,9 @@ namespace zlscript
 		return it->second;
 	}
 
-	VarInfo* CScriptCodeLoader::GetGlobalVarInfo(std::string name)
-	{
-		auto it = m_mapDicGlobalVar.find(name);
-		if (it != m_mapDicGlobalVar.end())
-		{
-			return &it->second;
-		}
-		return nullptr;
-	}
 
-	void CScriptCodeLoader::GetGlobalVar(vector<StackVarInfo>& vOut)
-	{
-		vOut = vGlobalNumVar;
-	}
-	tagCodeData* CScriptCodeLoader::GetCode(const char* pName)
+
+	CFunICode* CScriptCodeLoader::GetCode(const char* pName)
 	{
 		auto it = m_mapString2CodeIndex.find(pName);
 		if (it == m_mapString2CodeIndex.end())
@@ -475,60 +372,45 @@ namespace zlscript
 	//TODO 多线程支持
 	bool CScriptCodeLoader::SetFunICode(std::string name, CFunICode* pCode)
 	{
-		CFunICode* pOld = m_mapString2Code[name];
-		if (pOld == nullptr)
+		auto it = m_mapString2CodeIndex.find(name);
+		if (it != m_mapString2CodeIndex.end())
 		{
-			m_mapString2Code[name] = pCode;
+			CFunICode* pOld = m_vecCodeData[it->second];
+			if (pOld)
+			{
+				delete pOld;
+			}
+			m_vecCodeData[it->second] = pCode;
 			return true;
 		}
-		else if (pOld && pCode)
+		else
 		{
-			if (pOld->vBodyCode.empty())
-			{
-				m_mapString2Code[name] = pCode;
-				return true;
-			}
+			m_mapString2CodeIndex[name] = m_vecCodeData.size();
+			m_vecCodeData.push_back(pCode);
+			return true;
 		}
 		return false;
 	}
 
-	int CScriptCodeLoader::MakeICode2Code(int nMode)
+	bool CScriptCodeLoader::CheckCurCompileFunName(std::string name)
 	{
-		//先遍历一遍注册信息
-		auto it = m_mapString2Code.begin();
-		for (; it != m_mapString2Code.end(); it++)
-		{
-			CFunICode* pCode = it->second;
-			if (pCode)
-			{
-				tagCodeData code;
-				code.funname = pCode->funname;
-				code.filename = pCode->filename;
-				code.m_mapFunAttribute = pCode->m_mapFunAttribute;
-				m_mapString2CodeIndex[it->first] = m_vecCodeData.size();
-				m_vecCodeData.push_back(code);
-			}
-		}
-		it = m_mapString2Code.begin();
-		for (; it != m_mapString2Code.end(); it++)
-		{
-			CFunICode* pCode = it->second;
-			if (pCode)
-			{
-				auto itS2I = m_mapString2CodeIndex.find(it->first);
-				if (itS2I != m_mapString2CodeIndex.end())
-				{
-					tagCodeData& code = m_vecCodeData[itS2I->second];
-					pCode->MakeExeCode(code);
-				}
-				else
-				{
-					//TODO 报错
-				}
-			}
-		}
-		return 0;
+		if (m_setCurCompileFunName.find(name)!= m_setCurCompileFunName.end())
+			return false;
+		return true;
 	}
+
+	bool CScriptCodeLoader::AddCurCompileFunName(std::string name)
+	{
+		m_setCurCompileFunName.insert(name);
+		return true;
+	}
+
+	bool CScriptCodeLoader::ClearCurCompileFunName()
+	{
+		m_setCurCompileFunName.clear();
+		return true;
+	}
+
 
 
 //

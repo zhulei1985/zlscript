@@ -28,90 +28,90 @@
 
 namespace zlscript
 {
-	class CScriptHashMap : public CScriptPointInterface
-	{
-	public:
-		CScriptHashMap();
-		~CScriptHashMap();
+	//class CScriptHashMap : public CScriptPointInterface
+	//{
+	//public:
+	//	CScriptHashMap();
+	//	~CScriptHashMap();
 
-		static void Init2Script();
-	public:
-		CLASS_SCRIPT_FUN(CScriptHashMap, GetVal);
-		CLASS_SCRIPT_FUN(CScriptHashMap, SetVal);
-		CLASS_SCRIPT_FUN(CScriptHashMap, Get);
-		CLASS_SCRIPT_FUN(CScriptHashMap, Put);
-		CLASS_SCRIPT_FUN(CScriptHashMap, Remove);
-		CLASS_SCRIPT_FUN(CScriptHashMap, Clear);
-		//int GetVal2Script(CScriptCallState* pState);
-		//int SetVal2Script(CScriptCallState* pState);
-		//int Remove2Script(CScriptCallState* pState);
-		//int Clear2Script(CScriptCallState* pState);
-	public:
-		virtual bool AddAllData2Bytes(std::vector<char>& vBuff, std::vector<PointVarInfo>& vOutClassPoint);
-		virtual bool DecodeData4Bytes(char* pBuff, int& pos, unsigned int len, std::vector<PointVarInfo>& vOutClassPoint);
-	private:
-		std::unordered_map<StackVarInfo, StackVarInfo, hash_SV> m_mapData;
-	};
-	class CScriptArray : public CScriptPointInterface
-	{
-	public:
-		CScriptArray();
-		~CScriptArray();
-		static void Init2Script();
-	public:
-		CLASS_SCRIPT_FUN(CScriptArray, Add);
-		CLASS_SCRIPT_FUN(CScriptArray, Get);
-		CLASS_SCRIPT_FUN(CScriptArray, GetSize);
-		CLASS_SCRIPT_FUN(CScriptArray, Set);
-		CLASS_SCRIPT_FUN(CScriptArray, Remove);
-		CLASS_SCRIPT_FUN(CScriptArray, Clear);
+	//	static void Init2Script();
+	//public:
+	//	CLASS_SCRIPT_FUN(CScriptHashMap, GetVal);
+	//	CLASS_SCRIPT_FUN(CScriptHashMap, SetVal);
+	//	CLASS_SCRIPT_FUN(CScriptHashMap, Get);
+	//	CLASS_SCRIPT_FUN(CScriptHashMap, Put);
+	//	CLASS_SCRIPT_FUN(CScriptHashMap, Remove);
+	//	CLASS_SCRIPT_FUN(CScriptHashMap, Clear);
+	//	//int GetVal2Script(CScriptCallState* pState);
+	//	//int SetVal2Script(CScriptCallState* pState);
+	//	//int Remove2Script(CScriptCallState* pState);
+	//	//int Clear2Script(CScriptCallState* pState);
+	//public:
+	//	virtual bool AddAllData2Bytes(std::vector<char>& vBuff, std::vector<PointVarInfo>& vOutClassPoint);
+	//	virtual bool DecodeData4Bytes(char* pBuff, int& pos, unsigned int len, std::vector<PointVarInfo>& vOutClassPoint);
+	//private:
+	//	std::unordered_map<StackVarInfo, StackVarInfo, hash_SV> m_mapData;
+	//};
+	//class CScriptArray : public CScriptPointInterface
+	//{
+	//public:
+	//	CScriptArray();
+	//	~CScriptArray();
+	//	static void Init2Script();
+	//public:
+	//	CLASS_SCRIPT_FUN(CScriptArray, Add);
+	//	CLASS_SCRIPT_FUN(CScriptArray, Get);
+	//	CLASS_SCRIPT_FUN(CScriptArray, GetSize);
+	//	CLASS_SCRIPT_FUN(CScriptArray, Set);
+	//	CLASS_SCRIPT_FUN(CScriptArray, Remove);
+	//	CLASS_SCRIPT_FUN(CScriptArray, Clear);
 
-		//int Add2Script(CScriptCallState* pState);
-		//int Get2Script(CScriptCallState* pState);
-		//int GetSize2Script(CScriptCallState* pState);
-		//int Set2Script(CScriptCallState* pState);
-		//int Remove2Script(CScriptCallState* pState);
+	//	//int Add2Script(CScriptCallState* pState);
+	//	//int Get2Script(CScriptCallState* pState);
+	//	//int GetSize2Script(CScriptCallState* pState);
+	//	//int Set2Script(CScriptCallState* pState);
+	//	//int Remove2Script(CScriptCallState* pState);
 
-		//int Clear2Script(CScriptCallState* pState);
-	public:
-		std::vector<StackVarInfo>& GetVars()
-		{
-			return m_vecVars;
-		}
+	//	//int Clear2Script(CScriptCallState* pState);
+	//public:
+	//	std::vector<StackVarInfo>& GetVars()
+	//	{
+	//		return m_vecVars;
+	//	}
 
-		virtual bool AddAllData2Bytes(std::vector<char>& vBuff, std::vector<PointVarInfo>& vOutClassPoint);
-		virtual bool DecodeData4Bytes(char* pBuff, int& pos, unsigned int len, std::vector<PointVarInfo>& vOutClassPoint);
-	private:
-		//std::map<std::string, unsigned int> m_mapDicName2Index;
-		std::vector<StackVarInfo> m_vecVars;
-	};
-	class CScriptSubData
-	{
-	public:
-		CScriptSubData();
-		~CScriptSubData();
+	//	virtual bool AddAllData2Bytes(std::vector<char>& vBuff, std::vector<PointVarInfo>& vOutClassPoint);
+	//	virtual bool DecodeData4Bytes(char* pBuff, int& pos, unsigned int len, std::vector<PointVarInfo>& vOutClassPoint);
+	//private:
+	//	//std::map<std::string, unsigned int> m_mapDicName2Index;
+	//	std::vector<StackVarInfo> m_vecVars;
+	//};
+	//class CScriptSubData
+	//{
+	//public:
+	//	CScriptSubData();
+	//	~CScriptSubData();
 
-	public:
-		StackVarInfo m_var;
-		std::unordered_map<StackVarInfo, CScriptSubData*, hash_SV> m_mapChild;
-	};
-	class CScriptData : public CScriptPointInterface
-	{
-	public:
-		CScriptData();
-		~CScriptData();
-		static void Init2Script();
+	//public:
+	//	StackVarInfo m_var;
+	//	std::unordered_map<StackVarInfo, CScriptSubData*, hash_SV> m_mapChild;
+	//};
+	//class CScriptData : public CScriptPointInterface
+	//{
+	//public:
+	//	CScriptData();
+	//	~CScriptData();
+	//	static void Init2Script();
 
-		CLASS_SCRIPT_FUN(CScriptData, GetVal);
-		CLASS_SCRIPT_FUN(CScriptData, SetVal);
-		CLASS_SCRIPT_FUN(CScriptData, GetArray);
-		CLASS_SCRIPT_FUN(CScriptData, SaveFile);
-		CLASS_SCRIPT_FUN(CScriptData, LoadFile);
+	//	CLASS_SCRIPT_FUN(CScriptData, GetVal);
+	//	CLASS_SCRIPT_FUN(CScriptData, SetVal);
+	//	CLASS_SCRIPT_FUN(CScriptData, GetArray);
+	//	CLASS_SCRIPT_FUN(CScriptData, SaveFile);
+	//	CLASS_SCRIPT_FUN(CScriptData, LoadFile);
 
-		std::unordered_map<StackVarInfo, CScriptSubData*, hash_SV> m_mapChild;
+	//	std::unordered_map<StackVarInfo, CScriptSubData*, hash_SV> m_mapChild;
 
-		std::mutex m_Lock;
+	//	std::mutex m_Lock;
 
-	};
+	//};
 
 }

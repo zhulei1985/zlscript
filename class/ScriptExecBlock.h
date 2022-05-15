@@ -1,4 +1,4 @@
-﻿/****************************************************************************
+/****************************************************************************
 	Copyright (c) 2019 ZhuLei
 	Email:zhulei1985@foxmail.com
 
@@ -20,7 +20,7 @@
 #include <vector>
 #include "ScriptCodeLoader.h"
 #include "ScriptStack.h"
-#include "EMicroCodeType.h"
+
 #include <chrono>
 //////////////////////////////////////////////////////////////////////////////
 //                              脚本执行块                                  //
@@ -29,77 +29,51 @@ namespace zlscript
 {
 	class CScriptRunState;
 	class CScriptVirtualMachine;
-
+	class CFunICode;
 
 	class CScriptExecBlock
 	{
 	public:
-		CScriptExecBlock(tagCodeData* pData, CScriptRunState* pMaster);
+		CScriptExecBlock(CFunICode* pCode, CScriptRunState* pMaster);
 		~CScriptExecBlock(void);
 
 		int GetDefaultReturnType();
 		int GetFunType();
 
-		inline __int64 GetVal_Int64(char cType, unsigned int pos);
-		StackVarInfo GetVal(char cType, unsigned int pos);
-		bool GetVal(StackVarInfo& var, char cType, unsigned int pos);
-		bool GetVal(__int64& var, char cType, unsigned int pos);
-		bool GetVal(double& var, char cType, unsigned int pos);
-		bool GetVal(std::string& var, char cType, unsigned int pos);
-		bool SetVal(char cType, unsigned int pos, StackVarInfo& var);
+
 	private:
-		//指向的代码块
-		tagCodeData* m_pCodeData;
-		//执行位置
-		//unsigned int m_nCodePoint;
-		CBaseExeCode* m_pCurCode;
+
+		CFunICode* m_pCurCode;
+
+		//状态堆栈
+		std::vector<int> m_vRunState;
+		int nOtherState{0};
+		//变量寄存器
+		tagScriptVarStack loaclVarStack;
+	public:
+		tagScriptVarStack registerStack;
 	public:
 		CScriptRunState* m_pMaster;
-		//寄存器
-		StackVarInfo m_register[R_SIZE];
-		//堆栈
-		//CScriptStack m_stackRegister;
-		tagScriptVarStack m_stackRegister;
 
-		char m_cReturnRegisterIndex;//返回值放入的寄存器索引
-		StackVarInfo m_varReturnVar;//返回值
+		void RegisterLoaclVar(int index, int type);
+		CBaseVar* GetLoaclVar(int index);
 
+		int& GetRunState(int index);
+		void RevertRunState(int index);
 	public:
 		enum ERESULT_TYPE
 		{
-			ERESULT_END,
-			ERESULT_CONTINUE,
+			ERESULT_END,//结束运行
+			ERESULT_CONTINUE,//继续运行
+			ERESULT_NEXTCONTINUE,//暂停当前运行，下次继续
+			ERESULT_WAITING,//暂停，等返回
+			ERESULT_LOOP_HEAD,
+			ERESULT_LOOP_END,
 			ERESULT_ERROR,
-			ERESULT_RETURN,
-			ERESULT_WAITING,
-			ERESULT_CALLSCRIPTFUN,
-			ERESULT_NEXTCONTINUE
 		};
 		int GetCurCodeSoureIndex();
 		unsigned int ExecBlock(CScriptVirtualMachine* pMachine);
 
-		bool CheckRegisterTrue(char index);
-
-		//void PushVar(StackVarInfo& var);
-		//StackVarInfo PopVar();
-		//StackVarInfo* GetVar(unsigned int index);
-		//unsigned int GetVarSize();
-
-		StackVarInfo& GetReturnVar()
-		{
-			return m_varReturnVar;
-		}
-		char GetReturnRegisterIndex()
-		{
-			return m_cReturnRegisterIndex;
-		}
-		void ClearStack();
-
-		std::string GetCurSourceWords();
-	private:
-		StackVarInfo* m_pTempVar;//临时变量
-		unsigned int m_nTempVarSize;
-		//std::vector<StackVarInfo> vNumVar;//临时变量
 
 
 	//性能监控

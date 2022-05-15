@@ -9,39 +9,32 @@ namespace zlscript
 	void CBaseICode::SetFather(CBaseICode* pCode)
 	{
 		m_pFather = pCode;
+		m_nRunStateIndex = m_pFather->m_nRunStateIndex + 1;
 	}
-	CScriptCompiler* CBaseICode::GetCompiler()
-	{
-		return m_pCompiler;
-	}
-	void CBaseICode::SetCompiler(CScriptCompiler* pCompiler)
-	{
-		m_pCompiler = pCompiler;
-	}
-	bool CBaseICode::DefineTempVar(std::string VarType, std::string VarName)
+	//CScriptCompiler* CBaseICode::GetCompiler()
+	//{
+	//	return m_pCompiler;
+	//}
+	//void CBaseICode::SetCompiler(CScriptCompiler* pCompiler)
+	//{
+	//	m_pCompiler = pCompiler;
+	//}
+	bool CBaseICode::DefineTempVar(int type, std::string VarName)
 	{
 		if (m_pFather)
 		{
-			return m_pFather->DefineTempVar(VarType, VarName);
+			return m_pFather->DefineTempVar(type, VarName);
 		}
 		return false;
 	}
 	bool CBaseICode::CheckTempVar(const char* pVarName)
 	{
-		if (GetTempVarIndex(pVarName) != g_nTempVarIndexError)
+		if (GetTempVarInfo(pVarName) != nullptr)
 		{
 			return true;
 		}
 
 		return false;
-	}
-	unsigned int CBaseICode::GetTempVarIndex(const char* pVarName)
-	{
-		if (GetFather())
-		{
-			return GetFather()->GetTempVarIndex(pVarName);
-		}
-		return g_nTempVarIndexError;
 	}
 
 	VarInfo* CBaseICode::GetTempVarInfo(const char* pVarName)
@@ -68,7 +61,7 @@ namespace zlscript
 
 	void CBaseICode::AddErrorInfo(unsigned int pos, std::string error)
 	{
-		if (m_pCompiler)
-			m_pCompiler->AddErrorInfo(pos, error);
+		//if (m_pCompiler)
+		//	m_pCompiler->AddErrorInfo(pos, error);
 	}
 }

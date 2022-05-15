@@ -53,15 +53,19 @@ public:
 };
 int CTest::Add2Script(CScriptCallState* pState)
 {
-		if (pState == nullptr)
+	if (pState == nullptr)
 	{
 		return ECALLBACK_ERROR;
 	}
-	__int64 nVal1 = pState->GetIntVarFormStack(0);
-	__int64 nVal2 = pState->GetIntVarFormStack(1);
+	GET_VAR_4_STACK(CIntVar, pVar1, pState->m_stackRegister, 0);
+	GET_VAR_4_STACK(CIntVar, pVar2, pState->m_stackRegister, 1);
+	__int64 nVal1 = pVar1? pVar1->ToInt():0;
+	__int64 nVal2 = pVar1 ? pVar2->ToInt() : 0;
 	//int aaa = nVal1 + nVal2;
 	//printf("event %d\n", pState->m_pMachine->GetEventIndex());
-	pState->SetResult((__int64)(nVal1 + nVal2));
+	CIntVar result;
+	result.Set((__int64)(nVal1 + nVal2));
+	pState->SetResult(&result);
 	return ECALLBACK_FINISH;
 }
 int CTest::Fun12Script(CScriptCallState* pState)
@@ -148,7 +152,7 @@ int main()
 	//RegisterClassFun1("Add", CTest);
 
 	zlscript::LoadFile("test.script");
-	zlscript::CScriptCodeLoader::GetInstance()->MakeICode2Code(0);
+	//zlscript::CScriptCodeLoader::GetInstance()->MakeICode2Code(0);
 	//zlscript::CScriptCodeLoader::GetInstance()->ClearICode();
 	//zlscript::CScriptCodeLoader::GetInstance()->PrintAllCode("debug.txt");
 	g_nThreadRunState = 1;

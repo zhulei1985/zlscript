@@ -1,4 +1,4 @@
-﻿/****************************************************************************
+/****************************************************************************
 	Copyright (c) 2019 ZhuLei
 	Email:zhulei1985@foxmail.com
 
@@ -100,16 +100,8 @@ namespace zlscript
 
 		bool HasWaitingScript(unsigned long id);
 
-		//bool RemoveRunState(unsigned long id);
-		//bool RemoveRunStateByShape(int id);
-		//bool CheckRun(__int64 id);
-		//CScriptRunState* GetRunState(unsigned long id);
-		//CScriptRunState* PopRunState(unsigned long id);
-		StackVarInfo GetGlobalVar(unsigned int pos);
-		void SetGlobalVar(unsigned int pos, StackVarInfo& val);
 	protected:
-		std::mutex m_GlobalVarLock;
-		std::vector<StackVarInfo> vGlobalNumVar;
+
 
 		//****************运行管理******************//
 		bool bNoThread;

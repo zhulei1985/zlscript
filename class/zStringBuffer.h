@@ -34,7 +34,7 @@ namespace zlscript
 		void UseString(__int64 nIndex);
 		void ReleaseString(__int64 nIndex);
 
-		const char* GetString(__int64 nIndex);
+		std::string& GetString(__int64 nIndex);
 
 		struct tagInfo
 		{
@@ -46,6 +46,7 @@ namespace zlscript
 		std::map<__int64, tagInfo> m_StringPool;
 		__int64 m_IndexCount;
 
+		std::string strEmpty{""};
 		std::mutex m_Lock;
 	};
 }

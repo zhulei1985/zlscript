@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 /****************************************************************************
 	Copyright (c) 2019 ZhuLei
 	Email:zhulei1985@foxmail.com
@@ -21,15 +21,8 @@ namespace zlscript
 	{
 		EScriptVal_None,
 
-		EScriptVal_Int,
-		EScriptVal_Double,
-		EScriptVal_String,
-		//EScriptVal_ClassPointIndex,
-		EScriptVal_ClassPoint,
+		EScriptVal_Var = 1,
 
-		EScriptVal_SyncClassPoint,
-		EScriptVal_Binary,
-
-		EScriptVal_Void,
+		EScriptVal_Class = 1000,
 	};
 }

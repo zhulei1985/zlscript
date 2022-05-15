@@ -1,4 +1,4 @@
-﻿/****************************************************************************
+/****************************************************************************
 	Copyright (c) 2019 ZhuLei
 	Email:zhulei1985@foxmail.com
 
@@ -52,10 +52,16 @@ namespace zlscript
 		for (auto it = eventTrigger.vTriggers.begin(); it != eventTrigger.vTriggers.end(); it++)
 		{
 			tagScriptVarStack vRetrunVars;
-			StackVarInfo var((__int64)0);
-			StackVarInfo var2(it->second.strScriptName.c_str());
-			STACK_PUSH(vRetrunVars, var);
-			STACK_PUSH(vRetrunVars, var2);
+			CIntVar varReturnID;
+			varReturnID.Set((__int64)0);
+			CStringVar varString;
+			varString.Set(it->second.strScriptName);
+
+			CBaseVar* var = &varReturnID;
+			CBaseVar* var2 = &varString;
+
+			STACK_PUSH_COPY(vRetrunVars, var);
+			STACK_PUSH_COPY(vRetrunVars, var2);
 			STACK_COPY(vRetrunVars, it->second.parm);
 
 			CScriptEventMgr::GetInstance()->SendEvent(E_SCRIPT_EVENT_RUNSCRIPT,it->second.nEventnChannel, vRetrunVars);

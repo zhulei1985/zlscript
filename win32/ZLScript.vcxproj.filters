@@ -112,6 +112,21 @@
     <ClInclude Include="..\class\ScriptBaseICode.h">
       <Filter>code</Filter>
     </ClInclude>
+    <ClInclude Include="..\class\ScriptVarTypeMgr.h">
+      <Filter>code</Filter>
+    </ClInclude>
+    <ClInclude Include="..\class\ScriptGlobalVarMgr.h">
+      <Filter>code</Filter>
+    </ClInclude>
+    <ClInclude Include="..\class\ScriptClassInfo.h">
+      <Filter>code</Filter>
+    </ClInclude>
+    <ClInclude Include="..\class\ScriptVarAssignmentMgr.h">
+      <Filter>code</Filter>
+    </ClInclude>
+    <ClInclude Include="..\class\ScriptVarOperatorMgr.h">
+      <Filter>code</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\class\ScriptCallBackFunion.cpp">
@@ -193,6 +208,18 @@
       <Filter>code</Filter>
     </ClCompile>
     <ClCompile Include="..\class\ScriptBaseICode.cpp">
+      <Filter>code</Filter>
+    </ClCompile>
+    <ClCompile Include="..\class\ScriptVarTypeMgr.cpp">
+      <Filter>code</Filter>
+    </ClCompile>
+    <ClCompile Include="..\class\ScriptGlobalVarMgr.cpp">
+      <Filter>code</Filter>
+    </ClCompile>
+    <ClCompile Include="..\class\ScriptVarAssignmentMgr.cpp">
+      <Filter>code</Filter>
+    </ClCompile>
+    <ClCompile Include="..\class\ScriptVarOperatorMgr.cpp">
       <Filter>code</Filter>
     </ClCompile>
   </ItemGroup>

@@ -22,67 +22,34 @@
 
 namespace zlscript
 {
-	__int64 CScriptPointInterface::s_nScriptPointIndexCount = 0;
+
 	CScriptPointInterface::CScriptPointInterface()
 	{
-		m_nScriptPointIndex = 0;
 		m_pClassInfo = nullptr;
 	}
 	CScriptPointInterface::~CScriptPointInterface()
 	{
-		//auto it = m_vecScriptClassFun.begin();
-		//for (; it != m_vecScriptClassFun.end(); it++)
-		//{
-		//	CScriptBaseClassFunInfo* pInfo = *it;
-		//	if (pInfo)
-		//	{
-		//		delete pInfo;
-		//	}
-		//}
-		//m_vecScriptClassFun.clear();
-
-		if (IsInitScriptPointIndex())
-		{
-			RemoveClassObject(CScriptPointInterface::GetScriptPointIndex());
-			ClearScriptPointIndex();
-		}
-	}
-	void CScriptPointInterface::InitScriptPointIndex()
-	{
-		if (!IsInitScriptPointIndex())
-		{
-			s_nScriptPointIndexCount++;
-			m_nScriptPointIndex = s_nScriptPointIndexCount;
-		}
 
 	}
-	bool CScriptPointInterface::IsInitScriptPointIndex()
+	void CScriptPointInterface::PickUp()
 	{
-		if (m_nScriptPointIndex > 0)
-		{
-			return true;
-		}
-		return false;
+		nUsedCount++;
 	}
-	__int64 CScriptPointInterface::GetScriptPointIndex()
+	void CScriptPointInterface::PickDown()
 	{
-		if (!IsInitScriptPointIndex())
-		{
-			InitScriptPointIndex();
-		}
-		return m_nScriptPointIndex;
-	}
-	void CScriptPointInterface::ClearScriptPointIndex()
-	{
-		m_nScriptPointIndex = 0;
+		nUsedCount--;
 	}
 
 	unsigned int CScriptPointInterface::GetAttributeIndex(std::string name)
 	{
-		auto it = m_mapAttributeName2Index.find(name);
-		if (it != m_mapAttributeName2Index.end())
+		if (m_pClassInfo == nullptr)
 		{
-			return it->second;
+			return -1;
+		}
+		auto it = m_pClassInfo->mapDicString2ParamInfo.find(name);
+		if (it != m_pClassInfo->mapDicString2ParamInfo.end())
+		{
+			return it->second.m_index;
 		}
 		return -1;
 	}
@@ -114,7 +81,7 @@ namespace zlscript
 
 
 
-	void CScriptPointInterface::ChangeScriptAttribute(CBaseScriptClassAttribute* pAttr, StackVarInfo& old)
+	void CScriptPointInterface::ChangeScriptAttribute(CBaseScriptClassAttribute* pAttr, CBaseVar* old)
 	{
 		if (pAttr == nullptr)
 		{
@@ -137,7 +104,7 @@ namespace zlscript
 			m_mapDBAttributes[pAttr->m_strAttrName] = pAttr;
 		}
 		m_mapAllAttributes.insert(std::pair<unsigned int, CBaseScriptClassAttribute*>(pAttr->m_index, pAttr));
-		m_mapAttributeName2Index.insert(std::pair<std::string, unsigned int>(pAttr->m_strAttrName, pAttr->m_index));
+		//m_mapAttributeName2Index.insert(std::pair<std::string, unsigned int>(pAttr->m_strAttrName, pAttr->m_index));
 	}
 
 	void CScriptPointInterface::RemoveScriptAttribute(CBaseScriptClassAttribute* pAttr)
@@ -153,7 +120,7 @@ namespace zlscript
 		if (pClassFun)
 		{
 			pClassFun->m_index = m_vecScriptClassFun.size();
-			m_mapFun2Index[pClassFun->m_name] = pClassFun->m_index;
+			//m_mapFun2Index[pClassFun->m_name] = pClassFun->m_index;
 			//m_mapFun2Index.insert(std::pair<std::string, unsigned int>(pClassFun->m_name, pClassFun->m_index));
 			m_vecScriptClassFun.push_back(pClassFun);
 		}
@@ -162,8 +129,12 @@ namespace zlscript
 
 	unsigned int CScriptPointInterface::GetClassFunIndex(std::string name)
 	{
-		auto it = m_mapFun2Index.find(name);
-		if (it != m_mapFun2Index.end())
+		if (m_pClassInfo == nullptr)
+		{
+			return -1;
+		}
+		auto it = m_pClassInfo->mapDicFunString2Index.find(name);
+		if (it != m_pClassInfo->mapDicFunString2Index.end())
 		{
 			return it->second;
 		}
@@ -179,164 +150,164 @@ namespace zlscript
 		return m_vecScriptClassFun[id];
 	}
 
-	bool CScriptPointInterface::AddVar2Bytes(std::vector<char>& vBuff, const StackVarInfo* pVal, std::vector<PointVarInfo>& vOutClassPoint)
+	bool CScriptPointInterface::AddVar2Bytes(std::vector<char>& vBuff, const CBaseVar* pVal, std::vector<CPointVar*>& vOutClassPoint)
 	{
 		if (!pVal)
 		{
 			return false;
 		}
-		switch (pVal->cType)
-		{
-		case EScriptVal_Int:
-		{
-			AddChar2Bytes(vBuff, EScriptVal_Int);
-			AddInt642Bytes(vBuff, pVal->Int64);
-		}
-		break;
-		case EScriptVal_Double:
-		{
-			AddChar2Bytes(vBuff, EScriptVal_Double);
-			AddDouble2Bytes(vBuff, pVal->Double);
-		}
-		break;
-		case EScriptVal_String:
-		{
-			AddChar2Bytes(vBuff, EScriptVal_String);
-			const char* pStr = StackVarInfo::s_strPool.GetString(pVal->Int64);
-			AddString2Bytes(vBuff, (char*)pStr);
-		}
-		break;
-		case EScriptVal_Binary:
-		{
-			AddChar2Bytes(vBuff, EScriptVal_Binary);
-			unsigned int size = 0;
-			const char* pStr = StackVarInfo::s_binPool.GetBinary(pVal->Int64, size);
-			::AddData2Bytes(vBuff, pStr, size);
-		}
-		case EScriptVal_ClassPoint:
-		{
-			auto pPoint = pVal->pPoint;
-			if (pPoint)
-			{
-				AddChar2Bytes(vBuff, EScriptVal_ClassPoint);
-				AddUInt2Bytes(vBuff, vOutClassPoint.size());
-				vOutClassPoint.push_back(pPoint);
-			}
-			else
-			{
-				//TODO 错误
-				AddChar2Bytes(vBuff, EScriptVal_None);
-			}
-		}
-		break;
-		default:
-			AddChar2Bytes(vBuff, EScriptVal_None);
-			break;
-		}
+		//switch (pVal->cType)
+		//{
+		//case EScriptVal_Int:
+		//{
+		//	AddChar2Bytes(vBuff, EScriptVal_Int);
+		//	AddInt642Bytes(vBuff, pVal->Int64);
+		//}
+		//break;
+		//case EScriptVal_Double:
+		//{
+		//	AddChar2Bytes(vBuff, EScriptVal_Double);
+		//	AddDouble2Bytes(vBuff, pVal->Double);
+		//}
+		//break;
+		//case EScriptVal_String:
+		//{
+		//	AddChar2Bytes(vBuff, EScriptVal_String);
+		//	const char* pStr = StackVarInfo::s_strPool.GetString(pVal->Int64);
+		//	AddString2Bytes(vBuff, (char*)pStr);
+		//}
+		//break;
+		//case EScriptVal_Binary:
+		//{
+		//	AddChar2Bytes(vBuff, EScriptVal_Binary);
+		//	unsigned int size = 0;
+		//	const char* pStr = StackVarInfo::s_binPool.GetBinary(pVal->Int64, size);
+		//	::AddData2Bytes(vBuff, pStr, size);
+		//}
+		//case EScriptVal_ClassPoint:
+		//{
+		//	auto pPoint = pVal->pPoint;
+		//	if (pPoint)
+		//	{
+		//		AddChar2Bytes(vBuff, EScriptVal_ClassPoint);
+		//		AddUInt2Bytes(vBuff, vOutClassPoint.size());
+		//		vOutClassPoint.push_back(pPoint);
+		//	}
+		//	else
+		//	{
+		//		//TODO 错误
+		//		AddChar2Bytes(vBuff, EScriptVal_None);
+		//	}
+		//}
+		//break;
+		//default:
+		//	AddChar2Bytes(vBuff, EScriptVal_None);
+		//	break;
+		//}
 		return true;
 	}
 
-	bool CScriptPointInterface::AddVar2Bytes(std::vector<char>& vBuff, const PointVarInfo* pVal, std::vector<PointVarInfo>& vOutClassPoint)
+	bool CScriptPointInterface::AddVar2Bytes(std::vector<char>& vBuff, const CPointVar* pVal, std::vector<CPointVar*>& vOutClassPoint)
 	{
 		if (!pVal)
 		{
 			return false;
 		}
 
-		auto pPoint = pVal->pPoint;
-		if (pPoint)
-		{
-			AddChar2Bytes(vBuff, EScriptVal_ClassPoint);
-			AddUInt2Bytes(vBuff, vOutClassPoint.size());
-			vOutClassPoint.push_back(*pVal);
-		}
-		else
-		{
-			//TODO 错误
-			AddChar2Bytes(vBuff, EScriptVal_None);
-		}
+		//auto pPoint = pVal->pPoint;
+		//if (pPoint)
+		//{
+		//	AddChar2Bytes(vBuff, EScriptVal_ClassPoint);
+		//	AddUInt2Bytes(vBuff, vOutClassPoint.size());
+		//	vOutClassPoint.push_back(*pVal);
+		//}
+		//else
+		//{
+		//	//TODO 错误
+		//	AddChar2Bytes(vBuff, EScriptVal_None);
+		//}
 		return true;
 	}
 
-	StackVarInfo CScriptPointInterface::DecodeVar4Bytes(char* pBuff, int& pos, unsigned int len, std::vector<PointVarInfo>& vOutClassPoint)
+	CBaseVar* CScriptPointInterface::DecodeVar4Bytes(char* pBuff, int& pos, unsigned int len, std::vector<CPointVar*>& vOutClassPoint)
 	{
-		char cType = DecodeBytes2Char(pBuff, pos, len);
-		switch (cType)
-		{
-		case EScriptVal_None:
-			break;
-		case EScriptVal_Int:
-			{
-				__int64 nVal = DecodeBytes2Int64(pBuff, pos, len);
-				return StackVarInfo(nVal);
-			}
-			break;
-		case EScriptVal_Double:
-			{
-				double fVal = DecodeBytes2Double(pBuff, pos, len);
-				return StackVarInfo(fVal);
-			}
-			break;
-		case EScriptVal_String:
-			{
-				int nStrLen = DecodeBytes2Int(pBuff, pos, len);
-				//if (nStrLen )
-				std::vector<char> strTemp;
-				for (int i = 0; i < nStrLen && pos < len; i++)
-				{
-					strTemp.push_back(*(pBuff + pos));
-					pos++;
-				}
-				strTemp.push_back('\0');
-				return StackVarInfo(&strTemp[0]);
-			}
-			break;
-		case EScriptVal_Binary:
-			{
-				int nStrLen = DecodeBytes2Int(pBuff, pos, len);
-				if (nStrLen <= len - pos)
-				{
-					StackVarInfo var;
-					var.cType = EScriptVal_Binary;
-					var.Int64 = StackVarInfo::s_binPool.NewBinary(pBuff + pos, nStrLen);
-					return var;
-				}
-			}
-			break;
-		case EScriptVal_ClassPoint:
-			{
-				unsigned int index = DecodeBytes2Int(pBuff, pos, len);
-				if (index < vOutClassPoint.size())
-				{
-					return StackVarInfo(vOutClassPoint[index].pPoint);
-				}
-			}
-			break;
-		}
-		return StackVarInfo();
+		//char cType = DecodeBytes2Char(pBuff, pos, len);
+		//switch (cType)
+		//{
+		//case EScriptVal_None:
+		//	break;
+		//case EScriptVal_Int:
+		//	{
+		//		__int64 nVal = DecodeBytes2Int64(pBuff, pos, len);
+		//		return StackVarInfo(nVal);
+		//	}
+		//	break;
+		//case EScriptVal_Double:
+		//	{
+		//		double fVal = DecodeBytes2Double(pBuff, pos, len);
+		//		return StackVarInfo(fVal);
+		//	}
+		//	break;
+		//case EScriptVal_String:
+		//	{
+		//		int nStrLen = DecodeBytes2Int(pBuff, pos, len);
+		//		//if (nStrLen )
+		//		std::vector<char> strTemp;
+		//		for (int i = 0; i < nStrLen && pos < len; i++)
+		//		{
+		//			strTemp.push_back(*(pBuff + pos));
+		//			pos++;
+		//		}
+		//		strTemp.push_back('\0');
+		//		return StackVarInfo(&strTemp[0]);
+		//	}
+		//	break;
+		//case EScriptVal_Binary:
+		//	{
+		//		int nStrLen = DecodeBytes2Int(pBuff, pos, len);
+		//		if (nStrLen <= len - pos)
+		//		{
+		//			StackVarInfo var;
+		//			var.cType = EScriptVal_Binary;
+		//			var.Int64 = StackVarInfo::s_binPool.NewBinary(pBuff + pos, nStrLen);
+		//			return var;
+		//		}
+		//	}
+		//	break;
+		//case EScriptVal_ClassPoint:
+		//	{
+		//		unsigned int index = DecodeBytes2Int(pBuff, pos, len);
+		//		if (index < vOutClassPoint.size())
+		//		{
+		//			return StackVarInfo(vOutClassPoint[index].pPoint);
+		//		}
+		//	}
+		//	break;
+		//}
+		return nullptr;
 	}
 
-	PointVarInfo CScriptPointInterface::DecodePointVar4Bytes(char* pBuff, int& pos, unsigned int len, std::vector<PointVarInfo>& vOutClassPoint)
+	CPointVar* CScriptPointInterface::DecodePointVar4Bytes(char* pBuff, int& pos, unsigned int len, std::vector<CPointVar*>& vOutClassPoint)
 	{
-		char cType = DecodeBytes2Char(pBuff, pos, len);
-		switch (cType)
-		{
-		case EScriptVal_None:
-			break;
-		case EScriptVal_ClassPoint:
-		{
-			unsigned int index = DecodeBytes2Int(pBuff, pos, len);
-			if (index < vOutClassPoint.size())
-			{
-				return vOutClassPoint[index];
-			}
-		}
-		break;
-		}
-		return PointVarInfo();
+		//char cType = DecodeBytes2Char(pBuff, pos, len);
+		//switch (cType)
+		//{
+		//case EScriptVal_None:
+		//	break;
+		//case EScriptVal_ClassPoint:
+		//{
+		//	unsigned int index = DecodeBytes2Int(pBuff, pos, len);
+		//	if (index < vOutClassPoint.size())
+		//	{
+		//		return vOutClassPoint[index];
+		//	}
+		//}
+		//break;
+		//}
+		return nullptr;
 	}
 
-	void CScriptPointInterface::GetBaseClassInfo(stScriptClassInfo& info)
+	void CScriptPointInterface::GetBaseClassInfo(CBaseScriptClassInfo& info)
 	{
 		for (auto it = m_vecScriptClassFun.begin(); it != m_vecScriptClassFun.end(); it++)
 		{

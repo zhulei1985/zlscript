@@ -13,26 +13,26 @@ namespace zlscript
 	{
 	}
 
-	unsigned short CScriptCompiler::GetVarType(tagSourceWord varWord)
-	{
-		if (varWord.nFlag == E_WORD_FLAG_STRING)
-		{
-			return EScriptVal_String;
-		}
-		else if (varWord.nFlag == E_WORD_FLAG_NUMBER)
-		{
-			for (unsigned int i = 0; i < varWord.word.size(); i++)
-			{
-				if (varWord.word[i] == '.')
-				{
-					//是浮点
-					return EScriptVal_Double;
-				}
-			}
-			return EScriptVal_Int;
-		}
-		return EScriptVal_None;
-	}
+	//unsigned short CScriptCompiler::GetVarType(tagSourceWord varWord)
+	//{
+	//	if (varWord.nFlag == E_WORD_FLAG_STRING)
+	//	{
+	//		return EScriptVal_String;
+	//	}
+	//	else if (varWord.nFlag == E_WORD_FLAG_NUMBER)
+	//	{
+	//		for (unsigned int i = 0; i < varWord.word.size(); i++)
+	//		{
+	//			if (varWord.word[i] == '.')
+	//			{
+	//				//是浮点
+	//				return EScriptVal_Double;
+	//			}
+	//		}
+	//		return EScriptVal_Int;
+	//	}
+	//	return EScriptVal_None;
+	//}
 
 	bool CScriptCompiler::LexicalAnalysis(char* pData, unsigned int size)
 	{
@@ -433,6 +433,16 @@ namespace zlscript
 		return true;
 	}
 
+	int CScriptCompiler::AddTempVarIndex()
+	{
+		return nTempVarIndex++;
+	}
+
+	void CScriptCompiler::ClearTempVarIndex()
+	{
+		nTempVarIndex = 0;
+	}
+
 
 	bool CScriptCompiler::RunCompileState(SentenceSourceCode& vIn, E_CODE_SCOPE scopeType, CBaseICode* pFather, int addType)
 	{
@@ -449,7 +459,7 @@ namespace zlscript
 				if (pICode)
 				{
 					pICode->SetFather(pFather);
-					if (pICode->Compile(vIn))
+					if (pICode->Compile(vIn,this))
 					{
 						if (pFather)
 						{
@@ -481,13 +491,13 @@ namespace zlscript
 		AddCodeCompile<CBlockICode>(E_CODE_SCOPE_STATEMENT);
 
 		AddCodeCompile<CDefTempVarICode>(E_CODE_SCOPE_STATEMENT);
-		AddCodeCompile<CTestSignICode>(E_CODE_SCOPE_STATEMENT);
+		//AddCodeCompile<CTestSignICode>(E_CODE_SCOPE_STATEMENT);
 		AddCodeCompile<CIfICode>(E_CODE_SCOPE_STATEMENT);
 		AddCodeCompile<CWhileICode>(E_CODE_SCOPE_STATEMENT);
 		AddCodeCompile<CContinueICode>(E_CODE_SCOPE_STATEMENT);
 		AddCodeCompile<CBreakICode>(E_CODE_SCOPE_STATEMENT);
 		AddCodeCompile<CReturnICode>(E_CODE_SCOPE_STATEMENT);
-		AddCodeCompile<CDeleteICode>(E_CODE_SCOPE_STATEMENT);
+		//AddCodeCompile<CDeleteICode>(E_CODE_SCOPE_STATEMENT);
 		AddCodeCompile<CSentenceICode>(E_CODE_SCOPE_STATEMENT);
 
 		AddCodeCompile<CExpressionICode>(E_CODE_SCOPE_EXPRESSION);

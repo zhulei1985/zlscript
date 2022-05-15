@@ -1,4 +1,4 @@
-﻿#include "scriptcommon.h"
+#include "scriptcommon.h"
 #include "ScriptRunState.h"
 #include "ScriptCallBackFunion.h"
 #include "ScriptDebugPrint.h"
@@ -8,181 +8,37 @@
 
 namespace zlscript
 {
+	CScriptCallState::~CScriptCallState()
+	{
+		CScriptVarTypeMgr::GetInstance()->ReleaseVar(m_varReturn);
+	}
 	__int64 CScriptCallState::GetMasterID()
 	{
 		return m_pMaster ? m_pMaster->GetId() : 0;
 	}
-	//bool CScriptCallState::PushEmptyVarToStack()
-	//{
-	//	StackVarInfo var;
-	//	var.cType = EScriptVal_None;
-	//	var.Int64 = 0;
 
-	//	m_stackRegister.push(var);
-
-	//	return true;
-	//}
-	//bool CScriptCallState::PushVarToStack(int nVal)
-	//{
-	//	ScriptVector_PushVar(m_stackRegister, (__int64)nVal);
-
-	//	return true;
-	//}
-
-	//bool CScriptCallState::PushVarToStack(__int64 nVal)
-	//{
-	//	ScriptVector_PushVar(m_stackRegister, nVal);
-
-	//	return true;
-	//}
-	//bool CScriptCallState::PushVarToStack(double Double)
-	//{
-	//	ScriptVector_PushVar(m_stackRegister, Double);
-
-	//	return true;
-	//}
-	//bool CScriptCallState::PushVarToStack(const char* pstr)
-	//{
-	//	ScriptVector_PushVar(m_stackRegister, pstr);
-
-	//	return true;
-	//}
-	//bool CScriptCallState::PushClassPointToStack(__int64 nIndex)
-	//{
-	//	StackVarInfo var;
-	//	var.cType = EScriptVal_ClassPoint;
-	//	var.pPoint = CScriptSuperPointerMgr::GetInstance()->PickupPointer(nIndex);
-	//	m_stackRegister.push(var);
-
-	//	return true;
-	//}
-
-	//bool CScriptCallState::PushClassPointToStack(CScriptBasePointer* pPoint)
-	//{
-	//	ScriptVector_PushVar(m_stackRegister, pPoint);
-
-	//	return true;
-	//}
-
-	//bool CScriptCallState::PushVarToStack(StackVarInfo& Val)
-	//{
-	//	m_stackRegister.push(Val);
-
-	//	return true;
-	//}
-
-
-	//__int64 CScriptCallState::PopIntVarFormStack()
-	//{
-	//	return ScriptStack_GetInt(m_stackRegister);
-	//}
-	//double CScriptCallState::PopDoubleVarFormStack()
-	//{
-	//	return ScriptStack_GetFloat(m_stackRegister);
-	//}
-	//const char* CScriptCallState::PopCharVarFormStack()
-	//{
-	//	strBuffer = ScriptStack_GetString(m_stackRegister);
-
-	//	return strBuffer.c_str();
-	//}
-	//PointVarInfo CScriptCallState::PopClassPointFormStack()
-	//{
-	//	return ScriptStack_GetClassPoint(m_stackRegister);
-	//}
-	//StackVarInfo CScriptCallState::PopVarFormStack()
-	//{
-	//	StackVarInfo var = m_stackRegister.top();
-	//	m_stackRegister.pop();
-	//	return var;
-	//}
-	__int64 CScriptCallState::GetIntVarFormStack(unsigned int index)
-	{
-		__int64 nReturn = 0;
-		if (index < m_stackRegister.nIndex)
-		{
-			SCRIPTVAR_GET_INT(m_stackRegister.m_vData[index], nReturn);
-		}
-		return nReturn;
-	}
-	double CScriptCallState::GetDoubleVarFormStack(unsigned int index)
-	{
-		double fReturn = 0;
-		if (index < m_stackRegister.nIndex)
-		{
-			SCRIPTVAR_GET_FLOAT(m_stackRegister.m_vData[index], fReturn);
-		}
-		return fReturn;
-	}
-	std::string CScriptCallState::GetStringVarFormStack(unsigned int index)
-	{
-		std::string strReturn;
-		if (index < m_stackRegister.nIndex)
-		{
-			SCRIPTVAR_GET_STRING(m_stackRegister.m_vData[index], strReturn);
-		}
-		return strReturn;
-	}
-	PointVarInfo CScriptCallState::GetClassPointFormStack(unsigned int index)
-	{
-		if (index < m_stackRegister.nIndex)
-		{
-			StackVarInfo &var = m_stackRegister.m_vData[index];
-			if (var.cType == EScriptVal_ClassPoint)
-				return PointVarInfo(var.pPoint);
-		}
-
-		return PointVarInfo();
-	}
-	StackVarInfo CScriptCallState::GetVarFormStack(unsigned int index)
+	CBaseVar* CScriptCallState::GetVarFormStack(unsigned int index)
 	{
 		if (index < m_stackRegister.nIndex)
 		{
 			return m_stackRegister.m_vData[index];
 		}
 
-		return StackVarInfo();
+		return nullptr;
 	}
 	int CScriptCallState::GetParamNum()
 	{
 		return m_stackRegister.nIndex;
 	}
 
-	StackVarInfo& CScriptCallState::GetResult()
+	CBaseVar* CScriptCallState::GetResult()
 	{
 		return m_varReturn;
 	}
 
-	void CScriptCallState::SetResult(__int64 nVal)
+	void CScriptCallState::SetResult(CBaseVar* pVal)
 	{
-		m_varReturn = nVal;
-	}
-
-	void CScriptCallState::SetResult(double Val)
-	{
-		m_varReturn = Val;
-	}
-
-	void CScriptCallState::SetResult(const char* pStr)
-	{
-		m_varReturn = pStr;
-	}
-
-	void CScriptCallState::SetClassPointResult(__int64 nIndex)
-	{
-		m_varReturn.Clear();
-		m_varReturn.cType = EScriptVal_ClassPoint;
-		m_varReturn.pPoint = CScriptSuperPointerMgr::GetInstance()->PickupPointer(nIndex);
-	}
-
-	void CScriptCallState::SetClassPointResult(CScriptBasePointer* pPoint)
-	{
-		m_varReturn = pPoint;
-	}
-
-	void CScriptCallState::SetResult(StackVarInfo& Val)
-	{
-		m_varReturn = Val;
+		SCRIPTVAR_COPY_VAR(m_varReturn, pVal);
 	}
 
 
@@ -209,6 +65,7 @@ namespace zlscript
 	}
 	CScriptRunState::~CScriptRunState()
 	{
+		SCRIPTVAR_RELEASE(m_varReturn);
 		ClearStack();
 		ClearExecBlock();
 	}
@@ -241,36 +98,22 @@ namespace zlscript
 	//}
 
 
-	void CScriptRunState::SetResultRegister(StackVarInfo& var)
-	{
-		if (m_BlockStack.size() > 0)
-		{
-			CScriptExecBlock* pBlock = m_BlockStack.top();
-			if (pBlock && pBlock->m_cReturnRegisterIndex < R_SIZE)
-			{
-				SCRIPTVAR_SET_VAR(pBlock->m_register[pBlock->m_cReturnRegisterIndex], var);
-			}
-		}
-	}
 
 	void CScriptRunState::CopyFromStack(tagScriptVarStack& stack)
-	{		
+	{
 		if (m_BlockStack.size() > 0)
 		{
 			CScriptExecBlock* pBlock = m_BlockStack.top();
 			if (pBlock)
 			{
-				for (unsigned int i = 0; i < stack.nIndex; i++)
-				{
-					StackVarInfo var;
-					STACK_GET_INDEX(stack, var,i);
-					STACK_PUSH(pBlock->m_stackRegister, var);
-				}
+				STACK_MOVE_ALL_BACK(pBlock->registerStack, stack, 0);
 			}
 		}
 		while (stack.nIndex > 0)
 		{
-			STACK_POP(stack);
+			CBaseVar* pVar = nullptr;
+			STACK_POP(stack, pVar);
+			SCRIPTVAR_RELEASE(pVar);
 		}
 	}
 	//__int64 CScriptRunState::GetIntParamVar(int index)
@@ -396,7 +239,8 @@ namespace zlscript
 			CScriptExecBlock* pBlock = m_BlockStack.top();
 			if (pBlock)
 			{
-				pBlock->ClearStack();
+				STACK_CLEAR(pBlock->registerStack);
+				//pBlock->ClearStack();
 			}
 		}
 	}
@@ -410,7 +254,7 @@ namespace zlscript
 			CScriptExecBlock* pBlock = m_BlockStack.top();
 			if (bPrint)
 			{
-				zlscript::CScriptDebugPrintMgr::GetInstance()->Print(pBlock->GetCurSourceWords().c_str());
+				//zlscript::CScriptDebugPrintMgr::GetInstance()->Print(pBlock->GetCurSourceWords().c_str());
 			}
 			SAFE_DELETE(pBlock);
 			m_BlockStack.pop();
@@ -458,11 +302,11 @@ namespace zlscript
 		}
 		return nReturn;
 	}
-	int CScriptRunState::CallFun_Script(CScriptVirtualMachine* pMachine, int FunIndex, tagScriptVarStack& ParmStack, int nParmNum,char cRegisterIndex, bool bIsBreak)
+	int CScriptRunState::CallFun_Script(CScriptVirtualMachine* pMachine, int FunIndex, tagScriptVarStack& ParmStack, int nParmNum, bool bIsBreak)
 	{
 		int nReturn = ECALLBACK_FINISH;
 		{
-			tagCodeData* pCodeData = CScriptCodeLoader::GetInstance()->GetCode(FunIndex);
+			CFunICode* pCodeData = CScriptCodeLoader::GetInstance()->GetCode(FunIndex);
 			if (pCodeData)
 			{
 				CScriptExecBlock* pBlock =
@@ -470,26 +314,21 @@ namespace zlscript
 
 				if (pBlock)
 				{
-					pBlock->m_cReturnRegisterIndex = cRegisterIndex;
 					//提取参数
 					int nOffset = ParmStack.nIndex - nParmNum;
 					if (nOffset < 0)
 						nOffset = 0;
-					if (pBlock->m_pTempVar)
-					{
-						int nSize = nParmNum < pBlock->m_nTempVarSize ? nParmNum : pBlock->m_nTempVarSize;
-						for (int i = 0; i < nSize; i++)
-						{
-							StackVarInfo var;
-							STACK_GET_INDEX( ParmStack, var,(i + nOffset));
 
-							SCRIPTVAR_SET_VAR(pBlock->m_pTempVar[i],var);
-							
-						}
+					for (int i = 0; i < nParmNum; i++)
+					{
+						CBaseVar* pVar = nullptr;
+						STACK_GET_INDEX(ParmStack, pVar, (i + nOffset));
+						STACK_PUSH_MOVE(pBlock->registerStack, pVar);
 					}
 
+
 					m_BlockStack.push(pBlock);
-					nReturn = ECALLBACK_CALLSCRIPTFUN;
+					nReturn = ECALLBACK_NEXTCONTINUE;
 				}
 				else
 				{
@@ -508,7 +347,7 @@ namespace zlscript
 	{
 		int nReturn = ERunTime_Complete;
 
-		tagCodeData* pCode = CScriptCodeLoader::GetInstance()->GetCode(pFunName);
+		CFunICode* pCode = CScriptCodeLoader::GetInstance()->GetCode(pFunName);
 		if (pCode)
 		{
 			CScriptExecBlock* pBlock =
@@ -517,18 +356,7 @@ namespace zlscript
 			if (pBlock)
 			{
 				//注入参数
-				if (pBlock->m_pTempVar)
-				{
-					for (unsigned int i = 0; i < ParmStack.nIndex && i < pBlock->m_nTempVarSize; i++)
-					{
-						StackVarInfo var;
-						STACK_GET_INDEX(ParmStack,var,i);
-
-						SCRIPTVAR_SET_VAR(pBlock->m_pTempVar[i], var);
-
-					}
-				}
-
+				STACK_MOVE_ALL_BACK(pBlock->registerStack, ParmStack, 0);
 
 				m_BlockStack.push(pBlock);
 				nReturn = Exec(0xffffffff, pMachine);
@@ -557,125 +385,56 @@ namespace zlscript
 			}
 			bool bNeedNext = false;
 
-			while (unTimeRes > 0)
+			unsigned int nResult = pBlock->ExecBlock(pMachine);
+			switch (nResult)
 			{
-				bool bBreak = false;
-				unsigned int nResult = pBlock->ExecBlock(pMachine);
-				switch (nResult)
+			case CScriptExecBlock::ERESULT_END:
+			{
+				m_BlockStack.pop();
+				if (m_BlockStack.empty())
 				{
-				case CScriptExecBlock::ERESULT_END:
-				{
-					m_BlockStack.pop();
-					if (m_BlockStack.empty())
-					{
-						m_varReturn = pBlock->GetReturnVar();
-						SAFE_DELETE(pBlock);
-						return ERunTime_Complete;
-					}
-					else
-					{
-						auto pCurBlock = m_BlockStack.top();
-						if (pCurBlock)
-						{
-							//for (unsigned int i = 0; i < pBlock->GetVarSize(); i++)
-							//{
-							//	auto pVar = pBlock->GetVar(i);
-							//	if (pVar)
-							//		pCurBlock->PushVar(*pVar);
-							//	else
-							//	{
-							//		StackVarInfo var;
-							//		pCurBlock->PushVar(var);
-							//	}
-							//}
-							if (pBlock->GetReturnRegisterIndex() < R_SIZE)
-							{
-								pCurBlock->m_register[pBlock->GetReturnRegisterIndex()] = pBlock->GetReturnVar();
-							}
-							else
-							{
-								STACK_PUSH(pCurBlock->m_stackRegister, pBlock->GetReturnVar());
-							}
-						}
-						SAFE_DELETE(pBlock);
-					}
-					bBreak = true;
-					break;
+					STACK_POP(pBlock->registerStack, m_varReturn);
+					SAFE_DELETE(pBlock);
+					return ERunTime_Complete;
 				}
-				case CScriptExecBlock::ERESULT_ERROR:
+				else
 				{
-					//2020/4/23 执行错误后不再退出整个堆栈，而是只终结当前代码块并且返回默认值
-						//ClearExecBlock(true);
-					SCRIPT_PRINT("script", "Error script 执行错误: %s", FunName.c_str());
-#ifdef  _SCRIPT_DEBUG
-					for (unsigned int i = 0; i < m_BlockStack.size(); i++)
+					auto pCurBlock = m_BlockStack.top();
+					if (pCurBlock)
 					{
-						auto pBlock = m_BlockStack.get(i);
-						if (pBlock->m_pCurCode)
-						{
-							//auto souceInfo = CScriptCodeLoader::GetInstance()->GetSourceWords(pBlock->m_pCurCode->nSoureWordIndex);
-							//SCRIPT_PRINT("script", "Stack %d|file:%s,line:%d,word:%s", i, souceInfo.strCurFileName.c_str(),
-							//	souceInfo.nLineNum, souceInfo.strLineWords.c_str());
-						}
-					}
-#endif
-					//退出本代码块，返回默认返回值
-					m_BlockStack.pop();
-					if (pBlock->GetDefaultReturnType() != EScriptVal_None)
-					{
-						if (m_BlockStack.empty())
-						{
-							StackVarInfo var;
-							m_varReturn = var;
-							return ERunTime_Complete;
-						}
-						else
-						{
-							auto pCurBlock = m_BlockStack.top();
-							if (pCurBlock)
-							{
-								StackVarInfo var;
-								STACK_PUSH(pCurBlock->m_stackRegister, var);
-							}
-
-						}
+						CBaseVar* pTemp = nullptr;
+						STACK_POP(pBlock->registerStack, pTemp);
+						STACK_PUSH_MOVE(pCurBlock->registerStack, pTemp)
 					}
 					SAFE_DELETE(pBlock);
-					bBreak = true;
-					break;
-				}
-				case CScriptExecBlock::ERESULT_WAITING:
-				{
-					return ERunTime_Waiting;
-				}
-				case CScriptExecBlock::ERESULT_CALLSCRIPTFUN:
-				{
-					//检查是否有被打断的函数
-					bBreak = true;
 				}
 				break;
-				case CScriptExecBlock::ERESULT_NEXTCONTINUE:
-				{
-					bNeedNext = true;
-				}
-				break;
-				}
-				if (bNeedNext)
-				{
-					break;
-				}
-				if (bBreak)
-				{
-					break;
-				}
-
-				unTimeRes--;
-				nRunCount++;
 			}
-			if (bNeedNext)
+			case CScriptExecBlock::ERESULT_ERROR:
 			{
+				//2020/4/23 执行错误后不再退出整个堆栈，而是只终结当前代码块并且返回默认值
+					//ClearExecBlock(true);
+				SCRIPT_PRINT("script", "Error script 执行错误: %s", FunName.c_str());
+
+				SAFE_DELETE(pBlock);
+
 				break;
 			}
+			case CScriptExecBlock::ERESULT_WAITING:
+			{
+				return ERunTime_Waiting;
+			}
+			case CScriptExecBlock::ERESULT_NEXTCONTINUE:
+			{
+
+			}
+			break;
+			}
+
+
+			unTimeRes--;
+			nRunCount++;
+
 		}
 
 		if (m_BlockStack.empty())
@@ -692,223 +451,185 @@ namespace zlscript
 	}
 
 
-	int CScriptRunState::CallFun(CScriptVirtualMachine* pMachine, CScriptExecBlock* pCurBlock, int nType, int FunIndex, int nParmNum, bool bIsBreak)
+	//int CScriptRunState::CallFun(CScriptVirtualMachine* pMachine, CScriptExecBlock* pCurBlock, int nType, int FunIndex, int nParmNum, bool bIsBreak)
+	//{
+	//	int nReturn = ECALLBACK_FINISH;
+
+	//	switch (nType)
+	//	{
+	//	case 0:
+	//	{
+	//		//pCurBlock->SetCallFunParamNum(nParmNum);
+	//		C_CallBackScriptFunion pFun = CScriptCallBackFunion::GetFun(FunIndex);
+	//		if (pFun)
+	//		{
+	//			CACHE_NEW(CScriptCallState, pCallState, this);
+	//			if (pCurBlock)
+	//			{
+	//				unsigned int nBegin = pCurBlock->m_stackRegister.nIndex - nParmNum;
+	//				STACK_MOVE_ALL_BACK(pCallState->m_stackRegister, pCurBlock->m_stackRegister, nBegin);
+	//				//for (int i = 0; i < nParmNum; i++)
+	//				//{
+	//				//	StackVarInfo var;
+	//				//	STACK_GET_INDEX(pCurBlock->m_stackRegister, var, (pCurBlock->m_stackRegister.nIndex - nParmNum+i));
+	//				//	STACK_PUSH(pCallState->m_stackRegister, var);
+	//				//}
+	//				////pBlock->SetCallFunParamNum(nParmNum);
+	//				//for (int i = 0; i < nParmNum; i++)
+	//				//{
+	//				//	//pCurBlock->PopVar();
+	//				//	STACK_POP(pCurBlock->m_stackRegister);
+	//				//}
+	//			}
+	//			nReturn = pFun(pMachine, pCallState);
+	//			CACHE_DELETE(pCallState);
+	//		}
+	//		else
+	//		{
+	//			SCRIPT_PRINT("script", "Error: script callfun: %d", FunIndex);
+	//			return ECALLBACK_ERROR;
+	//		}
+	//	}
+	//	break;
+	//	case 1:
+	//	{
+	//		tagCodeData* pCodeData = CScriptCodeLoader::GetInstance()->GetCode(FunIndex);
+	//		if (pCodeData)
+	//		{
+	//			CScriptExecBlock* pBlock =
+	//				new CScriptExecBlock(pCodeData, this);
+
+	//			if (pBlock)
+	//			{
+	//				//提取参数
+	//				if (pCurBlock)
+	//				{
+
+	//					for (int i = 0; i < nParmNum; i++)
+	//					{
+	//						StackVarInfo var;
+	//						STACK_GET_INDEX(pCurBlock->m_stackRegister, var, pCurBlock->m_stackRegister.nIndex - nParmNum + i);
+	//						STACK_PUSH(pBlock->m_stackRegister, var);
+	//					}
+	//					//pBlock->SetCallFunParamNum(nParmNum);
+	//					for (int i = 0; i < nParmNum; i++)
+	//					{
+	//						//pCurBlock->PopVar();
+	//						STACK_POP(pCurBlock->m_stackRegister);
+	//					}
+	//				}
+
+	//				m_BlockStack.push(pBlock);
+	//				nReturn = ECALLBACK_CALLSCRIPTFUN;
+	//			}
+	//			else
+	//			{
+	//				nReturn = ECALLBACK_ERROR;
+	//			}
+	//		}
+	//		else
+	//		{
+	//			SCRIPT_PRINT("script", "Error: script scriptfun: %d", FunIndex);
+	//			return ECALLBACK_ERROR;
+	//		}
+	//	}
+	//	}
+
+	//	return nReturn;
+	//}
+
+	//int CScriptRunState::CallFun(CScriptVirtualMachine* pMachine, int nType, int FunIndex, tagScriptVarStack& ParmStack, bool bIsBreak)
+	//{
+	//	int nReturn = ECALLBACK_FINISH;
+
+	//	switch (nType)
+	//	{
+	//	case 0:
+	//	{
+	//		C_CallBackScriptFunion pFun = CScriptCallBackFunion::GetFun(FunIndex);
+	//		if (pFun)
+	//		{
+	//			CACHE_NEW(CScriptCallState, pCallState, this);
+	//			//注入参数
+
+	//			for (int i = 0; i < ParmStack.nIndex; i++)
+	//			{
+	//				StackVarInfo var;
+	//				STACK_GET_INDEX(ParmStack, var, i);
+	//				STACK_PUSH(pCallState->m_stackRegister, var);
+	//			}
+
+	//			nReturn = pFun(pMachine, pCallState);
+	//			CACHE_DELETE(pCallState);
+	//		}
+	//		else
+	//		{
+	//			SCRIPT_PRINT("script", "Error: script callfun: %d", FunIndex);
+	//			return ECALLBACK_ERROR;
+	//		}
+	//	}
+	//	break;
+	//	case 1:
+	//	{
+	//		tagCodeData* pCodeData = CScriptCodeLoader::GetInstance()->GetCode(FunIndex);
+	//		if (pCodeData)
+	//		{
+	//			CScriptExecBlock* pBlock =
+	//				new CScriptExecBlock(pCodeData, this);
+
+	//			if (pBlock)
+	//			{
+	//				//注入参数
+	//				for (int i = 0; i < ParmStack.nIndex; i++)
+	//				{
+	//					StackVarInfo var;
+	//					STACK_GET_INDEX(ParmStack, var, i);
+	//					STACK_PUSH(pBlock->m_stackRegister, var);
+	//				}
+	//				if (bIsBreak && m_BlockStack.size() > 0)
+	//				{
+	//					CScriptExecBlock* pOldBlock = m_BlockStack.top();
+	//					if (pOldBlock->GetFunType() == EICODE_FUN_CAN_BREAK)
+	//					{
+	//						m_BlockStack.pop();
+	//					}
+	//				}
+
+	//				m_BlockStack.push(pBlock);
+	//				nReturn = ECALLBACK_CALLSCRIPTFUN;
+	//			}
+	//			else
+	//			{
+	//				nReturn = ECALLBACK_ERROR;
+	//			}
+	//		}
+	//		else
+	//		{
+	//			SCRIPT_PRINT("script", "Error: script scriptfun: %d", FunIndex);
+	//			return ECALLBACK_ERROR;
+	//		}
+	//	}
+	//	}
+
+	//	return nReturn;
+	//}
+	
+int CScriptRunState::CallFun(CScriptVirtualMachine* pMachine, const char* pFunName, tagScriptVarStack& ParmStack, bool bIsBreak)
 	{
 		int nReturn = ECALLBACK_FINISH;
-
-		switch (nType)
+		int nFunIndex = CScriptCodeLoader::GetInstance()->GetCodeIndex(pFunName);
+		if (nFunIndex >= 0)
 		{
-		case 0:
-		{
-			//pCurBlock->SetCallFunParamNum(nParmNum);
-			C_CallBackScriptFunion pFun = CScriptCallBackFunion::GetFun(FunIndex);
-			if (pFun)
-			{
-				CACHE_NEW(CScriptCallState, pCallState, this);
-				if (pCurBlock)
-				{
-					unsigned int nBegin = pCurBlock->m_stackRegister.nIndex - nParmNum;
-					STACK_MOVE_ALL_BACK(pCallState->m_stackRegister, pCurBlock->m_stackRegister, nBegin);
-					//for (int i = 0; i < nParmNum; i++)
-					//{
-					//	StackVarInfo var;
-					//	STACK_GET_INDEX(pCurBlock->m_stackRegister, var, (pCurBlock->m_stackRegister.nIndex - nParmNum+i));
-					//	STACK_PUSH(pCallState->m_stackRegister, var);
-					//}
-					////pBlock->SetCallFunParamNum(nParmNum);
-					//for (int i = 0; i < nParmNum; i++)
-					//{
-					//	//pCurBlock->PopVar();
-					//	STACK_POP(pCurBlock->m_stackRegister);
-					//}
-				}
-				nReturn = pFun(pMachine, pCallState);
-				CACHE_DELETE(pCallState);
-			}
-			else
-			{
-				SCRIPT_PRINT("script", "Error: script callfun: %d", FunIndex);
-				return ECALLBACK_ERROR;
-			}
-		}
-		break;
-		case 1:
-		{
-			tagCodeData* pCodeData = CScriptCodeLoader::GetInstance()->GetCode(FunIndex);
-			if (pCodeData)
-			{
-				CScriptExecBlock* pBlock =
-					new CScriptExecBlock(pCodeData, this);
-
-				if (pBlock)
-				{
-					//提取参数
-					if (pCurBlock)
-					{
-
-						for (int i = 0; i < nParmNum; i++)
-						{
-							StackVarInfo var;
-							STACK_GET_INDEX(pCurBlock->m_stackRegister, var, pCurBlock->m_stackRegister.nIndex - nParmNum + i);
-							STACK_PUSH(pBlock->m_stackRegister,var);
-						}
-						//pBlock->SetCallFunParamNum(nParmNum);
-						for (int i = 0; i < nParmNum; i++)
-						{
-							//pCurBlock->PopVar();
-							STACK_POP(pCurBlock->m_stackRegister);
-						}
-					}
-
-					m_BlockStack.push(pBlock);
-					nReturn = ECALLBACK_CALLSCRIPTFUN;
-				}
-				else
-				{
-					nReturn = ECALLBACK_ERROR;
-				}
-			}
-			else
-			{
-				SCRIPT_PRINT("script", "Error: script scriptfun: %d", FunIndex);
-				return ECALLBACK_ERROR;
-			}
-		}
-		}
-
-		return nReturn;
-	}
-
-	int CScriptRunState::CallFun(CScriptVirtualMachine* pMachine, int nType, int FunIndex, tagScriptVarStack& ParmStack, bool bIsBreak)
-	{
-		int nReturn = ECALLBACK_FINISH;
-
-		switch (nType)
-		{
-		case 0:
-		{
-			C_CallBackScriptFunion pFun = CScriptCallBackFunion::GetFun(FunIndex);
-			if (pFun)
-			{
-				CACHE_NEW(CScriptCallState, pCallState, this);
-				//注入参数
-
-				for (int i = 0; i < ParmStack.nIndex; i++)
-				{
-					StackVarInfo var;
-					STACK_GET_INDEX(ParmStack, var,i);
-					STACK_PUSH(pCallState->m_stackRegister, var);
-				}
-
-				nReturn = pFun(pMachine, pCallState);
-				CACHE_DELETE(pCallState);
-			}
-			else
-			{
-				SCRIPT_PRINT("script", "Error: script callfun: %d", FunIndex);
-				return ECALLBACK_ERROR;
-			}
-		}
-		break;
-		case 1:
-		{
-			tagCodeData* pCodeData = CScriptCodeLoader::GetInstance()->GetCode(FunIndex);
-			if (pCodeData)
-			{
-				CScriptExecBlock* pBlock =
-					new CScriptExecBlock(pCodeData, this);
-
-				if (pBlock)
-				{
-					//注入参数
-					for (int i = 0; i < ParmStack.nIndex; i++)
-					{
-						StackVarInfo var;
-						STACK_GET_INDEX(ParmStack, var, i);
-						STACK_PUSH(pBlock->m_stackRegister, var);
-					}
-					if (bIsBreak && m_BlockStack.size() > 0)
-					{
-						CScriptExecBlock* pOldBlock = m_BlockStack.top();
-						if (pOldBlock->GetFunType() == EICODE_FUN_CAN_BREAK)
-						{
-							m_BlockStack.pop();
-						}
-					}
-
-					m_BlockStack.push(pBlock);
-					nReturn = ECALLBACK_CALLSCRIPTFUN;
-				}
-				else
-				{
-					nReturn = ECALLBACK_ERROR;
-				}
-			}
-			else
-			{
-				SCRIPT_PRINT("script", "Error: script scriptfun: %d", FunIndex);
-				return ECALLBACK_ERROR;
-			}
-		}
-		}
-
-		return nReturn;
-	}
-	int CScriptRunState::CallFun(CScriptVirtualMachine* pMachine, const char* pFunName, tagScriptVarStack& ParmStack, bool bIsBreak)
-	{
-		int nReturn = ECALLBACK_FINISH;
-
-		tagCodeData* pCode = CScriptCodeLoader::GetInstance()->GetCode(pFunName);
-		if (pCode)
-		{
-			CScriptExecBlock* pBlock =
-				new CScriptExecBlock(pCode, this);
-
-			if (pBlock)
-			{
-				//注入参数
-				if (pBlock->m_pTempVar)
-				{
-					for (unsigned int i = 0; i < ParmStack.nIndex && i < pBlock->m_nTempVarSize; i++)
-					{
-						StackVarInfo var;
-						STACK_GET_INDEX(ParmStack, var, i);
-
-						SCRIPTVAR_SET_VAR(pBlock->m_pTempVar[i], var);
-					}
-				}
-				if (bIsBreak && m_BlockStack.size() > 0)
-				{
-					CScriptExecBlock* pOldBlock = m_BlockStack.top();
-					if (pOldBlock->GetFunType() == EICODE_FUN_CAN_BREAK)
-					{
-						m_BlockStack.pop();
-					}
-				}
-
-				m_BlockStack.push(pBlock);
-				nReturn = ECALLBACK_CALLSCRIPTFUN;
-			}
-			else
-			{
-				nReturn = ECALLBACK_ERROR;
-			}
+			nReturn = CallFun_Script(pMachine, nFunIndex, ParmStack, ParmStack.nIndex, bIsBreak);
 		}
 		else
 		{
-
 			C_CallBackScriptFunion pFun = CScriptCallBackFunion::GetFun(pFunName);
 			if (pFun)
 			{
 				CACHE_NEW(CScriptCallState, pCallState, this);
 				//注入参数
-
-				for (int i = 0; i < ParmStack.nIndex; i++)
-				{
-					StackVarInfo var;
-					STACK_GET_INDEX(ParmStack, var, i);
-					STACK_PUSH(pCallState->m_stackRegister, var);
-				}
+				STACK_MOVE_ALL_BACK(pCallState->m_stackRegister, ParmStack, 0);
 
 				nReturn = pFun(pMachine, pCallState);
 				CACHE_DELETE(pCallState);

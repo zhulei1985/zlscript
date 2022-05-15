@@ -1,4 +1,4 @@
-﻿/****************************************************************************
+/****************************************************************************
 	Copyright (c) 2019 ZhuLei
 	Email:zhulei1985@foxmail.com
 
@@ -777,6 +777,32 @@ inline bool DecodeBytes2String(char* pBuff, int& pos, int len, char* pOut, int O
 	pOut[nStrLen] = '\0';
 
 	return true;
+}
+
+inline std::string DecodeBytes2String(char* pBuff, int& pos, int len)
+{
+	if (pBuff == nullptr)
+	{
+		return "";
+	}
+	std::string str;
+	int nStrLen = DecodeBytes2Int(pBuff, pos, len);
+	if (nStrLen == 0)
+	{
+		return str;
+	}
+	
+	if (pos + nStrLen >= len)
+	{
+		return str;
+	}
+	for (int i = 0; i < nStrLen; i++)
+	{
+		str.push_back(pBuff[pos+i]);
+	}
+	pos += nStrLen;
+
+	return std::move(str);
 }
 
 inline int DecodeBytes2Data(char* pBuff, int& pos, int len, char* pOut, int OutMaxlen)

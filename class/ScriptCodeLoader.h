@@ -23,17 +23,15 @@
 #include <list>
 #include <vector>
 #include <stack>
+#include <set>
 #include <functional> 
 #include <unordered_map>
  //#include "scriptcommon.h"
-#include "ScriptIntermediateCode.h"
-#include "ScriptStack.h"
-#include "ScriptCodeStyle.h"
+
 #include "ScriptCompileInfo.h"
 namespace zlscript
 {
-
-
+	class CFunICode;
 	class CScriptCodeLoader
 	{
 	public:
@@ -57,10 +55,7 @@ namespace zlscript
 		std::vector<LoadFun> m_vLoadFun;
 	private:
 		//***************字典*****************//
-		//map<string,unsigned short> m_mapDicSentenceToEnum;
-		//map<string,unsigned short> m_mapDicSignToEnum;
-		//std::map<std::string, unsigned short> m_mapDicSingleSignToEnum;//单元素运算符
-		//std::map<std::string, unsigned short> m_mapDicSignToEnum;
+
 		std::map<std::string, unsigned short> m_mapDicSignToPRI;//计算符的优先级，越高越优先
 
 		std::map<std::string, unsigned short> m_mapDic2KeyWord;
@@ -72,9 +67,9 @@ namespace zlscript
 		std::map<std::string, unsigned short> m_mapDicFunToICode;
 
 		void initDic();
+
 	public:
-		unsigned short GetVarType(tagSourceWord varWord);
-		unsigned short GetVarType(std::string type, unsigned short& classtype);
+
 		unsigned short GetWordKey(std::string str)
 		{
 			auto it = m_mapDic2KeyWord.find(str);
@@ -95,37 +90,30 @@ namespace zlscript
 		}
 	public:
 
-		bool AddGlobalVar(std::string name, unsigned short type, unsigned short typeExtend);
-		bool SetGlobalVar(std::string name, StackVarInfo& var);
 		//*****************代码*******************//
 
 		unsigned int GetCodeIndex(const char* pStr);
 	private:
-		//全局变量字典
-		std::map<std::string, VarInfo> m_mapDicGlobalVar;
-		//全局变量库
-		std::vector<StackVarInfo> vGlobalNumVar;//变量
 
 		//代码库
-		std::vector<tagCodeData> m_vecCodeData;
+		std::vector<CFunICode*> m_vecCodeData;
 
 		std::unordered_map<std::string, int> m_mapString2CodeIndex;
 	public:
-		VarInfo* GetGlobalVarInfo(std::string name);
-		void GetGlobalVar(std::vector<StackVarInfo>& vOut);
+
 		int GetCodeSize()
 		{
 			return (int)m_vecCodeData.size();
 		}
-		tagCodeData* GetCode(int index)
+		CFunICode* GetCode(int index)
 		{
 			if (index >= 0 && index < (int)m_vecCodeData.size())
 			{
-				return &m_vecCodeData[index];
+				return m_vecCodeData[index];
 			}
 			return nullptr;
 		}
-		tagCodeData* GetCode(const char* pName);
+		CFunICode* GetCode(const char* pName);
 		void LoadXml(std::string filename);
 		void clear();
 
@@ -133,30 +121,20 @@ namespace zlscript
 		bool CheckVarName(std::string varName);
 
 
-		typedef std::vector<CodeStyle> tagCodeSection;
+		//typedef std::vector<CodeStyle> tagCodeSection;
 
-		std::unordered_map<std::string, CFunICode*> m_mapString2Code;
+		//std::unordered_map<std::string, CFunICode*> m_mapString2Code;
 
 	public:
 		bool SetFunICode(std::string name, CFunICode* pCode);
-		//将中间代码树转化成执行代码
-		int MakeICode2Code(int nMode);
-		//清理中间代码
-		void ClearICode();
+		bool CheckCurCompileFunName(std::string name);
+		bool AddCurCompileFunName(std::string name);
+		bool ClearCurCompileFunName();
 
-		void PrintAllCode(const char *pFilename);
-	//	std::string PrintOneCode(CodeStyle code);
+		//void PrintAllCode(const char *pFilename);
 
-	//protected:
-	//	std::string GetSignPosTypeName(char Idx);
-	//	std::string GetRegisterName(char regIdx);
 	protected:
-		//typedef std::map<std::string, int> tagVarName2Pos;
-		//std::list<tagVarName2Pos> m_ListTempVarInfo;;
-
-		//std::stack<char> m_stackBlockLayer;
-
-		//tagCodeData m_vTempCodeData;
+		std::set<std::string> m_setCurCompileFunName;//本次编译有的函数名
 	public:
 		void SaveToBin();
 		void LoadFormBin();

@@ -1,4 +1,4 @@
-﻿/****************************************************************************
+/****************************************************************************
 	Copyright (c) 2019 ZhuLei
 	Email:zhulei1985@foxmail.com
 
@@ -18,135 +18,12 @@
 #include "ScriptStack.h"
 namespace zlscript
 {
-
-	//CScriptStack::CScriptStack(unsigned int Size)
-	//{
-	//	m_vData.resize(Size);
-	//	nIndex = 0;
-	//}
-	//CScriptStack::CScriptStack(const CScriptStack& info)
-	//{
-	//	//先清空，再赋值
-	//	for (unsigned int i = 0; i < this->nIndex; i++)
-	//	{
-	//		this->m_vData[i].Clear();
-	//	}
-	//	this->nIndex = 0;
-	//	if (info.m_vData.size() == 0)
-	//	{
-	//		//错误
-	//		return;
-	//	}
-	//	if (this->m_vData.size() < info.nIndex)
-	//	{
-	//		this->m_vData.resize(info.m_vData.size());
-	//	}
-	//	this->nIndex = info.nIndex;
-
-	//	for (unsigned int i = 0; i < info.nIndex; i++)
-	//	{
-	//		this->m_vData[i] = info.m_vData[i];
-	//	}
-	//	//return *this;
-	//}
-	//CScriptStack::~CScriptStack()
-	//{
-	//	nIndex = 0;
-	//	m_vData.clear();
-	//}
-	//bool CScriptStack::pop_front(unsigned int size)
-	//{
-	//	if (size <= nIndex)
-	//	{
-	//		auto it = m_vData.begin();
-	//		auto beginIt = it;
-	//		for (int i = 0; i < size;i++)
-	//		{
-	//			it++;
-	//		}
-	//		nIndex -= size;
-	//		m_vData.erase(beginIt, it);
-	//		return true;
-	//	}
-	//	nIndex = 0;
-	//	m_vData.clear();
-	//	return false;
-	//}
-	//bool CScriptStack::pop()
-	//{
-	//	if (nIndex > 0)
-	//	{
-	//		nIndex--;
-	//		m_vData[nIndex].Clear();
-	//		return true;
-	//	}
-	//	return false;
-	//}
-	//bool CScriptStack::push(StackVarInfo& val)
-	//{
-	//	if (nIndex < m_vData.size())
-	//	{
-	//		SCRIPTVAR_SET_VAR(m_vData[nIndex], val);
-	//		nIndex++;
-	//		return true;
-	//	}
-	//	return false;
-	//}
-	//StackVarInfo& CScriptStack::top()
-	//{
-	//	if (nIndex > 0)
-	//	{
-	//		return m_vData[nIndex - 1];
-	//	}
-
-	//	return emptyinfo;
-	//}
-	//unsigned int CScriptStack::size()
-	//{
-	//	return nIndex;
-	//}
-	//bool CScriptStack::empty()
-	//{
-	//	if (nIndex == 0)
-	//	{
-	//		return true;
-	//	}
-	//	return false;
-	//}
-
-	//CScriptStack& CScriptStack::operator=(const CScriptStack& info)
-	//{
-	//	//先清空，再赋值
-	//	for (unsigned int i = 0; i < this->nIndex; i++)
-	//	{
-	//		this->m_vData[i].Clear();
-	//	}
-	//	this->nIndex = 0;
-	//	if (info.m_vData.size() == 0)
-	//	{
-	//		//错误
-	//		return *this;
-	//	}
-	//	if (this->m_vData.size() < info.nIndex)
-	//	{
-	//		this->m_vData.resize(info.m_vData.size());
-	//	}
-
-	//	this->nIndex = info.nIndex;
-
-	//	for (unsigned int i = 0; i < info.nIndex; i++)
-	//	{
-	//		SCRIPTVAR_SET_VAR(this->m_vData[i] , info.m_vData[i]);
-	//	}
-	//	return *this;
-	//}
-
-	//StackVarInfo* CScriptStack::GetVal(int index)
-	//{
-	//	if (index >= 0 && index < m_vData.size())
-	//	{
-	//		return &m_vData[index];
-	//	}
-	//	return nullptr;
-	//}
+	tagScriptVarStack::~tagScriptVarStack()
+	{
+		while (nIndex > 0)
+		{
+			CScriptVarTypeMgr::GetInstance()->ReleaseVar(m_vData[nIndex]);
+			nIndex--;
+		}
+	}
 }

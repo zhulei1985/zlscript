@@ -32,7 +32,7 @@ namespace zlscript
 		CBaseICode* pCode = dynamic_cast<CBaseICode*>(pResult);
 		if (pCode)
 		{
-			pCode->SetCompiler(pCompiler);
+			//pCode->SetCompiler(pCompiler);
 			pCode->m_unBeginSoureIndex = index;
 			m_listICode.push_front(pCode);
 		}

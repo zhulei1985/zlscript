@@ -135,9 +135,9 @@ namespace zlscript
 		{
 			return ECALLBACK_ERROR;
 		}
-		short nVal = pState->GetIntVarFormStack(0);
+		GET_VAR_4_STACK(CIntVar, pVal, pState->m_stackRegister, 0);
 
-		g_Process_ID = nVal;
+		g_Process_ID = pVal? pVal->ToInt():0;
 
 		return ECALLBACK_FINISH;
 	}
@@ -156,9 +156,11 @@ namespace zlscript
 		int nParmNum = pState->GetParamNum();
 		//CScriptStack vRetrunVars;
 		
-		int nIsWaiting = pState->GetIntVarFormStack(0);//是否等待调用函数完成
-		std::string name = pState->GetStringVarFormStack(1);
+		GET_VAR_4_STACK(CIntVar, pIsWaiting, pState->m_stackRegister, 0);
+		int nIsWaiting = pIsWaiting ? pIsWaiting->ToInt() : 0;//是否等待调用函数完成
 
+		GET_VAR_4_STACK(CStringVar, pName, pState->m_stackRegister, 1);
+		std::string name = pName ? pName->ToString() : "";
 		//nParmNum -= 2;
 		tagScriptVarStack scriptParm;
 		STACK_MOVE_ALL_BACK(scriptParm, pState->m_stackRegister, 2);
@@ -186,8 +188,9 @@ namespace zlscript
 		}
 		auto nowTime = std::chrono::steady_clock::now();
 		auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(nowTime.time_since_epoch());
-
-		pState->SetResult(duration.count());
+		CIntVar var;
+		var.Set(duration.count());
+		pState->SetResult(&var);
 		return ECALLBACK_FINISH;
 	}
 	int CScriptCallBackFunion::print(CScriptVirtualMachine* pMachine, CScriptCallState* pState)
@@ -197,8 +200,10 @@ namespace zlscript
 			return ECALLBACK_ERROR;
 		}
 
-		std::string str = pState->GetStringVarFormStack(0);
-		printf("%s\n", str.c_str());
+		GET_VAR_4_STACK(CStringVar, pStrVar, pState->m_stackRegister, 0);
+
+		if (pStrVar)
+			printf("%s\n", pStrVar->ToString().c_str());
 
 		return ECALLBACK_FINISH;
 	}
@@ -212,21 +217,53 @@ namespace zlscript
 		}
 		std::string strReturn;
 		char ch[2] = { 0,0 };
-		std::string str = pState->GetStringVarFormStack(0);
+		GET_VAR_4_STACK(CStringVar, pStrVar, pState->m_stackRegister, 0);
 		int nIndex = 1;
-		const char* pStr = str.c_str();
-		for (unsigned int i = 0; i < str.size(); i++)
+		const char* pStr = nullptr;
+		int strLen = 0;
+		if (pStrVar)
+		{
+			pStr = pStrVar->ToString().c_str();
+			strLen = pStrVar->ToString().size();
+		}
+
+		for (unsigned int i = 0; i < strLen; i++)
 		{
 			if (pStr[i] == '%')
 			{
-				if (i + 1 < str.size())
+				if (i + 1 < strLen)
 				{
 					switch (pStr[i+1])
 					{
 					case 'd':
+						{
+							nIndex++;
+							GET_VAR_4_STACK(CIntVar, pVar, pState->m_stackRegister, nIndex);
+							if (pVar)
+							{
+								strReturn += pVar->ToString();
+							}
+						}
+						break;
 					case 'f':
+						{
+							nIndex++;
+							GET_VAR_4_STACK(CFloatVar, pVar, pState->m_stackRegister, nIndex);
+							if (pVar)
+							{
+								strReturn += pVar->ToString();
+							}
+						}
+						break;
 					case 's':
-						strReturn += pState->GetStringVarFormStack(nIndex++);
+						{
+							nIndex++;
+							GET_VAR_4_STACK(CStringVar, pVar, pState->m_stackRegister, nIndex);
+							if (pVar)
+							{
+								strReturn += pVar->ToString();
+							}
+						}
 						break;
 					default:
 						break;
@@ -236,7 +273,7 @@ namespace zlscript
 			}
 			else if (pStr[i] == '\\')
 			{
-				if (i + 1 < str.size())
+				if (i + 1 < strLen)
 				{
 					i++;
 					ch[0] = pStr[i];
@@ -250,7 +287,9 @@ namespace zlscript
 			}
 		}
 
-		pState->SetResult(strReturn.c_str());
+		CStringVar result;
+		result.Set(strReturn);
+		pState->SetResult(&result);
 		return ECALLBACK_FINISH;
 	}
 
@@ -266,7 +305,8 @@ namespace zlscript
 		int nval = 0x7fffffff;
 		if (pState->GetParamNum() >= 1)
 		{
-			nval = (int)pState->GetIntVarFormStack(0);
+			GET_VAR_4_STACK(CIntVar, pVar, pState->m_stackRegister, 0);
+			nval = pVar? (int)pVar->ToInt():0;
 			if (nval <= 0)
 			{
 				nval = 1;
@@ -274,7 +314,9 @@ namespace zlscript
 		}
 		int nrand = rand() % nval;
 
-		pState->SetResult((__int64)nrand);
+		CIntVar result;
+		result.Set((__int64)nrand);
+		pState->SetResult(&result);
 		return ECALLBACK_FINISH;
 	}
 	int CScriptCallBackFunion::wait(CScriptVirtualMachine* pMachine, CScriptCallState* pState)
@@ -289,7 +331,9 @@ namespace zlscript
 		}
 		if (pState->GetParamNum() >= 1)
 		{
-			pState->m_pMaster->SetWatingTime(pState->GetIntVarFormStack(0));
+			GET_VAR_4_STACK(CIntVar, pVar, pState->m_stackRegister, 0);
+			if (pVar)
+				pState->m_pMaster->SetWatingTime(pVar->ToInt());
 		}
 		return ECALLBACK_NEXTCONTINUE;
 	}
@@ -300,10 +344,13 @@ namespace zlscript
 		{
 			return ECALLBACK_ERROR;
 		}
-		__int64 nAngle = pState->GetIntVarFormStack(0);
+		GET_VAR_4_STACK(CIntVar, pVar, pState->m_stackRegister, 0);
+		__int64 nAngle = pVar? pVar->ToInt():0;
 		double fRadian = nAngle / 180.f * 3.1415926f;
 
-		pState->SetResult(fRadian);
+		CFloatVar result;
+		result.Set(fRadian);
+		pState->SetResult(&result);
 		return ECALLBACK_NEXTCONTINUE;
 	}
 
@@ -313,17 +360,15 @@ namespace zlscript
 		{
 			return ECALLBACK_ERROR;
 		}
-		PointVarInfo PointVal = pState->GetClassPointFormStack(0);
-		CScriptBasePointer* pPoint = PointVal.pPoint;
+		CIntVar result;
 
-		if (pPoint && pPoint->GetPoint())
+		GET_VAR_4_STACK(CPointVar, pVar, pState->m_stackRegister, 0);
+		if (pVar && pVar->ToPoint())
 		{
-			pState->SetResult((__int64)1);
+			result.Set((__int64)1);
 		}
-		else
-		{
-			pState->SetResult((__int64)0);
-		}
+
+		pState->SetResult(&result);
 		return ECALLBACK_FINISH;
 	}
 
@@ -333,21 +378,21 @@ namespace zlscript
 		{
 			return ECALLBACK_ERROR;
 		}
-		int nParmNum = pState->GetParamNum();
-		PointVarInfo pointVal = pState->GetClassPointFormStack(0);
-		std::string strEvent = pState->GetStringVarFormStack(1);
-		std::string strFlag = pState->GetStringVarFormStack(2);
-		std::string strScript = pState->GetStringVarFormStack(3);
-		__int64 nClassPoint = 0;
-		if (pointVal.pPoint)
-		{
-			nClassPoint = pointVal.pPoint->GetID();
-		}
+		//int nParmNum = pState->GetParamNum();
+		//PointVarInfo pointVal = pState->GetClassPointFormStack(0);
+		//std::string strEvent = pState->GetStringVarFormStack(1);
+		//std::string strFlag = pState->GetStringVarFormStack(2);
+		//std::string strScript = pState->GetStringVarFormStack(3);
+		//__int64 nClassPoint = 0;
+		//if (pointVal.pPoint)
+		//{
+		//	nClassPoint = pointVal.pPoint->GetID();
+		//}
 
-		tagScriptVarStack vParmVars;
-		STACK_COPY_BEGIN(vParmVars, pState->m_stackRegister, 4);
+		//tagScriptVarStack vParmVars;
+		//STACK_COPY_BEGIN(vParmVars, pState->m_stackRegister, 4);
 
-		CScriptTriggerMgr::GetInstance()->SetEventTrigger(strEvent, nClassPoint, strFlag, pMachine->GetEventIndex(), strScript, vParmVars);
+		//CScriptTriggerMgr::GetInstance()->SetEventTrigger(strEvent, nClassPoint, strFlag, pMachine->GetEventIndex(), strScript, vParmVars);
 
 		return ECALLBACK_FINISH;
 	}
@@ -358,14 +403,14 @@ namespace zlscript
 		{
 			return ECALLBACK_ERROR;
 		}
-		PointVarInfo pointVal = pState->GetClassPointFormStack(0);
-		std::string strEvent = pState->GetStringVarFormStack(1);
-		__int64 nClassPoint = 0;
-		if (pointVal.pPoint)
-		{
-			nClassPoint = pointVal.pPoint->GetID();
-		}
-		CScriptTriggerMgr::GetInstance()->TriggerEvent(strEvent, nClassPoint);
+		//PointVarInfo pointVal = pState->GetClassPointFormStack(0);
+		//std::string strEvent = pState->GetStringVarFormStack(1);
+		//__int64 nClassPoint = 0;
+		//if (pointVal.pPoint)
+		//{
+		//	nClassPoint = pointVal.pPoint->GetID();
+		//}
+		//CScriptTriggerMgr::GetInstance()->TriggerEvent(strEvent, nClassPoint);
 
 		return ECALLBACK_FINISH;
 	}
@@ -376,15 +421,15 @@ namespace zlscript
 		{
 			return ECALLBACK_ERROR;
 		}
-		PointVarInfo pointVal = pState->GetClassPointFormStack(0);
-		std::string strEvent = pState->GetStringVarFormStack(1);
-		std::string strFlag = pState->GetStringVarFormStack(2);
-		__int64 nClassPoint = 0;
-		if (pointVal.pPoint)
-		{
-			nClassPoint = pointVal.pPoint->GetID();
-		}
-		CScriptTriggerMgr::GetInstance()->RemoveTrigger(strEvent, nClassPoint, strFlag);
+		//PointVarInfo pointVal = pState->GetClassPointFormStack(0);
+		//std::string strEvent = pState->GetStringVarFormStack(1);
+		//std::string strFlag = pState->GetStringVarFormStack(2);
+		//__int64 nClassPoint = 0;
+		//if (pointVal.pPoint)
+		//{
+		//	nClassPoint = pointVal.pPoint->GetID();
+		//}
+		//CScriptTriggerMgr::GetInstance()->RemoveTrigger(strEvent, nClassPoint, strFlag);
 
 		return ECALLBACK_FINISH;
 	}

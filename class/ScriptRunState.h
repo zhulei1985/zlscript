@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 /****************************************************************************
 	Copyright (c) 2020 ZhuLei
 	Email:zhulei1985@foxmail.com
@@ -42,50 +42,24 @@ namespace zlscript
 		CScriptCallState(CScriptRunState* pMaster)
 		{
 			m_pMaster = pMaster;
+			m_varReturn = nullptr;
 		}
+		~CScriptCallState();
 		__int64 GetMasterID();
 
-		//bool PushEmptyVarToStack();
-		//bool PushVarToStack(int nVal);
-		//bool PushVarToStack(__int64 nVal);
-		//bool PushVarToStack(double Double);
-		//bool PushVarToStack(const char* pstr);
-		//bool PushClassPointToStack(__int64 nIndex);
-		//bool PushClassPointToStack(CScriptBasePointer* pPoint);
-		//bool PushVarToStack(StackVarInfo& Val);
 
-		//template<class T>
-		//bool PushClassPointToStack(T* pVal);
-
-		//virtual __int64 PopIntVarFormStack();
-		//virtual double PopDoubleVarFormStack();
-		//virtual const char* PopCharVarFormStack();
-		//virtual PointVarInfo PopClassPointFormStack();
-		//virtual StackVarInfo PopVarFormStack();
-
-		 __int64 GetIntVarFormStack(unsigned int index);
-		double GetDoubleVarFormStack(unsigned int index);
-		std::string GetStringVarFormStack(unsigned int index);
-		PointVarInfo GetClassPointFormStack(unsigned int index);
-		StackVarInfo GetVarFormStack(unsigned int index);
+		CBaseVar* GetVarFormStack(unsigned int index);
 
 		virtual int GetParamNum();
 
-		StackVarInfo& GetResult();
-		void SetResult(__int64 nVal);
-		void SetResult(double Val);
-		void SetResult(const char* pStr);
-		void SetClassPointResult(__int64 nIndex);
-		void SetClassPointResult(CScriptBasePointer* pPoint);
-		void SetResult(StackVarInfo& Val);
-		template<class T>
-		bool SetClassPointResult(T* pVal);
+		CBaseVar* GetResult();
+		void SetResult(CBaseVar* Val);
 	public:
 		tagScriptVarStack m_stackRegister;
 		std::string strBuffer;
 		CScriptRunState* m_pMaster;
 
-		StackVarInfo m_varReturn;
+		CBaseVar* m_varReturn;
 	};
 	class CScriptRunState
 	{
@@ -101,13 +75,13 @@ namespace zlscript
 
 		CScriptVirtualMachine* m_pMachine;
 	public:
-		//__int64 nNetworkID;//如果是网络调用，网络连接的ID
 		__int64 nCallEventIndex;//被调用的事件频道ID
 		__int64 m_CallReturnId;//被调用的事件频道ID
 		std::string FunName;
 
 		unsigned int nRunCount;
 
+		CBaseVar* m_varReturn{nullptr};
 	public:
 		void SetWatingTime(unsigned int nTime);
 
@@ -116,15 +90,11 @@ namespace zlscript
 	public:
 		//最后一次运行的时间
 		std::chrono::steady_clock::time_point m_timeLastRunTime;
-		StackVarInfo m_varReturn;
+		CBaseVar* m_pVarReturn;
 		CScriptExecBlockStack m_BlockStack;
 
-		//int CurCallFunParamNum;//当前调用函数的参数数量
-		//int CurStackSizeWithoutFunParam;//除了函数参数，堆栈的大小
 	public:
 		
-
-		virtual void SetResultRegister(StackVarInfo& var);
 		virtual void CopyFromStack(tagScriptVarStack &pStack);
 
 		//获取函数变量
@@ -138,7 +108,7 @@ namespace zlscript
 		void ClearAll();
 
 		int CallFun_CallBack(CScriptVirtualMachine* pMachine, int FunIndex, CScriptCallState* pCallState);
-		int CallFun_Script(CScriptVirtualMachine* pMachine, int FunIndex, tagScriptVarStack& ParmStack, int nParmNum, char cRegisterIndex, bool bIsBreak = false);
+		int CallFun_Script(CScriptVirtualMachine* pMachine, int FunIndex, tagScriptVarStack& ParmStack, int nParmNum,  bool bIsBreak = false);
 
 		int CallFun(CScriptVirtualMachine* pMachine, CScriptExecBlock* pCurBlock, int nType, int FunIndex, int nParmNum, bool bIsBreak = false);
 		int CallFun(CScriptVirtualMachine* pMachine, int nType, int FunIndex, tagScriptVarStack& ParmStack, bool bIsBreak = false);
@@ -172,19 +142,19 @@ namespace zlscript
 		char strbuff[2048];
 	};
 
-	template<class T>
-	inline bool CScriptCallState::SetClassPointResult(T* pVal)
-	{
-		if (pVal)
-		{
-			CScriptBasePointer* pPoint = CScriptSuperPointerMgr::GetInstance()->PickupPointer(pVal->GetScriptPointIndex());
-			m_varReturn = pPoint;
-			return true;
-		}
-		else
-		{
-			m_varReturn.Clear();
-		}
-		return false;
-	}
+	//template<class T>
+	//inline bool CScriptCallState::SetClassPointResult(T* pVal)
+	//{
+	//	if (pVal)
+	//	{
+	//		CScriptBasePointer* pPoint = CScriptSuperPointerMgr::GetInstance()->PickupPointer(pVal->GetScriptPointIndex());
+	//		m_varReturn = pPoint;
+	//		return true;
+	//	}
+	//	else
+	//	{
+	//		m_varReturn.Clear();
+	//	}
+	//	return false;
+	//}
 }

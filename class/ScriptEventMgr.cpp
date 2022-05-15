@@ -1,4 +1,4 @@
-﻿/****************************************************************************
+/****************************************************************************
 	Copyright (c) 2019 ZhuLei
 	Email:zhulei1985@foxmail.com
 
@@ -83,23 +83,9 @@ namespace zlscript
 			pEvent->nSendID = nSendID;
 			pEvent->nEventType = nEventType;
 
-			//for (int i = 0; i < vIn.size(); i++)
-			//{
-			//	StackVarInfo* pVar = vIn.GetVal(i);
-			//	if (pVar)
-			//		pEvent->m_Parm.push(*pVar);
-			//	else
-			//	{
-			//		StackVarInfo emtpy;
-			//		pEvent->m_Parm.push(emtpy);
-			//	}
-			//}
-			pEvent->m_Parm = vIn;
-			//while (vIn.size() > 0)
-			//{
-			//	pEvent->m_Parm.push(vIn.top());
-			//	vIn.pop();
-			//}
+			//pEvent->m_Parm = vIn;
+			STACK_MOVE_ALL_BACK(pEvent->m_Parm, vIn, 0);
+
 			eList.list.push_back(pEvent);
 		}
 		else
@@ -117,18 +103,9 @@ namespace zlscript
 				tagScriptEvent* pEvent = NewEvent();
 				pEvent->nSendID = nSendID;
 				pEvent->nEventType = nEventType;
-				//for (int i = vIn.size() - 1; i >= 0; i--)
-				//{
-				//	StackVarInfo* pVar = vIn.GetVal(i);
-				//	if (pVar)
-				//		pEvent->m_Parm.push(*pVar);
-				//	else
-				//	{
-				//		StackVarInfo emtpy;
-				//		pEvent->m_Parm.push(emtpy);
-				//	}
-				//}
-				pEvent->m_Parm = vIn;
+				
+				//pEvent->m_Parm = vIn;
+				STACK_MOVE_ALL_BACK(pEvent->m_Parm, vIn, 0);
 				channel.list.push_back(pEvent);
 			}
 			else

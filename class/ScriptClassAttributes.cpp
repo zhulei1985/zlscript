@@ -1,9 +1,10 @@
-﻿#include "ZLScript.h"
+#include "ZLScript.h"
 #include "zByteArray.h"
 #include "ScriptClassAttributes.h"
 #include "ScriptSuperPointer.h"
 #include "EScriptVariableType.h"
 #include "ScriptPointInterface.h"
+#include "ScriptVarAssignmentMgr.h"
 namespace zlscript
 {
 	CBaseScriptClassAttribute::~CBaseScriptClassAttribute()
@@ -44,7 +45,7 @@ namespace zlscript
 		m_vObserver.push_back(pObserver);
 	}
 
-	void CBaseScriptClassAttribute::NotifyObserver(StackVarInfo old)
+	void CBaseScriptClassAttribute::NotifyObserver(CBaseVar* pOld)
 	{
 		std::lock_guard<std::mutex> Lock(m_ObserverLock);
 		for (unsigned int i = 0; i < m_vObserver.size(); i++)
@@ -52,7 +53,7 @@ namespace zlscript
 			auto pObserver = m_vObserver[i];
 			if (pObserver)
 			{
-				pObserver->ChangeScriptAttribute(this, old);
+				pObserver->ChangeScriptAttribute(this, pOld);
 			}
 		}
 	}
@@ -74,17 +75,17 @@ namespace zlscript
 
 	CScriptIntAttribute::operator int()
 	{
-		return m_val;
+		return m_val.ToInt();
 	}
 	int CScriptIntAttribute::operator=(int val)
 	{
-		if (m_val != val)
+		if (m_val.ToInt() != val)
 		{
-			__int64 old = m_val;
-			m_val = val;
-			NotifyObserver(StackVarInfo(old));
+			CIntVar old(m_val);
+			m_val.Set((__int64)val);
+			NotifyObserver(&old);
 		}
-		return m_val;
+		return m_val.ToInt();
 	}
 
 	std::string CScriptIntAttribute::ToType()
@@ -94,47 +95,45 @@ namespace zlscript
 	std::string CScriptIntAttribute::ToString()
 	{
 		char strbuff[16];
-		snprintf(strbuff, sizeof(strbuff), "%d", m_val.load());
+		snprintf(strbuff, sizeof(strbuff), "%d", (int)m_val.ToInt());
 		return strbuff;
 	}
-	StackVarInfo CScriptIntAttribute::ToScriptVal()
+	CBaseVar* CScriptIntAttribute::ToScriptVal()
 	{
-		return StackVarInfo((__int64)m_val);
+		return &m_val;
 	}
 	bool CScriptIntAttribute::SetVal(std::string str)
 	{
-		m_val = atoi(str.c_str());
-		return true;
+		return m_val.Set(str);
 	}
-	bool CScriptIntAttribute::SetVal(StackVarInfo& var)
+	bool CScriptIntAttribute::SetVal(CBaseVar* var)
 	{
-		m_val = (int)GetInt_StackVar(&var);
-		return true;
+		return AssignVar(&m_val, var);
 	}
-	void CScriptIntAttribute::AddData2Bytes(std::vector<char>& vBuff, std::vector<PointVarInfo>& vOutClassPoint)
+	void CScriptIntAttribute::AddData2Bytes(std::vector<char>& vBuff, std::vector<CPointVar*>& vOutClassPoint)
 	{
-		AddInt2Bytes(vBuff, m_val);
+		AddInt2Bytes(vBuff, m_val.ToInt());
 	}
-	bool CScriptIntAttribute::DecodeData4Bytes(char* pBuff, int& pos, unsigned int len, std::vector<PointVarInfo>& vOutClassPoint)
+	bool CScriptIntAttribute::DecodeData4Bytes(char* pBuff, int& pos, unsigned int len, std::vector<CPointVar*>& vOutClassPoint)
 	{
-		m_val = DecodeBytes2Int(pBuff, pos, len);
+		m_val.Set((__int64)DecodeBytes2Int(pBuff, pos, len));
 		return true;
 	}
 
 	CScriptInt64Attribute::operator __int64()
 	{
-		return m_val;
+		return m_val.ToInt();
 	}
 
 	__int64 CScriptInt64Attribute::operator=(__int64 val)
 	{
-		if (m_val != val)
+		if (m_val.ToInt() != val)
 		{
-			__int64 old = m_val;
-			m_val = val;
-			NotifyObserver(StackVarInfo(old));
+			CIntVar old(m_val);
+			m_val.Set((__int64)val);
+			NotifyObserver(&old);
 		}
-		return m_val;
+		return m_val.ToInt();
 	}
 
 	std::string CScriptInt64Attribute::ToType()
@@ -145,54 +144,50 @@ namespace zlscript
 	std::string CScriptInt64Attribute::ToString()
 	{
 		char strbuff[32];
-		snprintf(strbuff, sizeof(strbuff), "%lld", m_val.load());
+		snprintf(strbuff, sizeof(strbuff), "%lld", m_val.ToInt());
 		return strbuff;
 	}
 
-	StackVarInfo CScriptInt64Attribute::ToScriptVal()
+	CBaseVar* CScriptInt64Attribute::ToScriptVal()
 	{
-		return StackVarInfo(m_val);
+		return &m_val;
 	}
 
 	bool CScriptInt64Attribute::SetVal(std::string str)
 	{
-		m_val = _atoi64(str.c_str());
-		return true;
+		return m_val.Set(str);
 	}
 
-	bool CScriptInt64Attribute::SetVal(StackVarInfo& var)
+	bool CScriptInt64Attribute::SetVal(CBaseVar* var)
 	{
-		m_val = GetInt_StackVar(&var);
-		return true;
+		return AssignVar(&m_val, var);
 	}
 
-	void CScriptInt64Attribute::AddData2Bytes(std::vector<char>& vBuff, std::vector<PointVarInfo>& vOutClassPoint)
+	void CScriptInt64Attribute::AddData2Bytes(std::vector<char>& vBuff, std::vector<CPointVar*>& vOutClassPoint)
 	{
-		AddInt642Bytes(vBuff, m_val);
+		AddInt642Bytes(vBuff, m_val.ToInt());
 	}
 
-	bool CScriptInt64Attribute::DecodeData4Bytes(char* pBuff, int& pos, unsigned int len, std::vector<PointVarInfo>& vOutClassPoint)
+	bool CScriptInt64Attribute::DecodeData4Bytes(char* pBuff, int& pos, unsigned int len, std::vector<CPointVar*>& vOutClassPoint)
 	{
-		m_val = DecodeBytes2Int64(pBuff, pos, len);
+		m_val.Set(DecodeBytes2Int64(pBuff, pos, len));
 		return true;
 	}
 
 	CScriptFloatAttribute::operator float()
 	{
-		std::lock_guard<std::mutex> Lock(m_lock);
-		return m_val;
+		return m_val.ToFloat();
 	}
 
 	float CScriptFloatAttribute::operator=(float val)
 	{
-		std::lock_guard<std::mutex> Lock(m_lock);
-		if (m_val != val)
+		if (m_val.ToFloat() != val)
 		{
-			double old = m_val;
-			m_val = val;
-			NotifyObserver(StackVarInfo(old));
+			CFloatVar old(m_val);
+			m_val.Set((double)val);
+			NotifyObserver(&old);
 		}
-		return m_val;
+		return m_val.ToFloat();
 	}
 
 	std::string CScriptFloatAttribute::ToType()
@@ -202,59 +197,51 @@ namespace zlscript
 
 	std::string CScriptFloatAttribute::ToString()
 	{
-		std::lock_guard<std::mutex> Lock(m_lock);
 		char strbuff[32];
-		snprintf(strbuff, sizeof(strbuff), "%f", m_val);
+		snprintf(strbuff, sizeof(strbuff), "%f", m_val.ToFloat());
 		return strbuff;
 	}
 
-	StackVarInfo CScriptFloatAttribute::ToScriptVal()
+	CBaseVar* CScriptFloatAttribute::ToScriptVal()
 	{
-		return StackVarInfo((double)m_val);
+		return &m_val;
 	}
 
 	bool CScriptFloatAttribute::SetVal(std::string str)
 	{
-		std::lock_guard<std::mutex> Lock(m_lock);
-		m_val = atof(str.c_str());
-		return true;
+		return m_val.Set(str);
 	}
 
-	bool CScriptFloatAttribute::SetVal(StackVarInfo& var)
+	bool CScriptFloatAttribute::SetVal(CBaseVar* var)
 	{
-		m_val = (float)GetFloat_StackVar(&var);
-		return false;
+		return AssignVar(&m_val, var);
 	}
 
-	void CScriptFloatAttribute::AddData2Bytes(std::vector<char>& vBuff, std::vector<PointVarInfo>& vOutClassPoint)
+	void CScriptFloatAttribute::AddData2Bytes(std::vector<char>& vBuff, std::vector<CPointVar*>& vOutClassPoint)
 	{
-		std::lock_guard<std::mutex> Lock(m_lock);
-		AddFloat2Bytes(vBuff, m_val);
+		AddFloat2Bytes(vBuff, m_val.ToFloat());
 	}
 
-	bool CScriptFloatAttribute::DecodeData4Bytes(char* pBuff, int& pos, unsigned int len, std::vector<PointVarInfo>& vOutClassPoint)
+	bool CScriptFloatAttribute::DecodeData4Bytes(char* pBuff, int& pos, unsigned int len, std::vector<CPointVar*>& vOutClassPoint)
 	{
-		std::lock_guard<std::mutex> Lock(m_lock);
-		m_val = DecodeBytes2Float(pBuff, pos, len);
+		m_val.Set((double)DecodeBytes2Float(pBuff, pos, len));
 		return true;
 	}
 
 	CScriptDoubleAttribute::operator double()
 	{
-		std::lock_guard<std::mutex> Lock(m_lock);
-		return m_val;
+		return m_val.ToFloat();
 	}
 
 	double CScriptDoubleAttribute::operator=(double val)
 	{
-		std::lock_guard<std::mutex> Lock(m_lock);
-		if (m_val != val)
+		if (m_val.ToFloat() != val)
 		{
-			double old = m_val;
-			m_val = val;
-			NotifyObserver(StackVarInfo(old));
+			CFloatVar old(m_val);
+			m_val.Set(val);
+			NotifyObserver(&old);
 		}
-		return m_val;
+		return m_val.ToFloat();
 	}
 
 	std::string CScriptDoubleAttribute::ToType()
@@ -264,92 +251,82 @@ namespace zlscript
 
 	std::string CScriptDoubleAttribute::ToString()
 	{
-		std::lock_guard<std::mutex> Lock(m_lock);
 		char strbuff[32];
-		snprintf(strbuff, sizeof(strbuff),"%f", m_val);
+		snprintf(strbuff, sizeof(strbuff),"%f", m_val.ToFloat());
 		return strbuff;
 	}
 
-	StackVarInfo CScriptDoubleAttribute::ToScriptVal()
+	CBaseVar* CScriptDoubleAttribute::ToScriptVal()
 	{
-		return StackVarInfo(m_val);
+		return &m_val;
 	}
 
 	bool CScriptDoubleAttribute::SetVal(std::string str)
 	{
-		std::lock_guard<std::mutex> Lock(m_lock);
-		m_val = atof(str.c_str());
-		return true;
+		return m_val.Set(str);
 	}
 
-	bool CScriptDoubleAttribute::SetVal(StackVarInfo& var)
+	bool CScriptDoubleAttribute::SetVal(CBaseVar* var)
 	{
-		m_val = GetFloat_StackVar(&var);
-		return true;
+		return AssignVar(&m_val, var);
 	}
 
-	void CScriptDoubleAttribute::AddData2Bytes(std::vector<char>& vBuff, std::vector<PointVarInfo>& vOutClassPoint)
+	void CScriptDoubleAttribute::AddData2Bytes(std::vector<char>& vBuff, std::vector<CPointVar*>& vOutClassPoint)
 	{
-		std::lock_guard<std::mutex> Lock(m_lock);
-		AddDouble2Bytes(vBuff, m_val);
+		AddDouble2Bytes(vBuff, m_val.ToFloat());
 	}
 
-	bool CScriptDoubleAttribute::DecodeData4Bytes(char* pBuff, int& pos, unsigned int len, std::vector<PointVarInfo>& vOutClassPoint)
+	bool CScriptDoubleAttribute::DecodeData4Bytes(char* pBuff, int& pos, unsigned int len, std::vector<CPointVar*>& vOutClassPoint)
 	{
-		std::lock_guard<std::mutex> Lock(m_lock);
-		m_val = DecodeBytes2Double(pBuff, pos, len);
+		m_val.Set(DecodeBytes2Double(pBuff, pos, len));
 		return true;
 	}
 	const int CScriptStringAttribute::s_maxStrLen = 1024;
 
 	CScriptStringAttribute::operator std::string&()
 	{
-		std::lock_guard<std::mutex> Lock(m_lock);
-		return m_val;
+		return m_val.ToString();
 	}
 
 	std::string& CScriptStringAttribute::operator=(std::string& val)
 	{
-		std::lock_guard<std::mutex> Lock(m_lock);
-		if (m_val != val)
+		if (m_val.ToString() != val)
 		{
-			std::string old = m_val;
-			m_val = val;
-			NotifyObserver(StackVarInfo(old.c_str()));
+			CStringVar old(m_val);
+			m_val.Set(val);
+			NotifyObserver(&old);
 		}
-		return m_val;
+		return m_val.ToString();
 	}
 
 	std::string& CScriptStringAttribute::operator=(char* val)
 	{
-		std::lock_guard<std::mutex> Lock(m_lock);
 		if (val == nullptr)
 		{
-			return m_val;
+			return m_val.ToString();
 		}
-		if (m_val != val)
+		if (m_val.ToString() != val)
 		{
-			std::string old = m_val;
-			m_val = val;
-			NotifyObserver(StackVarInfo(old.c_str()));
+			CStringVar old(m_val);
+			m_val.Set(std::string(val));
+			NotifyObserver(&old);
 		}
-		return m_val;
+		return m_val.ToString();
 	}
 
 	std::string& CScriptStringAttribute::operator=(const char* val)
 	{
-		std::lock_guard<std::mutex> Lock(m_lock);
 		if (val == nullptr)
 		{
-			return m_val;
+			return m_val.ToString();
 		}
-		if (m_val != val)
+		if (m_val.ToString() != val)
 		{
-			std::string old = m_val;
-			m_val = val;
-			NotifyObserver(StackVarInfo(old.c_str()));
+			CStringVar old(m_val);
+			m_val.Set(std::string(val));
+			NotifyObserver(&old);
 		}
-		return m_val;
+		return m_val.ToString();
 	}
 
 	std::string CScriptStringAttribute::ToType()
@@ -367,51 +344,44 @@ namespace zlscript
 
 	std::string CScriptStringAttribute::ToString()
 	{
-		std::lock_guard<std::mutex> Lock(m_lock);
-		return m_val;
+		return m_val.ToString();
 	}
 
-	StackVarInfo CScriptStringAttribute::ToScriptVal()
+	CBaseVar* CScriptStringAttribute::ToScriptVal()
 	{
-		return StackVarInfo(m_val.c_str());
+		return &m_val;
 	}
 
 	const char* CScriptStringAttribute::c_str()
 	{
-		std::lock_guard<std::mutex> Lock(m_lock);
-		return m_val.c_str();
+		return m_val.ToString().c_str();
 	}
 
 	bool CScriptStringAttribute::SetVal(std::string str)
 	{
-		std::lock_guard<std::mutex> Lock(m_lock);
-		m_val = str;
+		m_val.Set(str);
 		return true;
 	}
 
-	bool CScriptStringAttribute::SetVal(StackVarInfo& var)
+	bool CScriptStringAttribute::SetVal(CBaseVar* var)
 	{
-		std::lock_guard<std::mutex> Lock(m_lock);
-		m_val = GetString_StackVar(&var);
-		return true;
+		return AssignVar(&m_val, var);;
 	}
 
-	void CScriptStringAttribute::AddData2Bytes(std::vector<char>& vBuff, std::vector<PointVarInfo>& vOutClassPoint)
+	void CScriptStringAttribute::AddData2Bytes(std::vector<char>& vBuff, std::vector<CPointVar*>& vOutClassPoint)
 	{
-		std::lock_guard<std::mutex> Lock(m_lock);
-		AddString2Bytes(vBuff, m_val.c_str());
+		AddString2Bytes(vBuff, m_val.ToString().c_str());
 	}
 
-	bool CScriptStringAttribute::DecodeData4Bytes(char* pBuff, int& pos, unsigned int len, std::vector<PointVarInfo>& vOutClassPoint)
+	bool CScriptStringAttribute::DecodeData4Bytes(char* pBuff, int& pos, unsigned int len, std::vector<CPointVar*>& vOutClassPoint)
 	{
-		std::lock_guard<std::mutex> Lock(m_lock);
 		//TODO 以后加入缓存
 		char* strbuff = new char[s_maxStrLen];
 
 		bool bResult = DecodeBytes2String(pBuff, pos, len, strbuff, s_maxStrLen);
 		if (bResult)
 		{
-			m_val = strbuff;
+			m_val.Set(std::string(strbuff));
 		}
 		delete [] strbuff;
 		return bResult;
@@ -513,7 +483,7 @@ namespace zlscript
 		m_setFlag.clear();
 	}
 
-	void CScriptInt64ArrayAttribute::AddData2Bytes(std::vector<char>& vBuff, std::vector<PointVarInfo>& vOutClassPoint)
+	void CScriptInt64ArrayAttribute::AddData2Bytes(std::vector<char>& vBuff, std::vector<CPointVar*>& vOutClassPoint)
 	{
 		std::lock_guard<std::mutex> Lock(m_lock);
 		AddUInt2Bytes(vBuff, m_vecVal.size());//第一个是数组大小
@@ -525,7 +495,7 @@ namespace zlscript
 		}
 	}
 
-	void CScriptInt64ArrayAttribute::AddChangeData2Bytes(std::vector<char>& vBuff, std::vector<PointVarInfo>& vOutClassPoint)
+	void CScriptInt64ArrayAttribute::AddChangeData2Bytes(std::vector<char>& vBuff, std::vector<CPointVar*>& vOutClassPoint)
 	{
 		std::lock_guard<std::mutex> Lock(m_lock);
 		AddUInt2Bytes(vBuff, m_vecVal.size());
@@ -547,7 +517,7 @@ namespace zlscript
 		}
 	}
 
-	bool CScriptInt64ArrayAttribute::DecodeData4Bytes(char* pBuff, int& pos, unsigned int len, std::vector<PointVarInfo>& vOutClassPoint)
+	bool CScriptInt64ArrayAttribute::DecodeData4Bytes(char* pBuff, int& pos, unsigned int len, std::vector<CPointVar*>& vOutClassPoint)
 	{
 		std::lock_guard<std::mutex> Lock(m_lock);
 		unsigned int nArraySize = DecodeBytes2Int(pBuff, pos, len);
@@ -677,7 +647,7 @@ namespace zlscript
 		m_setFlag.clear();
 	}
 
-	void CScriptInt64toInt64MapAttribute::AddData2Bytes(std::vector<char>& vBuff, std::vector<PointVarInfo>& vOutClassPoint)
+	void CScriptInt64toInt64MapAttribute::AddData2Bytes(std::vector<char>& vBuff, std::vector<CPointVar*>& vOutClassPoint)
 	{
 		std::lock_guard<std::mutex> Lock(m_lock);
 		AddChar2Bytes(vBuff, 1);//第一是是否全部更新，1是，0否
@@ -690,7 +660,7 @@ namespace zlscript
 		}
 	}
 
-	void CScriptInt64toInt64MapAttribute::AddChangeData2Bytes(std::vector<char>& vBuff, std::vector<PointVarInfo>& vOutClassPoint)
+	void CScriptInt64toInt64MapAttribute::AddChangeData2Bytes(std::vector<char>& vBuff, std::vector<CPointVar*>& vOutClassPoint)
 	{
 		std::lock_guard<std::mutex> Lock(m_lock);
 		AddChar2Bytes(vBuff, 0);//第一是是否全部更新，1是，0否
@@ -712,7 +682,7 @@ namespace zlscript
 		}
 	}
 
-	bool CScriptInt64toInt64MapAttribute::DecodeData4Bytes(char* pBuff, int& pos, unsigned int len, std::vector<PointVarInfo>& vOutClassPoint)
+	bool CScriptInt64toInt64MapAttribute::DecodeData4Bytes(char* pBuff, int& pos, unsigned int len, std::vector<CPointVar*>& vOutClassPoint)
 	{
 		std::lock_guard<std::mutex> Lock(m_lock);
 		char mode = DecodeBytes2Char(pBuff, pos, len);
@@ -751,42 +721,16 @@ namespace zlscript
 	}
 
 
-	CScriptClassPointAttribute::operator PointVarInfo& ()
+	CScriptClassPointAttribute::operator CScriptPointInterface* ()
 	{
-		std::lock_guard<std::mutex> Lock(m_lock);
-		return m_val;
+		return m_val.ToPoint();
 	}
 
-	PointVarInfo& CScriptClassPointAttribute::operator=(CScriptPointInterface* pPoint)
+	CScriptPointInterface* CScriptClassPointAttribute::operator=(CScriptPointInterface* pPoint)
 	{
-		std::lock_guard<std::mutex> Lock(m_lock);
-		if (pPoint)
-		{
-			m_val = pPoint->GetScriptPointIndex();
-		}
-		else
-		{
-			m_val.Clear();
-		}
-		return m_val;
-	}
-
-	PointVarInfo& CScriptClassPointAttribute::operator=(CScriptBasePointer* pPoint)
-	{
-		std::lock_guard<std::mutex> Lock(m_lock);
-
-		m_val = pPoint;
-
-		return m_val;
-	}
-
-	PointVarInfo& CScriptClassPointAttribute::operator=(__int64 val)
-	{
-		std::lock_guard<std::mutex> Lock(m_lock);
-
-		m_val = val;
-
-		return m_val;
+		//std::lock_guard<std::mutex> Lock(m_lock);
+		m_val.Set(pPoint);
+		return m_val.ToPoint();
 	}
 
 	std::string CScriptClassPointAttribute::ToType()
@@ -804,46 +748,49 @@ namespace zlscript
 		return false;
 	}
 
-	bool CScriptClassPointAttribute::SetVal(StackVarInfo& var)
+	bool CScriptClassPointAttribute::SetVal(CBaseVar* var)
 	{
-		std::lock_guard<std::mutex> Lock(m_lock);
+		//std::lock_guard<std::mutex> Lock(m_lock);
 
-		m_val = GetPoint_StackVar(&var);
-		return true;
+		return AssignVar(&m_val, var);
 	}
 
-	void CScriptClassPointAttribute::AddData2Bytes(std::vector<char>& vBuff, std::vector<PointVarInfo>& vOutClassPoint)
+	void CScriptClassPointAttribute::AddData2Bytes(std::vector<char>& vBuff, std::vector<CPointVar*>& vOutClassPoint)
 	{
-		std::lock_guard<std::mutex> Lock(m_lock);
+		//std::lock_guard<std::mutex> Lock(m_lock);
 		AddInt2Bytes(vBuff, vOutClassPoint.size());
-		vOutClassPoint.push_back(m_val.pPoint);
+		CBaseVar* pPoint1 = &m_val;
+		CBaseVar* pResult = nullptr;
+		SCRIPTVAR_COPY_VAR(pResult, pPoint1);
+		vOutClassPoint.push_back(dynamic_cast<CPointVar*>(pResult));
 	}
 
-	bool CScriptClassPointAttribute::DecodeData4Bytes(char* pBuff, int& pos, unsigned int len, std::vector<PointVarInfo>& vOutClassPoint)
+	bool CScriptClassPointAttribute::DecodeData4Bytes(char* pBuff, int& pos, unsigned int len, std::vector<CPointVar*>& vOutClassPoint)
 	{
-		std::lock_guard<std::mutex> Lock(m_lock);
+		//std::lock_guard<std::mutex> Lock(m_lock);
 
 		unsigned int index = DecodeBytes2Int(pBuff, pos, len);
 		if (index < vOutClassPoint.size())
 		{
-			m_val = vOutClassPoint[index];
-			return true;
+			CBaseVar* pPoint1 = &m_val;
+			CBaseVar* pPoint2 = vOutClassPoint[index];
+			
+			return AssignVar(pPoint1, pPoint2);
 		}
 		return false;
 	}
 
-	CScriptVarAttribute::operator StackVarInfo& ()
+	CScriptVarAttribute::operator CBaseVar* ()
 	{
-		std::lock_guard<std::mutex> Lock(m_lock);
-		return m_val;
+		return m_pVal;
 	}
 
-	StackVarInfo& CScriptVarAttribute::operator=(StackVarInfo val)
+	CBaseVar* CScriptVarAttribute::operator=(CBaseVar* val)
 	{
 		// TODO: 在此处插入 return 语句
-		std::lock_guard<std::mutex> Lock(m_lock);
-		m_val = val;
-		return m_val;
+		//std::lock_guard<std::mutex> Lock(m_lock);
+		AssignVar(m_pVal,val);
+		return m_pVal;
 	}
 
 
@@ -862,30 +809,30 @@ namespace zlscript
 		return false;
 	}
 
-	bool CScriptVarAttribute::SetVal(StackVarInfo& var)
+	bool CScriptVarAttribute::SetVal(CBaseVar* var)
 	{
-		std::lock_guard<std::mutex> Lock(m_lock);
+		//std::lock_guard<std::mutex> Lock(m_lock);
 
-		m_val = GetPoint_StackVar(&var);
+		SCRIPTVAR_COPY_VAR(m_pVal, var);
 		return true;
 	}
 
-	void CScriptVarAttribute::AddData2Bytes(std::vector<char>& vBuff, std::vector<PointVarInfo>& vOutClassPoint)
+	void CScriptVarAttribute::AddData2Bytes(std::vector<char>& vBuff, std::vector<CPointVar*>& vOutClassPoint)
 	{
-		std::lock_guard<std::mutex> Lock(m_lock);
+		//std::lock_guard<std::mutex> Lock(m_lock);
 		if (m_pMaster)
 		{
-			m_pMaster->AddVar2Bytes(vBuff, &m_val, vOutClassPoint);
+			m_pMaster->AddVar2Bytes(vBuff, m_pVal, vOutClassPoint);
 		}
 	}
 
-	bool CScriptVarAttribute::DecodeData4Bytes(char* pBuff, int& pos, unsigned int len, std::vector<PointVarInfo>& vOutClassPoint)
+	bool CScriptVarAttribute::DecodeData4Bytes(char* pBuff, int& pos, unsigned int len, std::vector<CPointVar*>& vOutClassPoint)
 	{
-		std::lock_guard<std::mutex> Lock(m_lock);
+		//std::lock_guard<std::mutex> Lock(m_lock);
 		if (m_pMaster)
 		{
-			m_val = m_pMaster->DecodeVar4Bytes(pBuff, pos, len, vOutClassPoint);
-
+			CBaseVar *pVal = m_pMaster->DecodeVar4Bytes(pBuff, pos, len, vOutClassPoint);
+			SCRIPTVAR_MOVE_VAR(m_pVal, pVal);
 			return true;
 		}
 		return false;
@@ -893,48 +840,51 @@ namespace zlscript
 
 	void CScriptVarArrayAttribute::SetSize(unsigned int size)
 	{
-		std::lock_guard<std::mutex> Lock(m_lock);
+		//std::lock_guard<std::mutex> Lock(m_lock);
 		m_vecVal.resize(size);
 	}
 
 	unsigned int CScriptVarArrayAttribute::GetSize()
 	{
-		std::lock_guard<std::mutex> Lock(m_lock);
+		//std::lock_guard<std::mutex> Lock(m_lock);
 		return m_vecVal.size();
 	}
 
-	bool CScriptVarArrayAttribute::SetVal(unsigned int index, StackVarInfo Val)
+	bool CScriptVarArrayAttribute::SetVal(unsigned int index, CBaseVar* Val)
 	{
-		std::lock_guard<std::mutex> Lock(m_lock);
+		//std::lock_guard<std::mutex> Lock(m_lock);
 		if (index < m_vecVal.size())
 		{
 			m_setFlag.insert(index);
-			m_vecVal[index] = Val;
+			
+			SCRIPTVAR_COPY_VAR(m_vecVal[index], Val);
 			return true;
 		}
 		return false;
 	}
 
-	StackVarInfo CScriptVarArrayAttribute::GetVal(unsigned int index)
+	CBaseVar* CScriptVarArrayAttribute::GetVal(unsigned int index)
 	{
-		std::lock_guard<std::mutex> Lock(m_lock);
+		//std::lock_guard<std::mutex> Lock(m_lock);
 		if (index < m_vecVal.size())
 		{
 			return m_vecVal[index];
 		}
-		return StackVarInfo();
+		return nullptr;
 	}
 
-	void CScriptVarArrayAttribute::PushBack(StackVarInfo Val)
+	void CScriptVarArrayAttribute::PushBack(CBaseVar* Val)
 	{
-		std::lock_guard<std::mutex> Lock(m_lock);
+		//std::lock_guard<std::mutex> Lock(m_lock);
 		m_setFlag.insert(m_vecVal.size());
-		m_vecVal.push_back(Val);
+		CBaseVar* pTemp = nullptr;
+		SCRIPTVAR_COPY_VAR(pTemp, Val);
+		m_vecVal.push_back(pTemp);
 	}
 
 	bool CScriptVarArrayAttribute::Remove(unsigned int index)
 	{
-		std::lock_guard<std::mutex> Lock(m_lock);
+		//std::lock_guard<std::mutex> Lock(m_lock);
 		auto it = m_vecVal.begin();
 		for (unsigned int i = 0; it != m_vecVal.end(); it++, i++)
 		{
@@ -951,11 +901,11 @@ namespace zlscript
 	{
 		for (unsigned int i = 0; i < m_vecVal.size(); i++)
 		{
-			if (m_vecVal[i].pPoint)
+			if (m_vecVal[i])
 			{
 				m_setFlag.insert(i);
 			}
-			m_vecVal[i].Clear();
+			SCRIPTVAR_RELEASE(m_vecVal[i]);
 		}
 	}
 
@@ -979,25 +929,25 @@ namespace zlscript
 		m_setFlag.clear();
 	}
 
-	void CScriptVarArrayAttribute::AddData2Bytes(std::vector<char>& vBuff, std::vector<PointVarInfo>& vOutClassPoint)
+	void CScriptVarArrayAttribute::AddData2Bytes(std::vector<char>& vBuff, std::vector<CPointVar*>& vOutClassPoint)
 	{
 		if (m_pMaster == nullptr)
 		{
 			return;
 		}
-		std::lock_guard<std::mutex> Lock(m_lock);
+		//std::lock_guard<std::mutex> Lock(m_lock);
 		AddUInt2Bytes(vBuff, m_vecVal.size());//第一个是数组大小
 		AddUInt2Bytes(vBuff, m_vecVal.size());//第二个是要更新多少数据
 		for (unsigned int i = 0; i < m_vecVal.size(); i++)
 		{
 			AddUInt2Bytes(vBuff, i);
-			m_pMaster->AddVar2Bytes(vBuff,&m_vecVal[i], vOutClassPoint);
+			m_pMaster->AddVar2Bytes(vBuff, m_vecVal[i], vOutClassPoint);
 		}
 	}
 
-	void CScriptVarArrayAttribute::AddChangeData2Bytes(std::vector<char>& vBuff, std::vector<PointVarInfo>& vOutClassPoint)
+	void CScriptVarArrayAttribute::AddChangeData2Bytes(std::vector<char>& vBuff, std::vector<CPointVar*>& vOutClassPoint)
 	{
-		std::lock_guard<std::mutex> Lock(m_lock);
+		//std::lock_guard<std::mutex> Lock(m_lock);
 		AddUInt2Bytes(vBuff, m_vecVal.size());
 		AddUInt2Bytes(vBuff, m_setFlag.size());
 		auto it = m_setFlag.begin();
@@ -1007,7 +957,7 @@ namespace zlscript
 			if (index < m_vecVal.size())
 			{
 				AddUInt2Bytes(vBuff, index);
-				m_pMaster->AddVar2Bytes(vBuff, &m_vecVal[index], vOutClassPoint);
+				m_pMaster->AddVar2Bytes(vBuff, m_vecVal[index], vOutClassPoint);
 			}
 			else
 			{
@@ -1017,9 +967,9 @@ namespace zlscript
 		}
 	}
 
-	bool CScriptVarArrayAttribute::DecodeData4Bytes(char* pBuff, int& pos, unsigned int len, std::vector<PointVarInfo>& vOutClassPoint)
+	bool CScriptVarArrayAttribute::DecodeData4Bytes(char* pBuff, int& pos, unsigned int len, std::vector<CPointVar*>& vOutClassPoint)
 	{
-		std::lock_guard<std::mutex> Lock(m_lock);
+		//std::lock_guard<std::mutex> Lock(m_lock);
 		unsigned int nArraySize = DecodeBytes2Int(pBuff, pos, len);
 		if (m_vecVal.size() != nArraySize)
 		{
@@ -1032,154 +982,167 @@ namespace zlscript
 			int val = DecodeBytes2Int(pBuff, pos, len);
 			if (index < m_vecVal.size())
 			{
-				m_vecVal[index] = m_pMaster->DecodeVar4Bytes(pBuff, pos, len, vOutClassPoint);
+				CBaseVar *pTemp = m_pMaster->DecodeVar4Bytes(pBuff, pos, len, vOutClassPoint);
+				SCRIPTVAR_MOVE_VAR(m_vecVal[index], pTemp);
 			}
 		}
 		return true;
 	}
 
-	unsigned int CScriptVar2VarMapAttribute::GetSize()
-	{
-		std::lock_guard<std::mutex> Lock(m_lock);
-		return m_val.size();
-	}
+	//unsigned int CScriptVar2VarMapAttribute::GetSize()
+	//{
+	//	//std::lock_guard<std::mutex> Lock(m_lock);
+	//	return m_val.size();
+	//}
 
-	bool CScriptVar2VarMapAttribute::SetVal(StackVarInfo index, StackVarInfo val)
-	{
-		std::lock_guard<std::mutex> Lock(m_lock);
+	//bool CScriptVar2VarMapAttribute::SetVal(CBaseVar* index, CBaseVar* val)
+	//{
+	//	//std::lock_guard<std::mutex> Lock(m_lock);
 
-		m_val[index] = val;
-		m_setFlag.insert(index);
-		return true;
-	}
+	//	auto it = m_val.find(ScriptVarKey(index));
+	//	if (it != m_val.end())
+	//	{
+	//		m_val[ScriptVarKey(index)] = val;
+	//	}
+	//	else
+	//	{
+	//		CBaseVar* pKey = nullptr;
+	//		SCRIPTVAR_COPY_VAR(pKey, index);
+	//		m_val.insert(std::pair<ScriptVarKey, CBaseVar*>(ScriptVarKey(pKey), val));
 
-	StackVarInfo CScriptVar2VarMapAttribute::GetVal(StackVarInfo index)
-	{
-		std::lock_guard<std::mutex> Lock(m_lock);
-		auto it = m_val.find(index);
-		if (it != m_val.end())
-		{
-			return it->second;
-		}
-		return StackVarInfo();
-	}
+	//		m_setFlag.insert(index);
+	//	}
+	//	
+	//	return true;
+	//}
 
-	bool CScriptVar2VarMapAttribute::Remove(StackVarInfo index)
-	{
-		std::lock_guard<std::mutex> Lock(m_lock);
-		auto it = m_val.find(index);
-		if (it != m_val.end())
-		{
-			m_val.erase(it);
-			m_setFlag.insert(index);
-			return true;
-		}
-		return false;
-	}
+	//CBaseVar* CScriptVar2VarMapAttribute::GetVal(CBaseVar* index)
+	//{
+	//	//std::lock_guard<std::mutex> Lock(m_lock);
+	//	auto it = m_val.find(index);
+	//	if (it != m_val.end())
+	//	{
+	//		return it->second;
+	//	}
+	//	return nullptr;
+	//}
 
-	void CScriptVar2VarMapAttribute::clear()
-	{
-		std::lock_guard<std::mutex> Lock(m_lock);
-		m_val.clear();
-	}
+	//bool CScriptVar2VarMapAttribute::Remove(CBaseVar* index)
+	//{
+	//	//std::lock_guard<std::mutex> Lock(m_lock);
+	//	auto it = m_val.find(index);
+	//	if (it != m_val.end())
+	//	{
+	//		m_val.erase(it);
+	//		m_setFlag.insert(index);
+	//		return true;
+	//	}
+	//	return false;
+	//}
 
-	std::string CScriptVar2VarMapAttribute::ToType()
-	{
-		return std::string();
-	}
+	//void CScriptVar2VarMapAttribute::clear()
+	//{
+	//	//std::lock_guard<std::mutex> Lock(m_lock);
+	//	m_val.clear();
+	//}
 
-	std::string CScriptVar2VarMapAttribute::ToString()
-	{
-		return std::string();
-	}
+	//std::string CScriptVar2VarMapAttribute::ToType()
+	//{
+	//	return std::string();
+	//}
 
-	bool CScriptVar2VarMapAttribute::SetVal(std::string str)
-	{
-		return false;
-	}
+	//std::string CScriptVar2VarMapAttribute::ToString()
+	//{
+	//	return std::string();
+	//}
 
-	void CScriptVar2VarMapAttribute::ClearChangeFlag()
-	{
-		std::lock_guard<std::mutex> Lock(m_lock);
-		m_setFlag.clear();
-	}
+	//bool CScriptVar2VarMapAttribute::SetVal(std::string str)
+	//{
+	//	return false;
+	//}
 
-	void CScriptVar2VarMapAttribute::AddData2Bytes(std::vector<char>& vBuff, std::vector<PointVarInfo>& vOutClassPoint)
-	{
-		std::lock_guard<std::mutex> Lock(m_lock);
-		AddChar2Bytes(vBuff, 1);//第一是是否全部更新，1是，0否
-		AddUInt2Bytes(vBuff, m_val.size());//第二个是要更新多少数据
-		auto it = m_val.begin();
-		for (;it != m_val.end();it++)
-		{
-			StackVarInfo index = it->first;
-			m_pMaster->AddVar2Bytes(vBuff, &index, vOutClassPoint);
-			//AddChar2Bytes(vBuff, 1);
-			m_pMaster->AddVar2Bytes(vBuff, &it->second, vOutClassPoint);
-		}
-	}
+	//void CScriptVar2VarMapAttribute::ClearChangeFlag()
+	//{
+	//	//std::lock_guard<std::mutex> Lock(m_lock);
+	//	m_setFlag.clear();
+	//}
 
-	void CScriptVar2VarMapAttribute::AddChangeData2Bytes(std::vector<char>& vBuff, std::vector<PointVarInfo>& vOutClassPoint)
-	{
-		std::lock_guard<std::mutex> Lock(m_lock);
-		AddChar2Bytes(vBuff, 0);//第一是是否全部更新，1是，0否
-		AddUInt2Bytes(vBuff, m_setFlag.size());//第二个是要更新多少数据
-		auto itFlag = m_setFlag.begin();
-		for (; itFlag != m_setFlag.end(); itFlag++)
-		{
-			auto it = m_val.find(*itFlag);
-			if (it != m_val.end())
-			{
-				StackVarInfo index = it->first;
-				m_pMaster->AddVar2Bytes(vBuff, &index, vOutClassPoint);
-				AddChar2Bytes(vBuff, 1);
-				m_pMaster->AddVar2Bytes(vBuff, &it->second, vOutClassPoint);
-			}
-			else
-			{
-				StackVarInfo index = *itFlag;
-				m_pMaster->AddVar2Bytes(vBuff, &index, vOutClassPoint);
-				AddChar2Bytes(vBuff, 0);
-			}
-		}
-	}
+	//void CScriptVar2VarMapAttribute::AddData2Bytes(std::vector<char>& vBuff, std::vector<CPointVar*>& vOutClassPoint)
+	//{
+	//	//std::lock_guard<std::mutex> Lock(m_lock);
+	//	//AddChar2Bytes(vBuff, 1);//第一是是否全部更新，1是，0否
+	//	//AddUInt2Bytes(vBuff, m_val.size());//第二个是要更新多少数据
+	//	//auto it = m_val.begin();
+	//	//for (;it != m_val.end();it++)
+	//	//{
+	//	//	StackVarInfo index = it->first;
+	//	//	m_pMaster->AddVar2Bytes(vBuff, &index, vOutClassPoint);
+	//	//	//AddChar2Bytes(vBuff, 1);
+	//	//	m_pMaster->AddVar2Bytes(vBuff, &it->second, vOutClassPoint);
+	//	//}
+	//}
 
-	bool CScriptVar2VarMapAttribute::DecodeData4Bytes(char* pBuff, int& pos, unsigned int len, std::vector<PointVarInfo>& vOutClassPoint)
-	{
-		std::lock_guard<std::mutex> Lock(m_lock);
-		char mode = DecodeBytes2Char(pBuff, pos, len);
-		int nNum = DecodeBytes2Int(pBuff, pos, len);
-		if (mode == 1)
-		{
-			m_val.clear();
-			for (int i = 0; i < nNum; i++)
-			{
-				StackVarInfo Index = m_pMaster->DecodeVar4Bytes(pBuff, pos, len, vOutClassPoint);
-				m_val[Index] = m_pMaster->DecodeVar4Bytes(pBuff, pos, len, vOutClassPoint);
-			}
-		}
-		else
-		{
-			for (int i = 0; i < nNum; i++)
-			{
-				StackVarInfo Index = m_pMaster->DecodeVar4Bytes(pBuff, pos, len, vOutClassPoint);
-				char cHas = DecodeBytes2Char(pBuff, pos, len);
-				if (cHas != 0)
-				{
-					m_val[Index] = m_pMaster->DecodeVar4Bytes(pBuff, pos, len, vOutClassPoint);
-				}
-				else
-				{
-					auto it = m_val.find(Index);
-					if (it != m_val.end())
-					{
-						m_val.erase(it);
-					}
-				}
-			}
-		}
-		return true;
-	}
+	//void CScriptVar2VarMapAttribute::AddChangeData2Bytes(std::vector<char>& vBuff, std::vector<CPointVar*>& vOutClassPoint)
+	//{
+	//	//std::lock_guard<std::mutex> Lock(m_lock);
+	//	//AddChar2Bytes(vBuff, 0);//第一是是否全部更新，1是，0否
+	//	//AddUInt2Bytes(vBuff, m_setFlag.size());//第二个是要更新多少数据
+	//	//auto itFlag = m_setFlag.begin();
+	//	//for (; itFlag != m_setFlag.end(); itFlag++)
+	//	//{
+	//	//	auto it = m_val.find(*itFlag);
+	//	//	if (it != m_val.end())
+	//	//	{
+	//	//		StackVarInfo index = it->first;
+	//	//		m_pMaster->AddVar2Bytes(vBuff, &index, vOutClassPoint);
+	//	//		AddChar2Bytes(vBuff, 1);
+	//	//		m_pMaster->AddVar2Bytes(vBuff, &it->second, vOutClassPoint);
+	//	//	}
+	//	//	else
+	//	//	{
+	//	//		StackVarInfo index = *itFlag;
+	//	//		m_pMaster->AddVar2Bytes(vBuff, &index, vOutClassPoint);
+	//	//		AddChar2Bytes(vBuff, 0);
+	//	//	}
+	//	//}
+	//}
+
+	//bool CScriptVar2VarMapAttribute::DecodeData4Bytes(char* pBuff, int& pos, unsigned int len, std::vector<CPointVar*>& vOutClassPoint)
+	//{
+	//	//std::lock_guard<std::mutex> Lock(m_lock);
+	//	//char mode = DecodeBytes2Char(pBuff, pos, len);
+	//	//int nNum = DecodeBytes2Int(pBuff, pos, len);
+	//	//if (mode == 1)
+	//	//{
+	//	//	m_val.clear();
+	//	//	for (int i = 0; i < nNum; i++)
+	//	//	{
+	//	//		StackVarInfo Index = m_pMaster->DecodeVar4Bytes(pBuff, pos, len, vOutClassPoint);
+	//	//		m_val[Index] = m_pMaster->DecodeVar4Bytes(pBuff, pos, len, vOutClassPoint);
+	//	//	}
+	//	//}
+	//	//else
+	//	//{
+	//	//	for (int i = 0; i < nNum; i++)
+	//	//	{
+	//	//		StackVarInfo Index = m_pMaster->DecodeVar4Bytes(pBuff, pos, len, vOutClassPoint);
+	//	//		char cHas = DecodeBytes2Char(pBuff, pos, len);
+	//	//		if (cHas != 0)
+	//	//		{
+	//	//			m_val[Index] = m_pMaster->DecodeVar4Bytes(pBuff, pos, len, vOutClassPoint);
+	//	//		}
+	//	//		else
+	//	//		{
+	//	//			auto it = m_val.find(Index);
+	//	//			if (it != m_val.end())
+	//	//			{
+	//	//				m_val.erase(it);
+	//	//			}
+	//	//		}
+	//	//	}
+	//	//}
+	//	return true;
+	//}
 
 
 

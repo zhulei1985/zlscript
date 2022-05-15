@@ -127,6 +127,7 @@
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>../class/;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_SCRIPT_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -139,6 +140,7 @@
     <ClInclude Include="..\class\CICodeMgr.h" />
     <ClInclude Include="..\class\ScriptBaseICode.h" />
     <ClInclude Include="..\class\ScriptClassFunion.h" />
+    <ClInclude Include="..\class\ScriptClassInfo.h" />
     <ClInclude Include="..\class\ScriptCodeStyle.h" />
     <ClInclude Include="..\class\ScriptClassAttributes.h" />
     <ClInclude Include="..\class\ScriptClassMgr.h" />
@@ -146,11 +148,15 @@
     <ClInclude Include="..\class\ScriptCompileInfo.h" />
     <ClInclude Include="..\class\ScriptDebugPrint.h" />
     <ClInclude Include="..\class\ScriptExecFrame.h" />
+    <ClInclude Include="..\class\ScriptGlobalVarMgr.h" />
     <ClInclude Include="..\class\ScriptIntermediateCode.h" />
     <ClInclude Include="..\class\ScriptPointInterface.h" />
     <ClInclude Include="..\class\ScriptRunState.h" />
     <ClInclude Include="..\class\ScriptTriggerMgr.h" />
+    <ClInclude Include="..\class\ScriptVarAssignmentMgr.h" />
     <ClInclude Include="..\class\ScriptVarInfo.h" />
+    <ClInclude Include="..\class\ScriptVarOperatorMgr.h" />
+    <ClInclude Include="..\class\ScriptVarTypeMgr.h" />
     <ClInclude Include="..\class\TempScriptRunState.h" />
     <ClInclude Include="..\class\zBinaryBuffer.h" />
     <ClInclude Include="..\class\zByteArray.h" />
@@ -185,12 +191,16 @@
     <ClCompile Include="..\class\ScriptEventMgr.cpp" />
     <ClCompile Include="..\class\ScriptExecBlock.cpp" />
     <ClCompile Include="..\class\ScriptExecFrame.cpp" />
+    <ClCompile Include="..\class\ScriptGlobalVarMgr.cpp" />
     <ClCompile Include="..\class\ScriptIntermediateCode.cpp" />
     <ClCompile Include="..\class\ScriptPointInterface.cpp" />
     <ClCompile Include="..\class\ScriptRunState.cpp" />
     <ClCompile Include="..\class\ScriptStack.cpp" />
     <ClCompile Include="..\class\ScriptSuperPointer.cpp" />
     <ClCompile Include="..\class\ScriptTriggerMg.cpp" />
+    <ClCompile Include="..\class\ScriptVarAssignmentMgr.cpp" />
+    <ClCompile Include="..\class\ScriptVarOperatorMgr.cpp" />
+    <ClCompile Include="..\class\ScriptVarTypeMgr.cpp" />
     <ClCompile Include="..\class\ScriptVirtualMachine.cpp" />
     <ClCompile Include="..\class\ScriptVarInfo.cpp" />
     <ClCompile Include="..\class\TempScriptRunState.cpp" />
