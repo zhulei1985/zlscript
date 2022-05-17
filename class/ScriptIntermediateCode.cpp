@@ -171,7 +171,7 @@ namespace zlscript
 		GetNewWord(strSign);
 		if (strSign.word == ";")
 		{
-			if (!this->DefineTempVar(unVarType, strName.word))
+			if (!this->DefineTempVar(unVarType, strName.word, pCompiler))
 			{
 				AddErrorInfo(
 					strName.nSourceWordsIndex,
@@ -182,7 +182,7 @@ namespace zlscript
 		}
 		else if (strSign.word == "=")
 		{
-			if (!this->DefineTempVar(unVarType, strName.word))
+			if (!this->DefineTempVar(unVarType, strName.word, pCompiler))
 			{
 				AddErrorInfo(
 					strName.nSourceWordsIndex,

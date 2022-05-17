@@ -9,7 +9,10 @@ namespace zlscript
 	void CBaseICode::SetFather(CBaseICode* pCode)
 	{
 		m_pFather = pCode;
-		m_nRunStateIndex = m_pFather->m_nRunStateIndex + 1;
+		if (m_pFather)
+			m_nRunStateIndex = m_pFather->m_nRunStateIndex + 1;
+		else
+			m_nRunStateIndex = 0;
 	}
 	//CScriptCompiler* CBaseICode::GetCompiler()
 	//{
@@ -19,11 +22,11 @@ namespace zlscript
 	//{
 	//	m_pCompiler = pCompiler;
 	//}
-	bool CBaseICode::DefineTempVar(int type, std::string VarName)
+	bool CBaseICode::DefineTempVar(int type, std::string VarName, CScriptCompiler* pCompiler)
 	{
 		if (m_pFather)
 		{
-			return m_pFather->DefineTempVar(type, VarName);
+			return m_pFather->DefineTempVar(type, VarName, pCompiler);
 		}
 		return false;
 	}

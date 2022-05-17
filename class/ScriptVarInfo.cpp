@@ -5,6 +5,10 @@
 
 namespace zlscript
 {
+	CIntVar::CIntVar()
+	{
+		m_nType = CScriptClassInfo<CIntVar>::GetInstance().nClassType;
+	}
 	__int64 CIntVar::ToInt()
 	{
 		return nValue;
@@ -74,6 +78,11 @@ namespace zlscript
 		return false;
 	}
 
+
+	CFloatVar::CFloatVar()
+	{
+		m_nType = CScriptClassInfo<CFloatVar>::GetInstance().nClassType;
+	}
 
 	__int64 CFloatVar::ToInt()
 	{
@@ -145,6 +154,10 @@ namespace zlscript
 	}
 
 	zlscript::CStringPool CStringVar::s_strPool;
+	CStringVar::CStringVar()
+	{
+		m_nType = CScriptClassInfo<CStringVar>::GetInstance().nClassType;
+	}
 	CStringVar::~CStringVar()
 	{
 		clear();

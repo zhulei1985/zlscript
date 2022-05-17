@@ -53,7 +53,8 @@ namespace zlscript
 
 #define STACK_PUSH_COPY(stack,var) {\
 		STACK_CHECK_SIZE(stack)\
-		SCRIPTVAR_COPY_VAR(stack.m_vData[stack.nIndex],var);\
+		auto &pVar1 = stack.m_vData[stack.nIndex]; \
+		SCRIPTVAR_COPY_VAR(pVar1,var);\
 		stack.nIndex++;\
 	}
 #define STACK_PUSH_MOVE(stack,var) {\

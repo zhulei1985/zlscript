@@ -395,8 +395,8 @@ namespace zlscript
 	bool CScriptCodeLoader::CheckCurCompileFunName(std::string name)
 	{
 		if (m_setCurCompileFunName.find(name)!= m_setCurCompileFunName.end())
-			return false;
-		return true;
+			return true;
+		return false;
 	}
 
 	bool CScriptCodeLoader::AddCurCompileFunName(std::string name)

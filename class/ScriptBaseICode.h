@@ -37,7 +37,7 @@ namespace zlscript
 		//CScriptCompiler* GetCompiler();
 		//void SetCompiler(CScriptCompiler* pCompiler);
 
-		virtual bool DefineTempVar(int type, std::string VarName);
+		virtual bool DefineTempVar(int type, std::string VarName, CScriptCompiler* pCompiler);
 		virtual bool CheckTempVar(const char* pVarName);
 
 		virtual VarInfo* GetTempVarInfo(const char* pVarName);

@@ -58,6 +58,7 @@ namespace zlscript
 			auto pMgr = new CScriptVarMgr<T>();
 			int nType = m_vVarTypeMgr.size();
 			mapDicString2Type[name] = nType;
+			pMgr->SetType(nType);
 			m_vVarTypeMgr.push_back(pMgr);
 
 			CScriptClassInfo<T> &info = CScriptClassInfo<T>::GetInstance();

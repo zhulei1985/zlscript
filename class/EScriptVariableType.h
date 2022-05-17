@@ -19,9 +19,9 @@ namespace zlscript
 {
 	enum
 	{
-		EScriptVal_None,
+		EScriptVal_None = -1,
 
-		EScriptVal_Var = 1,
+		EScriptVal_Var = 0,
 
 		EScriptVal_Class = 1000,
 	};

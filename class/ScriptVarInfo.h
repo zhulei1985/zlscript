@@ -38,10 +38,11 @@ namespace zlscript
 	class CIntVar : public CBaseVar
 	{
 	public:
-		CIntVar(){}
+		CIntVar();
 		CIntVar(CIntVar& var)
 		{
 			nValue = var.nValue;
+			m_nType = var.m_nType;
 		}
 	public:
 		std::size_t GetHash() const
@@ -70,10 +71,11 @@ namespace zlscript
 	class CFloatVar : public CBaseVar
 	{
 	public:
-		CFloatVar() {}
+		CFloatVar();
 		CFloatVar(CFloatVar& var)
 		{
 			fValue = var.fValue;
+			m_nType = var.m_nType;
 		}
 	public:
 
@@ -102,11 +104,12 @@ namespace zlscript
 	class CStringVar : public CBaseVar
 	{
 	public:
-		CStringVar() {}
+		CStringVar();
 		CStringVar(CStringVar &var)
 		{
 			s_strPool.UseString(nStringIndex);
 			nStringIndex = var.nStringIndex;
+			m_nType = var.m_nType;
 		}
 		~CStringVar();
 	public:

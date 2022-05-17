@@ -30,6 +30,9 @@ namespace zlscript
 {
 	inline void InitScript()
 	{
+		RegisterVarType("int", CIntVar);
+		RegisterVarType("float", CFloatVar);
+		RegisterVarType("string", CStringVar);
 		CScriptCallBackFunion::GetInstance()->init();
 		//CScriptSuperPointerMgr::GetInstance()->Init();
 		//CScriptData::Init2Script();
@@ -63,6 +66,8 @@ namespace zlscript
 		var2.Set(pName);
 		CBaseVar* pVar = &var;
 		CBaseVar* pVar2 = &var2;
+		CBaseVar* pTemp = nullptr;
+
 		STACK_PUSH_COPY(vRetrunVars, pVar);
 		STACK_PUSH_COPY(vRetrunVars, pVar2);
 		CScriptEventMgr::GetInstance()->SendEvent(E_SCRIPT_EVENT_RUNSCRIPT,0, vRetrunVars);
