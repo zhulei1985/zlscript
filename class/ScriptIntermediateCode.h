@@ -127,7 +127,7 @@ namespace zlscript
 		std::string filename;
 
 		std::string strReturnType;
-
+		int nPramSize{ 0 };
 		std::vector<CBaseICode*> vBodyCode;
 
 		int MaxStateIndex{0};

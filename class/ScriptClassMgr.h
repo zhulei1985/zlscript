@@ -60,16 +60,28 @@ namespace zlscript
 		CBaseVar* New(int autorelease);
 		void Release(CBaseVar* pPoint);
 	
+	protected:
+		std::list<CBaseVar*> cache;
 	};
 
 
 	template<class T>
 	inline CBaseVar* CScriptVarMgr<T>::New(int autorelease)
 	{
-		CBaseVar* pPoint = new T;
-		if (pPoint)
+		CBaseVar* pPoint = nullptr;
+		if (!cache.empty())
 		{
-			pPoint->SetType(m_nType);
+			pPoint = cache.front();
+			cache.pop_front();
+		}
+		if (pPoint == nullptr)
+		{
+			pPoint = new T;
+			if (pPoint)
+			{
+				pPoint->SetType(m_nType);
+			}
+
 		}
 		return pPoint;
 	}
@@ -78,7 +90,9 @@ namespace zlscript
 	inline void CScriptVarMgr<T>::Release(CBaseVar* pPoint)
 	{
 		if (pPoint)
-			delete pPoint;
+			cache.push_back(pPoint);
+		//if (pPoint)
+		//	delete pPoint;
 	}
 
 

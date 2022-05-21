@@ -106,7 +106,10 @@ namespace zlscript
 			}
 			else
 			{
-				pGVar->pVar->Set(strVal.word);
+				//pGVar->pVar->Set(strVal.word);
+				CStringVar temp;
+				temp.Set(strVal.word);
+				AssignVar(pGVar->pVar, (&temp));
 			}
 
 			CScriptGlobalVarMgr::GetInstance()->Revert(pGVar);
@@ -307,6 +310,7 @@ namespace zlscript
 					RevertAll();
 					return false;
 				}
+				nPramSize++;
 				GetWord(nextWord);
 				if (nextWord.word == ",")
 				{
@@ -384,7 +388,14 @@ namespace zlscript
 			{
 				pBlock->RegisterLoaclVar(it->second.index, it->second.nType);
 			}
-
+			for (int i = 0; i < nPramSize; i++)
+			{
+				CBaseVar *pLoaclVar = pBlock->GetLoaclVar(i);
+				CBaseVar* pVar = nullptr;
+				STACK_GET_INDEX(pBlock->registerStack, pVar, i);
+				AssignVar(pLoaclVar, pVar);
+			}
+			STACK_POP_FRONT(pBlock->registerStack, nPramSize);
 			state++;
 		}
 		while (state > 0 && state <= vBodyCode.size())
@@ -1045,6 +1056,7 @@ namespace zlscript
 		else
 		{
 			//TODO 报错
+			STACK_PUSH_MOVE(pBlock->registerStack, pVar);
 			return CScriptExecBlock::ERESULT_ERROR;
 		}
 
@@ -1130,7 +1142,6 @@ namespace zlscript
 	{
 		int& state = pBlock->GetRunState(m_nRunStateIndex);
 
-		CBaseVar* pLeftVar = nullptr;
 		if (state == 0)
 		{	
 			if (pLeftOperand)
@@ -1145,20 +1156,6 @@ namespace zlscript
 		}
 		if (state == 1)
 		{
-			if (pLeftOperand)
-			{
-				STACK_POP(pBlock->registerStack, pLeftVar);
-				if (pLeftVar == nullptr)
-				{
-					//TODO 报错
-					return CScriptExecBlock::ERESULT_ERROR;
-				}
-			}
-			state++;
-		}
-		CBaseVar* pRightVar = nullptr;
-		if (state == 2)
-		{
 			if (pRightOperand)
 			{
 				int result = pRightOperand->Run(pBlock);
@@ -1169,7 +1166,9 @@ namespace zlscript
 			}
 			state++;
 		}
-		if (state == 3)
+		CBaseVar* pLeftVar = nullptr;
+		CBaseVar* pRightVar = nullptr;
+		if (state == 2)
 		{
 			if (pRightOperand)
 			{
@@ -1177,17 +1176,34 @@ namespace zlscript
 				if (pRightVar == nullptr)
 				{
 					//TODO 报错
+					SCRIPTVAR_RELEASE(pLeftVar);
 					return CScriptExecBlock::ERESULT_ERROR;
 				}
 			}
+			if (pLeftOperand)
+			{
+				STACK_POP(pBlock->registerStack, pLeftVar);
+				if (pLeftVar == nullptr)
+				{
+					//TODO 报错
+					return CScriptExecBlock::ERESULT_ERROR;
+				}
+			}
+
 			state++;
 		}
+
+
 		if (!CScriptVarOperatorMgr::GetInstance()->Operator(pOperGroup, pLeftVar, pRightVar,pBlock->registerStack))
 		{
 			//TODO 报错
+			SCRIPTVAR_RELEASE(pLeftVar);
+			SCRIPTVAR_RELEASE(pRightVar);
 			return CScriptExecBlock::ERESULT_ERROR;
 		}
 		state = 0;
+		SCRIPTVAR_RELEASE(pLeftVar);
+		SCRIPTVAR_RELEASE(pRightVar);
 		pBlock->RevertRunState(m_nRunStateIndex);
 		return CScriptExecBlock::ERESULT_CONTINUE;
 	}
@@ -1902,8 +1918,8 @@ namespace zlscript
 				{
 					return false;
 				}
-				pSetCode->AddICode(0, pOperNode->pRightOperand);
 				pSetCode->SetFather(pOperNode->GetFather());
+				pSetCode->AddICode(0, pOperNode->pRightOperand);
 				*pNode = pSetCode;
 				return true;
 
@@ -1921,8 +1937,8 @@ namespace zlscript
 				{
 					return false;
 				}
-				pSaveCode->AddICode(0, pOperNode->pRightOperand);
 				pSaveCode->SetFather(pOperNode->GetFather());
+				pSaveCode->AddICode(0, pOperNode->pRightOperand);
 				*pNode = pSaveCode;
 				return true;
 			}

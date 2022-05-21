@@ -88,7 +88,7 @@ namespace zlscript
 		}
 		else
 		{
-			result.Set((__int64)1);
+			result.Set((__int64)0);
 		}
 		STACK_PUSH_COPY(stack, (&result));
 		return true;
@@ -108,7 +108,7 @@ namespace zlscript
 		}
 		else
 		{
-			result.Set((__int64)1);
+			result.Set((__int64)0);
 		}
 		STACK_PUSH_COPY(stack, (&result));
 		return true;
