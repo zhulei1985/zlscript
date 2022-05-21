@@ -26,6 +26,7 @@
 #include "ScriptClassMgr.h"
 #include "ScriptClassAttributes.h"
 #include "ScriptPointInterface.h"
+#include "ScriptOperatorFuns.h"
 namespace zlscript
 {
 	inline void InitScript()
@@ -34,6 +35,7 @@ namespace zlscript
 		RegisterVarType("float", CFloatVar);
 		RegisterVarType("string", CStringVar);
 		CScriptCallBackFunion::GetInstance()->init();
+		InitOperFun();
 		//CScriptSuperPointerMgr::GetInstance()->Init();
 		//CScriptData::Init2Script();
 		//CScriptHashMap::Init2Script();

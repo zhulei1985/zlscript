@@ -20,10 +20,11 @@
 
 #include <functional> 
 #include "ScriptVarInfo.h"
+#include "ScriptStack.h"
 //赋值管理
 namespace zlscript
 {
-	typedef std::function<bool(CBaseVar*, CBaseVar*)> OperFun;
+	typedef std::function<bool(CBaseVar*, CBaseVar*, tagScriptVarStack& stack)> OperFun;
 	typedef std::map<__int64, OperFun> OperGroup;
 	class CScriptVarOperatorMgr
 	{
@@ -37,10 +38,10 @@ namespace zlscript
 		static CScriptVarOperatorMgr s_Instance;
 	public:
 		void RegisterFun(int OperType, int type1, int type2, OperFun pFun);
-		bool Operator(int OperType, CBaseVar* pDes, CBaseVar* pSrc);
+		bool Operator(int OperType, CBaseVar* pDes, CBaseVar* pSrc, tagScriptVarStack& stack);
 
 		OperGroup* GetOperGroup(int OperType);
-		bool Operator(OperGroup *group, CBaseVar* pDes, CBaseVar* pSrc);
+		bool Operator(OperGroup *group, CBaseVar* pDes, CBaseVar* pSrc, tagScriptVarStack &stack);
 	protected:
 		std::map<int, OperGroup> m_mapOperGroup;
 	};

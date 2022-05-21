@@ -417,7 +417,7 @@ namespace zlscript
 				SCRIPT_PRINT("script", "Error script 执行错误: %s", FunName.c_str());
 
 				SAFE_DELETE(pBlock);
-
+				m_BlockStack.pop();
 				break;
 			}
 			case CScriptExecBlock::ERESULT_WAITING:

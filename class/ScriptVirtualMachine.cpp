@@ -650,7 +650,7 @@ namespace zlscript
 		CScriptRunState* m_pScriptState = new CScriptRunState;
 		if (m_pScriptState)
 		{
-			std::string strScript;
+			//std::string strScript;
 			CBaseVar* pVarScriptName = nullptr;
 			STACK_GET_INDEX(ParmInfo, pVarScriptName, 1);
 			CStringVar* pStrScript = dynamic_cast<CStringVar*>(pVarScriptName);
@@ -664,7 +664,7 @@ namespace zlscript
 				m_pScriptState->m_CallReturnId = pScriptStateID->ToInt();
 			}
 			STACK_POP_FRONT(ParmInfo, 2);
-			RunFun(m_pScriptState, strScript, ParmInfo);
+			RunFun(m_pScriptState, pStrScript->ToString(), ParmInfo);
 		}
 	}
 

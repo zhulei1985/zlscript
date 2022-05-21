@@ -364,8 +364,17 @@ namespace zlscript
 		CBaseICode::AddICode(nType, pCode);
 	}
 
+	void CFunICode::SetMaxRunState(int val)
+	{
+		if (MaxStateIndex < val)
+		{
+			MaxStateIndex = val;
+		}
+	}
+
 	int CFunICode::Run(CScriptExecBlock* pBlock)
 	{
+		pBlock->RegisterRunState(MaxStateIndex + 1);
 		int& state = pBlock->GetRunState(m_nRunStateIndex);
 		if (state == 0)
 		{
@@ -1173,7 +1182,7 @@ namespace zlscript
 			}
 			state++;
 		}
-		if (!CScriptVarOperatorMgr::GetInstance()->Operator(pOperGroup, pLeftVar, pRightVar))
+		if (!CScriptVarOperatorMgr::GetInstance()->Operator(pOperGroup, pLeftVar, pRightVar,pBlock->registerStack))
 		{
 			//TODO 报错
 			return CScriptExecBlock::ERESULT_ERROR;

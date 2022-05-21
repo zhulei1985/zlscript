@@ -119,6 +119,9 @@ namespace zlscript
 		virtual bool Compile(SentenceSourceCode& vIn,CScriptCompiler* pCompiler);
 
 		virtual void AddICode(int nType, CBaseICode* pCode);
+
+	public:
+		virtual void SetMaxRunState(int val);
 	public:
 		std::string funname;
 		std::string filename;
@@ -127,6 +130,7 @@ namespace zlscript
 
 		std::vector<CBaseICode*> vBodyCode;
 
+		int MaxStateIndex{0};
 	protected:
 		std::map<std::string, VarInfo> m_mapTempVarInfo;
 

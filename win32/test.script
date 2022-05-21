@@ -40,10 +40,15 @@ void CalculationTest()
 
 void main()
 {
+	int t1 = GetMsTime();
+	print(t1);
 	print("begin");
 
 	int nVal = 0;
-	int t1 = GetMsTime();
+	print("begin2");
+
+	print("begin3");
+	t1 = GetMsTime();
 	//nVal = FibTest(40);
 	nVal = FibTest(20);
 	int t2 = GetMsTime() - t1;

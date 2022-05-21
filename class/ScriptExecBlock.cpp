@@ -60,8 +60,16 @@ namespace zlscript
 	CBaseVar* CScriptExecBlock::GetLoaclVar(int index)
 	{
 		CBaseVar* pResult = nullptr;
-		STACK_GET_INDEX(loaclVarStack, pResult, index);
+		if (index < loaclVarStack.nSize)
+		{
+			pResult = loaclVarStack.m_vData[index];
+		}
 		return pResult;
+	}
+
+	void CScriptExecBlock::RegisterRunState(int size)
+	{
+		m_vRunState.resize(size);
 	}
 
 	int& CScriptExecBlock::GetRunState(int index)
@@ -72,9 +80,9 @@ namespace zlscript
 		}
 		if (m_vRunState.size() <= index)
 		{
-			m_vRunState.resize(index + 1);
+			return nOtherState;
 		}
-		// TODO: ÔÚ´Ë´¦²åÈë return Óï¾ä
+		// TODO: åœ¨æ­¤å¤„æ’å…¥ return è¯­å¥
 		return m_vRunState[index];
 	}
 

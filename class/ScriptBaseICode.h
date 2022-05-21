@@ -55,9 +55,11 @@ namespace zlscript
 
 	public:
 		//直接基于中间代码来执行
-		virtual int Run(CScriptExecBlock* pBlock) { return 0; };
+		virtual int Run(CScriptExecBlock* pBlock);
 
 	protected:
 		int m_nRunStateIndex;//运行状态索引
+	public:
+		virtual void SetMaxRunState(int val);
 	};
 }

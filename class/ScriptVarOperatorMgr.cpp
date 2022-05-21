@@ -19,7 +19,7 @@ namespace zlscript
 		group[trans.index] = pFun;
 	}
 
-	bool CScriptVarOperatorMgr::Operator(int OperType, CBaseVar* pDes, CBaseVar* pSrc)
+	bool CScriptVarOperatorMgr::Operator(int OperType, CBaseVar* pDes, CBaseVar* pSrc, tagScriptVarStack& stack)
 	{
 		OperGroup& group = m_mapOperGroup[OperType];
 		union {
@@ -37,7 +37,7 @@ namespace zlscript
 		if (it != group.end())
 		{
 			OperFun& fun = it->second;
-			return fun(pDes, pSrc);
+			return fun(pDes, pSrc, stack);
 		}
 
 		return false;
@@ -47,7 +47,7 @@ namespace zlscript
 		OperGroup& group = m_mapOperGroup[OperType];
 		return &group;
 	}
-	bool CScriptVarOperatorMgr::Operator(OperGroup* group, CBaseVar* pDes, CBaseVar* pSrc)
+	bool CScriptVarOperatorMgr::Operator(OperGroup* group, CBaseVar* pDes, CBaseVar* pSrc, tagScriptVarStack& stack)
 	{
 		if (group == nullptr)
 		{
@@ -68,7 +68,7 @@ namespace zlscript
 		if (it != group->end())
 		{
 			OperFun& fun = it->second;
-			return fun(pDes, pSrc);
+			return fun(pDes, pSrc, stack);
 		}
 		return false;
 	}

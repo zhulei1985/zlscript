@@ -58,6 +58,7 @@ namespace zlscript
 		void RegisterLoaclVar(int index, int type);
 		CBaseVar* GetLoaclVar(int index);
 
+		void RegisterRunState(int size);
 		int& GetRunState(int index);
 		void RevertRunState(int index);
 	public:

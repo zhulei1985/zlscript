@@ -1,5 +1,6 @@
 #include "ScriptBaseICode.h"
 #include "ScriptCompiler.h"
+#include "ScriptExecBlock.h"
 namespace zlscript
 {
 	CBaseICode* CBaseICode::GetFather()
@@ -13,6 +14,7 @@ namespace zlscript
 			m_nRunStateIndex = m_pFather->m_nRunStateIndex + 1;
 		else
 			m_nRunStateIndex = 0;
+		SetMaxRunState(m_nRunStateIndex);
 	}
 	//CScriptCompiler* CBaseICode::GetCompiler()
 	//{
@@ -66,5 +68,16 @@ namespace zlscript
 	{
 		//if (m_pCompiler)
 		//	m_pCompiler->AddErrorInfo(pos, error);
+	}
+	int CBaseICode::Run(CScriptExecBlock* pBlock)
+	{
+		return CScriptExecBlock::ERESULT_CONTINUE;
+	}
+	void CBaseICode::SetMaxRunState(int val)
+	{
+		if (m_pFather)
+		{
+			m_pFather->SetMaxRunState(val);
+		}
 	}
 }
