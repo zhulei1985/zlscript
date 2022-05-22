@@ -54,6 +54,7 @@ namespace zlscript
 		unsigned int m_unBeginSoureIndex;
 
 	public:
+		virtual bool MakeExeCode(stCodeData& vOut);
 		//直接基于中间代码来执行
 		virtual int Run(CScriptExecBlock* pBlock);
 

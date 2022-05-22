@@ -60,25 +60,25 @@
 //	};
 //
 //#endif
-//	class CScriptExecBlock;
-//	class CBaseExeCode
-//	{
-//	public:
-//		CBaseExeCode()
-//		{
-//			m_pNext = nullptr;
-//			nSoureWordIndex = 0;
-//			nCodeIndex = 0;
-//		}
-//
-//		virtual int Run(CScriptExecBlock *pBlock, CBaseExeCode **pNextPoint) = 0;
-//		virtual std::string GetCodeString() { return ""; }
-//	public:
-//		CBaseExeCode* m_pNext;
-//
-//		unsigned int nSoureWordIndex;
-//		unsigned int nCodeIndex;
-//	};
+	class CScriptExecBlock;
+	class CBaseExeCode
+	{
+	public:
+		CBaseExeCode()
+		{
+			m_pNext = nullptr;
+			nSoureWordIndex = 0;
+			nCodeIndex = 0;
+		}
+
+		virtual int Run(CScriptExecBlock *pBlock, CBaseExeCode **pNextPoint) = 0;
+		virtual std::string GetCodeString() { return ""; }
+	public:
+		CBaseExeCode* m_pNext;
+
+		unsigned int nSoureWordIndex;
+		unsigned int nCodeIndex;
+	};
 //	//ECODE_ADD = 1, //加
 //	class CAddExeCode : public CBaseExeCode
 //	{

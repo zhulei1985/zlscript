@@ -130,6 +130,9 @@
     <ClInclude Include="..\class\ScriptOperatorFuns.h">
       <Filter>code</Filter>
     </ClInclude>
+    <ClInclude Include="..\class\ScriptExeCodeData.h">
+      <Filter>code</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\class\ScriptCallBackFunion.cpp">

@@ -148,6 +148,7 @@
     <ClInclude Include="..\class\ScriptCompileInfo.h" />
     <ClInclude Include="..\class\ScriptDebugPrint.h" />
     <ClInclude Include="..\class\ScriptExecFrame.h" />
+    <ClInclude Include="..\class\ScriptExeCodeData.h" />
     <ClInclude Include="..\class\ScriptGlobalVarMgr.h" />
     <ClInclude Include="..\class\ScriptIntermediateCode.h" />
     <ClInclude Include="..\class\ScriptOperatorFuns.h" />
