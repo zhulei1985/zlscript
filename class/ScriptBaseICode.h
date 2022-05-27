@@ -1,6 +1,7 @@
 #pragma once
 #include "EMicroCodeType.h"
 #include "ScriptCompileInfo.h"
+#include "ScriptExeCodeData.h"
 namespace zlscript
 {
 	struct VarInfo
@@ -54,7 +55,7 @@ namespace zlscript
 		unsigned int m_unBeginSoureIndex;
 
 	public:
-		virtual bool MakeExeCode(stCodeData& vOut);
+		virtual bool MakeExeCode(CExcCodeData& vOut);
 		//直接基于中间代码来执行
 		virtual int Run(CScriptExecBlock* pBlock);
 

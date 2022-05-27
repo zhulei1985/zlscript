@@ -69,6 +69,10 @@ namespace zlscript
 		//if (m_pCompiler)
 		//	m_pCompiler->AddErrorInfo(pos, error);
 	}
+	bool CBaseICode::MakeExeCode(CExcCodeData& vOut)
+	{
+		return true;
+	}
 	int CBaseICode::Run(CScriptExecBlock* pBlock)
 	{
 		return CScriptExecBlock::ERESULT_CONTINUE;
