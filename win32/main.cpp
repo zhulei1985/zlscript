@@ -1,4 +1,4 @@
-﻿#include "ZLScript.h"
+#include "ZLScript.h"
 #include <atomic>
 #include <thread>
 #include <chrono>
@@ -151,7 +151,9 @@ int main()
 	RegisterClassType("CSubTest", CSubTest);
 	//RegisterClassFun1("Add", CTest);
 
-	zlscript::LoadFile("test.script");
+	CScriptCompiler compiler;
+	zlscript::LoadFile("test.script", &compiler);
+	compiler.MakeExeCode();
 	//zlscript::CScriptCodeLoader::GetInstance()->MakeICode2Code(0);
 	//zlscript::CScriptCodeLoader::GetInstance()->ClearICode();
 	//zlscript::CScriptCodeLoader::GetInstance()->PrintAllCode("debug.txt");

@@ -64,19 +64,16 @@ namespace zlscript
 		return nullptr;
 	}
 
-	void CBaseICode::AddErrorInfo(unsigned int pos, std::string error)
-	{
-		//if (m_pCompiler)
-		//	m_pCompiler->AddErrorInfo(pos, error);
-	}
-	bool CBaseICode::MakeExeCode(CExcCodeData& vOut)
+	//void CBaseICode::AddErrorInfo(unsigned int pos, std::string error)
+	//{
+	//	if (m_pCompiler)
+	//		m_pCompiler->AddErrorInfo(pos, error);
+	//}
+	bool CBaseICode::MakeExeCode(CExeCodeData& vOut)
 	{
 		return true;
 	}
-	int CBaseICode::Run(CScriptExecBlock* pBlock)
-	{
-		return CScriptExecBlock::ERESULT_CONTINUE;
-	}
+
 	void CBaseICode::SetMaxRunState(int val)
 	{
 		if (m_pFather)

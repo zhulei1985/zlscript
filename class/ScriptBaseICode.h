@@ -48,16 +48,12 @@ namespace zlscript
 		virtual CBaseICode* GetICode(int nType, int index);
 	private:
 		CBaseICode* m_pFather;
-	protected:
-		//CScriptCompiler* m_pCompiler;
-		void AddErrorInfo(unsigned int pos, std::string error);
+
 	public:
 		unsigned int m_unBeginSoureIndex;
 
 	public:
-		virtual bool MakeExeCode(CExcCodeData& vOut);
-		//直接基于中间代码来执行
-		virtual int Run(CScriptExecBlock* pBlock);
+		virtual bool MakeExeCode(CExeCodeData& vOut);
 
 	protected:
 		int m_nRunStateIndex;//运行状态索引

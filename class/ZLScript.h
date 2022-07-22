@@ -27,6 +27,7 @@
 #include "ScriptClassAttributes.h"
 #include "ScriptPointInterface.h"
 #include "ScriptOperatorFuns.h"
+#include "ScriptCompiler.h"
 namespace zlscript
 {
 	inline void InitScript()
@@ -41,9 +42,9 @@ namespace zlscript
 		//CScriptHashMap::Init2Script();
 		//CScriptArray::Init2Script();
 	}
-	inline void LoadFile(const char * filename)
+	inline void LoadFile(const char * filename, CScriptCompiler* pCompiler)
 	{
-		CScriptCodeLoader::GetInstance()->LoadFile(filename);
+		CScriptCodeLoader::GetInstance()->LoadFile(filename, pCompiler);
 	}
 	#define RUNSCRIPT(pMachine,scriptname,...) { \
 		if (pMachine) \

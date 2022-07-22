@@ -1,5 +1,6 @@
 #include "scriptcommon.h"
 
+#include "ScriptCodeLoader.h"
 #include "EScriptSentenceType.h"
 
 #include "ScriptVirtualMachine.h"
@@ -9,17 +10,23 @@
 #include "ScriptSuperPointer.h"
 #include "ScriptClassMgr.h"
 #include "ScriptIntermediateCode.h"
+#include "ScriptCodeStyle.h"
+#include "ScriptVarAssignmentMgr.h"
 #include <string>
 
 namespace zlscript
 {
-	CScriptExecBlock::CScriptExecBlock(CFunICode* pCode, CScriptRunState* pMaster)
+	CScriptExecBlock::CScriptExecBlock(CExeCodeData* pCode, CScriptRunState* pMaster)
 	{
-		m_pCurCode = nullptr;
+		m_pCodeData = nullptr;
 		m_pMaster = pMaster;
-		m_pCurCode = pCode;
+		m_pCodeData = pCode;
 
-
+		initLocalVar();
+		if (m_pCodeData)
+		{
+			m_pCurExeCode = m_pCodeData->pBeginCode;
+		}
 	}
 
 	CScriptExecBlock::~CScriptExecBlock(void)
@@ -36,28 +43,43 @@ namespace zlscript
 		return 0;
 	}
 
+	void CScriptExecBlock::initLocalVar()
+	{
+		if (m_pCodeData == nullptr)
+		{
+			return;
+		}
+		loaclVarStack.m_vData.resize(m_pCodeData->vLocalVarType.size());
+		loaclVarStack.nIndex = 0;
+		loaclVarStack.nSize = loaclVarStack.m_vData.size();
+		for (unsigned int i = 0; i < m_pCodeData->vLocalVarType.size(); i++)
+		{
+			loaclVarStack.m_vData[i] = CScriptVarTypeMgr::GetInstance()->GetVar(m_pCodeData->vLocalVarType[i]);
+		}
+	}
+
 	int CScriptExecBlock::GetDefaultReturnType()
 	{
 
 		return 0;
 	}
+	
+	//void CScriptExecBlock::RegisterLoaclVar(int index, int type)
+	//{
+	//	if (index < 0)
+	//	{
+	//		return;
+	//	}
+	//	if (index >= loaclVarStack.nSize)
+	//	{
+	//		loaclVarStack.m_vData.resize(index+1);
+	//		loaclVarStack.nIndex = index;
+	//		loaclVarStack.nSize = index + 1;		
+	//	}
+	//	loaclVarStack.m_vData[index] = CScriptVarTypeMgr::GetInstance()->GetVar(type);
+	//}
 
-	void CScriptExecBlock::RegisterLoaclVar(int index, int type)
-	{
-		if (index < 0)
-		{
-			return;
-		}
-		if (index >= loaclVarStack.nSize)
-		{
-			loaclVarStack.m_vData.resize(index+1);
-			loaclVarStack.nIndex = index;
-			loaclVarStack.nSize = index + 1;		
-		}
-		loaclVarStack.m_vData[index] = CScriptVarTypeMgr::GetInstance()->GetVar(type);
-	}
-
-	CBaseVar* CScriptExecBlock::GetLoaclVar(int index)
+	const CBaseVar* CScriptExecBlock::GetLoaclVar(int index)
 	{
 		CBaseVar* pResult = nullptr;
 		if (index < loaclVarStack.nSize)
@@ -67,45 +89,64 @@ namespace zlscript
 		return pResult;
 	}
 
-	void CScriptExecBlock::RegisterRunState(int size)
+	bool CScriptExecBlock::SetLoaclVar(int index, const CBaseVar* pVar)
 	{
-		m_vRunState.resize(size);
+		if (index < loaclVarStack.nSize)
+		{
+			CBaseVar *pLoackVar = loaclVarStack.m_vData[index];
+			AssignVar(pLoackVar, pVar);
+		}
+		return false;
 	}
 
-	int& CScriptExecBlock::GetRunState(int index)
+	const CBaseVar* CScriptExecBlock::GetConstVar(int index)
 	{
-		if (index < 0)
+		if ((unsigned int)index < m_pCodeData->vConstVar.size())
 		{
-			return nOtherState;
+			return m_pCodeData->vConstVar[index];
 		}
-		if (m_vRunState.size() <= index)
-		{
-			return nOtherState;
-		}
-		// TODO: 在此处插入 return 语句
-		return m_vRunState[index];
+		return nullptr;
 	}
 
-	void CScriptExecBlock::RevertRunState(int index)
-	{
-		if (index >= 0 && index < m_vRunState.size())
-		{
-			m_vRunState[index] = 0;
-		}
-	}
+	//void CScriptExecBlock::RegisterRunState(int size)
+	//{
+	//	m_vRunState.resize(size);
+	//}
+
+	//int& CScriptExecBlock::GetRunState(int index)
+	//{
+	//	if (index < 0)
+	//	{
+	//		return nOtherState;
+	//	}
+	//	if (m_vRunState.size() <= index)
+	//	{
+	//		return nOtherState;
+	//	}
+	//	// TODO: 在此处插入 return 语句
+	//	return m_vRunState[index];
+	//}
+
+	//void CScriptExecBlock::RevertRunState(int index)
+	//{
+	//	if (index >= 0 && index < m_vRunState.size())
+	//	{
+	//		m_vRunState[index] = 0;
+	//	}
+	//}
 
 	int CScriptExecBlock::GetCurCodeSoureIndex()
 	{
-		if (m_pCurCode)
+		if (m_pCurExeCode)
 		{
-			return m_pCurCode->m_unBeginSoureIndex;
+			return m_pCurExeCode->nSoureWordIndex;
 		}
 		return 0;
 	}
 
 	unsigned int CScriptExecBlock::ExecBlock(CScriptVirtualMachine* pMachine)
 	{
-		if (m_pMaster == nullptr || m_pCurCode == nullptr || pMachine == nullptr)
+		if (m_pMaster == nullptr || m_pCodeData == nullptr || pMachine == nullptr)
 		{
 			return ERESULT_ERROR;
 		}
@@ -113,9 +154,9 @@ namespace zlscript
 		auto oldTime = std::chrono::steady_clock::now();
 		//unsigned int nDataLen = m_pCodeData->vCodeData.size();
 		//CodeStyle* pData = &m_pCodeData->vCodeData[0];
-		while (m_pCurCode)
+		while (m_pCurExeCode)
 		{
-			nResult = m_pCurCode->Run(this);
+			nResult = m_pCurExeCode->Run(this, &m_pCurExeCode);
 
 			if (nResult != ERESULT_CONTINUE)
 			{	
@@ -130,7 +171,7 @@ namespace zlscript
 		//{
 		//	return nResult;
 		//}
-		if (m_pCurCode == nullptr)
+		if (m_pCurExeCode == nullptr)
 		{
 			nResult = ERESULT_END;
 		}

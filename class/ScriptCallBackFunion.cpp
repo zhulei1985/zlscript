@@ -200,10 +200,26 @@ namespace zlscript
 			return ECALLBACK_ERROR;
 		}
 
-		GET_VAR_4_STACK(CStringVar, pStrVar, pState->m_stackRegister, 0);
+		GET_VAR_4_STACK(CBaseVar, pVar, pState->m_stackRegister, 0);
 
-		if (pStrVar)
-			printf("%s\n", pStrVar->ToString().c_str());
+		if (pVar)
+		{
+			if (pVar->GetType() == CScriptClassInfo<CIntVar>::GetInstance().nClassType)
+			{
+				CIntVar* pIntVar = (CIntVar*)pVar;
+				printf("%s\n", pIntVar->ToString().c_str());
+			}
+			else if (pVar->GetType() == CScriptClassInfo<CFloatVar>::GetInstance().nClassType)
+			{
+				CFloatVar* pFloatVar = (CFloatVar*)pVar;
+				printf("%s\n", pFloatVar->ToString().c_str());
+			}
+			else if (pVar->GetType() == CScriptClassInfo<CStringVar>::GetInstance().nClassType)
+			{
+				CStringVar* pFloatVar = (CStringVar*)pVar;
+				printf("%s\n", pFloatVar->ToString().c_str());
+			}
+		}
 
 		return ECALLBACK_FINISH;
 	}

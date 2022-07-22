@@ -7,6 +7,7 @@
 namespace zlscript
 {
 	class CBaseICode;
+	class CFunICode;
 	class CBaseICodeMgr;
 	template<class T>
 	class CICodeMgr;
@@ -22,6 +23,7 @@ namespace zlscript
 
 		bool Compile(char* pData, unsigned int size);
 
+		bool MakeExeCode();
 	private:
 		void InitLexicalAnalysisFun();
 		//读取符号
@@ -72,9 +74,9 @@ namespace zlscript
 		typedef std::list<CBaseICodeMgr*> ListICodeMgr;
 		std::unordered_map<int, ListICodeMgr> m_mapICodeMgr;
 	public:
-		void AddErrorInfo(unsigned int pos, std::string error)
+		void AddErrorInfo(int lv, unsigned int pos, int error)
 		{
-			m_vError.push_back(tagErrorInfo(pos, error));
+			m_vError.push_back(tagErrorInfo(lv, pos, error));
 		}
 		void ClearErrorInfo()
 		{
@@ -83,13 +85,15 @@ namespace zlscript
 	private:
 		struct tagErrorInfo
 		{
-			tagErrorInfo(unsigned int pos, std::string error)
+			tagErrorInfo(int lv,unsigned int pos, int error)
 			{
+				level = lv;
 				nErrorWordPos = pos;
-				strError = error;
+				nError = error;
 			}
+			int level;
 			unsigned int nErrorWordPos;
-			std::string strError;
+			unsigned int nError;
 		};
 		std::vector<tagErrorInfo> m_vError;
 
@@ -102,6 +106,11 @@ namespace zlscript
 		void PartitionSourceWords(char* pSource, unsigned int size);
 		unsigned int GetSourceWordsIndex(unsigned int nIndex);
 #endif
+	public:
+		bool SetFunICode(std::string name, CFunICode* pCode);
+		CFunICode* GetFunICode(std::string name);
+	protected:
+		std::map<std::string, CFunICode*> m_FunICode;
 	};
 
 	template<class T>

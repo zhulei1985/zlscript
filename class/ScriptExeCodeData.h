@@ -1,50 +1,28 @@
 #pragma once
-#include "EMicroCodeType.h"
-#include "ScriptCompileInfo.h"
+#include <string>
 namespace zlscript
 {
-	class CExcCodeData
+	class CBaseVar;
+	class CBaseExeCode;
+	class CExeCodeData
 	{
 	public:
-		CExcCodeData()
-		{
-			nType = EICODE_FUN_DEFAULT;
-			nDefaultReturnType = EScriptVal_None;
-			pBeginCode = nullptr;
-			pEndCode = nullptr;
-		}
-		~CExcCodeData()
-		{
-			while (pBeginCode)
-			{
-				auto pNext = pBeginCode->m_pNext;
-				delete pBeginCode;
-				pBeginCode = pNext;
-			}
-		}
-		void AddCode(CBaseExeCode* pCode)
-		{
-			if (pCode == nullptr)
-			{
-				return;
-			}
-			if (pBeginCode == nullptr)
-			{
-				pBeginCode = pCode;
-				pEndCode = pCode;
-			}
-			else
-			{
-				pCode->nCodeIndex = pEndCode->nCodeIndex + 1;
-				pEndCode->m_pNext = pCode;
-				pEndCode = pCode;
-			}
-		}
+		CExeCodeData();
+		~CExeCodeData();
+		void AddCode(CBaseExeCode* pCode);
 		CBaseExeCode* pBeginCode;
 		CBaseExeCode* pEndCode;
 		int nType;
 
-
+		//临时变量信息
+		std::vector<int> vLocalVarType;
+		//常量表
+		std::vector<CBaseVar*> vConstVar;
+		int nFunParamNums;
 		int nDefaultReturnType;//默认返回值类型
+
+		std::string funname;
+	public:
+		int GetConstVarIndex(CBaseVar* pVar);
 	};
 }

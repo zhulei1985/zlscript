@@ -31,7 +31,8 @@
 #include "ScriptCompileInfo.h"
 namespace zlscript
 {
-	class CFunICode;
+	class CScriptCompiler;
+	class CExeCodeData;
 	class CScriptCodeLoader
 	{
 	public:
@@ -47,7 +48,7 @@ namespace zlscript
 
 	public:
 		void RegisterCallBack_LoadFun(std::function<bool(const char*, std::vector<char>&)>);
-		bool LoadFile(const char* filename);
+		bool LoadFile(const char* filename, CScriptCompiler* pCompiler);
 
 	private:
 		static bool DefaultLoadFile(const char*, std::vector<char>&);
@@ -96,7 +97,7 @@ namespace zlscript
 	private:
 
 		//代码库
-		std::vector<CFunICode*> m_vecCodeData;
+		std::vector<CExeCodeData*> m_vecCodeData;
 
 		std::unordered_map<std::string, int> m_mapString2CodeIndex;
 	public:
@@ -105,7 +106,7 @@ namespace zlscript
 		{
 			return (int)m_vecCodeData.size();
 		}
-		CFunICode* GetCode(int index)
+		CExeCodeData* GetCode(int index)
 		{
 			if (index >= 0 && index < (int)m_vecCodeData.size())
 			{
@@ -113,28 +114,20 @@ namespace zlscript
 			}
 			return nullptr;
 		}
-		CFunICode* GetCode(const char* pName);
+		CExeCodeData* GetCode(const char* pName);
+		int RegisterCodeName(std::string name);
 		void LoadXml(std::string filename);
+
+		void PrintAllCode(const char* pFilename);
+
 		void clear();
 
 		//检查变量名是否合法
 		bool CheckVarName(std::string varName);
 
+		bool AddCode(std::string name, CExeCodeData* pCode);
 
-		//typedef std::vector<CodeStyle> tagCodeSection;
 
-		//std::unordered_map<std::string, CFunICode*> m_mapString2Code;
-
-	public:
-		bool SetFunICode(std::string name, CFunICode* pCode);
-		bool CheckCurCompileFunName(std::string name);
-		bool AddCurCompileFunName(std::string name);
-		bool ClearCurCompileFunName();
-
-		//void PrintAllCode(const char *pFilename);
-
-	protected:
-		std::set<std::string> m_setCurCompileFunName;//本次编译有的函数名
 	public:
 		void SaveToBin();
 		void LoadFormBin();

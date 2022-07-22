@@ -23,7 +23,7 @@
 //赋值管理
 namespace zlscript
 {
-	typedef std::function<bool(CBaseVar*, CBaseVar*)> AssignFun;
+	typedef std::function<bool(CBaseVar*, const CBaseVar*)> AssignFun;
 	class CScriptVarAssignmentMgr
 	{
 	public:
@@ -36,7 +36,7 @@ namespace zlscript
 		static CScriptVarAssignmentMgr s_Instance;
 	public:
 		void RegisterFun(int type1, int type2, AssignFun pFun);
-		bool Assign(CBaseVar* pDes, CBaseVar* pSrc);
+		bool Assign(CBaseVar* pDes, const CBaseVar* pSrc);
 	protected:
 		std::map<__int64, AssignFun> m_vPrintFunFun;
 	};

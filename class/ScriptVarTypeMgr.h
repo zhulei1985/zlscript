@@ -36,6 +36,9 @@ namespace zlscript
 		CScriptPointInterface* NewObject(unsigned int type);
 		void ReleaseObject(CScriptPointInterface* pVar);
 
+		void Add2ReleaseCache(CScriptPointInterface* pVar);
+		void ProcessReleaseCache();
+
 		CBaseScriptClassInfo *GetTypeInfo(unsigned int type);
 	private:
 
@@ -46,6 +49,9 @@ namespace zlscript
 		std::vector<CBaseScriptClassInfo*> m_vVarTypeInfo;
 		////只有初始化的时候才会写，理论上不需要线程锁
 		//std::vector<CScriptClassInfo> m_vClassInfo;
+
+		std::mutex m_MutexReleaseCacheLock;
+		std::list<CScriptPointInterface*> m_listReleaseCache;
 	};
 
 
@@ -114,7 +120,7 @@ namespace zlscript
 #define SCRIPTVAR_RELEASE(pVar) {\
 		if (pVar)\
 		{\
-			CScriptVarTypeMgr::GetInstance()->ReleaseVar(pVar);\
+			CScriptVarTypeMgr::GetInstance()->ReleaseVar((CBaseVar*)pVar);\
 			pVar = nullptr;\
 		}\
 	}\

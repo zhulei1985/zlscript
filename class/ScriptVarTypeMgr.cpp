@@ -21,7 +21,7 @@ namespace zlscript
 		{
 			return it->second;
 		}
-		return -1;
+		return EScriptVal_None;
 	}
 
 	CBaseVar* CScriptVarTypeMgr::GetVar(unsigned int type)
@@ -51,7 +51,8 @@ namespace zlscript
 		if (type < m_vVarTypeMgr.size())
 		{
 			CBaseScriptClassMgr* pMsg = dynamic_cast<CBaseScriptClassMgr*>(m_vVarTypeMgr[type]);
-			return pMsg->NewObject();
+			if (pMsg)
+				return pMsg->NewObject();
 		}
 		return nullptr;
 	}
@@ -63,6 +64,21 @@ namespace zlscript
 		{
 			CBaseScriptClassMgr* pMsg = dynamic_cast<CBaseScriptClassMgr*>(m_vVarTypeMgr[type]);
 			return pMsg->Release(pVar);
+		}
+	}
+	void CScriptVarTypeMgr::Add2ReleaseCache(CScriptPointInterface* pVar)
+	{
+		std::lock_guard<std::mutex> Lock(m_MutexReleaseCacheLock);
+		m_listReleaseCache.push_back(pVar);
+	}
+	void CScriptVarTypeMgr::ProcessReleaseCache()
+	{
+		std::lock_guard<std::mutex> Lock(m_MutexReleaseCacheLock);
+		while (!m_listReleaseCache.empty())
+		{
+			CScriptPointInterface* pVar = m_listReleaseCache.front();
+			ReleaseObject(pVar);
+			m_listReleaseCache.pop_front();
 		}
 	}
 	CBaseScriptClassInfo* CScriptVarTypeMgr::GetTypeInfo(unsigned int type)

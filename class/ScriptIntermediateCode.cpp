@@ -17,6 +17,7 @@
 #include "scriptcommon.h"
 #include "EScriptSentenceType.h"
 #include "EMicroCodeType.h"
+#include "EErrorType.h"
 #include "ScriptCallBackFunion.h"
 #include "ScriptCodeLoader.h"
 #include "ScriptIntermediateCode.h"
@@ -30,7 +31,7 @@
 #include "ScriptRunState.h"
 namespace zlscript
 {
-
+#define AddErrorInfo(lv, pos, error) pCompiler->AddErrorInfo(lv,pos,error);
 	bool CDefGlobalVarICode::Compile(SentenceSourceCode& vIn, CScriptCompiler* pCompiler)
 	{
 		SignToPos();
@@ -45,9 +46,9 @@ namespace zlscript
 
 		if (unVarType == EScriptVal_None)
 		{
-			AddErrorInfo(
+			AddErrorInfo(0,
 				strType.nSourceWordsIndex,
-				"CDefGlobalVarICode:type is none");
+				ERROR_VAR_TYPE_NONE);
 			RevertAll();
 			return false;
 		}
@@ -55,9 +56,9 @@ namespace zlscript
 
 		if (!CScriptCodeLoader::GetInstance()->CheckVarName(strName.word))
 		{
-			AddErrorInfo(
+			AddErrorInfo(0,
 				strName.nSourceWordsIndex,
-				"CDefGlobalVarICode:Callback Function name already exists");
+				ERROR_VAR_NAME_ILLEGAL);
 			RevertAll();
 			return false;
 		}
@@ -69,8 +70,9 @@ namespace zlscript
 			if (!CScriptGlobalVarMgr::GetInstance()->New(strName.word, unVarType))
 			{
 				AddErrorInfo(
+					1,
 					strName.nSourceWordsIndex,
-					"CDefGlobalVarICode:global var cannot add");
+					ERROR_GLOBAL_VAR_CANNOT_ADD);
 				RevertAll();
 				return false;
 			}
@@ -79,18 +81,18 @@ namespace zlscript
 		{
 			if (!CScriptGlobalVarMgr::GetInstance()->New(strName.word, unVarType))
 			{
-				AddErrorInfo(
+				AddErrorInfo(1,
 					strName.nSourceWordsIndex,
-					"CDefGlobalVarICode:global var cannot add");
+					ERROR_GLOBAL_VAR_CANNOT_ADD);
 				RevertAll();
 				return false;
 			}
-			auto pGVar = CScriptGlobalVarMgr::GetInstance()->Get(strName.word);
-			if (!pGVar)
+			int GVarIndex = CScriptGlobalVarMgr::GetInstance()->GetIndex(strName.word);
+			if (GVarIndex == -1)
 			{
-				AddErrorInfo(
+				AddErrorInfo(1,
 					strName.nSourceWordsIndex,
-					"CDefGlobalVarICode:global var cannot set");
+					ERROR_GLOBAL_VAR_CANNOT_SET);
 				RevertAll();
 				return false;
 			}
@@ -102,24 +104,24 @@ namespace zlscript
 				CScriptPointInterface* pPoint =
 					CScriptVarTypeMgr::GetInstance()->NewObject(
 						CScriptVarTypeMgr::GetInstance()->GetVarType(strClassType.word));
-				pGVar->pVar->Set(pPoint);
+				CPointVar temp;
+				temp.Set(pPoint);
+				CScriptGlobalVarMgr::GetInstance()->Set(GVarIndex, &temp);
 			}
 			else
 			{
 				//pGVar->pVar->Set(strVal.word);
 				CStringVar temp;
 				temp.Set(strVal.word);
-				AssignVar(pGVar->pVar, (&temp));
+				CScriptGlobalVarMgr::GetInstance()->Set(GVarIndex, &temp);
 			}
-
-			CScriptGlobalVarMgr::GetInstance()->Revert(pGVar);
 
 			GetNewWord(NextWord);
 			if (NextWord.word != ";")
 			{
-				AddErrorInfo(
+				AddErrorInfo(2,
 					NextWord.nSourceWordsIndex,
-					"CDefGlobalVarICode : Format error , not end");
+					ESIGN_ILLEGAL_END);
 				RevertAll();
 				return false;
 			}
@@ -145,9 +147,9 @@ namespace zlscript
 		unsigned short unVarType = CScriptVarTypeMgr::GetInstance()->GetVarType(strType.word);
 		if (unVarType == EScriptVal_None)
 		{
-			AddErrorInfo(
+			AddErrorInfo(0,
 				strType.nSourceWordsIndex,
-				"CDefTempVarICode:type is none");
+				ERROR_VAR_TYPE_NONE);
 			RevertAll();
 			return false;
 		}
@@ -156,17 +158,17 @@ namespace zlscript
 		//检测名字是否与回调函数名冲突
 		if (!CScriptCodeLoader::GetInstance()->CheckVarName(strName.word))
 		{
-			AddErrorInfo(
+			AddErrorInfo(0,
 				strName.nSourceWordsIndex,
-				"CDefTempVarICode: name error");
+				ERROR_VAR_NAME_ILLEGAL);
 			RevertAll();
 			return false;
 		}
 		if (this->CheckTempVar(strName.word.c_str()))
 		{
-			AddErrorInfo(
+			AddErrorInfo(0,
 				strName.nSourceWordsIndex,
-				"CDefTempVarICode:name already exists");
+				ERROR_VAR_NAME_EXISTS);
 			RevertAll();
 			return false;
 		}
@@ -176,9 +178,9 @@ namespace zlscript
 		{
 			if (!this->DefineTempVar(unVarType, strName.word, pCompiler))
 			{
-				AddErrorInfo(
+				AddErrorInfo(1,
 					strName.nSourceWordsIndex,
-					"CDefTempVarICode:global var cannot add");
+					ERROR_TEMP_VAR_CANNOT_ADD);
 				RevertAll();
 				return false;
 			}
@@ -187,9 +189,9 @@ namespace zlscript
 		{
 			if (!this->DefineTempVar(unVarType, strName.word, pCompiler))
 			{
-				AddErrorInfo(
+				AddErrorInfo(1,
 					strName.nSourceWordsIndex,
-					"CDefTempVarICode:global var cannot add");
+					ERROR_TEMP_VAR_CANNOT_ADD);
 				RevertAll();
 				return false;
 			}
@@ -199,9 +201,9 @@ namespace zlscript
 		}
 		else
 		{
-			AddErrorInfo(
+			AddErrorInfo(1,
 				strName.nSourceWordsIndex,
-				"CDefTempVarICode:format error");
+				ESIGN_ILLEGAL_END);
 			RevertAll();
 			return false;
 		}
@@ -239,9 +241,9 @@ namespace zlscript
 		int ntype = CScriptVarTypeMgr::GetInstance()->GetVarType(strType.word);
 		if (!DefineTempVar(ntype, strName.word, pCompiler))
 		{
-			AddErrorInfo(
+			AddErrorInfo(10,
 				strType.nSourceWordsIndex,
-				"CFunICode:DefineTempVar(defining temporary variable error)");
+				ERROR_FUN_PARAM);
 			RevertAll();
 			return false;
 		}
@@ -260,45 +262,61 @@ namespace zlscript
 		GetNewWord(nextWord);
 
 		std::string strType = nextWord.word;
-		unsigned short unVarType = CScriptVarTypeMgr::GetInstance()->GetVarType(strType);
-		if (unVarType == EScriptVal_None)
+		nReturnType = CScriptVarTypeMgr::GetInstance()->GetVarType(strType);
+		if (strType != "void" && nReturnType == EScriptVal_None)
 		{
-			AddErrorInfo(
+			AddErrorInfo(0,
 				nextWord.nSourceWordsIndex,
-				"CFunICode:type is none");
+				ERROR_VAR_TYPE_NONE);
 			RevertAll();
 			return false;
 		}
 		GetNewWord(strName);
 
+		if (!CScriptCodeLoader::GetInstance()->CheckVarName(strName.word))
+		{
+			AddErrorInfo(0,
+				strName.nSourceWordsIndex,
+				ERROR_FUN_NAME_ILLEGAL);
+			RevertAll();
+			return false;
+		}
 		//检测名字是否与回调函数名冲突
 		if (CScriptCallBackFunion::GetFunIndex(strName.word) >= 0)
 		{
-			AddErrorInfo(
+			AddErrorInfo(0,
 				strName.nSourceWordsIndex,
-				"CFunICode:Callback Function name already exists");
+				ERROR_FUN_NAME_EXISTS);
 			RevertAll();
 			return false;
 		}
-		if (CScriptCodeLoader::GetInstance()->CheckCurCompileFunName(strName.word))
+
+		if (pCompiler->GetFunICode(strName.word) != nullptr)
 		{
-			AddErrorInfo(
+			AddErrorInfo(0,
 				strName.nSourceWordsIndex,
-				"CFunICode:Function name already exists");
+				ERROR_FUN_NAME_EXISTS);
 			RevertAll();
 			return false;
 		}
+
 		funname = strName.word;
 		GetNewWord(strSign);
 		if (strSign.word != "(")
 		{
-			AddErrorInfo(
+			AddErrorInfo(0,
 				strSign.nSourceWordsIndex,
-				"CFunICode:format error,no bracket");
+				ERROR_FUN_FORMAT_NO_BRACKET);
 			RevertAll();
 			return false;
 		}
 		pCompiler->ClearTempVarIndex();
+
+		if (pCompiler->SetFunICode(strName.word, this) == false)
+		{
+			return false;
+		}
+
 		GetWord(nextWord);
 		if (nextWord.word != ")")
 		{
@@ -322,9 +340,9 @@ namespace zlscript
 				}
 				else
 				{
-					AddErrorInfo(
+					AddErrorInfo(1,
 						nextWord.nSourceWordsIndex,
-						"CFunICode:format error,FunctionParameter");
+						ERROR_FUN_FORMAT_PARAM);
 					RevertAll();
 					return false;
 				}
@@ -357,8 +375,7 @@ namespace zlscript
 				}
 			}
 		}
-		CScriptCodeLoader::GetInstance()->AddCurCompileFunName(strName.word);
-		CScriptCodeLoader::GetInstance()->SetFunICode(strName.word, this);
+
 		return true;
 	}
 
@@ -366,6 +383,32 @@ namespace zlscript
 	{
 		vBodyCode.push_back(pCode);
 		CBaseICode::AddICode(nType, pCode);
+	}
+
+	bool CFunICode::MakeExeCode(CExeCodeData& vOut)
+	{
+		for (auto it = m_mapTempVarInfo.begin(); it != m_mapTempVarInfo.end(); it++)
+		{
+			if (it->second.index >= vOut.vLocalVarType.size())
+			{
+				vOut.vLocalVarType.resize(it->second.index + 1);
+			}
+			vOut.vLocalVarType[it->second.index] = it->second.nType;
+
+		}
+		vOut.nDefaultReturnType = nReturnType;
+		vOut.nFunParamNums = nPramSize;
+		//首先是参数的赋值
+
+		for (unsigned int i = 0; i < vBodyCode.size(); i++)
+		{
+			if (vBodyCode[i])
+			{
+				vBodyCode[i]->MakeExeCode(vOut);
+			}
+		}
+
+		return true;
 	}
 
 	void CFunICode::SetMaxRunState(int val)
@@ -376,43 +419,43 @@ namespace zlscript
 		}
 	}
 
-	int CFunICode::Run(CScriptExecBlock* pBlock)
-	{
-		pBlock->RegisterRunState(MaxStateIndex + 1);
-		int& state = pBlock->GetRunState(m_nRunStateIndex);
-		if (state == 0)
-		{
-			//注册变量
-			auto it = m_mapTempVarInfo.begin();
-			for (; it != m_mapTempVarInfo.end(); it++)
-			{
-				pBlock->RegisterLoaclVar(it->second.index, it->second.nType);
-			}
-			for (int i = 0; i < nPramSize; i++)
-			{
-				CBaseVar *pLoaclVar = pBlock->GetLoaclVar(i);
-				CBaseVar* pVar = nullptr;
-				STACK_GET_INDEX(pBlock->registerStack, pVar, i);
-				AssignVar(pLoaclVar, pVar);
-			}
-			STACK_POP_FRONT(pBlock->registerStack, nPramSize);
-			state++;
-		}
-		while (state > 0 && state <= vBodyCode.size())
-		{
-			int result = vBodyCode[state - 1]->Run(pBlock);
-			
-			if (result != CScriptExecBlock::ERESULT_CONTINUE)
-			{
-				return result;
-			}
-			state++;
-		}
+	//int CFunICode::Run(CScriptExecBlock* pBlock)
+	//{
+	//	pBlock->RegisterRunState(MaxStateIndex + 1);
+	//	int& state = pBlock->GetRunState(m_nRunStateIndex);
+	//	if (state == 0)
+	//	{
+	//		//注册变量
+	//		auto it = m_mapTempVarInfo.begin();
+	//		for (; it != m_mapTempVarInfo.end(); it++)
+	//		{
+	//			pBlock->RegisterLoaclVar(it->second.index, it->second.nType);
+	//		}
+	//		for (int i = 0; i < nPramSize; i++)
+	//		{
+	//			CBaseVar *pLoaclVar = pBlock->GetLoaclVar(i);
+	//			CBaseVar* pVar = nullptr;
+	//			STACK_GET_INDEX(pBlock->registerStack, pVar, i);
+	//			AssignVar(pLoaclVar, pVar);
+	//		}
+	//		STACK_POP_FRONT(pBlock->registerStack, nPramSize);
+	//		state++;
+	//	}
+	//	while (state > 0 && state <= vBodyCode.size())
+	//	{
+	//		int result = vBodyCode[state - 1]->Run(pBlock);
+	//		
+	//		if (result != CScriptExecBlock::ERESULT_CONTINUE)
+	//		{
+	//			return result;
+	//		}
+	//		state++;
+	//	}
 
-		state = 0;
-		pBlock->RevertRunState(m_nRunStateIndex);
-		return CScriptExecBlock::ERESULT_END;
-	}
+	//	state = 0;
+	//	pBlock->RevertRunState(m_nRunStateIndex);
+	//	return CScriptExecBlock::ERESULT_END;
+	//}
 
 	bool CBlockICode::DefineTempVar(int type, std::string VarName, CScriptCompiler* pCompiler)
 	{
@@ -460,9 +503,9 @@ namespace zlscript
 		GetNewWord(nextWord);
 		if (nextWord.word != "{")
 		{
-			AddErrorInfo(
+			AddErrorInfo(0,
 				nextWord.nSourceWordsIndex,
-				"CBlockICode:format error");
+				ERROR_FORMAT_NOT);
 			RevertAll();
 			return false;
 		}
@@ -497,35 +540,53 @@ namespace zlscript
 		CBaseICode::AddICode(nType, pCode);
 	}
 
-	int CBlockICode::Run(CScriptExecBlock* pBlock)
+	bool CBlockICode::MakeExeCode(CExeCodeData& vOut)
 	{
-		int& state = pBlock->GetRunState(m_nRunStateIndex);
-		if (state == 0)
+		for (auto it = m_vICode.begin(); it != m_vICode.end(); it++)
 		{
-			//注册变量
-			auto it = m_mapTempVarInfo.begin();
-			for (; it != m_mapTempVarInfo.end(); it++)
+			bool bSuccess = false;
+			CBaseICode* pICode = *it;
+			if (pICode != nullptr)
 			{
-				pBlock->RegisterLoaclVar(it->second.index, it->second.nType);
+				bSuccess = pICode->MakeExeCode(vOut);
 			}
-
-			state++;
-		}
-		while (state > 0 && state <= m_vICode.size())
-		{
-			int result = m_vICode[state - 1]->Run(pBlock);
-
-			if (result != CScriptExecBlock::ERESULT_CONTINUE)
+			if (!bSuccess)
 			{
-				return result;
+				return false;
 			}
-			state++;
 		}
-
-		state = 0;
-		pBlock->RevertRunState(m_nRunStateIndex);
-		return CScriptExecBlock::ERESULT_CONTINUE;
+		return true;
 	}
+
+	//int CBlockICode::Run(CScriptExecBlock* pBlock)
+	//{
+	//	int& state = pBlock->GetRunState(m_nRunStateIndex);
+	//	if (state == 0)
+	//	{
+	//		//注册变量
+	//		auto it = m_mapTempVarInfo.begin();
+	//		for (; it != m_mapTempVarInfo.end(); it++)
+	//		{
+	//			pBlock->RegisterLoaclVar(it->second.index, it->second.nType);
+	//		}
+
+	//		state++;
+	//	}
+	//	while (state > 0 && state <= m_vICode.size())
+	//	{
+	//		int result = m_vICode[state - 1]->Run(pBlock);
+
+	//		if (result != CScriptExecBlock::ERESULT_CONTINUE)
+	//		{
+	//			return result;
+	//		}
+	//		state++;
+	//	}
+
+	//	state = 0;
+	//	pBlock->RevertRunState(m_nRunStateIndex);
+	//	return CScriptExecBlock::ERESULT_CONTINUE;
+	//}
 
 	CLoadVarICode::~CLoadVarICode()
 	{
@@ -553,17 +614,16 @@ namespace zlscript
 			if (pInfo != nullptr)
 			{
 				nLoadType = E_VAR_SCOPE_LOACL;
-				LoaclVarIndex = pInfo->index;
+				VarIndex = pInfo->index;
 			}
 			else
 			{
 				//检查是否是全局变量
-				stGlobalVar* pGlobalVar = CScriptGlobalVarMgr::GetInstance()->Get(nextWord.word);
-				if (pGlobalVar)
+				int nGVarIndex = CScriptGlobalVarMgr::GetInstance()->GetIndex(nextWord.word);
+				if (nGVarIndex != -1)
 				{
 					nLoadType = E_VAR_SCOPE_GLOBAL;
-					GlobalVarIndex = pGlobalVar->index;
-					CScriptGlobalVarMgr::GetInstance()->Revert(pGlobalVar);
+					VarIndex = nGVarIndex;
 				}
 				else
 				{
@@ -606,40 +666,48 @@ namespace zlscript
 		return true;
 	}
 
-	int CLoadVarICode::Run(CScriptExecBlock* pBlock)
+	bool CLoadVarICode::MakeExeCode(CExeCodeData& vOut)
 	{
-		//向堆栈里压入一个数据
-
-		switch (nLoadType)
-		{
-		case E_VAR_SCOPE_CONST:
-		{
-			STACK_PUSH_COPY(pBlock->registerStack, m_pConst);
-		}
-		break;
-		case E_VAR_SCOPE_GLOBAL:
-		{
-			stGlobalVar* pGlobalVar = CScriptGlobalVarMgr::GetInstance()->Get(GlobalVarIndex);
-			if (pGlobalVar)
-			{
-				STACK_PUSH_COPY(pBlock->registerStack, pGlobalVar->pVar);
-				CScriptGlobalVarMgr::GetInstance()->Revert(pGlobalVar);
-			}
-		}
-		break;
-		case E_VAR_SCOPE_LOACL:
-		{
-			CBaseVar* pLoacllVar = pBlock->GetLoaclVar(LoaclVarIndex);
-			if (pLoacllVar)
-			{
-				STACK_PUSH_COPY(pBlock->registerStack, pLoacllVar);
-			}
-		}
-		break;
-
-		}
-		return CScriptExecBlock::ERESULT_CONTINUE;
+		bool bResult = true;
+		nLoadType = E_VAR_SCOPE_CONST;
+		VarIndex = vOut.GetConstVarIndex(m_pConst);
+		return bResult;
 	}
+
+	//int CLoadVarICode::Run(CScriptExecBlock* pBlock)
+	//{
+	//	//向堆栈里压入一个数据
+
+	//	switch (nLoadType)
+	//	{
+	//	case E_VAR_SCOPE_CONST:
+	//	{
+	//		STACK_PUSH_COPY(pBlock->registerStack, m_pConst);
+	//	}
+	//	break;
+	//	case E_VAR_SCOPE_GLOBAL:
+	//	{
+	//		stGlobalVar* pGlobalVar = CScriptGlobalVarMgr::GetInstance()->Get(GlobalVarIndex);
+	//		if (pGlobalVar)
+	//		{
+	//			STACK_PUSH_COPY(pBlock->registerStack, pGlobalVar->pVar);
+	//			CScriptGlobalVarMgr::GetInstance()->Revert(pGlobalVar);
+	//		}
+	//	}
+	//	break;
+	//	case E_VAR_SCOPE_LOACL:
+	//	{
+	//		CBaseVar* pLoacllVar = pBlock->GetLoaclVar(LoaclVarIndex);
+	//		if (pLoacllVar)
+	//		{
+	//			STACK_PUSH_COPY(pBlock->registerStack, pLoacllVar);
+	//		}
+	//	}
+	//	break;
+
+	//	}
+	//	return CScriptExecBlock::ERESULT_CONTINUE;
+	//}
 
 	bool CSaveVarICode::Compile(SentenceSourceCode& vIn, CScriptCompiler* pCompiler)
 	{
@@ -655,41 +723,65 @@ namespace zlscript
 		pRightOperand = pCode;
 		CBaseICode::AddICode(0, pCode);
 	}
-	int CSaveVarICode::Run(CScriptExecBlock* pBlock)
+	bool CSaveVarICode::MakeExeCode(CExeCodeData& vOut)
 	{
-		int& state = pBlock->GetRunState(m_nRunStateIndex);
-		if (state == 0)
+		if (pRightOperand == nullptr)
 		{
-			int result = pRightOperand->Run(pBlock);
+			return false;
+		}
+		pRightOperand->MakeExeCode(vOut);
+		CVoluationExeCode* pCode = CExeCodeMgr::GetInstance()->New<CVoluationExeCode>(m_unBeginSoureIndex);
 
-			if (result != CScriptExecBlock::ERESULT_CONTINUE)
-			{
-				return result;
-			}
-			state++;
-		}
-		//从堆栈里取一个数据
-		CBaseVar* pVar = nullptr;
-		STACK_POP(pBlock->registerStack, pVar);
-		if (nSaveType == E_VAR_SCOPE_GLOBAL)
+		if (pRightOperand->GetType() == E_I_CODE_LOADVAR)
 		{
-			stGlobalVar* pGlobalVar = CScriptGlobalVarMgr::GetInstance()->Get(GlobalVarIndex);
-			if (pGlobalVar)
-			{
-				AssignVar(pGlobalVar->pVar, pVar);
-				CScriptGlobalVarMgr::GetInstance()->Revert(pGlobalVar);
-			}
+			CLoadVarICode* pLoadCode = (CLoadVarICode*)pRightOperand;
+			pCode->param.nType = pLoadCode->nLoadType;
+			pCode->param.dwPos = pLoadCode->VarIndex;
 		}
-		else if (nSaveType == E_VAR_SCOPE_LOACL)
+		else
 		{
-			CBaseVar* pLoacllVar = pBlock->GetLoaclVar(LoaclVarIndex);
-			AssignVar(pLoacllVar, pVar);
+			pCode->param.nType = E_VAR_SCOPE_REGISTER;
 		}
-		SCRIPTVAR_RELEASE(pVar);
-		state = 0;
-		pBlock->RevertRunState(m_nRunStateIndex);
-		return CScriptExecBlock::ERESULT_CONTINUE;
+		pCode->cType = nSaveType;
+		pCode->dwPos = VarIndex;
+		vOut.AddCode(pCode);
+		return false;
 	}
+	//int CSaveVarICode::Run(CScriptExecBlock* pBlock)
+	//{
+	//	int& state = pBlock->GetRunState(m_nRunStateIndex);
+	//	if (state == 0)
+	//	{
+	//		int result = pRightOperand->Run(pBlock);
+
+	//		if (result != CScriptExecBlock::ERESULT_CONTINUE)
+	//		{
+	//			return result;
+	//		}
+	//		state++;
+	//	}
+	//	//从堆栈里取一个数据
+	//	CBaseVar* pVar = nullptr;
+	//	STACK_POP(pBlock->registerStack, pVar);
+	//	if (nSaveType == E_VAR_SCOPE_GLOBAL)
+	//	{
+	//		stGlobalVar* pGlobalVar = CScriptGlobalVarMgr::GetInstance()->Get(GlobalVarIndex);
+	//		if (pGlobalVar)
+	//		{
+	//			AssignVar(pGlobalVar->pVar, pVar);
+	//			CScriptGlobalVarMgr::GetInstance()->Revert(pGlobalVar);
+	//		}
+	//	}
+	//	else if (nSaveType == E_VAR_SCOPE_LOACL)
+	//	{
+	//		CBaseVar* pLoacllVar = pBlock->GetLoaclVar(LoaclVarIndex);
+	//		AssignVar(pLoacllVar, pVar);
+	//	}
+	//	SCRIPTVAR_RELEASE(pVar);
+	//	state = 0;
+	//	pBlock->RevertRunState(m_nRunStateIndex);
+	//	return CScriptExecBlock::ERESULT_CONTINUE;
+	//}
 
 	bool CGetClassParamICode::Compile(SentenceSourceCode& vIn, CScriptCompiler* pCompiler)
 	{
@@ -700,14 +792,15 @@ namespace zlscript
 		GetWord(nextWord);
 		if (nextWord.word != "->" && nextWord.word != ".")
 		{
-			AddErrorInfo(
+			AddErrorInfo(0,
 				nextWord.nSourceWordsIndex,
-				"CGetClassParamICode:format error ->");
+				ERROR_FORMAT_NOT);
 			RevertAll();
 			return false;
 		}
 		GetWord(nextWord);
 		strParamName = nextWord.word;
+
 		int nClassType = 0;
 		VarInfo* pInfo = GetTempVarInfo(strClassVarName.c_str());
 		if (pInfo != nullptr)
@@ -719,14 +812,15 @@ namespace zlscript
 		else
 		{
 			//检查是否是全局变量
-			stGlobalVar* pGlobalVar = CScriptGlobalVarMgr::GetInstance()->Get(strClassVarName);
-			if (pGlobalVar)
+			int index = CScriptGlobalVarMgr::GetInstance()->GetIndex(strClassVarName);
+			if (index != -1)
 			{
 				isGlobal = true;
-				varIndex = pGlobalVar->index;
-				CScriptGlobalVarMgr::GetInstance()->Revert(pGlobalVar);
-				if (pGlobalVar->pVar)
-					nClassType = pGlobalVar->pVar->GetType();
+				varIndex = index;
+				const CBaseVar* pGlobalVar = CScriptGlobalVarMgr::GetInstance()->Get(index);
+				if (pGlobalVar)
+					nClassType = pGlobalVar->GetType();
+				CScriptGlobalVarMgr::GetInstance()->Revert(index);
 			}
 			else
 			{
@@ -745,109 +839,41 @@ namespace zlscript
 				{
 					nParamIndex = it->second.m_index;
 				}
-			}
-		}
-		return true;
-	}
-	int CGetClassParamICode::Run(CScriptExecBlock* pBlock)
-	{
-		if (varIndex == -1)
-		{
-			return CScriptExecBlock::ERESULT_ERROR;
-		}
-		int result = CScriptExecBlock::ERESULT_CONTINUE;
-		unsigned int nParamIndexRunTime = nParamIndex;
-
-		if (isGlobal)
-		{
-			stGlobalVar* pGlobalVar = CScriptGlobalVarMgr::GetInstance()->Get(varIndex);
-			if (pGlobalVar)
-			{
-				CPointVar* pPoint = dynamic_cast<CPointVar*>(pGlobalVar->pVar);
-				if (pPoint)
-				{
-					if (pPoint->ToPoint())
-					{
-						if (nParamIndexRunTime < 0)
-						{
-							nParamIndexRunTime = pPoint->ToPoint()->GetAttributeIndex(strParamName);
-						}
-						auto param = pPoint->ToPoint()->GetAttribute(nParamIndexRunTime);
-						if (param)
-						{
-							STACK_PUSH_COPY(pBlock->registerStack, param->ToScriptVal());
-						}
-						else
-						{
-							result = CScriptExecBlock::ERESULT_ERROR;
-							//TODO 输出错误信息
-						}
-					}
-					else
-					{
-						result = CScriptExecBlock::ERESULT_ERROR;
-						//TODO 输出错误信息
-					}
-				}
 				else
 				{
-					result = CScriptExecBlock::ERESULT_ERROR;
-					//TODO 输出错误信息
+					RevertAll();
+					//TODO 提示错误
+					return false;
 				}
-				CScriptGlobalVarMgr::GetInstance()->Revert(pGlobalVar);
 			}
 			else
 			{
-				result = CScriptExecBlock::ERESULT_ERROR;
-				//TODO 输出错误信息
+				RevertAll();
+				//TODO 提示错误
+				return false;
 			}
 		}
 		else
 		{
-			CBaseVar* pLoacllVar = pBlock->GetLoaclVar(varIndex);
-			if (pLoacllVar)
-			{
-				CPointVar* pPoint = dynamic_cast<CPointVar*>(pLoacllVar);
-				if (pPoint)
-				{
-					if (pPoint->ToPoint())
-					{
-						if (nParamIndexRunTime < 0)
-						{
-							nParamIndexRunTime = pPoint->ToPoint()->GetAttributeIndex(strParamName);
-						}
-						auto param = pPoint->ToPoint()->GetAttribute(nParamIndexRunTime);
-						if (param)
-						{
-							STACK_PUSH_COPY(pBlock->registerStack, param->ToScriptVal());
-						}
-						else
-						{
-							result = CScriptExecBlock::ERESULT_ERROR;
-							//TODO 输出错误信息
-						}
-					}
-					else
-					{
-						result = CScriptExecBlock::ERESULT_ERROR;
-						//TODO 输出错误信息
-					}
-				}
-				else
-				{
-					result = CScriptExecBlock::ERESULT_ERROR;
-					//TODO 输出错误信息
-				}
-			}
-			else
-			{
-				result = CScriptExecBlock::ERESULT_ERROR;
-				//TODO 输出错误信息
-			}
+			RevertAll();
+			//TODO 提示错误
+			return false;
 		}
-
-		return result;
+		return true;
 	}
+	bool CGetClassParamICode::MakeExeCode(CExeCodeData& vOut)
+	{
+		CGetClassParamExeCode* pGetCode = CExeCodeMgr::GetInstance()->New<CGetClassParamExeCode>(m_unBeginSoureIndex);
+		if (isGlobal)
+			pGetCode->param.nType = E_VAR_SCOPE_GLOBAL;
+		else
+			pGetCode->param.nType = E_VAR_SCOPE_LOACL;
+		pGetCode->param.dwPos = varIndex;
+		pGetCode->dwPos = nParamIndex;
+		vOut.AddCode(pGetCode);
+		return true;
+	}
+
 
 	void CSetClassParamICode::AddICode(int nType, CBaseICode* pCode)
 	{
@@ -859,143 +885,31 @@ namespace zlscript
 		//此类并不直接参与编译,表达式树整理时按情况替换GetClassParamICode
 		return true;
 	}
-	int CSetClassParamICode::Run(CScriptExecBlock* pBlock)
+	bool CSetClassParamICode::MakeExeCode(CExeCodeData& vOut)
 	{
-		int& state = pBlock->GetRunState(m_nRunStateIndex);
-		if (state == 0)
-		{	
-			if (pRightOperand)
-			{
-				int result = pRightOperand->Run(pBlock);
-				if (result != CScriptExecBlock::ERESULT_CONTINUE)
-				{
-					return result;
-				}
-			}
-
-			state++;
-			
-			if (varIndex == -1)
-			{
-				return CScriptExecBlock::ERESULT_ERROR;
-			}
-
-		}
-		int result = CScriptExecBlock::ERESULT_CONTINUE;
-		unsigned int nParamIndexRunTime = nParamIndex;
-
-		if (isGlobal)
+		CSetClassParamExeCode* pSetCode = CExeCodeMgr::GetInstance()->New<CSetClassParamExeCode>(m_unBeginSoureIndex);
+		pRightOperand->MakeExeCode(vOut);
+		if (pRightOperand->GetType() == E_I_CODE_LOADVAR)
 		{
-			stGlobalVar* pGlobalVar = CScriptGlobalVarMgr::GetInstance()->Get(varIndex);
-			if (pGlobalVar)
-			{
-				CPointVar* pPoint = dynamic_cast<CPointVar*>(pGlobalVar->pVar);
-				if (pPoint)
-				{
-					if (pPoint->ToPoint())
-					{
-						if (nParamIndexRunTime < 0)
-						{
-							nParamIndexRunTime = pPoint->ToPoint()->GetAttributeIndex(strParamName);
-						}
-						auto param = pPoint->ToPoint()->GetAttribute(nParamIndexRunTime);
-						if (param)
-						{
-							CBaseVar* pVar = nullptr;
-							STACK_POP(pBlock->registerStack, pVar);
-							param->SetVal(pVar);
-							SCRIPTVAR_RELEASE(pVar);
-						}
-						else
-						{
-							result = CScriptExecBlock::ERESULT_ERROR;
-							//TODO 输出错误信息
-						}
-					}
-					else
-					{
-						result = CScriptExecBlock::ERESULT_ERROR;
-						//TODO 输出错误信息
-					}
-				}
-				else
-				{
-					result = CScriptExecBlock::ERESULT_ERROR;
-					//TODO 输出错误信息
-				}
-				CScriptGlobalVarMgr::GetInstance()->Revert(pGlobalVar);
-			}
-			else
-			{
-				result = CScriptExecBlock::ERESULT_ERROR;
-				//TODO 输出错误信息
-			}
+			CLoadVarICode* pLoadCode = (CLoadVarICode*)pRightOperand;
+			pSetCode->valInfo.nType = pLoadCode->nLoadType;
+			pSetCode->valInfo.dwPos = pLoadCode->VarIndex;
 		}
 		else
 		{
-			CBaseVar* pLoacllVar = pBlock->GetLoaclVar(varIndex);
-			if (pLoacllVar)
-			{
-				CPointVar* pPoint = dynamic_cast<CPointVar*>(pLoacllVar);
-				if (pPoint)
-				{
-					if (pPoint->ToPoint())
-					{
-						if (nParamIndexRunTime < 0)
-						{
-							nParamIndexRunTime = pPoint->ToPoint()->GetAttributeIndex(strParamName);
-						}
-						auto param = pPoint->ToPoint()->GetAttribute(nParamIndexRunTime);
-						if (param)
-						{
-							//从堆栈里取一个数据
-							CBaseVar* pVar = nullptr;
-							STACK_POP(pBlock->registerStack, pVar);
-							param->SetVal(pVar);
-							SCRIPTVAR_RELEASE(pVar);
-						}
-						else
-						{
-							result = CScriptExecBlock::ERESULT_ERROR;
-							//TODO 输出错误信息
-						}
-					}
-					else
-					{
-						result = CScriptExecBlock::ERESULT_ERROR;
-						//TODO 输出错误信息
-					}
-				}
-				else
-				{
-					result = CScriptExecBlock::ERESULT_ERROR;
-					//TODO 输出错误信息
-				}
-			}
-			else
-			{
-				result = CScriptExecBlock::ERESULT_ERROR;
-				//TODO 输出错误信息
-			}
+			pSetCode->valInfo.nType = E_VAR_SCOPE_REGISTER;
 		}
-		state = 0;
-		pBlock->RevertRunState(m_nRunStateIndex);
-		return result;
+
+		if (isGlobal)
+			pSetCode->param.nType = E_VAR_SCOPE_GLOBAL;
+		else
+			pSetCode->param.nType = E_VAR_SCOPE_LOACL;
+		pSetCode->param.dwPos = varIndex;
+		pSetCode->dwPos = nParamIndex;
+		vOut.AddCode(pSetCode);
+		return true;
 	}
-	//bool CMinusICode::MakeExeCode(tagCodeData& vOut)
-	//{
-	//	if (pRightOperand)
-	//	{
-	//		pRightOperand->SetRegisterIndex(R_A);
-	//		pRightOperand->MakeExeCode(vOut);
-	//	}
 
-	//	CMinusExeCode* pCode = CExeCodeMgr::GetInstance()->New<CMinusExeCode>(m_unBeginSoureIndex);
-	//	pCode->cResultRegister = cRegisterIndex;
-	//	vOut.AddCode(pCode);
-
-	//	return true;
-	//}
 	void CMinusICode::AddICode(int nType, CBaseICode* pCode)
 	{
 		pRightOperand = pCode;
@@ -1013,58 +927,85 @@ namespace zlscript
 		}
 		if (!pCompiler->RunCompileState(vIn, CScriptCompiler::E_CODE_SCOPE_MEMBER, this, 0))
 		{
-			AddErrorInfo(
+			AddErrorInfo(0,
 				nextWord.nSourceWordsIndex,
-				"CGetClassParamICode:format error ->");
+				ERROR_FORMAT_NOT);
 			RevertAll();
 			return false;
 		}
 		return true;
 	}
-	int CMinusICode::Run(CScriptExecBlock* pBlock)
+	bool CMinusICode::MakeExeCode(CExeCodeData& vOut)
 	{
-		int& state = pBlock->GetRunState(m_nRunStateIndex);
-		if (state == 0)
+		CUnaryOperExeCode* pCode = CExeCodeMgr::GetInstance()->New<CUnaryOperExeCode>(m_unBeginSoureIndex);
+		pRightOperand->MakeExeCode(vOut);
+		if (pRightOperand->GetType() == E_I_CODE_LOADVAR)
 		{
-			if (pRightOperand)
-			{
-				int result = pRightOperand->Run(pBlock);
-				if (result != CScriptExecBlock::ERESULT_CONTINUE)
-				{
-					return result;
-				}
-			}
-			state++;
+			CLoadVarICode* pLoadCode = (CLoadVarICode*)pRightOperand;
+			pCode->param.nType = pLoadCode->nLoadType;
+			pCode->param.dwPos = pLoadCode->VarIndex;
 		}
-		CBaseVar* pVar = nullptr;
-		STACK_POP(pBlock->registerStack, pVar);
-		if (pVar == nullptr)
+		else
 		{
-			//TODO 报错
-			return CScriptExecBlock::ERESULT_ERROR;
+			pCode->param.nType = E_VAR_SCOPE_REGISTER;
 		}
-		if (pVar->GetType() == CScriptClassInfo<CIntVar>::GetInstance().nClassType)
+		auto group = CScriptVarOperatorMgr::GetInstance()->GetUnaryOperGroup(ECODE_MINUS);
+		if (group != nullptr)
 		{
-			CIntVar* pIntVar = (CIntVar*)pVar;
-			pIntVar->Set(-pIntVar->ToInt());
-		}
-		else if (pVar->GetType() == CScriptClassInfo<CFloatVar>::GetInstance().nClassType)
-		{
-			CFloatVar* pFLoatVar = (CFloatVar*)pVar;
-			pFLoatVar->Set(-pFLoatVar->ToFloat());
+			pCode->operGroup = group;
 		}
 		else
 		{
 			//TODO 报错
-			STACK_PUSH_MOVE(pBlock->registerStack, pVar);
-			return CScriptExecBlock::ERESULT_ERROR;
+			return false;
 		}
-
-		STACK_PUSH_MOVE(pBlock->registerStack, pVar);
-		state = 0;
-		pBlock->RevertRunState(m_nRunStateIndex);
-		return CScriptExecBlock::ERESULT_CONTINUE;
+		vOut.AddCode(pCode);
+		return true;
 	}
+	//int CMinusICode::Run(CScriptExecBlock* pBlock)
+	//{
+	//	int& state = pBlock->GetRunState(m_nRunStateIndex);
+	//	if (state == 0)
+	//	{
+	//		if (pRightOperand)
+	//		{
+	//			int result = pRightOperand->Run(pBlock);
+	//			if (result != CScriptExecBlock::ERESULT_CONTINUE)
+	//			{
+	//				return result;
+	//			}
+	//		}
+	//		state++;
+	//	}
+	//	CBaseVar* pVar = nullptr;
+	//	STACK_POP(pBlock->registerStack, pVar);
+	//	if (pVar == nullptr)
+	//	{
+	//		//TODO 报错
+	//		return CScriptExecBlock::ERESULT_ERROR;
+	//	}
+	//	if (pVar->GetType() == CScriptClassInfo<CIntVar>::GetInstance().nClassType)
+	//	{
+	//		CIntVar* pIntVar = (CIntVar*)pVar;
+	//		pIntVar->Set(-pIntVar->ToInt());
+	//	}
+	//	else if (pVar->GetType() == CScriptClassInfo<CFloatVar>::GetInstance().nClassType)
+	//	{
+	//		CFloatVar* pFLoatVar = (CFloatVar*)pVar;
+	//		pFLoatVar->Set(-pFLoatVar->ToFloat());
+	//	}
+	//	else
+	//	{
+	//		//TODO 报错
+	//		STACK_PUSH_MOVE(pBlock->registerStack, pVar);
+	//		return CScriptExecBlock::ERESULT_ERROR;
+	//	}
+
+	//	STACK_PUSH_MOVE(pBlock->registerStack, pVar);
+	//	state = 0;
+	//	pBlock->RevertRunState(m_nRunStateIndex);
+	//	return CScriptExecBlock::ERESULT_CONTINUE;
+	//}
 
 	void COperatorICode::AddICode(int nType, CBaseICode* pCode)
 	{
@@ -1120,158 +1061,61 @@ namespace zlscript
 		int nPRI = CScriptCodeLoader::GetInstance()->GetSignPRI(nextWord.word);
 		if (nPRI == 0xffff)
 		{
-			AddErrorInfo(
+			AddErrorInfo(0,
 				nextWord.nSourceWordsIndex,
-				"COperatorICode:no Operator");
+				ERROR_NO_PRI_SIGN);
 			RevertAll();
 			return false;
 		}
 		strOperator = nextWord.word;
 		nPriorityLv = nPRI;
 		nOperatorCode = CScriptCodeLoader::GetInstance()->GetWordKey(strOperator);
-		pOperGroup = CScriptVarOperatorMgr::GetInstance()->GetOperGroup(nOperatorCode);
+		pOperGroup = CScriptVarOperatorMgr::GetInstance()->GetBinaryOperGroup(nOperatorCode);
 		if (pOperGroup == nullptr)
 		{
 			//TODO 提示错误
+			AddErrorInfo(2,
+				nextWord.nSourceWordsIndex,
+				ERROR_NO_OPER_SIGN);
 			RevertAll();
 			return false;
 		}
 		return true;
 	}
-	int COperatorICode::Run(CScriptExecBlock* pBlock)
+	bool COperatorICode::MakeExeCode(CExeCodeData& vOut)
 	{
-		int& state = pBlock->GetRunState(m_nRunStateIndex);
-
-		if (state == 0)
-		{	
-			if (pLeftOperand)
-			{
-				int result = pLeftOperand->Run(pBlock);
-				if (result != CScriptExecBlock::ERESULT_CONTINUE)
-				{
-					return result;
-				}
-			}
-			state++;
-		}
-		if (state == 1)
+		CBinaryOperExeCode* pCode = CExeCodeMgr::GetInstance()->New<CBinaryOperExeCode>(m_unBeginSoureIndex);
+		pLeftOperand->MakeExeCode(vOut);
+		pRightOperand->MakeExeCode(vOut);
+		if (pLeftOperand->GetType() == E_I_CODE_LOADVAR)
 		{
-			if (pRightOperand)
-			{
-				int result = pRightOperand->Run(pBlock);
-				if (result != CScriptExecBlock::ERESULT_CONTINUE)
-				{
-					return result;
-				}
-			}
-			state++;
+			CLoadVarICode* pLoadCode = (CLoadVarICode*)pLeftOperand;
+			pCode->leftParam.nType = pLoadCode->nLoadType;
+			pCode->leftParam.dwPos = pLoadCode->VarIndex;
 		}
-		CBaseVar* pLeftVar = nullptr;
-		CBaseVar* pRightVar = nullptr;
-		if (state == 2)
+		else
 		{
-			if (pRightOperand)
-			{
-				STACK_POP(pBlock->registerStack, pRightVar);
-				if (pRightVar == nullptr)
-				{
-					//TODO 报错
-					SCRIPTVAR_RELEASE(pLeftVar);
-					return CScriptExecBlock::ERESULT_ERROR;
-				}
-			}
-			if (pLeftOperand)
-			{
-				STACK_POP(pBlock->registerStack, pLeftVar);
-				if (pLeftVar == nullptr)
-				{
-					//TODO 报错
-					return CScriptExecBlock::ERESULT_ERROR;
-				}
-			}
-
-			state++;
+			pCode->leftParam.nType = E_VAR_SCOPE_REGISTER;
 		}
 
-
-		if (!CScriptVarOperatorMgr::GetInstance()->Operator(pOperGroup, pLeftVar, pRightVar,pBlock->registerStack))
+		if (pRightOperand->GetType() == E_I_CODE_LOADVAR)
 		{
-			//TODO 报错
-			SCRIPTVAR_RELEASE(pLeftVar);
-			SCRIPTVAR_RELEASE(pRightVar);
-			return CScriptExecBlock::ERESULT_ERROR;
+			CLoadVarICode* pLoadCode = (CLoadVarICode*)pRightOperand;
+			pCode->rightParam.nType = pLoadCode->nLoadType;
+			pCode->rightParam.dwPos = pLoadCode->VarIndex;
 		}
-		state = 0;
-		SCRIPTVAR_RELEASE(pLeftVar);
-		SCRIPTVAR_RELEASE(pRightVar);
-		pBlock->RevertRunState(m_nRunStateIndex);
-		return CScriptExecBlock::ERESULT_CONTINUE;
+		else
+		{
+			pCode->rightParam.nType = E_VAR_SCOPE_REGISTER;
+		}
+
+
+		pCode->operGroup = pOperGroup;
+
+		vOut.AddCode(pCode);
+		return true;
 	}
-	//bool CCallBackFunICode::MakeExeCode(stCodeData& vOut)
-	//{
-	//	for (unsigned int i = 0; i < vParams.size(); i++)
-	//	{
-	//		CBaseICode* pCode = vParams[i];
-	//		if (pCode)
-	//		{
-	//			pCode->MakeExeCode(vOut);
-	//		}
-	//	}
-	//	CodeStyle code(m_unBeginSoureIndex);
-	//	code.qwCode = 0;
-	//	code.wInstruct = ECODE_CALL_CALLBACK;
-	//	code.cSign = cRegisterIndex;
-	//	code.cExtend = (char)vParams.size();
-	//	code.dwPos = nFunIndex;
-	//	vOut.push_back(code);
-	//}
-	//void CCallBackFunICode::AddICode(int nType, CBaseICode* pCode)
-	//{
-	//	if (nType == E_PARAM)
-	//	{
-	//		vParams.push_back(pCode);
-	//	}
-	//	CBaseICode::AddICode(nType, pCode);
-	//}
-	//bool CCallFunICode::MakeExeCode(tagCodeData& vOut)
-	//{
-	//	for (unsigned int i = 0; i < vParams.size(); i++)
-	//	{
-	//		CBaseICode* pCode = vParams[i];
-	//		if (pCode)
-	//		{
-	//			pCode->SetRegisterIndex(R_A);
-	//			pCode->MakeExeCode(vOut);
-	//			CPushExeCode* pPushCode = CExeCodeMgr::GetInstance()->New<CPushExeCode>(m_unBeginSoureIndex);
-	//			pPushCode->cType = ESIGN_REGISTER;
-	//			pPushCode->dwPos = R_A;
-	//			vOut.AddCode(pPushCode);
-	//		}
-	//	}
-	//	int nCallBack = CScriptCallBackFunion::GetFunIndex(strFunName);
-	//	if (nCallBack >= 0)
-	//	{
-	//		CCallBackExeCode* pCallCode = CExeCodeMgr::GetInstance()->New<CCallBackExeCode>(m_unBeginSoureIndex);
-	//		pCallCode->cParmSize = (unsigned char)vParams.size();
-	//		pCallCode->cResultRegister = cRegisterIndex;
-	//		pCallCode->unFunIndex = nCallBack;
-	//		vOut.AddCode(pCallCode);
 
-	//		return true;
-	//	}
-	//	int nFunIndex = CScriptCodeLoader::GetInstance()->GetCodeIndex(strFunName.c_str());
-	//	if (nFunIndex >= 0)
-	//	{
-	//		CCallScriptExeCode* pCallCode = CExeCodeMgr::GetInstance()->New<CCallScriptExeCode>(m_unBeginSoureIndex);
-	//		pCallCode->cParmSize = (unsigned char)vParams.size();
-	//		pCallCode->cResultRegister = cRegisterIndex;
-	//		pCallCode->unFunIndex = nFunIndex;
-	//		vOut.AddCode(pCallCode);
-
-	//		return true;
-	//	}
-	//	return false;
-	//}
 	void CCallFunICode::AddICode(int nType, CBaseICode* pCode)
 	{
 		if (nType == E_PARAM)
@@ -1294,7 +1138,7 @@ namespace zlscript
 		GetWord(nextWord);
 		if (nextWord.word != "(")
 		{
-			AddErrorInfo(nextWord.nSourceWordsIndex, "CCallFunICode:format error");
+			AddErrorInfo(0, nextWord.nSourceWordsIndex, ERROR_FORMAT_NOT);
 			RevertAll();
 			return false;
 		}
@@ -1306,7 +1150,7 @@ namespace zlscript
 			{
 				if (!pCompiler->RunCompileState(vIn, CScriptCompiler::E_CODE_SCOPE_EXPRESSION, this, E_PARAM))
 				{
-					AddErrorInfo(nextWord.nSourceWordsIndex, "CCallFunICode:param format error");
+					AddErrorInfo(1, nextWord.nSourceWordsIndex, ERROR_FORMAT_NOT);
 					RevertAll();
 					return false;
 				}
@@ -1321,121 +1165,55 @@ namespace zlscript
 				}
 				else
 				{
-					AddErrorInfo(
+					AddErrorInfo(1,
 						nextWord.nSourceWordsIndex,
-						"CCallFunICode:format error,Parameter");
+						ERROR_FORMAT_NOT);
 					RevertAll();
 					return false;
 				}
 			}
 		}
-		nCallBack = CScriptCallBackFunion::GetFunIndex(strFunName);
-		if (nCallBack < 0)
-		{
-			nFunIndex = CScriptCodeLoader::GetInstance()->GetCodeIndex(strFunName.c_str());
-		}
+
 		return true;
 	}
 
-	int CCallFunICode::Run(CScriptExecBlock* pBlock)
+	bool CCallFunICode::MakeExeCode(CExeCodeData& vOut)
 	{
-		int& state = pBlock->GetRunState(m_nRunStateIndex);
-
-		for (int i = state; i < vParams.size(); i++)
+		std::vector<CExeParamInfo> params;
+		for (int i = 0; i < vParams.size(); i++)
 		{
+			CExeParamInfo info;
 			CBaseICode* pCode = vParams[i];
 			if (pCode)
 			{
-				int result = pCode->Run(pBlock);
-				if (result != CScriptExecBlock::ERESULT_CONTINUE)
-				{
-					return result;
-				}
+				pCode->MakeExeCode(vOut);
+
 			}
-			state++;
+			params.push_back(info);
 		}
-		if (state == vParams.size())
+		nCallBack = CScriptCallBackFunion::GetFunIndex(strFunName);
+		if (nCallBack >= 0)
 		{
-			state++;
-			if (pBlock->registerStack.nIndex < vParams.size())
-			{
-				//TODO 输出错误
-				return CScriptExecBlock::ERESULT_ERROR;
-			}
-			int nResult = CScriptExecBlock::ERESULT_CONTINUE;
-
-			unsigned nBegin = pBlock->registerStack.nIndex - vParams.size();
-			if (nCallBack >= 0)
-			{
-				CACHE_NEW(CScriptCallState, pCallState, pBlock->m_pMaster);
-				if (pCallState == nullptr)
-				{
-					//TODO 输出错误
-					return CScriptExecBlock::ERESULT_ERROR;
-				}
-				STACK_MOVE_ALL_BACK(pCallState->m_stackRegister, pBlock->registerStack, nBegin);
-				switch (pBlock->m_pMaster->CallFun_CallBack(pBlock->m_pMaster->m_pMachine, nCallBack, pCallState))
-				{
-				case ECALLBACK_ERROR:
-					nResult = CScriptExecBlock::ERESULT_ERROR;
-					break;
-				case ECALLBACK_WAITING:
-					nResult = CScriptExecBlock::ERESULT_WAITING;
-					break;
-				case ECALLBACK_NEXTCONTINUE:
-					nResult = CScriptExecBlock::ERESULT_NEXTCONTINUE;
-					break;
-				case ECALLBACK_FINISH:
-					if (pCallState->GetResult())
-					{
-						STACK_PUSH_COPY(pBlock->registerStack, pCallState->GetResult());
-					}
-					nResult = CScriptExecBlock::ERESULT_CONTINUE;
-					break;
-				}
-				CACHE_DELETE(pCallState);
-			}
-			else
-			{
-				if (nFunIndex < 0)
-				{
-					nFunIndex = CScriptCodeLoader::GetInstance()->GetCodeIndex(strFunName.c_str());
-					if (nFunIndex < 0)
-					{
-						//TODO 输出错误
-						return CScriptExecBlock::ERESULT_ERROR;
-					}
-				}
-				switch (pBlock->m_pMaster->CallFun_Script(pBlock->m_pMaster->m_pMachine, nFunIndex, pBlock->registerStack, vParams.size()))
-				{
-				case ECALLBACK_ERROR:
-					nResult = CScriptExecBlock::ERESULT_ERROR;
-					break;
-				case ECALLBACK_WAITING:
-					nResult = CScriptExecBlock::ERESULT_WAITING;
-					break;
-				case ECALLBACK_NEXTCONTINUE:
-					nResult = CScriptExecBlock::ERESULT_NEXTCONTINUE;
-					break;
-				case ECALLBACK_FINISH:
-					nResult = CScriptExecBlock::ERESULT_CONTINUE;
-					break;
-				}
-				for (unsigned char i = 0; i < vParams.size(); i++)
-				{
-					CBaseVar* pVar = nullptr;
-					STACK_POP(pBlock->registerStack, pVar);
-					SCRIPTVAR_RELEASE(pVar)
-				}
-			}
-			if (nResult != CScriptExecBlock::ERESULT_CONTINUE)
-				return nResult;
+			CCallBackExeCode* pFunCode = CExeCodeMgr::GetInstance()->New<CCallBackExeCode>(m_unBeginSoureIndex);
+			pFunCode->unFunIndex = nCallBack;
+			pFunCode->params = params;
+			vOut.AddCode(pFunCode);
 		}
-		state = 0;
-		pBlock->RevertRunState(m_nRunStateIndex);
-
-		return CScriptExecBlock::ERESULT_CONTINUE;
+		else
+		{
+			nFunIndex = CScriptCodeLoader::GetInstance()->GetCodeIndex(strFunName.c_str());
+			if (nFunIndex < 0)
+			{
+				return false;
+			}
+			CCallBackExeCode* pFunCode = CExeCodeMgr::GetInstance()->New<CCallBackExeCode>(m_unBeginSoureIndex);
+			pFunCode->unFunIndex = nFunIndex;
+			pFunCode->params = params;
+			vOut.AddCode(pFunCode);
+		}
+		return false;
 	}
+
 
 	void CCallClassFunICode::AddICode(int nType, CBaseICode* pCode)
 	{
@@ -1461,7 +1239,7 @@ namespace zlscript
 		GetWord(nextWord);
 		if (nextWord.word != "->" && nextWord.word != ".")
 		{
-			AddErrorInfo(nextWord.nSourceWordsIndex, "CCallClassFunICode:format error ->");
+			AddErrorInfo(0, nextWord.nSourceWordsIndex, ERROR_FORMAT_NOT);
 			RevertAll();
 			return false;
 		}
@@ -1476,16 +1254,15 @@ namespace zlscript
 		else
 		{
 			//检查是否是全局变量
-			stGlobalVar* pGlobalVar = CScriptGlobalVarMgr::GetInstance()->Get(strClassVarName);
-			if (pGlobalVar)
+			int index = CScriptGlobalVarMgr::GetInstance()->GetIndex(strClassVarName);
+			if (index != -1)
 			{
 				isGlobal = true;
-				varIndex = pGlobalVar->index;
-				CScriptGlobalVarMgr::GetInstance()->Revert(pGlobalVar);
-				if (pGlobalVar->pVar)
-				{
-					nClassType = pGlobalVar->pVar->GetType();
-				}
+				varIndex = index;
+				const CBaseVar* pGlobalVar = CScriptGlobalVarMgr::GetInstance()->Get(index);
+				if (pGlobalVar)
+					nClassType = pGlobalVar->GetType();
+				CScriptGlobalVarMgr::GetInstance()->Revert(index);
 			}
 			else
 			{
@@ -1513,7 +1290,7 @@ namespace zlscript
 		GetWord(nextWord);
 		if (nextWord.word != "(")
 		{
-			AddErrorInfo(nextWord.nSourceWordsIndex, "CCallFunICode:format error");
+			AddErrorInfo(1, nextWord.nSourceWordsIndex, ERROR_FORMAT_NOT);
 			RevertAll();
 			return false;
 		}
@@ -1525,7 +1302,7 @@ namespace zlscript
 			{
 				if (!pCompiler->RunCompileState(vIn, CScriptCompiler::E_CODE_SCOPE_EXPRESSION, this, E_PARAM))
 				{
-					AddErrorInfo(nextWord.nSourceWordsIndex, "CCallFunICode:param format error");
+					AddErrorInfo(2, nextWord.nSourceWordsIndex, ERROR_FORMAT_NOT);
 					RevertAll();
 					return false;
 				}
@@ -1540,9 +1317,9 @@ namespace zlscript
 				}
 				else
 				{
-					AddErrorInfo(
+					AddErrorInfo(2,
 						nextWord.nSourceWordsIndex,
-						"CCallFunICode:format error,Parameter");
+						ERROR_FORMAT_NOT);
 					RevertAll();
 					return false;
 				}
@@ -1551,143 +1328,167 @@ namespace zlscript
 		return true;
 	}
 
-	int CCallClassFunICode::RunClassFun(CScriptExecBlock* pBlock,CScriptPointInterface* pPoint, int funIndex)
+	bool CCallClassFunICode::MakeExeCode(CExeCodeData& vOut)
 	{
-		int result = CScriptExecBlock::ERESULT_ERROR;
-		unsigned int nBegin = pBlock->registerStack.nIndex - vParams.size();
-		CACHE_NEW(CScriptCallState, pCallState, pBlock->m_pMaster);
-		if (pCallState)
+		CCallClassFunExeCode* pCallCode = CExeCodeMgr::GetInstance()->New<CCallClassFunExeCode>(m_unBeginSoureIndex);
+		if (isGlobal)
+			pCallCode->object.nType = E_VAR_SCOPE_GLOBAL;
+		else
+			pCallCode->object.nType = E_VAR_SCOPE_LOACL;
+		pCallCode->object.dwPos = varIndex;
+		pCallCode->funIndex = nFunIndex;
+		for (int i = 0; i < vParams.size(); i++)
 		{
-			STACK_MOVE_ALL_BACK(pCallState->m_stackRegister, pBlock->registerStack, nBegin);
-			switch (pPoint->RunFun(funIndex, pCallState))
-			{
-			case ECALLBACK_ERROR:
-				result = CScriptExecBlock::ERESULT_ERROR;
-				break;
-			case ECALLBACK_WAITING:
-				result = CScriptExecBlock::ERESULT_WAITING;
-				break;
-			case ECALLBACK_NEXTCONTINUE:
-				result = CScriptExecBlock::ERESULT_NEXTCONTINUE;
-				break;
-			case ECALLBACK_FINISH:
-				//执行完将结果放入寄存器
-				if (pCallState->GetResult())
-				{
-					STACK_PUSH_COPY(pBlock->registerStack, pCallState->GetResult());
-				}
-				result = CScriptExecBlock::ERESULT_CONTINUE;
-				break;
-			}
-		}
-		CACHE_DELETE(pCallState);
-		return result;
-	}
-
-	int CCallClassFunICode::Run(CScriptExecBlock* pBlock)
-	{
-		int& state = pBlock->GetRunState(m_nRunStateIndex);
-
-		for (int i = state; i < vParams.size(); i++)
-		{	
+			CExeParamInfo info;
 			CBaseICode* pCode = vParams[i];
 			if (pCode)
 			{
-				int result = pCode->Run(pBlock);
-				if (result != CScriptExecBlock::ERESULT_CONTINUE)
-				{
-					return result;
-				}
-			}
-			state++;
-		}
-		if (state == vParams.size())
-		{
-			state++;
-			if (pBlock->registerStack.nIndex < vParams.size())
-			{
-				//TODO 输出错误
-				return CScriptExecBlock::ERESULT_ERROR;
-			}
-			int result = CScriptExecBlock::ERESULT_CONTINUE;
-			int nFunIndexRunTime = nFunIndex;
+				pCode->MakeExeCode(vOut);
 
-			if (isGlobal)
-			{
-				stGlobalVar* pGlobalVar = CScriptGlobalVarMgr::GetInstance()->Get(varIndex);
-				if (pGlobalVar)
-				{
-					CPointVar* pPoint = dynamic_cast<CPointVar*>(pGlobalVar->pVar);
-					if (pPoint)
-					{
-						if (pPoint->ToPoint())
-						{
-							if (nFunIndexRunTime < 0)
-							{
-								nFunIndexRunTime = pPoint->ToPoint()->GetClassFunIndex(strFunName);
-							}
-							result = RunClassFun(pBlock, pPoint->ToPoint(), nFunIndexRunTime);
-						}
-						else
-						{
-							result = CScriptExecBlock::ERESULT_ERROR;
-							//TODO 输出错误信息
-						}
-					}
-					else
-					{
-						result = CScriptExecBlock::ERESULT_ERROR;
-						//TODO 输出错误信息
-					}
-					CScriptGlobalVarMgr::GetInstance()->Revert(pGlobalVar);
-				}
-				else
-				{
-					result = CScriptExecBlock::ERESULT_ERROR;
-					//TODO 输出错误信息
-				}
 			}
-			else
-			{
-				CBaseVar* pLoacllVar = pBlock->GetLoaclVar(varIndex);
-				if (pLoacllVar)
-				{
-					CPointVar* pPoint = dynamic_cast<CPointVar*>(pLoacllVar);
-					if (pPoint)
-					{
-						if (pPoint->ToPoint())
-						{
-							if (nFunIndexRunTime < 0)
-							{
-								nFunIndexRunTime = pPoint->ToPoint()->GetClassFunIndex(strFunName);
-							}
-							result = RunClassFun(pBlock, pPoint->ToPoint(), nFunIndexRunTime);
-						}
-						else
-						{
-							result = CScriptExecBlock::ERESULT_ERROR;
-							//TODO 输出错误信息
-						}
-					}
-					else
-					{
-						result = CScriptExecBlock::ERESULT_ERROR;
-						//TODO 输出错误信息
-					}
-				}
-				else
-				{
-					result = CScriptExecBlock::ERESULT_ERROR;
-					//TODO 输出错误信息
-				}
-			}
-			if (result != CScriptExecBlock::ERESULT_CONTINUE)
-				return result;
+			pCallCode->params.push_back(info);
 		}
-		state = 0;
-		pBlock->RevertRunState(m_nRunStateIndex);
-		return CScriptExecBlock::ERESULT_CONTINUE;
+		vOut.AddCode(pCallCode);
+		return true;
 	}
+
+	//int CCallClassFunICode::RunClassFun(CScriptExecBlock* pBlock, CScriptPointInterface* pPoint, int funIndex)
+	//{
+	//	int result = CScriptExecBlock::ERESULT_ERROR;
+	//	unsigned int nBegin = pBlock->registerStack.nIndex - vParams.size();
+	//	CACHE_NEW(CScriptCallState, pCallState, pBlock->m_pMaster);
+	//	if (pCallState)
+	//	{
+	//		STACK_MOVE_ALL_BACK(pCallState->m_stackRegister, pBlock->registerStack, nBegin);
+	//		switch (pPoint->RunFun(funIndex, pCallState))
+	//		{
+	//		case ECALLBACK_ERROR:
+	//			result = CScriptExecBlock::ERESULT_ERROR;
+	//			break;
+	//		case ECALLBACK_WAITING:
+	//			result = CScriptExecBlock::ERESULT_WAITING;
+	//			break;
+	//		case ECALLBACK_NEXTCONTINUE:
+	//			result = CScriptExecBlock::ERESULT_NEXTCONTINUE;
+	//			break;
+	//		case ECALLBACK_FINISH:
+	//			//执行完将结果放入寄存器
+	//			if (pCallState->GetResult())
+	//			{
+	//				STACK_PUSH_COPY(pBlock->registerStack, pCallState->GetResult());
+	//			}
+	//			result = CScriptExecBlock::ERESULT_CONTINUE;
+	//			break;
+	//		}
+	//	}
+	//	CACHE_DELETE(pCallState);
+	//	return result;
+	//}
+
+	//int CCallClassFunICode::Run(CScriptExecBlock* pBlock)
+	//{
+	//	int& state = pBlock->GetRunState(m_nRunStateIndex);
+
+	//	for (int i = state; i < vParams.size(); i++)
+	//	{
+	//		CBaseICode* pCode = vParams[i];
+	//		if (pCode)
+	//		{
+	//			int result = pCode->Run(pBlock);
+	//			if (result != CScriptExecBlock::ERESULT_CONTINUE)
+	//			{
+	//				return result;
+	//			}
+	//		}
+	//		state++;
+	//	}
+	//	if (state == vParams.size())
+	//	{
+	//		state++;
+	//		if (pBlock->registerStack.nIndex < vParams.size())
+	//		{
+	//			//TODO 输出错误
+	//			return CScriptExecBlock::ERESULT_ERROR;
+	//		}
+	//		int result = CScriptExecBlock::ERESULT_CONTINUE;
+	//		int nFunIndexRunTime = nFunIndex;
+
+	//		if (isGlobal)
+	//		{
+	//			stGlobalVar* pGlobalVar = CScriptGlobalVarMgr::GetInstance()->Get(varIndex);
+	//			if (pGlobalVar)
+	//			{
+	//				CPointVar* pPoint = dynamic_cast<CPointVar*>(pGlobalVar->pVar);
+	//				if (pPoint)
+	//				{
+	//					if (pPoint->ToPoint())
+	//					{
+	//						if (nFunIndexRunTime < 0)
+	//						{
+	//							nFunIndexRunTime = pPoint->ToPoint()->GetClassFunIndex(strFunName);
+	//						}
+	//						result = RunClassFun(pBlock, pPoint->ToPoint(), nFunIndexRunTime);
+	//					}
+	//					else
+	//					{
+	//						result = CScriptExecBlock::ERESULT_ERROR;
+	//						//TODO 输出错误信息
+	//					}
+	//				}
+	//				else
+	//				{
+	//					result = CScriptExecBlock::ERESULT_ERROR;
+	//					//TODO 输出错误信息
+	//				}
+	//				CScriptGlobalVarMgr::GetInstance()->Revert(pGlobalVar);
+	//			}
+	//			else
+	//			{
+	//				result = CScriptExecBlock::ERESULT_ERROR;
+	//				//TODO 输出错误信息
+	//			}
+	//		}
+	//		else
+	//		{
+	//			CBaseVar* pLoacllVar = pBlock->GetLoaclVar(varIndex);
+	//			if (pLoacllVar)
+	//			{
+	//				CPointVar* pPoint = dynamic_cast<CPointVar*>(pLoacllVar);
+	//				if (pPoint)
+	//				{
+	//					if (pPoint->ToPoint())
+	//					{
+	//						if (nFunIndexRunTime < 0)
+	//						{
+	//							nFunIndexRunTime = pPoint->ToPoint()->GetClassFunIndex(strFunName);
+	//						}
+	//						result = RunClassFun(pBlock, pPoint->ToPoint(), nFunIndexRunTime);
+	//					}
+	//					else
+	//					{
+	//						result = CScriptExecBlock::ERESULT_ERROR;
+	//						//TODO 输出错误信息
+	//					}
+	//				}
+	//				else
+	//				{
+	//					result = CScriptExecBlock::ERESULT_ERROR;
+	//					//TODO 输出错误信息
+	//				}
+	//			}
+	//			else
+	//			{
+	//				result = CScriptExecBlock::ERESULT_ERROR;
+	//				//TODO 输出错误信息
+	//			}
+	//		}
+	//		if (result != CScriptExecBlock::ERESULT_CONTINUE)
+	//			return result;
+	//	}
+	//	state = 0;
+	//	pBlock->RevertRunState(m_nRunStateIndex);
+	//	return CScriptExecBlock::ERESULT_CONTINUE;
+	//}
 
 
 	void CSentenceICode::AddICode(int nType, CBaseICode* pCode)
@@ -1714,7 +1515,7 @@ namespace zlscript
 			{
 				if (!pCompiler->RunCompileState(vIn, CScriptCompiler::E_CODE_SCOPE_EXPRESSION, this, 0))
 				{
-					AddErrorInfo(nextWord.nSourceWordsIndex, "CSentenceICode:format error");
+					AddErrorInfo(0, nextWord.nSourceWordsIndex, ERROR_FORMAT_NOT);
 					RevertAll();
 					return false;
 				}
@@ -1729,7 +1530,7 @@ namespace zlscript
 				}
 				else
 				{
-					AddErrorInfo(nextWord.nSourceWordsIndex, "CSentenceICode:format error");
+					AddErrorInfo(0, nextWord.nSourceWordsIndex, ERROR_FORMAT_NOT);
 					RevertAll();
 					return false;
 				}
@@ -1738,26 +1539,39 @@ namespace zlscript
 		return true;
 	}
 
-	int CSentenceICode::Run(CScriptExecBlock* pBlock)
+	bool CSentenceICode::MakeExeCode(CExeCodeData& vOut)
 	{
-		int& state = pBlock->GetRunState(m_nRunStateIndex);
-		for (int i = state; i < vData.size(); i++)
+		for (int i = 0; i < vData.size(); i++)
 		{
 			CBaseICode* pCode = vData[i];
 			if (pCode)
 			{
-				int result = pCode->Run(pBlock);
-				if (result != CScriptExecBlock::ERESULT_CONTINUE)
-				{
-					return result;
-				}
+				pCode->MakeExeCode(vOut);
 			}
-			state++;
 		}
-		state = 0;
-		pBlock->RevertRunState(m_nRunStateIndex);
-		return CScriptExecBlock::ERESULT_CONTINUE;
+		return false;
 	}
+
+	//int CSentenceICode::Run(CScriptExecBlock* pBlock)
+	//{
+	//	int& state = pBlock->GetRunState(m_nRunStateIndex);
+	//	for (int i = state; i < vData.size(); i++)
+	//	{
+	//		CBaseICode* pCode = vData[i];
+	//		if (pCode)
+	//		{
+	//			int result = pCode->Run(pBlock);
+	//			if (result != CScriptExecBlock::ERESULT_CONTINUE)
+	//			{
+	//				return result;
+	//			}
+	//		}
+	//		state++;
+	//	}
+	//	state = 0;
+	//	pBlock->RevertRunState(m_nRunStateIndex);
+	//	return CScriptExecBlock::ERESULT_CONTINUE;
+	//}
 
 	//bool CExpressionICode::MakeExeCode(tagCodeData& vOut)
 	//{
@@ -1892,6 +1706,18 @@ namespace zlscript
 		CheckOperatorTree((CBaseICode**)&m_pRoot, pCompiler);
 		return true;
 	}
+	bool CExpressionICode::MakeExeCode(CExeCodeData& vOut)
+	{
+		if (m_pRoot)
+		{
+			return m_pRoot->MakeExeCode(vOut);
+		}
+		else if (pOperandCode)
+		{
+			return pOperandCode->MakeExeCode(vOut);
+		}
+		return false;
+	}
 	bool CExpressionICode::CheckOperatorTree(CBaseICode** pNode, CScriptCompiler* pCompiler)
 	{
 		if (pNode == nullptr)
@@ -1931,8 +1757,8 @@ namespace zlscript
 				CSaveVarICode* pSaveCode = (CSaveVarICode*)mgr.New(pCompiler, pLeftOperand->m_unBeginSoureIndex);
 
 				pSaveCode->nSaveType = pLeftOperand->nLoadType;
-				pSaveCode->LoaclVarIndex = pLeftOperand->LoaclVarIndex;
-				pSaveCode->GlobalVarIndex = pLeftOperand->GlobalVarIndex;
+				pSaveCode->VarIndex = pLeftOperand->VarIndex;
+
 				if (CheckOperatorTree(&pOperNode->pRightOperand, pCompiler) == false)
 				{
 					return false;
@@ -1947,7 +1773,7 @@ namespace zlscript
 
 		if (pOperNode->pLeftOperand && pOperNode->pLeftOperand->GetType() == E_I_CODE_OPERATOR)
 		{
-			if (CheckOperatorTree(&pOperNode->pLeftOperand,pCompiler) == false)
+			if (CheckOperatorTree(&pOperNode->pLeftOperand, pCompiler) == false)
 			{
 				return false;
 			}
@@ -1961,18 +1787,18 @@ namespace zlscript
 		}
 		return true;
 	}
-	int CExpressionICode::Run(CScriptExecBlock* pBlock)
-	{
-		if (m_pRoot)
-		{
-			return m_pRoot->Run(pBlock);
-		}
-		else if (pOperandCode)
-		{
-			return pOperandCode->Run(pBlock);
-		}
-		return CScriptExecBlock::ERESULT_CONTINUE;
-	}
+	//int CExpressionICode::Run(CScriptExecBlock* pBlock)
+	//{
+	//	if (m_pRoot)
+	//	{
+	//		return m_pRoot->Run(pBlock);
+	//	}
+	//	else if (pOperandCode)
+	//	{
+	//		return pOperandCode->Run(pBlock);
+	//	}
+	//	return CScriptExecBlock::ERESULT_CONTINUE;
+	//}
 	//bool CIfICode::MakeExeCode(tagCodeData& vOut)
 	//{
 	//	//先压入条件
@@ -2042,14 +1868,14 @@ namespace zlscript
 		GetWord(nextWord);
 		if (nextWord.word != "(")
 		{
-			AddErrorInfo(nextWord.nSourceWordsIndex, "CIfICode:if format error");
+			AddErrorInfo(10,nextWord.nSourceWordsIndex, ERROR_FORMAT_NOT);
 			RevertAll();
 			return false;
 		}
 
 		if (!pCompiler->RunCompileState(vIn, CScriptCompiler::E_CODE_SCOPE_EXPRESSION, this, E_COND))
 		{
-			AddErrorInfo(nextWord.nSourceWordsIndex, "CIfICode:if condition format error");
+			AddErrorInfo(10,nextWord.nSourceWordsIndex, ERROR_FORMAT_NOT);
 			RevertAll();
 			return false;
 		}
@@ -2057,14 +1883,14 @@ namespace zlscript
 		GetWord(nextWord);
 		if (nextWord.word != ")")
 		{
-			AddErrorInfo(nextWord.nSourceWordsIndex, "CIfICode:if format error");
+			AddErrorInfo(10,nextWord.nSourceWordsIndex, ERROR_FORMAT_NOT);
 			RevertAll();
 			return false;
 		}
 
 		if (!pCompiler->RunCompileState(vIn, CScriptCompiler::E_CODE_SCOPE_STATEMENT, this, E_TRUE))
 		{
-			AddErrorInfo(nextWord.nSourceWordsIndex, "CIfICode:if true block format error");
+			AddErrorInfo(10,nextWord.nSourceWordsIndex, ERROR_FORMAT_NOT);
 			RevertAll();
 			return false;
 		}
@@ -2078,7 +1904,7 @@ namespace zlscript
 
 		if (!pCompiler->RunCompileState(vIn, CScriptCompiler::E_CODE_SCOPE_STATEMENT, this, E_FALSE))
 		{
-			AddErrorInfo(nextWord.nSourceWordsIndex, "CIfICode:if false block format error");
+			AddErrorInfo(10,nextWord.nSourceWordsIndex, ERROR_FORMAT_NOT);
 			RevertAll();
 			return false;
 		}
@@ -2086,82 +1912,113 @@ namespace zlscript
 		return true;
 	}
 
-	bool CIfICode::CheckCondVar(CBaseVar* pVar)
+	bool CIfICode::MakeExeCode(CExeCodeData& vOut)
 	{
-		if (pVar->GetType() == CScriptClassInfo<CIntVar>::GetInstance().nClassType)
+		//先压入条件
+		if (pCondCode)
 		{
-			CIntVar* pIntVar = dynamic_cast<CIntVar*>(pVar);
-			if (pIntVar && pIntVar->ToInt() != 0)
-			{
-				return true;
-			}
+			pCondCode->MakeExeCode(vOut);
 		}
-		else if (pVar->GetType() == CScriptClassInfo<CStringVar>::GetInstance().nClassType)
-		{
+		CJumpFalseExeCode* pIfCode = CExeCodeMgr::GetInstance()->New<CJumpFalseExeCode>(m_unBeginSoureIndex);
+		vOut.AddCode(pIfCode);
+		if (pTureCode)
+			pTureCode->MakeExeCode(vOut);
 
+		if (pFalseCode)
+		{
+			CJumpExeCode* pElseCode = CExeCodeMgr::GetInstance()->New<CJumpExeCode>(m_unBeginSoureIndex);
+			vOut.AddCode(pElseCode);
+			pFalseCode->MakeExeCode(vOut);
+			pIfCode->pJumpCode = pElseCode->m_pNext;
+			CSignExeCode* pEndCode = CExeCodeMgr::GetInstance()->New<CSignExeCode>(m_unBeginSoureIndex);
+			vOut.AddCode(pEndCode);
+			pElseCode->pJumpCode = pEndCode;
 		}
 		else
 		{
-			CPointVar* pPoint = dynamic_cast<CPointVar*>(pVar);
-			if (pPoint && pPoint->ToPoint())
-			{
-				return true;
-			}
+			CSignExeCode* pEndCode = CExeCodeMgr::GetInstance()->New<CSignExeCode>(m_unBeginSoureIndex);
+			vOut.AddCode(pEndCode);
+			pIfCode->pJumpCode = pEndCode;
 		}
-		return false;
+		return true;
 	}
 
-	int CIfICode::Run(CScriptExecBlock* pBlock)
-	{
-		int& state = pBlock->GetRunState(m_nRunStateIndex);
-		if (state == 0)
-		{	
-			int result = pCondCode->Run(pBlock);
-			if (result != CScriptExecBlock::ERESULT_CONTINUE)
-			{
-				return result;
-			}
-			state++;
-		}
-		if (state == 1)
-		{
-			state++;
-			CBaseVar* pCondVar = nullptr;
-			STACK_POP(pBlock->registerStack, pCondVar);
-			if (CheckCondVar(pCondVar))
-			{
-				state = 2;
-			}
-			else
-			{
-				state = 3;
-			}
-			SCRIPTVAR_RELEASE(pCondVar);
-		}
-		int result = CScriptExecBlock::ERESULT_CONTINUE;
-		if (state == 2)
-		{
-			result = pTureCode->Run(pBlock);
-			if (result != CScriptExecBlock::ERESULT_CONTINUE)
-			{
-				return result;
-			}
-			state = 4;
-		}
-		if (state == 3)
-		{
-			result = pFalseCode->Run(pBlock);
-			if (result != CScriptExecBlock::ERESULT_CONTINUE)
-			{
-				return result;
-			}
-			state = 4;
-		}
-		
-		state = 0;
-		pBlock->RevertRunState(m_nRunStateIndex);
-		return result;
-	}
+	//bool CIfICode::CheckCondVar(CBaseVar* pVar)
+	//{
+	//	if (pVar->GetType() == CScriptClassInfo<CIntVar>::GetInstance().nClassType)
+	//	{
+	//		CIntVar* pIntVar = dynamic_cast<CIntVar*>(pVar);
+	//		if (pIntVar && pIntVar->ToInt() != 0)
+	//		{
+	//			return true;
+	//		}
+	//	}
+	//	else if (pVar->GetType() == CScriptClassInfo<CStringVar>::GetInstance().nClassType)
+	//	{
+
+	//	}
+	//	else
+	//	{
+	//		CPointVar* pPoint = dynamic_cast<CPointVar*>(pVar);
+	//		if (pPoint && pPoint->ToPoint())
+	//		{
+	//			return true;
+	//		}
+	//	}
+	//	return false;
+	//}
+
+	//int CIfICode::Run(CScriptExecBlock* pBlock)
+	//{
+	//	int& state = pBlock->GetRunState(m_nRunStateIndex);
+	//	if (state == 0)
+	//	{
+	//		int result = pCondCode->Run(pBlock);
+	//		if (result != CScriptExecBlock::ERESULT_CONTINUE)
+	//		{
+	//			return result;
+	//		}
+	//		state++;
+	//	}
+	//	if (state == 1)
+	//	{
+	//		state++;
+	//		CBaseVar* pCondVar = nullptr;
+	//		STACK_POP(pBlock->registerStack, pCondVar);
+	//		if (CheckCondVar(pCondVar))
+	//		{
+	//			state = 2;
+	//		}
+	//		else
+	//		{
+	//			state = 3;
+	//		}
+	//		SCRIPTVAR_RELEASE(pCondVar);
+	//	}
+	//	int result = CScriptExecBlock::ERESULT_CONTINUE;
+	//	if (state == 2)
+	//	{
+	//		result = pTureCode->Run(pBlock);
+	//		if (result != CScriptExecBlock::ERESULT_CONTINUE)
+	//		{
+	//			return result;
+	//		}
+	//		state = 4;
+	//	}
+	//	if (state == 3)
+	//	{
+	//		result = pFalseCode->Run(pBlock);
+	//		if (result != CScriptExecBlock::ERESULT_CONTINUE)
+	//		{
+	//			return result;
+	//		}
+	//		state = 4;
+	//	}
+
+	//	state = 0;
+	//	pBlock->RevertRunState(m_nRunStateIndex);
+	//	return result;
+	//}
 
 	//bool CWhileICode::MakeExeCode(tagCodeData& vOut)
 	//{
@@ -2250,14 +2107,14 @@ namespace zlscript
 		GetWord(nextWord);
 		if (nextWord.word != "(")
 		{
-			AddErrorInfo(nextWord.nSourceWordsIndex, "CWhileICode:if format error");
+			AddErrorInfo(10,nextWord.nSourceWordsIndex, ERROR_FORMAT_NOT);
 			RevertAll();
 			return false;
 		}
 
 		if (!pCompiler->RunCompileState(vIn, CScriptCompiler::E_CODE_SCOPE_EXPRESSION, this, E_COND))
 		{
-			AddErrorInfo(nextWord.nSourceWordsIndex, "CWhileICode:if condition format error");
+			AddErrorInfo(10,nextWord.nSourceWordsIndex, ERROR_FORMAT_NOT);
 			RevertAll();
 			return false;
 		}
@@ -2265,101 +2122,155 @@ namespace zlscript
 		GetWord(nextWord);
 		if (nextWord.word != ")")
 		{
-			AddErrorInfo(nextWord.nSourceWordsIndex, "CWhileICode:while format error");
+			AddErrorInfo(10,nextWord.nSourceWordsIndex, ERROR_FORMAT_NOT);
 			RevertAll();
 			return false;
 		}
 
 		if (!pCompiler->RunCompileState(vIn, CScriptCompiler::E_CODE_SCOPE_STATEMENT, this, E_BLOCK))
 		{
-			AddErrorInfo(nextWord.nSourceWordsIndex, "CWhileICode:while block format error");
+			AddErrorInfo(10,nextWord.nSourceWordsIndex, ERROR_FORMAT_NOT);
 			RevertAll();
 			return false;
 		}
 
 		return true;
 	}
-	bool CWhileICode::CheckCondVar(CBaseVar* pVar)
+	bool CWhileICode::MakeExeCode(CExeCodeData& vOut)
 	{
-		if (pVar->GetType() == CScriptClassInfo<CIntVar>::GetInstance().nClassType)
+		if (pCondCode == nullptr)
 		{
-			CIntVar* pIntVar = dynamic_cast<CIntVar*>(pVar);
-			if (pIntVar && pIntVar->ToInt() != 0)
-			{
-				return true;
-			}
+			return false;
 		}
-		else if (pVar->GetType() == CScriptClassInfo<CStringVar>::GetInstance().nClassType)
+		if (pBodyCode == nullptr)
 		{
+			return false;
+		}
+		CBaseExeCode* pBegin = vOut.pEndCode;
+		pCondCode->MakeExeCode(vOut);
 
-		}
+		CJumpFalseExeCode* pIfCode = CExeCodeMgr::GetInstance()->New<CJumpFalseExeCode>(m_unBeginSoureIndex);
+		vOut.AddCode(pIfCode);
+
+		pBodyCode->MakeExeCode(vOut);
+		//要在块尾加入返回块头的指令
+		CJumpExeCode* pJumpBeginCode = CExeCodeMgr::GetInstance()->New<CJumpExeCode>(m_unBeginSoureIndex);
+		if (pBegin)
+			pJumpBeginCode->pJumpCode = pBegin->m_pNext;
 		else
-		{
-			CPointVar* pPoint = dynamic_cast<CPointVar*>(pVar);
-			if (pPoint && pPoint->ToPoint())
-			{
-				return true;
-			}
-		}
-		return false;
-	}
-	int CWhileICode::Run(CScriptExecBlock* pBlock)
-	{
-		int& state = pBlock->GetRunState(m_nRunStateIndex);
-		while (true)
-		{
-			if (state == 0)
-			{
-				int result = pCondCode->Run(pBlock);
-				if (result != CScriptExecBlock::ERESULT_CONTINUE)
-				{
-					return result;
-				}
-				state++;
-			}
-			if (state == 1)
-			{
-				CBaseVar* pCondVar = nullptr;
-				STACK_POP(pBlock->registerStack, pCondVar);
-				if (CheckCondVar(pCondVar))
-				{
-					state = 2;
-				}
-				else
-				{
-					state = 3;
-				}
-				SCRIPTVAR_RELEASE(pCondVar);
-			}
-			if (state == 2)
-			{
-				int result = pBodyCode->Run(pBlock);
-				switch (result)
-				{
-				case CScriptExecBlock::ERESULT_LOOP_HEAD:
-					state = 0;
-					break;
-				case CScriptExecBlock::ERESULT_LOOP_END:
-					state = 3;
-					break;
-				case CScriptExecBlock::ERESULT_CONTINUE:
-					state = 4;
-					break;
-				default:
-					return result;
-				}
-				state = 4;
-			}
-			if (state == 3)
-			{
-				break;
-			}
-			state = 0;
-		}
+			pJumpBeginCode->pJumpCode = vOut.pBeginCode;
+		vOut.AddCode(pJumpBeginCode);
 
-		pBlock->RevertRunState(m_nRunStateIndex);
-		return CScriptExecBlock::ERESULT_CONTINUE;
+		CSignExeCode* pEndCode = CExeCodeMgr::GetInstance()->New<CSignExeCode>(m_unBeginSoureIndex);
+		vOut.AddCode(pEndCode);
+		pIfCode->pJumpCode = pEndCode;
+
+		for (CBaseExeCode* pCheckCode = pIfCode; pCheckCode && pCheckCode != pJumpBeginCode; pCheckCode = pCheckCode->m_pNext)
+		{
+			auto pBreakCode = dynamic_cast<CBreakExeCode*>(pCheckCode);
+			if (pBreakCode)
+			{
+				if (pBreakCode->pJumpCode == nullptr)
+				{
+					pBreakCode->pJumpCode = pEndCode;
+				}
+			}
+			else
+			{
+				auto pContinueCode = dynamic_cast<CContinueExeCode*>(pCheckCode);
+				if (pContinueCode)
+				{
+					if (pContinueCode->pJumpCode == nullptr)
+					{
+						pContinueCode->pJumpCode = pBegin->m_pNext;;
+					}
+				}
+			}
+
+		}
+		return true;
 	}
+	//bool CWhileICode::CheckCondVar(CBaseVar* pVar)
+	//{
+	//	if (pVar->GetType() == CScriptClassInfo<CIntVar>::GetInstance().nClassType)
+	//	{
+	//		CIntVar* pIntVar = dynamic_cast<CIntVar*>(pVar);
+	//		if (pIntVar && pIntVar->ToInt() != 0)
+	//		{
+	//			return true;
+	//		}
+	//	}
+	//	else if (pVar->GetType() == CScriptClassInfo<CStringVar>::GetInstance().nClassType)
+	//	{
+
+	//	}
+	//	else
+	//	{
+	//		CPointVar* pPoint = dynamic_cast<CPointVar*>(pVar);
+	//		if (pPoint && pPoint->ToPoint())
+	//		{
+	//			return true;
+	//		}
+	//	}
+	//	return false;
+	//}
+	//int CWhileICode::Run(CScriptExecBlock* pBlock)
+	//{
+	//	int& state = pBlock->GetRunState(m_nRunStateIndex);
+	//	while (true)
+	//	{
+	//		if (state == 0)
+	//		{
+	//			int result = pCondCode->Run(pBlock);
+	//			if (result != CScriptExecBlock::ERESULT_CONTINUE)
+	//			{
+	//				return result;
+	//			}
+	//			state++;
+	//		}
+	//		if (state == 1)
+	//		{
+	//			CBaseVar* pCondVar = nullptr;
+	//			STACK_POP(pBlock->registerStack, pCondVar);
+	//			if (CheckCondVar(pCondVar))
+	//			{
+	//				state = 2;
+	//			}
+	//			else
+	//			{
+	//				state = 3;
+	//			}
+	//			SCRIPTVAR_RELEASE(pCondVar);
+	//		}
+	//		if (state == 2)
+	//		{
+	//			int result = pBodyCode->Run(pBlock);
+	//			switch (result)
+	//			{
+	//			case CScriptExecBlock::ERESULT_LOOP_HEAD:
+	//				state = 0;
+	//				break;
+	//			case CScriptExecBlock::ERESULT_LOOP_END:
+	//				state = 3;
+	//				break;
+	//			case CScriptExecBlock::ERESULT_CONTINUE:
+	//				state = 4;
+	//				break;
+	//			default:
+	//				return result;
+	//			}
+	//			state = 4;
+	//		}
+	//		if (state == 3)
+	//		{
+	//			break;
+	//		}
+	//		state = 0;
+	//	}
+
+	//	pBlock->RevertRunState(m_nRunStateIndex);
+	//	return CScriptExecBlock::ERESULT_CONTINUE;
+	//}
 	//bool CContinueICode::MakeExeCode(tagCodeData& vOut)
 	//{
 	//	CContinueExeCode* pCode = CExeCodeMgr::GetInstance()->New<CContinueExeCode>(m_unBeginSoureIndex);
@@ -2383,16 +2294,22 @@ namespace zlscript
 		GetWord(nextWord);
 		if (nextWord.word != ";")
 		{
-			pCompiler->AddErrorInfo(nextWord.nSourceWordsIndex, "CContinueICode:format error");
+			AddErrorInfo(10, nextWord.nSourceWordsIndex, ERROR_FORMAT_NOT);
 			RevertAll();
 			return false;
 		}
 		return true;
 	}
-	int CContinueICode::Run(CScriptExecBlock* pBlock)
+	bool CContinueICode::MakeExeCode(CExeCodeData& vOut)
 	{
-		return CScriptExecBlock::ERESULT_LOOP_HEAD;
+		CBreakExeCode* pCode = CExeCodeMgr::GetInstance()->New<CBreakExeCode>(m_unBeginSoureIndex);
+		vOut.AddCode(pCode);
+		return true;
 	}
+	//int CContinueICode::Run(CScriptExecBlock* pBlock)
+	//{
+	//	return CScriptExecBlock::ERESULT_LOOP_HEAD;
+	//}
 	//bool CBreakICode::MakeExeCode(tagCodeData& vOut)
 	//{
 	//	CBreakExeCode* pCode = CExeCodeMgr::GetInstance()->New<CBreakExeCode>(m_unBeginSoureIndex);
@@ -2415,16 +2332,22 @@ namespace zlscript
 		GetWord(nextWord);
 		if (nextWord.word != ";")
 		{
-			pCompiler->AddErrorInfo(nextWord.nSourceWordsIndex, "CBreakICode:format error");
+			AddErrorInfo(10,nextWord.nSourceWordsIndex, ERROR_FORMAT_NOT);
 			RevertAll();
 			return false;
 		}
 		return true;
 	}
-	int CBreakICode::Run(CScriptExecBlock* pBlock)
+	bool CBreakICode::MakeExeCode(CExeCodeData& vOut)
 	{
-		return CScriptExecBlock::ERESULT_LOOP_END;
+		CContinueExeCode* pCode = CExeCodeMgr::GetInstance()->New<CContinueExeCode>(m_unBeginSoureIndex);
+		vOut.AddCode(pCode);
+		return true;
 	}
+	//int CBreakICode::Run(CScriptExecBlock* pBlock)
+	//{
+	//	return CScriptExecBlock::ERESULT_LOOP_END;
+	//}
 	//bool CReturnICode::MakeExeCode(tagCodeData& vOut)
 	//{
 	//	if (pBodyCode)
@@ -2468,7 +2391,7 @@ namespace zlscript
 		RevertOne();
 		if (!pCompiler->RunCompileState(vIn, CScriptCompiler::E_CODE_SCOPE_EXPRESSION, this, 0))
 		{
-			AddErrorInfo(nextWord.nSourceWordsIndex, "CReturnICode:expression format error");
+			AddErrorInfo(10,nextWord.nSourceWordsIndex, ERROR_FORMAT_NOT);
 			RevertAll();
 			return false;
 		}
@@ -2476,29 +2399,52 @@ namespace zlscript
 		GetWord(nextWord);
 		if (nextWord.word != ";")
 		{
-			pCompiler->AddErrorInfo(nextWord.nSourceWordsIndex, "CReturnICode:format error");
+			AddErrorInfo(10,nextWord.nSourceWordsIndex, ESIGN_ILLEGAL_END);
 			RevertAll();
 			return false;
 		}
 		return true;
 	}
 
-	int CReturnICode::Run(CScriptExecBlock* pBlock)
+	bool CReturnICode::MakeExeCode(CExeCodeData& vOut)
 	{
-		int& state = pBlock->GetRunState(m_nRunStateIndex);
-		if (state == 0)
+		if (pBodyCode)
 		{
-			int result = pBodyCode->Run(pBlock);
-			if (result != CScriptExecBlock::ERESULT_CONTINUE)
-			{
-				return result;
-			}
-			state++;
+			pBodyCode->MakeExeCode(vOut);
 		}
-		state = 0;
-		pBlock->RevertRunState(m_nRunStateIndex);
-		return CScriptExecBlock::ERESULT_END;
+
+		CReturnExeCode* pCode = CExeCodeMgr::GetInstance()->New<CReturnExeCode>(m_unBeginSoureIndex);
+		if (pBodyCode->GetType() == E_I_CODE_LOADVAR)
+		{
+			CLoadVarICode* pLoadCode = (CLoadVarICode*)pBodyCode;
+			pCode->returnParam.nType = pLoadCode->nLoadType;
+			pCode->returnParam.dwPos = pLoadCode->VarIndex;
+		}
+		else
+		{
+			pCode->returnParam.nType = E_VAR_SCOPE_REGISTER;
+		}
+		vOut.AddCode(pCode);
+
+		return true;
 	}
+
+	//int CReturnICode::Run(CScriptExecBlock* pBlock)
+	//{
+	//	int& state = pBlock->GetRunState(m_nRunStateIndex);
+	//	if (state == 0)
+	//	{
+	//		int result = pBodyCode->Run(pBlock);
+	//		if (result != CScriptExecBlock::ERESULT_CONTINUE)
+	//		{
+	//			return result;
+	//		}
+	//		state++;
+	//	}
+	//	state = 0;
+	//	pBlock->RevertRunState(m_nRunStateIndex);
+	//	return CScriptExecBlock::ERESULT_END;
+	//}
 
 
 	//bool CNewICode::MakeExeCode(tagCodeData& vOut)
@@ -2541,25 +2487,34 @@ namespace zlscript
 		return true;
 	}
 
-	int CNewICode::Run(CScriptExecBlock* pBlock)
+	bool CNewICode::MakeExeCode(CExeCodeData& vOut)
 	{
-		if (nClassType < 0)
-		{
-			nClassType = CScriptVarTypeMgr::GetInstance()->GetVarType(strClassType);
-		}
-		auto pPoint = CScriptVarTypeMgr::GetInstance()->NewObject(nClassType);
-		CBaseVar* pVar = CScriptVarTypeMgr::GetInstance()->GetVar(nClassType);
-		if (pVar->Set(pPoint))
-		{
-			STACK_PUSH_MOVE(pBlock->registerStack, pVar);
-		}
-		else
-		{
-			CScriptVarTypeMgr::GetInstance()->ReleaseVar(pVar);
-			CScriptVarTypeMgr::GetInstance()->ReleaseObject(pPoint);
-		}
-		return CScriptExecBlock::ERESULT_CONTINUE;
+		CNewClassExeCode* pCode = CExeCodeMgr::GetInstance()->New<CNewClassExeCode>(m_unBeginSoureIndex);
+		pCode->dwClassIndex = nClassType;
+		vOut.AddCode(pCode);
+
+		return true;
 	}
+
+	//int CNewICode::Run(CScriptExecBlock* pBlock)
+	//{
+	//	if (nClassType < 0)
+	//	{
+	//		nClassType = CScriptVarTypeMgr::GetInstance()->GetVarType(strClassType);
+	//	}
+	//	auto pPoint = CScriptVarTypeMgr::GetInstance()->NewObject(nClassType);
+	//	CBaseVar* pVar = CScriptVarTypeMgr::GetInstance()->GetVar(nClassType);
+	//	if (pVar->Set(pPoint))
+	//	{
+	//		STACK_PUSH_MOVE(pBlock->registerStack, pVar);
+	//	}
+	//	else
+	//	{
+	//		CScriptVarTypeMgr::GetInstance()->ReleaseVar(pVar);
+	//		CScriptVarTypeMgr::GetInstance()->ReleaseObject(pPoint);
+	//	}
+	//	return CScriptExecBlock::ERESULT_CONTINUE;
+	//}
 
 	//bool CDeleteICode::MakeExeCode(tagCodeData& vOut)
 	//{
@@ -2640,6 +2595,18 @@ namespace zlscript
 		m_pBody = pCode;
 	}
 
+	bool CBracketsICode::MakeExeCode(CExeCodeData& vOut)
+	{
+		if (m_pBody)
+		{
+			if (!m_pBody->MakeExeCode(vOut))
+			{
+				return false;
+			}
+		}
+		return true;
+	}
+
 	bool CBracketsICode::Compile(SentenceSourceCode& vIn, CScriptCompiler* pCompiler)
 	{
 		SignToPos();
@@ -2655,23 +2622,23 @@ namespace zlscript
 		}
 		if (!pCompiler->RunCompileState(vIn, CScriptCompiler::E_CODE_SCOPE_EXPRESSION, this, 0))
 		{
-			pCompiler->AddErrorInfo(nextWord.nSourceWordsIndex, "CBracketsICode:expression error");
+			AddErrorInfo(2,nextWord.nSourceWordsIndex, ERROR_FORMAT_NOT);
 			RevertAll();
 			return false;
 		}
 		GetWord(nextWord);
 		if (nextWord.word != ")")
 		{
-			pCompiler->AddErrorInfo(nextWord.nSourceWordsIndex, "CBracketsICode:format error");
+			AddErrorInfo(2,nextWord.nSourceWordsIndex, ERROR_FORMAT_NOT);
 			RevertAll();
 			return false;
 		}
 		return true;
 	}
-	int CBracketsICode::Run(CScriptExecBlock* pBlock)
-	{
-		return m_pBody->Run(pBlock);
-	}
+	//int CBracketsICode::Run(CScriptExecBlock* pBlock)
+	//{
+	//	return m_pBody->Run(pBlock);
+	//}
 	//bool CTestSignICode::MakeExeCode(tagCodeData& vOut)
 	//{
 	//	for (int i = 0; i < nNum / 2; i++)

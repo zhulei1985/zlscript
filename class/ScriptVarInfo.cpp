@@ -9,24 +9,24 @@ namespace zlscript
 	{
 		m_nType = CScriptClassInfo<CIntVar>::GetInstance().nClassType;
 	}
-	__int64 CIntVar::ToInt()
+	__int64 CIntVar::ToInt() const
 	{
 		return nValue;
 	}
 
-	double CIntVar::ToFloat()
+	double CIntVar::ToFloat() const
 	{
 		return (double)nValue;
 	}
 
-	std::string CIntVar::ToString()
+	std::string CIntVar::ToString() const
 	{
 		char strbuff[64] = { 0 };
 		sprintf(strbuff, "%lld", nValue);
 		return strbuff;
 	}
 
-	tagByteArray CIntVar::ToBinary()
+	tagByteArray CIntVar::ToBinary() const
 	{
 		tagByteArray vec;
 		vec.push_back((char)GetType());
@@ -34,9 +34,9 @@ namespace zlscript
 		return std::move(vec);
 	}
 
-	bool CIntVar::Set(CBaseVar* pVar)
+	bool CIntVar::Set(const CBaseVar* pVar)
 	{
-		CIntVar* pInt = dynamic_cast<CIntVar*>(pVar);
+		const CIntVar* pInt = dynamic_cast<const CIntVar*>(pVar);
 		if (pInt)
 		{
 			nValue = pInt->nValue;
@@ -84,24 +84,24 @@ namespace zlscript
 		m_nType = CScriptClassInfo<CFloatVar>::GetInstance().nClassType;
 	}
 
-	__int64 CFloatVar::ToInt()
+	__int64 CFloatVar::ToInt() const
 	{
 		return (__int64)fValue;
 	}
 
-	double CFloatVar::ToFloat()
+	double CFloatVar::ToFloat() const
 	{
 		return fValue;
 	}
 
-	std::string CFloatVar::ToString()
+	std::string CFloatVar::ToString() const
 	{
 		char strbuff[64] = { 0 };
 		sprintf(strbuff, "%f", fValue);
 		return strbuff;
 	}
 
-	tagByteArray CFloatVar::ToBinary()
+	tagByteArray CFloatVar::ToBinary() const
 	{
 		tagByteArray vec;
 		vec.push_back((char)GetType());
@@ -109,9 +109,9 @@ namespace zlscript
 		return std::move(vec);
 	}
 
-	bool CFloatVar::Set(CBaseVar* pVar)
+	bool CFloatVar::Set(const CBaseVar* pVar)
 	{
-		CFloatVar* pInt = dynamic_cast<CFloatVar*>(pVar);
+		const CFloatVar* pInt = dynamic_cast<const CFloatVar*>(pVar);
 		if (pInt)
 		{
 			fValue = pInt->fValue;
@@ -162,28 +162,28 @@ namespace zlscript
 	{
 		clear();
 	}
-	__int64 CStringVar::ToInt()
+	__int64 CStringVar::ToInt() const
 	{
 		std::string& str = s_strPool.GetString(nStringIndex);
 
 		return _atoi64(str.c_str());
 	}
 
-	double CStringVar::ToFloat()
+	double CStringVar::ToFloat() const
 	{
 		std::string& str = s_strPool.GetString(nStringIndex);
 
 		return atof(str.c_str());
 	}
 
-	std::string& CStringVar::ToString()
+	std::string& CStringVar::ToString() const
 	{
 		std::string& str = s_strPool.GetString(nStringIndex);
 
 		return str;
 	}
 
-	tagByteArray CStringVar::ToBinary()
+	tagByteArray CStringVar::ToBinary() const
 	{
 		std::string& str = s_strPool.GetString(nStringIndex);
 
@@ -194,9 +194,9 @@ namespace zlscript
 
 	}
 
-	bool CStringVar::Set(CBaseVar* pVar)
+	bool CStringVar::Set(const CBaseVar* pVar)
 	{
-		CStringVar* pStrVar = dynamic_cast<CStringVar*>(pVar);
+		const CStringVar* pStrVar = dynamic_cast<const CStringVar*>(pVar);
 		if (pStrVar)
 		{
 			clear();
@@ -264,7 +264,7 @@ namespace zlscript
 	{
 		clear();
 	}
-	tagByteArray CBinaryVar::ToBinary()
+	tagByteArray CBinaryVar::ToBinary() const
 	{
 		unsigned int len = 0;
 		const char* pData = s_binPool.GetBinary(nBinaryIndex, len);
@@ -277,10 +277,10 @@ namespace zlscript
 		return vec;
 	}
 
-	bool CBinaryVar::Set(CBaseVar* pVar)
+	bool CBinaryVar::Set(const CBaseVar* pVar)
 	{
 
-		CBinaryVar* pStrVar = dynamic_cast<CBinaryVar*>(pVar);
+		const CBinaryVar* pStrVar = dynamic_cast<const CBinaryVar*>(pVar);
 		if (pStrVar)
 		{
 			clear();
@@ -312,14 +312,14 @@ namespace zlscript
 		clear();
 	}
 
-	CScriptPointInterface* CPointVar::ToPoint()
+	CScriptPointInterface* CPointVar::ToPoint() const
 	{
 		return pPoint;
 	}
 
-	bool CPointVar::Set(CBaseVar* pVar)
+	bool CPointVar::Set(const CBaseVar* pVar)
 	{
-		CPointVar* pPointVar = dynamic_cast<CPointVar*>(pVar);
+		const CPointVar* pPointVar = dynamic_cast<const CPointVar*>(pVar);
 		if (pPointVar)
 		{
 			clear();

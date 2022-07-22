@@ -37,11 +37,14 @@ namespace zlscript
 		static CScriptGlobalVarMgr s_Instance;
 	public:
 		bool New(std::string name, int type);
-		stGlobalVar* Get(std::string name);
-		stGlobalVar* Get(unsigned int index);
+		int GetIndex(std::string name);
+		//stGlobalVar* Get(unsigned int index);
 
 		void Revert(stGlobalVar *pGlobalVar);
-	private:
+		void Revert(unsigned int index);
+
+		const CBaseVar* Get(unsigned int index);
+		bool Set(unsigned int index, const CBaseVar* pVar);
 		std::unordered_map<std::string, unsigned int> m_mapDicName2Index;
 		//全局变量库
 		std::vector<stGlobalVar> m_vGlobalVar;//变量

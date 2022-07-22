@@ -109,6 +109,7 @@ namespace zlscript
 
 		int CallFun_CallBack(CScriptVirtualMachine* pMachine, int FunIndex, CScriptCallState* pCallState);
 		int CallFun_Script(CScriptVirtualMachine* pMachine, int FunIndex, tagScriptVarStack& ParmStack, int nParmNum,  bool bIsBreak = false);
+		int CallFun_Script(CScriptVirtualMachine* pMachine, int FunIndex, std::vector<const CBaseVar*>& vParams);
 
 		int CallFun(CScriptVirtualMachine* pMachine, CScriptExecBlock* pCurBlock, int nType, int FunIndex, int nParmNum, bool bIsBreak = false);
 		int CallFun(CScriptVirtualMachine* pMachine, int nType, int FunIndex, tagScriptVarStack& ParmStack, bool bIsBreak = false);

@@ -1,7 +1,7 @@
 #include <string>
 #include "ScriptIntermediateCode.h"
 #include "ScriptCompiler.h"
-
+#include "ScriptCodeLoader.h"
 namespace zlscript
 {
 	CScriptCompiler::CScriptCompiler()
@@ -98,6 +98,21 @@ namespace zlscript
 			}
 		}
 		return true;
+	}
+
+	bool CScriptCompiler::MakeExeCode()
+	{
+		for (auto it = m_FunICode.begin(); it != m_FunICode.end(); it++)
+		{
+			CFunICode* pICode = it->second;
+			if (pICode)
+			{
+				CExeCodeData* pExeData = new CExeCodeData;
+				pICode->MakeExeCode(*pExeData);
+				CScriptCodeLoader::GetInstance()->AddCode(it->first, pExeData);
+			}
+		}
+		return false;
 	}
 
 	void CScriptCompiler::InitLexicalAnalysisFun()
@@ -575,6 +590,31 @@ namespace zlscript
 			return m_vCharIndex2LineIndex[nIndex];
 		}
 		return 0;
+	}
+
+	bool CScriptCompiler::SetFunICode(std::string name, CFunICode* pCode)
+	{
+		if (pCode == nullptr)
+		{
+			return false;
+		}
+		if (m_FunICode.find(name) != m_FunICode.end())
+		{
+			return false;
+		}
+		m_FunICode[name] = pCode;
+		CScriptCodeLoader::GetInstance()->RegisterCodeName(name);
+		return true;
+	}
+
+	CFunICode* CScriptCompiler::GetFunICode(std::string name)
+	{
+		auto it = m_FunICode.find(name);
+		if (it != m_FunICode.end())
+		{
+			return it->second;
+		}
+		return nullptr;
 	}
 
 }

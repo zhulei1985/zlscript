@@ -120,6 +120,7 @@ namespace zlscript
 
 		virtual void AddICode(int nType, CBaseICode* pCode);
 
+		virtual bool MakeExeCode(CExeCodeData& vOut);
 	public:
 		virtual void SetMaxRunState(int val);
 	public:
@@ -127,6 +128,7 @@ namespace zlscript
 		std::string filename;
 
 		std::string strReturnType;
+		int nReturnType;
 		int nPramSize{ 0 };
 		std::vector<CBaseICode*> vBodyCode;
 
@@ -134,9 +136,6 @@ namespace zlscript
 	protected:
 		std::map<std::string, VarInfo> m_mapTempVarInfo;
 
-	public:
-		//直接基于中间代码来执行
-		virtual int Run(CScriptExecBlock* pBlock);
 	};
 
 	class CBlockICode : public CBaseICode
@@ -158,6 +157,8 @@ namespace zlscript
 		virtual bool Compile(SentenceSourceCode& vIn, CScriptCompiler* pCompiler);
 
 		virtual void AddICode(int nType, CBaseICode* pCode);
+
+		virtual bool MakeExeCode(CExeCodeData& vOut);
 	public:
 		//std::map<std::string, std::string> m_mapVarNameAndType;
 	protected:
@@ -167,7 +168,7 @@ namespace zlscript
 
 	public:
 		//直接基于中间代码来执行
-		virtual int Run(CScriptExecBlock* pBlock);
+		//virtual int Run(CScriptExecBlock* pBlock);
 	};
 
 	class CLoadVarICode : public CBaseICode
@@ -187,24 +188,17 @@ namespace zlscript
 
 		virtual bool Compile(SentenceSourceCode& vIn, CScriptCompiler* pCompiler);
 
-		//char cSource;//ESignType
-		//int nPos;
+		virtual bool MakeExeCode(CExeCodeData& vOut);
 	public:
-		enum
-		{
-			E_VAR_SCOPE_CONST,//常量
-			E_VAR_SCOPE_GLOBAL,//全局变量 
-			E_VAR_SCOPE_LOACL,//临时变量
-		};
+
 		int nLoadType;
 
 		CBaseVar* m_pConst{nullptr};
 
-		int LoaclVarIndex{-1};
-		int GlobalVarIndex{ -1 };
+		int VarIndex{-1};
 	public:
-		//直接基于中间代码来执行
-		virtual int Run(CScriptExecBlock* pBlock);
+		////直接基于中间代码来执行
+		//virtual int Run(CScriptExecBlock* pBlock);
 	};
 	//此类并不直接参与编译
 	class CSaveVarICode : public CBaseICode
@@ -222,22 +216,18 @@ namespace zlscript
 		virtual bool Compile(SentenceSourceCode& vIn, CScriptCompiler* pCompiler);
 
 		virtual void AddICode(int nType, CBaseICode* pCode);
+
+		virtual bool MakeExeCode(CExeCodeData& vOut);
 	public:
-		enum
-		{
-			E_VAR_SCOPE_CONST,//常量
-			E_VAR_SCOPE_GLOBAL,//全局变量 
-			E_VAR_SCOPE_LOACL,//临时变量
-		};
+
 		int nSaveType;
 		CBaseICode* pRightOperand;//右操作数
 
-		int LoaclVarIndex{ -1 };
-		int GlobalVarIndex{ -1 };
+		int VarIndex{ -1 };
 
-	public:
-		//直接基于中间代码来执行
-		virtual int Run(CScriptExecBlock* pBlock);
+	//public:
+	//	//直接基于中间代码来执行
+	//	virtual int Run(CScriptExecBlock* pBlock);
 	};
 
 	class CGetClassParamICode : public CBaseICode
@@ -252,6 +242,9 @@ namespace zlscript
 		}
 
 		virtual bool Compile(SentenceSourceCode& vIn, CScriptCompiler* pCompiler);
+		virtual bool MakeExeCode(CExeCodeData& vOut);
+
+	public:
 		std::string strClassVarName;//类对象名
 		std::string strParamName;//类成员变量名
 
@@ -260,8 +253,8 @@ namespace zlscript
 
 		int nParamIndex{-1};
 	public:
-		//直接基于中间代码来执行
-		virtual int Run(CScriptExecBlock* pBlock);
+		////直接基于中间代码来执行
+		//virtual int Run(CScriptExecBlock* pBlock);
 	};
 	//此类并不直接参与编译
 	class CSetClassParamICode : public CBaseICode
@@ -278,6 +271,7 @@ namespace zlscript
 		//virtual bool MakeExeCode(tagCodeData& vOut);
 		virtual void AddICode(int nType, CBaseICode* pCode);
 		virtual bool Compile(SentenceSourceCode& vIn, CScriptCompiler* pCompiler);
+		virtual bool MakeExeCode(CExeCodeData& vOut);
 		std::string strClassVarName;//类对象名
 		std::string strParamName;//类成员变量名
 
@@ -288,9 +282,9 @@ namespace zlscript
 
 		CBaseICode* pRightOperand;//右操作数
 
-	public:
-		//直接基于中间代码来执行
-		virtual int Run(CScriptExecBlock* pBlock);
+	//public:
+	//	//直接基于中间代码来执行
+	//	virtual int Run(CScriptExecBlock* pBlock);
 	};
 	//取反操作
 	class CMinusICode : public CBaseICode
@@ -308,11 +302,13 @@ namespace zlscript
 		virtual void AddICode(int nType, CBaseICode* pCode);
 
 		virtual bool Compile(SentenceSourceCode& vIn, CScriptCompiler* pCompiler);
+
+		virtual bool MakeExeCode(CExeCodeData& vOut);
 		CBaseICode* pRightOperand;//右操作数
 
-	public:
-		//直接基于中间代码来执行
-		virtual int Run(CScriptExecBlock* pBlock);
+	//public:
+	//	//直接基于中间代码来执行
+	//	virtual int Run(CScriptExecBlock* pBlock);
 	};
 	class COperatorICode : public CBaseICode
 	{
@@ -340,6 +336,8 @@ namespace zlscript
 		virtual void AddICode(int nType, CBaseICode* pCode);
 		virtual CBaseICode* GetICode(int nType, int index);
 		virtual bool Compile(SentenceSourceCode& vIn, CScriptCompiler* pCompiler);
+
+		virtual bool MakeExeCode(CExeCodeData& vOut);
 	public:
 		std::string strOperator;//操作符
 		int nPriorityLv;//优先级
@@ -349,10 +347,10 @@ namespace zlscript
 		std::vector<CBaseICode*> m_OtherOperand;
 
 		int nOperatorCode;//操作符，暂时用EMicroCodeType里的ECODE_ADD到ECODE_BIT_XOR
-		OperGroup* pOperGroup{nullptr};
-	public:
-		//直接基于中间代码来执行
-		virtual int Run(CScriptExecBlock* pBlock);
+		BinaryOperGroup* pOperGroup{nullptr};
+	//public:
+	//	//直接基于中间代码来执行
+	//	virtual int Run(CScriptExecBlock* pBlock);
 	};
 	//class CCallBackFunICode : public CBaseICode
 	//{
@@ -391,14 +389,16 @@ namespace zlscript
 		//virtual bool MakeExeCode(tagCodeData& vOut);
 		virtual void AddICode(int nType, CBaseICode* pCode);
 		virtual bool Compile(SentenceSourceCode& vIn, CScriptCompiler* pCompiler);
+
+		virtual bool MakeExeCode(CExeCodeData& vOut);
 	public:
 		int nCallBack{ -1 };
 		int nFunIndex{ -1 };
 		std::string strFunName;
 		std::vector<CBaseICode*> vParams;//参数
-	public:
-		//直接基于中间代码来执行
-		virtual int Run(CScriptExecBlock* pBlock);
+	//public:
+	//	//直接基于中间代码来执行
+	//	virtual int Run(CScriptExecBlock* pBlock);
 	};
 	class CCallClassFunICode : public CBaseICode
 	{
@@ -421,7 +421,9 @@ namespace zlscript
 
 		virtual bool Compile(SentenceSourceCode& vIn, CScriptCompiler* pCompiler);
 
-		int RunClassFun(CScriptExecBlock* pBlock,CScriptPointInterface* pPoint, int funIndex);
+		virtual bool MakeExeCode(CExeCodeData& vOut);
+
+		//int RunClassFun(CScriptExecBlock* pBlock,CScriptPointInterface* pPoint, int funIndex);
 	public:
 		std::string strClassVarName;
 		std::string strFunName;
@@ -431,9 +433,9 @@ namespace zlscript
 		int varIndex{ -1 };
 
 		int nFunIndex{ -1 };
-	public:
-		//直接基于中间代码来执行
-		virtual int Run(CScriptExecBlock* pBlock);
+	//public:
+	//	//直接基于中间代码来执行
+	//	virtual int Run(CScriptExecBlock* pBlock);
 	};
 
 	class CSentenceICode : public CBaseICode
@@ -451,11 +453,12 @@ namespace zlscript
 
 		virtual bool Compile(SentenceSourceCode& vIn, CScriptCompiler* pCompiler);
 
+		virtual bool MakeExeCode(CExeCodeData& vOut);
 	protected:
 		std::vector<CBaseICode*> vData;
-	public:
-		//直接基于中间代码来执行
-		virtual int Run(CScriptExecBlock* pBlock);
+	//public:
+	//	//直接基于中间代码来执行
+	//	virtual int Run(CScriptExecBlock* pBlock);
 	};
 	class CExpressionICode : public CBaseICode
 	{
@@ -474,6 +477,9 @@ namespace zlscript
 		virtual void AddICode(int nType, CBaseICode* pCode);
 
 		virtual bool Compile(SentenceSourceCode& vIn, CScriptCompiler* pCompiler);
+
+		virtual bool MakeExeCode(CExeCodeData& vOut);
+
 		bool CheckOperatorTree(CBaseICode** pNode, CScriptCompiler* pCompiler);
 		enum
 		{
@@ -486,9 +492,9 @@ namespace zlscript
 
 		CBaseICode* pOperandCode;
 
-	public:
-		//直接基于中间代码来执行
-		virtual int Run(CScriptExecBlock* pBlock);
+	//public:
+	//	//直接基于中间代码来执行
+	//	virtual int Run(CScriptExecBlock* pBlock);
 	};
 	class CIfICode : public CBaseICode
 	{
@@ -518,14 +524,16 @@ namespace zlscript
 
 		virtual bool Compile(SentenceSourceCode& vIn, CScriptCompiler* pCompiler);
 
-		bool CheckCondVar(CBaseVar* pVar);
+		virtual bool MakeExeCode(CExeCodeData& vOut);
+
+		//bool CheckCondVar(CBaseVar* pVar);
 	protected:
 		CBaseICode* pCondCode;
 		CBaseICode* pTureCode;
 		CBaseICode* pFalseCode;
-	public:
-		//直接基于中间代码来执行
-		virtual int Run(CScriptExecBlock* pBlock);
+	//public:
+	//	//直接基于中间代码来执行
+	//	virtual int Run(CScriptExecBlock* pBlock);
 	};
 
 
@@ -552,14 +560,16 @@ namespace zlscript
 
 		virtual bool Compile(SentenceSourceCode& vIn, CScriptCompiler* pCompiler);
 
-		bool CheckCondVar(CBaseVar* pVar);
+		virtual bool MakeExeCode(CExeCodeData& vOut);
+
+		//bool CheckCondVar(CBaseVar* pVar);
 	protected:
 		CBaseICode* pCondCode;
 		CBaseICode* pBodyCode;
 
-	public:
-		//直接基于中间代码来执行
-		virtual int Run(CScriptExecBlock* pBlock);
+	//public:
+	//	//直接基于中间代码来执行
+	//	virtual int Run(CScriptExecBlock* pBlock);
 	};
 	class CContinueICode : public CBaseICode
 	{
@@ -573,9 +583,9 @@ namespace zlscript
 			return E_I_CODE_CONTINUE;
 		}
 		virtual bool Compile(SentenceSourceCode& vIn, CScriptCompiler* pCompiler);
-	public:
-		//直接基于中间代码来执行
-		virtual int Run(CScriptExecBlock* pBlock);
+
+		virtual bool MakeExeCode(CExeCodeData& vOut);
+
 	};
 	class CBreakICode : public CBaseICode
 	{
@@ -590,9 +600,11 @@ namespace zlscript
 		}
 		//virtual bool MakeExeCode(tagCodeData& vOut);
 		virtual bool Compile(SentenceSourceCode& vIn, CScriptCompiler* pCompiler);
-	public:
-		//直接基于中间代码来执行
-		virtual int Run(CScriptExecBlock* pBlock);
+
+		virtual bool MakeExeCode(CExeCodeData& vOut);
+	//public:
+	//	//直接基于中间代码来执行
+	//	virtual int Run(CScriptExecBlock* pBlock);
 	};
 
 	class CForICode : public CBaseICode
@@ -616,12 +628,14 @@ namespace zlscript
 		virtual void AddICode(int nType, CBaseICode* pCode);
 
 		virtual bool Compile(SentenceSourceCode& vIn, CScriptCompiler* pCompiler);
+
+		virtual bool MakeExeCode(CExeCodeData& vOut);
 	protected:
 		CBaseICode* pBodyCode;
 		//int nVarType;//返回值类型
-	public:
-		//直接基于中间代码来执行
-		virtual int Run(CScriptExecBlock* pBlock);
+	//public:
+	//	//直接基于中间代码来执行
+	//	virtual int Run(CScriptExecBlock* pBlock);
 	};
 
 	class CNewICode : public CBaseICode
@@ -639,13 +653,15 @@ namespace zlscript
 		virtual void AddICode(int nType, CBaseICode* pCode);
 
 		virtual bool Compile(SentenceSourceCode& vIn, CScriptCompiler* pCompiler);
+
+		virtual bool MakeExeCode(CExeCodeData& vOut);
 	public:
 		std::string strClassType;
 
 		int nClassType{-1};
-	public:
-		//直接基于中间代码来执行
-		virtual int Run(CScriptExecBlock* pBlock);
+	//public:
+	//	//直接基于中间代码来执行
+	//	virtual int Run(CScriptExecBlock* pBlock);
 	};
 
 	//class CDeleteICode : public CBaseICode
@@ -687,11 +703,13 @@ namespace zlscript
 		virtual void AddICode(int nType, CBaseICode* pCode);
 
 		virtual bool Compile(SentenceSourceCode& vIn, CScriptCompiler* pCompiler);
+
+		virtual bool MakeExeCode(CExeCodeData& vOut);
 	public:
 		CBaseICode* m_pBody;
-	public:
-		//直接基于中间代码来执行
-		virtual int Run(CScriptExecBlock* pBlock);
+	//public:
+	//	//直接基于中间代码来执行
+	//	virtual int Run(CScriptExecBlock* pBlock);
 	};
 	//class CTestSignICode : public CBaseICode
 	//{

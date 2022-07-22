@@ -4,10 +4,10 @@
 #include "ScriptClassInfo.h"
 namespace zlscript
 {
-	bool addIntInt(CBaseVar* var1, CBaseVar* var2,tagScriptVarStack& stack)
+	bool addIntInt(const CBaseVar* var1, const CBaseVar* var2,tagScriptVarStack& stack)
 	{
-		CIntVar* pVar1 = dynamic_cast<CIntVar*>(var1);
-		CIntVar* pVar2 = dynamic_cast<CIntVar*>(var2);
+		const CIntVar* pVar1 = dynamic_cast<const CIntVar*>(var1);
+		const CIntVar* pVar2 = dynamic_cast<const CIntVar*>(var2);
 		if (pVar1 == nullptr || pVar2 == nullptr)
 		{
 			return false;
@@ -18,10 +18,10 @@ namespace zlscript
 		return true;
 	}
 
-	bool addStrInt(CBaseVar* var1, CBaseVar* var2, tagScriptVarStack& stack)
+	bool addStrInt(const CBaseVar* var1, const CBaseVar* var2, tagScriptVarStack& stack)
 	{
-		CStringVar* pVar1 = dynamic_cast<CStringVar*>(var1);
-		CIntVar* pVar2 = dynamic_cast<CIntVar*>(var2);
+		const CStringVar* pVar1 = dynamic_cast<const CStringVar*>(var1);
+		const CIntVar* pVar2 = dynamic_cast<const CIntVar*>(var2);
 		if (pVar1 == nullptr || pVar2 == nullptr)
 		{
 			return false;
@@ -31,10 +31,10 @@ namespace zlscript
 		STACK_PUSH_COPY(stack, (&result));
 		return true;
 	}
-	bool addStrStr(CBaseVar* var1, CBaseVar* var2, tagScriptVarStack& stack)
+	bool addStrStr(const CBaseVar* var1, const CBaseVar* var2, tagScriptVarStack& stack)
 	{
-		CStringVar* pVar1 = dynamic_cast<CStringVar*>(var1);
-		CStringVar* pVar2 = dynamic_cast<CStringVar*>(var2);
+		const CStringVar* pVar1 = dynamic_cast<const CStringVar*>(var1);
+		const CStringVar* pVar2 = dynamic_cast<const CStringVar*>(var2);
 		if (pVar1 == nullptr || pVar2 == nullptr)
 		{
 			return false;
@@ -45,10 +45,10 @@ namespace zlscript
 		return true;
 	}
 
-	bool sumIntInt(CBaseVar* var1, CBaseVar* var2, tagScriptVarStack& stack)
+	bool sumIntInt(const CBaseVar* var1, const CBaseVar* var2, tagScriptVarStack& stack)
 	{
-		CIntVar* pVar1 = dynamic_cast<CIntVar*>(var1);
-		CIntVar* pVar2 = dynamic_cast<CIntVar*>(var2);
+		const CIntVar* pVar1 = dynamic_cast<const CIntVar*>(var1);
+		const CIntVar* pVar2 = dynamic_cast<const CIntVar*>(var2);
 		if (pVar1 == nullptr || pVar2 == nullptr)
 		{
 			return false;
@@ -59,10 +59,10 @@ namespace zlscript
 		return true;
 	}
 
-	bool mulIntInt(CBaseVar* var1, CBaseVar* var2, tagScriptVarStack& stack)
+	bool mulIntInt(const CBaseVar* var1, const CBaseVar* var2, tagScriptVarStack& stack)
 	{
-		CIntVar* pVar1 = dynamic_cast<CIntVar*>(var1);
-		CIntVar* pVar2 = dynamic_cast<CIntVar*>(var2);
+		const CIntVar* pVar1 = dynamic_cast<const CIntVar*>(var1);
+		const CIntVar* pVar2 = dynamic_cast<const CIntVar*>(var2);
 		if (pVar1 == nullptr || pVar2 == nullptr)
 		{
 			return false;
@@ -73,10 +73,10 @@ namespace zlscript
 		return true;
 	}
 
-	bool lessIntInt(CBaseVar* var1, CBaseVar* var2, tagScriptVarStack& stack)
+	bool lessIntInt(const CBaseVar* var1, const CBaseVar* var2, tagScriptVarStack& stack)
 	{
-		CIntVar* pVar1 = dynamic_cast<CIntVar*>(var1);
-		CIntVar* pVar2 = dynamic_cast<CIntVar*>(var2);
+		const CIntVar* pVar1 = dynamic_cast<const CIntVar*>(var1);
+		const CIntVar* pVar2 = dynamic_cast<const CIntVar*>(var2);
 		if (pVar1 == nullptr || pVar2 == nullptr)
 		{
 			return false;
@@ -93,10 +93,10 @@ namespace zlscript
 		STACK_PUSH_COPY(stack, (&result));
 		return true;
 	}
-	bool lessEqualIntInt(CBaseVar* var1, CBaseVar* var2, tagScriptVarStack& stack)
+	bool lessEqualIntInt(const CBaseVar* var1, const CBaseVar* var2, tagScriptVarStack& stack)
 	{
-		CIntVar* pVar1 = dynamic_cast<CIntVar*>(var1);
-		CIntVar* pVar2 = dynamic_cast<CIntVar*>(var2);
+		const CIntVar* pVar1 = dynamic_cast<const CIntVar*>(var1);
+		const CIntVar* pVar2 = dynamic_cast<const CIntVar*>(var2);
 		if (pVar1 == nullptr || pVar2 == nullptr)
 		{
 			return false;

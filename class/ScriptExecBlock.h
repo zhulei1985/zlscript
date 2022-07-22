@@ -18,7 +18,8 @@
 #pragma once
 #include <stack>
 #include <vector>
-#include "ScriptCodeLoader.h"
+//#include "ScriptCodeLoader.h"
+#include "ScriptExeCodeData.h"
 #include "ScriptStack.h"
 
 #include <chrono>
@@ -29,38 +30,40 @@ namespace zlscript
 {
 	class CScriptRunState;
 	class CScriptVirtualMachine;
-	class CFunICode;
+	class CBaseExeCode;
 
 	class CScriptExecBlock
 	{
 	public:
-		CScriptExecBlock(CFunICode* pCode, CScriptRunState* pMaster);
+		CScriptExecBlock(CExeCodeData* pCode, CScriptRunState* pMaster);
 		~CScriptExecBlock(void);
 
 		int GetDefaultReturnType();
 		int GetFunType();
 
-
+		void initLocalVar();
 	private:
+		CExeCodeData* m_pCodeData;
+		CBaseExeCode* m_pCurExeCode;
 
-		CFunICode* m_pCurCode;
-
-		//状态堆栈
-		std::vector<int> m_vRunState;
-		int nOtherState{0};
+		////状态堆栈
+		//std::vector<int> m_vRunState;
+		//int nOtherState{0};
 		//变量寄存器
 		tagScriptVarStack loaclVarStack;
 	public:
 		tagScriptVarStack registerStack;
 	public:
 		CScriptRunState* m_pMaster;
+		
 
-		void RegisterLoaclVar(int index, int type);
-		CBaseVar* GetLoaclVar(int index);
-
-		void RegisterRunState(int size);
-		int& GetRunState(int index);
-		void RevertRunState(int index);
+		//void RegisterLoaclVar(int index, int type);
+		const CBaseVar* GetLoaclVar(int index);
+		bool SetLoaclVar(int index, const CBaseVar* pVar);
+		const CBaseVar* GetConstVar(int index);
+		//void RegisterRunState(int size);
+		//int& GetRunState(int index);
+		//void RevertRunState(int index);
 	public:
 		enum ERESULT_TYPE
 		{

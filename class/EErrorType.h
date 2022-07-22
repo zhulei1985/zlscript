@@ -17,20 +17,23 @@
  ****************************************************************************/
 namespace zlscript
 {
-	enum
+	enum EErrorType
 	{
-		EScriptVal_None = -1,
-
-		EScriptVal_Var = 0,
-
-		//EScriptVal_Class = 1000,
-	};
-
-	enum
-	{
-		E_VAR_SCOPE_CONST,//常量
-		E_VAR_SCOPE_GLOBAL,//全局变量 
-		E_VAR_SCOPE_LOACL,//临时变量
-		E_VAR_SCOPE_REGISTER,//寄存器
+		ESIGN_ILLEGAL_END,
+		ERROR_NO_PRI_SIGN,//没有优先级配置
+		ERROR_NO_OPER_SIGN,
+		ERROR_FORMAT_NOT,
+		ERROR_VAR_TYPE_NONE, //变量类型无定义
+		ERROR_VAR_NAME_ILLEGAL, //变量名非法
+		ERROR_VAR_NAME_EXISTS, //变量名已存在
+		ERROR_GLOBAL_VAR_CANNOT_ADD,//全局变量注册失败
+		ERROR_GLOBAL_VAR_CANNOT_SET,//全局变量设置失败
+		ERROR_TEMP_VAR_CANNOT_ADD,//局部变量注册失败
+		ERROR_TEMP_VAR_CANNOT_SET,//局部变量设置失败
+		ERROR_FUN_PARAM,
+		ERROR_FUN_FORMAT_PARAM,
+		ERROR_FUN_NAME_ILLEGAL,
+		ERROR_FUN_NAME_EXISTS,
+		ERROR_FUN_FORMAT_NO_BRACKET,
 	};
 }

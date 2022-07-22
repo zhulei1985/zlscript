@@ -13,7 +13,7 @@ namespace zlscript
 	class CBaseVar
 	{
 	public:
-		int GetType() 
+		int GetType() const
 		{
 			return m_nType;
 		}
@@ -29,7 +29,7 @@ namespace zlscript
 
 		virtual bool Set(std::string val) { return false; }
 		virtual bool Set(CScriptPointInterface* pVal) { return false; }
-		virtual bool Set(CBaseVar* pVar)
+		virtual bool Set(const CBaseVar* pVar)
 		{
 			return false;
 		}
@@ -52,12 +52,12 @@ namespace zlscript
 			return h1 ^ h2;
 		}
 
-		virtual __int64 ToInt();
-		virtual double ToFloat();
-		virtual std::string ToString();
-		virtual tagByteArray ToBinary();
+		virtual __int64 ToInt() const;
+		virtual double ToFloat() const;
+		virtual std::string ToString() const;
+		virtual tagByteArray ToBinary() const;
 
-		virtual bool Set(CBaseVar* pVar);
+		virtual bool Set(const CBaseVar* pVar);
 		virtual bool Set(__int64 val);
 		virtual bool Set(double val);
 		virtual bool Set(std::string val);
@@ -86,12 +86,12 @@ namespace zlscript
 			return h1 ^ h2;
 		}
 
-		virtual __int64 ToInt();
-		virtual double ToFloat();
-		virtual std::string ToString();
-		virtual tagByteArray ToBinary();
+		virtual __int64 ToInt() const;
+		virtual double ToFloat() const;
+		virtual std::string ToString() const;
+		virtual tagByteArray ToBinary() const;
 
-		virtual bool Set(CBaseVar* pVar);
+		virtual bool Set(const CBaseVar* pVar);
 		virtual bool Set(__int64 val);
 		virtual bool Set(double val);
 		virtual bool Set(std::string val);
@@ -120,12 +120,12 @@ namespace zlscript
 			return h1 ^ h2;
 		}
 
-		virtual __int64 ToInt();
-		virtual double ToFloat();
-		virtual std::string& ToString();
-		virtual tagByteArray ToBinary();
+		virtual __int64 ToInt() const;
+		virtual double ToFloat() const;
+		virtual std::string& ToString() const;
+		virtual tagByteArray ToBinary() const;
 
-		virtual bool Set(CBaseVar* pVar);
+		virtual bool Set(const CBaseVar* pVar);
 		virtual bool Set(__int64 val);
 		virtual bool Set(double val);
 		virtual bool Set(std::string val);
@@ -151,9 +151,9 @@ namespace zlscript
 			return h1 ^ h2;
 		}
 
-		virtual tagByteArray ToBinary();
+		virtual tagByteArray ToBinary() const;
 
-		virtual bool Set(CBaseVar* pVar);
+		virtual bool Set(const CBaseVar* pVar);
 		virtual bool Set(CScriptPointInterface* pVal);
 
 	private:
@@ -175,9 +175,9 @@ namespace zlscript
 			return h1 ^ h2;
 		}
 
-		virtual CScriptPointInterface* ToPoint();
+		virtual CScriptPointInterface* ToPoint() const;
 
-		virtual bool Set(CBaseVar* pVar);
+		virtual bool Set(const CBaseVar* pVar);
 		virtual bool Set(CScriptPointInterface* pVal);
 
 	private:

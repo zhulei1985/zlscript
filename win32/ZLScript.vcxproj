@@ -138,6 +138,7 @@
   <ItemGroup>
     <ClInclude Include="..\class\CBaseICodeMgr.h" />
     <ClInclude Include="..\class\CICodeMgr.h" />
+    <ClInclude Include="..\class\EErrorType.h" />
     <ClInclude Include="..\class\ScriptBaseICode.h" />
     <ClInclude Include="..\class\ScriptClassFunion.h" />
     <ClInclude Include="..\class\ScriptClassInfo.h" />
@@ -193,6 +194,7 @@
     <ClCompile Include="..\class\ScriptEventMgr.cpp" />
     <ClCompile Include="..\class\ScriptExecBlock.cpp" />
     <ClCompile Include="..\class\ScriptExecFrame.cpp" />
+    <ClCompile Include="..\class\ScriptExeCodeData.cpp" />
     <ClCompile Include="..\class\ScriptGlobalVarMgr.cpp" />
     <ClCompile Include="..\class\ScriptIntermediateCode.cpp" />
     <ClCompile Include="..\class\ScriptOperatorFuns.cpp" />

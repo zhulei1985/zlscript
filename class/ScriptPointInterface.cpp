@@ -38,6 +38,10 @@ namespace zlscript
 	void CScriptPointInterface::PickDown()
 	{
 		nUsedCount--;
+		if (nUsedCount <= 0)
+		{
+			CScriptVarTypeMgr::GetInstance()->Add2ReleaseCache(this);
+		}
 	}
 
 	unsigned int CScriptPointInterface::GetAttributeIndex(std::string name)

@@ -63,8 +63,12 @@ namespace zlscript
 	{
 		m_vLoadFun.push_back(fun);
 	}
-	bool CScriptCodeLoader::LoadFile(const char* filename)
+	bool CScriptCodeLoader::LoadFile(const char* filename, CScriptCompiler* pCompiler)
 	{
+		if (pCompiler == nullptr)
+		{
+			return false;
+		}
 		std::vector<char> vBuff;
 		auto rit = m_vLoadFun.rbegin();
 		for (; rit != m_vLoadFun.rend(); rit++)
@@ -75,9 +79,10 @@ namespace zlscript
 				break;
 			}
 		}
-		CScriptCompiler compiler;
+		//CScriptCompiler compiler;
 
-		compiler.Compile(&vBuff[0], vBuff.size());
+		pCompiler->Compile(&vBuff[0], vBuff.size());
+
 //#if _SCRIPT_DEBUG
 //		PartitionSourceWords(vBuff);
 //#endif
@@ -235,147 +240,16 @@ namespace zlscript
 		return bResult;
 	}
 
-
-
-	//bool CScriptCodeLoader::RunCompileState(SentenceSourceCode& vIn, E_CODE_SCOPE scopeType, CBaseICode* pFather, int addType)
-	//{
-	//	SignToPos();
-
-	//	auto& list = m_mapICodeMgr[scopeType];
-	//	bool bResult = false;
-	//	for (auto it = list.begin(); it != list.end(); it++)
-	//	{
-	//		auto pMgr = *it;
-	//		if (pMgr)
-	//		{
-	//			auto pICode = pMgr->New(this, nBeginSourceWordIndex);
-	//			if (pICode)
-	//			{
-	//				pICode->SetFather(pFather);
-	//				if (pICode->Compile(vIn))
-	//				{
-	//					if (pFather)
-	//					{
-	//						pFather->AddICode(addType, pICode);
-	//					}
-	//					bResult = true;
-	//					break;
-	//				}
-	//				pMgr->Release(pICode);
-	//			}
-	//		}
-	//	}
-	//	//if (LoadDefineFunState(vIn) == ECompile_ERROR)
-	//	//{
-	//	//	return false;
-	//	//}
-	//	if (bResult)
-	//	{
-	//		ClearErrorInfo();
-	//	}
-	//	return bResult;
-	//}
-
-
-	unsigned int CScriptCodeLoader::GetCodeIndex(const char* pStr)
+	bool CScriptCodeLoader::AddCode(std::string name, CExeCodeData* pCode)
 	{
-		auto it = m_mapString2CodeIndex.find(pStr);
-		if (it == m_mapString2CodeIndex.end())
+		if (pCode)
 		{
-			return -1;
+			pCode->funname = name;
 		}
-		return it->second;
-	}
-
-
-
-	CFunICode* CScriptCodeLoader::GetCode(const char* pName)
-	{
-		auto it = m_mapString2CodeIndex.find(pName);
-		if (it == m_mapString2CodeIndex.end())
-		{
-			return nullptr;
-		}
-		return GetCode(it->second);
-	}
-	void CScriptCodeLoader::LoadXml(std::string filename)
-	{
-		//_finddata_t file;
-		//long lf;
-
-		//string strbuff = dir + "*.*";
-		//if((lf = _findfirst(strbuff.c_str(), &file))==-1l)
-		//{
-
-		//}
-		//else
-		//{
-		//	while ( _findnext( lf, &file ) == 0)
-		//	{
-		//		if(file.attrib == _A_SUBDIR)
-		//		{
-		//			if (strcmp(file.name,"..") == 0)
-		//			{
-		//				continue;
-		//			}
-		//			string newdir = dir + file.name + "\\";
-		//			LoadXml(newdir);
-		//		}
-		//		else
-		//		{
-		//			string filename = dir + file.name;
-		//			LoadFile(filename.c_str());
-		//		}
-		//	}
-		//}
-		//_findclose(lf);
-		//std::string fullfile = cocos2d::CCFileUtils::getInstance()->fullPathForFilename(filename);
-		//std::string fullfile = cocos2d::CCFileUtils::sharedFileUtils()->getWritablePath();;
-		//fullfile += filename;
-		//tinyxml2::XMLDocument xmldoc;
-		//if (xmldoc.LoadFile(fullfile.c_str()))
-		//{
-		//	return ;
-		//}
-
-		//LoadFormBin();
-#if 0
-		std::string fullfile = cocos2d::CCFileUtils::getInstance()->fullPathForFilename(filename);
-		cocos2d::Data data = cocos2d::FileUtils::getInstance()->getDataFromFile(fullfile);
-		tinyxml2::XMLDocument xmldoc;
-		if (xmldoc.Parse((const char*)data.getBytes(), data.getSize()) != tinyxml2::XML_NO_ERROR)
-		{
-			return;
-		}
-
-		tinyxml2::XMLElement* pRoot = xmldoc.RootElement();
-		if (pRoot == nullptr)
-		{
-			return;
-		}
-		tinyxml2::XMLElement* pRoleElem = pRoot->FirstChildElement("script");
-		for (; pRoleElem; pRoleElem = pRoleElem->NextSiblingElement("script"))
-		{
-			const char* pTemp = pRoleElem->Attribute("name");
-			if (pTemp)
-			{
-				//std::string str = "script//";
-				//str += pTemp;
-				//LoadFile(str.c_str());
-				LoadFile(pTemp);
-			}
-		}
-		SaveToBin();
-#endif
-	}
-
-	//TODO 多线程支持
-	bool CScriptCodeLoader::SetFunICode(std::string name, CFunICode* pCode)
-	{
 		auto it = m_mapString2CodeIndex.find(name);
 		if (it != m_mapString2CodeIndex.end())
 		{
-			CFunICode* pOld = m_vecCodeData[it->second];
+			CExeCodeData* pOld = m_vecCodeData[it->second];
 			if (pOld)
 			{
 				delete pOld;
@@ -392,27 +266,91 @@ namespace zlscript
 		return false;
 	}
 
-	bool CScriptCodeLoader::CheckCurCompileFunName(std::string name)
-	{
-		if (m_setCurCompileFunName.find(name)!= m_setCurCompileFunName.end())
-			return true;
-		return false;
-	}
 
-	bool CScriptCodeLoader::AddCurCompileFunName(std::string name)
-	{
-		m_setCurCompileFunName.insert(name);
-		return true;
-	}
 
-	bool CScriptCodeLoader::ClearCurCompileFunName()
+
+	unsigned int CScriptCodeLoader::GetCodeIndex(const char* pStr)
 	{
-		m_setCurCompileFunName.clear();
-		return true;
+		auto it = m_mapString2CodeIndex.find(pStr);
+		if (it == m_mapString2CodeIndex.end())
+		{
+			return -1;
+		}
+		return it->second;
 	}
 
 
 
+	CExeCodeData* CScriptCodeLoader::GetCode(const char* pName)
+	{
+		auto it = m_mapString2CodeIndex.find(pName);
+		if (it == m_mapString2CodeIndex.end())
+		{
+			return nullptr;
+		}
+		return GetCode(it->second);
+	}
+	int CScriptCodeLoader::RegisterCodeName(std::string name)
+	{
+		auto it = m_mapString2CodeIndex.find(name);
+		if (it != m_mapString2CodeIndex.end())
+		{
+			return it->second;
+		}
+		else
+		{
+			int index = m_vecCodeData.size();
+			m_mapString2CodeIndex[name] = index;
+			m_vecCodeData.push_back(nullptr);
+			return index;
+		}
+	}
+	void CScriptCodeLoader::LoadXml(std::string filename)
+	{
+
+	}
+
+	void CScriptCodeLoader::PrintAllCode(const char* pFilename)
+	{
+		FILE* fp = fopen(pFilename, "wb");
+		if (fp == nullptr)
+		{
+			return;
+		}
+		for (auto it = m_vecCodeData.begin(); it != m_vecCodeData.end(); it++)
+		{
+			CExeCodeData* pData = *it;
+			if (pData == nullptr)
+			{
+				continue;
+			}
+			fputs("********************************\n", fp);
+			fputs(pData->funname.c_str(), fp);
+			fputc('\n', fp);
+			fputs("********************************\n", fp);
+			unsigned int curSoureWordIndex = -1;
+			for (auto pCode = pData->pBeginCode; pCode; pCode = pCode->m_pNext)
+			{
+
+				std::string str = pCode->GetCodeString();// = PrintOneCode(pCode);
+				char strbuff[32] = { 0 };
+				sprintf(strbuff, "[%d]\t", pCode->nCodeIndex);
+				fputs(strbuff, fp);
+				fputs(str.c_str(), fp);
+#ifdef _SCRIPT_DEBUG
+				if (curSoureWordIndex != pCode->nSoureWordIndex)
+				{
+					curSoureWordIndex = pCode->nSoureWordIndex;
+					//auto souceInfo = GetSourceWords(curSoureWordIndex);
+					//fputc('\t', fp);
+					//fputs(souceInfo.strLineWords.c_str(), fp);
+				}
+#endif
+				fputc('\n', fp);
+			}
+		}
+		fclose(fp);
+	}
 //
 //	void CScriptCodeLoader::PrintAllCode(const char* pFilename)
 //	{

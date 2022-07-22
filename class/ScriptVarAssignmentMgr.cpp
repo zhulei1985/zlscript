@@ -18,7 +18,7 @@ namespace zlscript
 		m_vPrintFunFun[trans.index] = pFun;
 	}
 
-	bool CScriptVarAssignmentMgr::Assign(CBaseVar* pDes, CBaseVar* pSrc)
+	bool CScriptVarAssignmentMgr::Assign(CBaseVar* pDes,const CBaseVar* pSrc)
 	{
 		union {
 			struct
@@ -37,7 +37,7 @@ namespace zlscript
 			AssignFun& fun = it->second;
 			return fun(pDes, pSrc);
 		}
-		//Ã»ÓÐ×¢²áµÄ¸³Öµ´¦Àí£¬³¢ÊÔÊ¹ÓÃ×Ô´øµÄ¸³Öµ
+		//æ²¡æœ‰æ³¨å†Œçš„èµ‹å€¼å¤„ç†ï¼Œå°è¯•ä½¿ç”¨è‡ªå¸¦çš„èµ‹å€¼
 		if (trans.type1 == trans.type2)
 		{
 			return pDes->Set(pSrc);

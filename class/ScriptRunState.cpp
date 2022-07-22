@@ -4,6 +4,9 @@
 #include "ScriptDebugPrint.h"
 #include "EScriptSentenceType.h"
 #include "EScriptVariableType.h"
+#include "ScriptExeCodeData.h"
+#include "ScriptVarAssignmentMgr.h"
+#include "ScriptCodeLoader.h"
 #include <chrono>
 
 namespace zlscript
@@ -306,7 +309,7 @@ namespace zlscript
 	{
 		int nReturn = ECALLBACK_FINISH;
 		{
-			CFunICode* pCodeData = CScriptCodeLoader::GetInstance()->GetCode(FunIndex);
+			CExeCodeData* pCodeData = CScriptCodeLoader::GetInstance()->GetCode(FunIndex);
 			if (pCodeData)
 			{
 				CScriptExecBlock* pBlock =
@@ -319,11 +322,52 @@ namespace zlscript
 					if (nOffset < 0)
 						nOffset = 0;
 
-					for (int i = 0; i < nParmNum; i++)
+					for (int i = 0; i < nParmNum && i < pCodeData->nFunParamNums; i++)
 					{
-						CBaseVar* pVar = nullptr;
-						STACK_GET_INDEX(ParmStack, pVar, (i + nOffset));
-						STACK_PUSH_MOVE(pBlock->registerStack, pVar);
+						CBaseVar* pVar1 = pBlock->loaclVarStack.m_vData[i];
+						CBaseVar* pVar2 = ParmStack.m_vData[i+ nOffset];
+						AssignVar(pVar1, pVar2);
+						//CBaseVar* pVar = nullptr;
+						//STACK_GET_INDEX(ParmStack, pVar, (i + nOffset));
+						//STACK_PUSH_MOVE(pBlock->registerStack, pVar);
+					}
+
+
+					m_BlockStack.push(pBlock);
+					nReturn = ECALLBACK_NEXTCONTINUE;
+				}
+				else
+				{
+					nReturn = ECALLBACK_ERROR;
+				}
+			}
+			else
+			{
+				SCRIPT_PRINT("script", "Error: script scriptfun: %d", FunIndex);
+				return ECALLBACK_ERROR;
+			}
+		}
+		return nReturn;
+	}
+	int CScriptRunState::CallFun_Script(CScriptVirtualMachine* pMachine, int FunIndex, std::vector<const CBaseVar*>& vParams)
+	{
+		int nReturn = ECALLBACK_FINISH;
+		{
+			CExeCodeData* pCodeData = CScriptCodeLoader::GetInstance()->GetCode(FunIndex);
+			if (pCodeData)
+			{
+				CScriptExecBlock* pBlock =
+					new CScriptExecBlock(pCodeData, this);
+
+				if (pBlock)
+				{
+					//提取参数
+
+					for (unsigned int i = 0; i < vParams.size() && i < pCodeData->nFunParamNums; i++)
+					{
+						CBaseVar* pVar1 = pBlock->loaclVarStack.m_vData[i];
+						const CBaseVar* pVar2 = vParams[i];
+						AssignVar(pVar1, pVar2);
 					}
 
 
@@ -347,7 +391,7 @@ namespace zlscript
 	{
 		int nReturn = ERunTime_Complete;
 
-		CFunICode* pCode = CScriptCodeLoader::GetInstance()->GetCode(pFunName);
+		CExeCodeData* pCode = CScriptCodeLoader::GetInstance()->GetCode(pFunName);
 		if (pCode)
 		{
 			CScriptExecBlock* pBlock =
@@ -356,7 +400,16 @@ namespace zlscript
 			if (pBlock)
 			{
 				//注入参数
-				STACK_MOVE_ALL_BACK(pBlock->registerStack, ParmStack, 0);
+				for (int i = 0; i < ParmStack.nSize && i < pCode->nFunParamNums; i++)
+				{
+					CBaseVar* pVar1 = pBlock->loaclVarStack.m_vData[i];
+					CBaseVar* pVar2 = ParmStack.m_vData[i];
+					AssignVar(pVar1, pVar2);
+					//CBaseVar* pVar = nullptr;
+					//STACK_GET_INDEX(ParmStack, pVar, (i + nOffset));
+					//STACK_PUSH_MOVE(pBlock->registerStack, pVar);
+				}
+				//STACK_MOVE_ALL_BACK(pBlock->registerStack, ParmStack, 0);
 
 				m_BlockStack.push(pBlock);
 				nReturn = Exec(0xffffffff, pMachine);
