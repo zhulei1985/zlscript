@@ -216,8 +216,8 @@ namespace zlscript
 			}
 			else if (pVar->GetType() == CScriptClassInfo<CStringVar>::GetInstance().nClassType)
 			{
-				CStringVar* pFloatVar = (CStringVar*)pVar;
-				printf("%s\n", pFloatVar->ToString().c_str());
+				CStringVar* pStringVar = (CStringVar*)pVar;
+				printf("%s\n", pStringVar->ToString().c_str());
 			}
 		}
 

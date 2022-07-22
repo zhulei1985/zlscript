@@ -669,8 +669,11 @@ namespace zlscript
 	bool CLoadVarICode::MakeExeCode(CExeCodeData& vOut)
 	{
 		bool bResult = true;
-		nLoadType = E_VAR_SCOPE_CONST;
-		VarIndex = vOut.GetConstVarIndex(m_pConst);
+		if (m_pConst)
+		{
+			nLoadType = E_VAR_SCOPE_CONST;
+			VarIndex = vOut.GetConstVarIndex(m_pConst);
+		}
 		return bResult;
 	}
 
@@ -1187,6 +1190,20 @@ namespace zlscript
 			if (pCode)
 			{
 				pCode->MakeExeCode(vOut);
+				if (pCode->GetType() == E_I_CODE_EXPRESSION)
+				{
+					CExpressionICode* pExpressCode = (CExpressionICode*)pCode;
+					if (pExpressCode->pOperandCode && pExpressCode->pOperandCode->GetType() == E_I_CODE_LOADVAR)
+					{
+						CLoadVarICode* pLoadCode = (CLoadVarICode*)pExpressCode->pOperandCode;
+						info.nType = pLoadCode->nLoadType;
+						info.dwPos = pLoadCode->VarIndex;
+					}
+					else
+					{
+						info.nType = E_VAR_SCOPE_REGISTER;
+					}
+				}
 
 			}
 			params.push_back(info);
@@ -1206,12 +1223,12 @@ namespace zlscript
 			{
 				return false;
 			}
-			CCallBackExeCode* pFunCode = CExeCodeMgr::GetInstance()->New<CCallBackExeCode>(m_unBeginSoureIndex);
+			CCallScriptExeCode* pFunCode = CExeCodeMgr::GetInstance()->New<CCallScriptExeCode>(m_unBeginSoureIndex);
 			pFunCode->unFunIndex = nFunIndex;
 			pFunCode->params = params;
 			vOut.AddCode(pFunCode);
 		}
-		return false;
+		return true;
 	}
 
 
@@ -1344,7 +1361,20 @@ namespace zlscript
 			if (pCode)
 			{
 				pCode->MakeExeCode(vOut);
-
+				if (pCode->GetType() == E_I_CODE_EXPRESSION)
+				{
+					CExpressionICode* pExpressCode = (CExpressionICode*)pCode;
+					if (pExpressCode->pOperandCode && pExpressCode->pOperandCode->GetType() == E_I_CODE_LOADVAR)
+					{
+						CLoadVarICode* pLoadCode = (CLoadVarICode*)pExpressCode->pOperandCode;
+						info.nType = pLoadCode->nLoadType;
+						info.dwPos = pLoadCode->VarIndex;
+					}
+					else
+					{
+						info.nType = E_VAR_SCOPE_REGISTER;
+					}
+				}
 			}
 			pCallCode->params.push_back(info);
 		}
@@ -1868,14 +1898,14 @@ namespace zlscript
 		GetWord(nextWord);
 		if (nextWord.word != "(")
 		{
-			AddErrorInfo(10,nextWord.nSourceWordsIndex, ERROR_FORMAT_NOT);
+			AddErrorInfo(10, nextWord.nSourceWordsIndex, ERROR_FORMAT_NOT);
 			RevertAll();
 			return false;
 		}
 
 		if (!pCompiler->RunCompileState(vIn, CScriptCompiler::E_CODE_SCOPE_EXPRESSION, this, E_COND))
 		{
-			AddErrorInfo(10,nextWord.nSourceWordsIndex, ERROR_FORMAT_NOT);
+			AddErrorInfo(10, nextWord.nSourceWordsIndex, ERROR_FORMAT_NOT);
 			RevertAll();
 			return false;
 		}
@@ -1883,14 +1913,14 @@ namespace zlscript
 		GetWord(nextWord);
 		if (nextWord.word != ")")
 		{
-			AddErrorInfo(10,nextWord.nSourceWordsIndex, ERROR_FORMAT_NOT);
+			AddErrorInfo(10, nextWord.nSourceWordsIndex, ERROR_FORMAT_NOT);
 			RevertAll();
 			return false;
 		}
 
 		if (!pCompiler->RunCompileState(vIn, CScriptCompiler::E_CODE_SCOPE_STATEMENT, this, E_TRUE))
 		{
-			AddErrorInfo(10,nextWord.nSourceWordsIndex, ERROR_FORMAT_NOT);
+			AddErrorInfo(10, nextWord.nSourceWordsIndex, ERROR_FORMAT_NOT);
 			RevertAll();
 			return false;
 		}
@@ -1904,7 +1934,7 @@ namespace zlscript
 
 		if (!pCompiler->RunCompileState(vIn, CScriptCompiler::E_CODE_SCOPE_STATEMENT, this, E_FALSE))
 		{
-			AddErrorInfo(10,nextWord.nSourceWordsIndex, ERROR_FORMAT_NOT);
+			AddErrorInfo(10, nextWord.nSourceWordsIndex, ERROR_FORMAT_NOT);
 			RevertAll();
 			return false;
 		}
@@ -2107,14 +2137,14 @@ namespace zlscript
 		GetWord(nextWord);
 		if (nextWord.word != "(")
 		{
-			AddErrorInfo(10,nextWord.nSourceWordsIndex, ERROR_FORMAT_NOT);
+			AddErrorInfo(10, nextWord.nSourceWordsIndex, ERROR_FORMAT_NOT);
 			RevertAll();
 			return false;
 		}
 
 		if (!pCompiler->RunCompileState(vIn, CScriptCompiler::E_CODE_SCOPE_EXPRESSION, this, E_COND))
 		{
-			AddErrorInfo(10,nextWord.nSourceWordsIndex, ERROR_FORMAT_NOT);
+			AddErrorInfo(10, nextWord.nSourceWordsIndex, ERROR_FORMAT_NOT);
 			RevertAll();
 			return false;
 		}
@@ -2122,14 +2152,14 @@ namespace zlscript
 		GetWord(nextWord);
 		if (nextWord.word != ")")
 		{
-			AddErrorInfo(10,nextWord.nSourceWordsIndex, ERROR_FORMAT_NOT);
+			AddErrorInfo(10, nextWord.nSourceWordsIndex, ERROR_FORMAT_NOT);
 			RevertAll();
 			return false;
 		}
 
 		if (!pCompiler->RunCompileState(vIn, CScriptCompiler::E_CODE_SCOPE_STATEMENT, this, E_BLOCK))
 		{
-			AddErrorInfo(10,nextWord.nSourceWordsIndex, ERROR_FORMAT_NOT);
+			AddErrorInfo(10, nextWord.nSourceWordsIndex, ERROR_FORMAT_NOT);
 			RevertAll();
 			return false;
 		}
@@ -2332,7 +2362,7 @@ namespace zlscript
 		GetWord(nextWord);
 		if (nextWord.word != ";")
 		{
-			AddErrorInfo(10,nextWord.nSourceWordsIndex, ERROR_FORMAT_NOT);
+			AddErrorInfo(10, nextWord.nSourceWordsIndex, ERROR_FORMAT_NOT);
 			RevertAll();
 			return false;
 		}
@@ -2391,7 +2421,7 @@ namespace zlscript
 		RevertOne();
 		if (!pCompiler->RunCompileState(vIn, CScriptCompiler::E_CODE_SCOPE_EXPRESSION, this, 0))
 		{
-			AddErrorInfo(10,nextWord.nSourceWordsIndex, ERROR_FORMAT_NOT);
+			AddErrorInfo(10, nextWord.nSourceWordsIndex, ERROR_FORMAT_NOT);
 			RevertAll();
 			return false;
 		}
@@ -2399,7 +2429,7 @@ namespace zlscript
 		GetWord(nextWord);
 		if (nextWord.word != ";")
 		{
-			AddErrorInfo(10,nextWord.nSourceWordsIndex, ESIGN_ILLEGAL_END);
+			AddErrorInfo(10, nextWord.nSourceWordsIndex, ESIGN_ILLEGAL_END);
 			RevertAll();
 			return false;
 		}
@@ -2414,15 +2444,19 @@ namespace zlscript
 		}
 
 		CReturnExeCode* pCode = CExeCodeMgr::GetInstance()->New<CReturnExeCode>(m_unBeginSoureIndex);
-		if (pBodyCode->GetType() == E_I_CODE_LOADVAR)
+		if (pBodyCode->GetType() == E_I_CODE_EXPRESSION)
 		{
-			CLoadVarICode* pLoadCode = (CLoadVarICode*)pBodyCode;
-			pCode->returnParam.nType = pLoadCode->nLoadType;
-			pCode->returnParam.dwPos = pLoadCode->VarIndex;
-		}
-		else
-		{
-			pCode->returnParam.nType = E_VAR_SCOPE_REGISTER;
+			CExpressionICode* pExpressCode = (CExpressionICode*)pBodyCode;
+			if (pExpressCode->pOperandCode && pExpressCode->pOperandCode->GetType() == E_I_CODE_LOADVAR)
+			{
+				CLoadVarICode* pLoadCode = (CLoadVarICode*)pExpressCode->pOperandCode;
+				pCode->returnParam.nType = pLoadCode->nLoadType;
+				pCode->returnParam.dwPos = pLoadCode->VarIndex;
+			}
+			else
+			{
+				pCode->returnParam.nType = E_VAR_SCOPE_REGISTER;
+			}
 		}
 		vOut.AddCode(pCode);
 
@@ -2622,14 +2656,14 @@ namespace zlscript
 		}
 		if (!pCompiler->RunCompileState(vIn, CScriptCompiler::E_CODE_SCOPE_EXPRESSION, this, 0))
 		{
-			AddErrorInfo(2,nextWord.nSourceWordsIndex, ERROR_FORMAT_NOT);
+			AddErrorInfo(2, nextWord.nSourceWordsIndex, ERROR_FORMAT_NOT);
 			RevertAll();
 			return false;
 		}
 		GetWord(nextWord);
 		if (nextWord.word != ")")
 		{
-			AddErrorInfo(2,nextWord.nSourceWordsIndex, ERROR_FORMAT_NOT);
+			AddErrorInfo(2, nextWord.nSourceWordsIndex, ERROR_FORMAT_NOT);
 			RevertAll();
 			return false;
 		}

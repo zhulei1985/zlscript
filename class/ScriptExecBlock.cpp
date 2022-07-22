@@ -171,7 +171,7 @@ namespace zlscript
 		//{
 		//	return nResult;
 		//}
-		if (m_pCurExeCode == nullptr)
+		if (nResult == ERESULT_CONTINUE && m_pCurExeCode == nullptr)
 		{
 			nResult = ERESULT_END;
 		}

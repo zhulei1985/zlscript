@@ -487,7 +487,7 @@ namespace zlscript
 			E_STATE_OPERAND,
 			E_STATE_SIZE,
 		};
-	protected:
+	public:
 		COperatorICode* m_pRoot;
 
 		CBaseICode* pOperandCode;

@@ -452,12 +452,15 @@ namespace zlscript
 				}
 				else
 				{
-					auto pCurBlock = m_BlockStack.top();
-					if (pCurBlock)
+					if (pBlock->GetFunType() != -1)
 					{
-						CBaseVar* pTemp = nullptr;
-						STACK_POP(pBlock->registerStack, pTemp);
-						STACK_PUSH_MOVE(pCurBlock->registerStack, pTemp)
+						auto pCurBlock = m_BlockStack.top();
+						if (pCurBlock)
+						{
+							CBaseVar* pTemp = nullptr;
+							STACK_POP(pBlock->registerStack, pTemp);
+							STACK_PUSH_MOVE(pCurBlock->registerStack, pTemp)
+						}
 					}
 					SAFE_DELETE(pBlock);
 				}
