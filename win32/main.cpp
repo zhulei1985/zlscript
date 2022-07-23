@@ -156,7 +156,7 @@ int main()
 	compiler.MakeExeCode();
 	//zlscript::CScriptCodeLoader::GetInstance()->MakeICode2Code(0);
 	//zlscript::CScriptCodeLoader::GetInstance()->ClearICode();
-	//zlscript::CScriptCodeLoader::GetInstance()->PrintAllCode("debug.txt");
+	zlscript::CScriptCodeLoader::GetInstance()->PrintAllCode("debug.txt");
 	g_nThreadRunState = 1;
 
 	//zlscript::CScriptStack stackParm;

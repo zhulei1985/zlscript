@@ -404,7 +404,10 @@ namespace zlscript
 		{
 			if (vBodyCode[i])
 			{
-				vBodyCode[i]->MakeExeCode(vOut);
+				if (vBodyCode[i]->MakeExeCode(vOut) == false)
+				{
+					return false;
+				}
 			}
 		}
 
@@ -732,7 +735,10 @@ namespace zlscript
 		{
 			return false;
 		}
-		pRightOperand->MakeExeCode(vOut);
+		if (pRightOperand->MakeExeCode(vOut) == false)
+		{
+			return false;
+		}
 		CVoluationExeCode* pCode = CExeCodeMgr::GetInstance()->New<CVoluationExeCode>(m_unBeginSoureIndex);
 
 		if (pRightOperand->GetType() == E_I_CODE_LOADVAR)
@@ -748,7 +754,7 @@ namespace zlscript
 		pCode->cType = nSaveType;
 		pCode->dwPos = VarIndex;
 		vOut.AddCode(pCode);
-		return false;
+		return true;
 	}
 	//int CSaveVarICode::Run(CScriptExecBlock* pBlock)
 	//{
@@ -891,7 +897,10 @@ namespace zlscript
 	bool CSetClassParamICode::MakeExeCode(CExeCodeData& vOut)
 	{
 		CSetClassParamExeCode* pSetCode = CExeCodeMgr::GetInstance()->New<CSetClassParamExeCode>(m_unBeginSoureIndex);
-		pRightOperand->MakeExeCode(vOut);
+		if (pRightOperand->MakeExeCode(vOut) == false)
+		{
+			return false;
+		}
 		if (pRightOperand->GetType() == E_I_CODE_LOADVAR)
 		{
 			CLoadVarICode* pLoadCode = (CLoadVarICode*)pRightOperand;
@@ -941,7 +950,10 @@ namespace zlscript
 	bool CMinusICode::MakeExeCode(CExeCodeData& vOut)
 	{
 		CUnaryOperExeCode* pCode = CExeCodeMgr::GetInstance()->New<CUnaryOperExeCode>(m_unBeginSoureIndex);
-		pRightOperand->MakeExeCode(vOut);
+		if (pRightOperand->MakeExeCode(vOut) == false)
+		{
+			return false;
+		}
 		if (pRightOperand->GetType() == E_I_CODE_LOADVAR)
 		{
 			CLoadVarICode* pLoadCode = (CLoadVarICode*)pRightOperand;
@@ -1088,8 +1100,14 @@ namespace zlscript
 	bool COperatorICode::MakeExeCode(CExeCodeData& vOut)
 	{
 		CBinaryOperExeCode* pCode = CExeCodeMgr::GetInstance()->New<CBinaryOperExeCode>(m_unBeginSoureIndex);
-		pLeftOperand->MakeExeCode(vOut);
-		pRightOperand->MakeExeCode(vOut);
+		if (pLeftOperand->MakeExeCode(vOut) == false)
+		{
+			return false;
+		}
+		if (pRightOperand->MakeExeCode(vOut) == false)
+		{
+			return false;
+		}
 		if (pLeftOperand->GetType() == E_I_CODE_LOADVAR)
 		{
 			CLoadVarICode* pLoadCode = (CLoadVarICode*)pLeftOperand;
@@ -1189,7 +1207,10 @@ namespace zlscript
 			CBaseICode* pCode = vParams[i];
 			if (pCode)
 			{
-				pCode->MakeExeCode(vOut);
+				if (pCode->MakeExeCode(vOut) == false)
+				{
+					return false;
+				}
 				if (pCode->GetType() == E_I_CODE_EXPRESSION)
 				{
 					CExpressionICode* pExpressCode = (CExpressionICode*)pCode;
@@ -1576,10 +1597,13 @@ namespace zlscript
 			CBaseICode* pCode = vData[i];
 			if (pCode)
 			{
-				pCode->MakeExeCode(vOut);
+				if (pCode->MakeExeCode(vOut) == false)
+				{
+					return false;
+				}
 			}
 		}
-		return false;
+		return true;
 	}
 
 	//int CSentenceICode::Run(CScriptExecBlock* pBlock)
@@ -1945,20 +1969,46 @@ namespace zlscript
 	bool CIfICode::MakeExeCode(CExeCodeData& vOut)
 	{
 		//先压入条件
+		CJumpFalseExeCode* pIfCode = CExeCodeMgr::GetInstance()->New<CJumpFalseExeCode>(m_unBeginSoureIndex);
 		if (pCondCode)
 		{
-			pCondCode->MakeExeCode(vOut);
+			if (pCondCode->MakeExeCode(vOut) == false)
+			{
+				return false;
+			}
+			if (pCondCode->GetType() == E_I_CODE_EXPRESSION)
+			{
+				CExpressionICode* pExpressCode = (CExpressionICode*)pCondCode;
+				if (pExpressCode->pOperandCode && pExpressCode->pOperandCode->GetType() == E_I_CODE_LOADVAR)
+				{
+					CLoadVarICode* pLoadCode = (CLoadVarICode*)pExpressCode->pOperandCode;
+					pIfCode->condParam.nType = pLoadCode->nLoadType;
+					pIfCode->condParam.dwPos = pLoadCode->VarIndex;
+				}
+				else
+				{
+					pIfCode->condParam.nType = E_VAR_SCOPE_REGISTER;
+				}
+			}
 		}
-		CJumpFalseExeCode* pIfCode = CExeCodeMgr::GetInstance()->New<CJumpFalseExeCode>(m_unBeginSoureIndex);
+		
 		vOut.AddCode(pIfCode);
 		if (pTureCode)
-			pTureCode->MakeExeCode(vOut);
+		{
+			if (pTureCode->MakeExeCode(vOut) == false)
+			{
+				return false;
+			}
+		}
 
 		if (pFalseCode)
 		{
 			CJumpExeCode* pElseCode = CExeCodeMgr::GetInstance()->New<CJumpExeCode>(m_unBeginSoureIndex);
 			vOut.AddCode(pElseCode);
-			pFalseCode->MakeExeCode(vOut);
+			if (pFalseCode->MakeExeCode(vOut) == false)
+			{
+				return false;
+			}
 			pIfCode->pJumpCode = pElseCode->m_pNext;
 			CSignExeCode* pEndCode = CExeCodeMgr::GetInstance()->New<CSignExeCode>(m_unBeginSoureIndex);
 			vOut.AddCode(pEndCode);
@@ -2177,12 +2227,33 @@ namespace zlscript
 			return false;
 		}
 		CBaseExeCode* pBegin = vOut.pEndCode;
-		pCondCode->MakeExeCode(vOut);
-
 		CJumpFalseExeCode* pIfCode = CExeCodeMgr::GetInstance()->New<CJumpFalseExeCode>(m_unBeginSoureIndex);
+		if (pCondCode->MakeExeCode(vOut) == false)
+		{
+			return false;
+		}
+		if (pCondCode->GetType() == E_I_CODE_EXPRESSION)
+		{
+			CExpressionICode* pExpressCode = (CExpressionICode*)pCondCode;
+			if (pExpressCode->pOperandCode && pExpressCode->pOperandCode->GetType() == E_I_CODE_LOADVAR)
+			{
+				CLoadVarICode* pLoadCode = (CLoadVarICode*)pExpressCode->pOperandCode;
+				pIfCode->condParam.nType = pLoadCode->nLoadType;
+				pIfCode->condParam.dwPos = pLoadCode->VarIndex;
+			}
+			else
+			{
+				pIfCode->condParam.nType = E_VAR_SCOPE_REGISTER;
+			}
+		}
+
+		
 		vOut.AddCode(pIfCode);
 
-		pBodyCode->MakeExeCode(vOut);
+		if (pBodyCode->MakeExeCode(vOut) == false)
+		{
+			return false;
+		}
 		//要在块尾加入返回块头的指令
 		CJumpExeCode* pJumpBeginCode = CExeCodeMgr::GetInstance()->New<CJumpExeCode>(m_unBeginSoureIndex);
 		if (pBegin)
@@ -2438,24 +2509,32 @@ namespace zlscript
 
 	bool CReturnICode::MakeExeCode(CExeCodeData& vOut)
 	{
-		if (pBodyCode)
+		CReturnExeCode* pCode = CExeCodeMgr::GetInstance()->New<CReturnExeCode>(m_unBeginSoureIndex);
+		if (vOut.nDefaultReturnType != EScriptVal_None)
 		{
-			pBodyCode->MakeExeCode(vOut);
+			pCode->bNeedReturnVar = true;
 		}
 
-		CReturnExeCode* pCode = CExeCodeMgr::GetInstance()->New<CReturnExeCode>(m_unBeginSoureIndex);
-		if (pBodyCode->GetType() == E_I_CODE_EXPRESSION)
+		if (pBodyCode)
 		{
-			CExpressionICode* pExpressCode = (CExpressionICode*)pBodyCode;
-			if (pExpressCode->pOperandCode && pExpressCode->pOperandCode->GetType() == E_I_CODE_LOADVAR)
+			if (pBodyCode->MakeExeCode(vOut) == false)
 			{
-				CLoadVarICode* pLoadCode = (CLoadVarICode*)pExpressCode->pOperandCode;
-				pCode->returnParam.nType = pLoadCode->nLoadType;
-				pCode->returnParam.dwPos = pLoadCode->VarIndex;
+				return false;
 			}
-			else
+
+			if (pBodyCode->GetType() == E_I_CODE_EXPRESSION)
 			{
-				pCode->returnParam.nType = E_VAR_SCOPE_REGISTER;
+				CExpressionICode* pExpressCode = (CExpressionICode*)pBodyCode;
+				if (pExpressCode->pOperandCode && pExpressCode->pOperandCode->GetType() == E_I_CODE_LOADVAR)
+				{
+					CLoadVarICode* pLoadCode = (CLoadVarICode*)pExpressCode->pOperandCode;
+					pCode->returnParam.nType = pLoadCode->nLoadType;
+					pCode->returnParam.dwPos = pLoadCode->VarIndex;
+				}
+				else
+				{
+					pCode->returnParam.nType = E_VAR_SCOPE_REGISTER;
+				}
 			}
 		}
 		vOut.AddCode(pCode);

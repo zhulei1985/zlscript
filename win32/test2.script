@@ -1,0 +1,66 @@
+//注释为两个'/'，当前只支持这一种注释方法
+int g_a = 3;
+void init()
+{
+	print("init.....");
+
+}
+int FibTest(int n)
+{
+	//print("FibTest:"+n);
+	if (n < 2)
+	{
+		return n;
+	}
+	else
+	{
+		return FibTest(n-2) + FibTest(n-1);
+	}
+}
+void CalculationTest()
+{
+	int t1 = GetMsTime();
+
+	int sum = 0;
+	int i = 1;
+	while (i <= 1000)
+	{
+		int j = 1;
+		while (j <= 1000)
+		{
+			sum = sum + i*j;
+			j = j + 1;
+		}
+		i = i + 1;
+	}
+
+	int t2 = GetMsTime() - t1;
+	print("Calculation result:" + sum);
+	print("Calculation time:" + t2 +"ms");
+}
+int testFun()
+{
+	int a = 1;
+	return a;
+}
+void main()
+{
+	int test = testFun() + testFun();
+	print(test);
+	int t1 = GetMsTime();
+	print(t1);
+	print("begin");
+
+	int nVal = 0;
+	print("begin2");
+
+	print("begin3");
+	t1 = GetMsTime();
+	//nVal = FibTest(40);
+	nVal = FibTest(20);
+	int t2 = GetMsTime() - t1;
+	print("fibtest result:" + nVal);
+	print("fibtest time:"+t2+"ms");
+
+	CalculationTest();
+}

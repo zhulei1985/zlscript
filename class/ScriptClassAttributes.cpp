@@ -106,7 +106,7 @@ namespace zlscript
 	{
 		return m_val.Set(str);
 	}
-	bool CScriptIntAttribute::SetVal(CBaseVar* var)
+	bool CScriptIntAttribute::SetVal(const CBaseVar* var)
 	{
 		return AssignVar(&m_val, var);
 	}
@@ -158,7 +158,7 @@ namespace zlscript
 		return m_val.Set(str);
 	}
 
-	bool CScriptInt64Attribute::SetVal(CBaseVar* var)
+	bool CScriptInt64Attribute::SetVal(const CBaseVar* var)
 	{
 		return AssignVar(&m_val, var);
 	}
@@ -212,7 +212,7 @@ namespace zlscript
 		return m_val.Set(str);
 	}
 
-	bool CScriptFloatAttribute::SetVal(CBaseVar* var)
+	bool CScriptFloatAttribute::SetVal(const CBaseVar* var)
 	{
 		return AssignVar(&m_val, var);
 	}
@@ -266,7 +266,7 @@ namespace zlscript
 		return m_val.Set(str);
 	}
 
-	bool CScriptDoubleAttribute::SetVal(CBaseVar* var)
+	bool CScriptDoubleAttribute::SetVal(const CBaseVar* var)
 	{
 		return AssignVar(&m_val, var);
 	}
@@ -363,7 +363,7 @@ namespace zlscript
 		return true;
 	}
 
-	bool CScriptStringAttribute::SetVal(CBaseVar* var)
+	bool CScriptStringAttribute::SetVal(const CBaseVar* var)
 	{
 		return AssignVar(&m_val, var);;
 	}
@@ -748,7 +748,7 @@ namespace zlscript
 		return false;
 	}
 
-	bool CScriptClassPointAttribute::SetVal(CBaseVar* var)
+	bool CScriptClassPointAttribute::SetVal(const CBaseVar* var)
 	{
 		//std::lock_guard<std::mutex> Lock(m_lock);
 
@@ -809,7 +809,7 @@ namespace zlscript
 		return false;
 	}
 
-	bool CScriptVarAttribute::SetVal(CBaseVar* var)
+	bool CScriptVarAttribute::SetVal(const CBaseVar* var)
 	{
 		//std::lock_guard<std::mutex> Lock(m_lock);
 

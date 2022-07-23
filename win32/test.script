@@ -7,7 +7,6 @@ void init()
 }
 int FibTest(int n)
 {
-	//print("FibTest:"+n);
 	if (n < 2)
 	{
 		return n;
@@ -38,23 +37,125 @@ void CalculationTest()
 	print("Calculation result:" + sum);
 	print("Calculation time:" + t2 +"ms");
 }
-
-void main()
+void CalculationTest2()
 {
 	int t1 = GetMsTime();
-	print(t1);
+	CTest test = new CTest;
+	int sum = 0;
+	int i = 1;
+	while (i <= 100)
+	{
+		int j = 1;
+		while (j <= 100)
+		{
+			sum = test->Add(sum , i*j);
+			j = j + 1;
+		}
+		i = i + 1;
+	}
+
+	int t2 = GetMsTime() - t1;
+	print("Calculation 2 result:" + sum);
+	print("Calculation 2 time:" + t2 +"ms");
+}
+void CalculationTest3(CTest test)
+{
+	int t1 = GetMsTime();
+	//int sum = 0;
+	int i = 1;
+	test->bbb = 0;
+	while (i <= 100)
+	{
+		int j = 1;
+		while (j <= 100)
+		{
+			test->bbb = test->bbb + i*j;
+			//sum = test->Add(sum , i*j);
+			j = j + 1;
+		}
+		i = i + 1;
+	}
+
+	int t2 = GetMsTime() - t1;
+
+	print("Calculation 3 test->bbb:" + test->bbb);
+	//print("Calculation 3 result:" + sum);
+	print("Calculation 3 time:" + t2 +"ms");
+}
+void test1(int a, int b)
+{
+	print("检测参数顺序");
+	print(a);
+	print(b);
+}
+int testAdd(int a, int b)
+{
+	return a+b;
+}
+void CalculationTest4()
+{
+	int t1 = GetMsTime();
+	int sum = 0;
+	int i = 1;
+	while (i <= 100)
+	{
+		int j = 1;
+		while (j <= 100)
+		{
+			sum = testAdd(sum , i*j);
+			j = j + 1;
+		}
+		i = i + 1;
+	}
+
+	int t2 = GetMsTime() - t1;
+	print("Calculation 4 result:" + sum);
+	print("Calculation 4 time:" + t2 +"ms");
+}
+void testClass()
+{
+	CTest test = new CTest;
+	CSubTest subtest = new CSubTest;
+	test->Fun1();
+	test->Fun2();
+	subtest->Fun1();
+	subtest->Fun2();
+	subtest->Fun3();
+}
+void main()
+{
 	print("begin");
-
+	testClass();
 	int nVal = 0;
-	print("begin2");
-
-	print("begin3");
-	t1 = GetMsTime();
+	int t1 = GetMsTime();
 	//nVal = FibTest(40);
 	nVal = FibTest(20);
 	int t2 = GetMsTime() - t1;
 	print("fibtest result:" + nVal);
 	print("fibtest time:"+t2+"ms");
-
+	CTest test = new CTest;
+	//delete test;
 	CalculationTest();
+	CalculationTest2();
+	CalculationTest3(test);
+	CalculationTest4();
+	//RunScript(0,"CalculationTest");
+	//RunScript(0,"CalculationTest2");
+	//RunScript(0,"CalculationTest3",test);
+	//RunScript(0,"CalculationTest3",test);
+	//RunScript(0,"CalculationTest4",test);
+	//RunScript(0,"CalculationTest4",test);
+	//int nVal2 = test->Add(1,2);
+	print(nVal2);
+	//CalculationTest2();
+	//CalculationTest();
+	//RunScript(0,"CalculationTest");
+	//RunScript(0,"CalculationTest2");
+	//RunScript(0,"CalculationTest");
+	//RunScript(0,"CalculationTest2");
+	//RunScript(0,"CalculationTest");
+	//RunScript(0,"CalculationTest2");
+	//RunScript(0,"CalculationTest");
+	//RunScript(0,"CalculationTest2");
+	//RunScript(0,"CalculationTest");
 }

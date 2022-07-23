@@ -204,9 +204,9 @@ namespace zlscript
 			auto pAttribute = pPoint->GetAttribute(dwPos);
 			if (pAttribute)
 			{
-				CBaseVar* pAttrVar = nullptr;
-				STACK_POP(pBlock->registerStack, pAttrVar);
-				pAttribute->SetVal(pAttrVar);
+				//CBaseVar* pAttrVar = nullptr;
+				//STACK_POP(pBlock->registerStack, pAttrVar);
+				pAttribute->SetVal(valInfo.pVar);
 			}
 			else
 			{

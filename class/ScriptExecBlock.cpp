@@ -150,12 +150,31 @@ namespace zlscript
 		{
 			return ERESULT_ERROR;
 		}
+		//FILE* fp = fopen("RunDebug.txt", "ab");
+		//if (fp)
+		//{
+		//	fputs("********************************\n", fp);
+		//	fputs(m_pCodeData->funname.c_str(), fp);
+		//	fputc('\t', fp);
+		//	char strbuff[32] = { 0 };
+		//	sprintf(strbuff, "runIndex[%d]\n", (int)this);
+		//	fputs(strbuff, fp);
+		//	fputs("********************************\n", fp);
+		//}
 		int nResult = ERESULT_CONTINUE;
 		auto oldTime = std::chrono::steady_clock::now();
-		//unsigned int nDataLen = m_pCodeData->vCodeData.size();
-		//CodeStyle* pData = &m_pCodeData->vCodeData[0];
+
 		while (m_pCurExeCode)
 		{
+			//if (fp)
+			//{
+			//	std::string str = m_pCurExeCode->GetCodeString();
+			//	char strbuff[32] = { 0 };
+			//	sprintf(strbuff, "[%d]\t", m_pCurExeCode->nCodeIndex);
+			//	fputs(strbuff, fp);
+			//	fputs(str.c_str(), fp);
+			//	fputc('\n', fp);
+			//}
 			nResult = m_pCurExeCode->Run(this, &m_pCurExeCode);
 
 			if (nResult != ERESULT_CONTINUE)
@@ -163,14 +182,12 @@ namespace zlscript
 				break;
 			}
 		}
-
+		//if (fp)
+		//	fclose(fp);
 		auto nowTime = std::chrono::steady_clock::now();
 		auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(nowTime - oldTime);
 		m_msRunningTime += duration;
-		//if (nResult == ERESULT_CALLSCRIPTFUN)
-		//{
-		//	return nResult;
-		//}
+
 		if (nResult == ERESULT_CONTINUE && m_pCurExeCode == nullptr)
 		{
 			nResult = ERESULT_END;

@@ -1,277 +1,194 @@
 ********************************
 init
 ********************************
-[0]			print("init.....");
-[1]	
-[2]	
-********************************
-CalculationTest
-********************************
-[0]			int t1 = GetMsTime();
-[1]	
-[2]			int sum = 0;
-[3]	
-[4]			int i = 1;
-[5]	
-[6]			while (i <= 1000)
-[7]	
-[8]	
-[9]				int j = 1;
-[10]	
-[11]				while (j <= 1000)
-[12]	
-[13]	
-[14]					sum = sum + i*j;
-[15]	
-[16]	
-[17]	
-[18]	
-[19]	
-[20]	
-[21]					j = j + 1;
-[22]	
-[23]	
-[24]				while (j <= 1000)
-[25]	
-[26]				i = i + 1;
-[27]	
-[28]	
-[29]			while (i <= 1000)
-[30]	
-[31]			int t2 = GetMsTime() - t1;
-[32]	
-[33]	
-[34]			print("Calculation result:" + sum);
-[35]	
-[36]	
-[37]	
-[38]			print("Calculation time:" + t2 +"ms");
-[39]	
-[40]	
-[41]	
-[42]	
-********************************
-CalculationTest4
-********************************
-[0]			int t1 = GetMsTime();
-[1]	
-[2]			int sum = 0;
-[3]	
-[4]			int i = 1;
-[5]	
-[6]			while (i <= 100)
-[7]	
-[8]	
-[9]				int j = 1;
-[10]	
-[11]				while (j <= 100)
-[12]	
-[13]	
-[14]					sum = testAdd(sum , i*j);
-[15]	
-[16]	
-[17]	
-[18]	
-[19]	
-[20]	
-[21]					j = j + 1;
-[22]	
-[23]	
-[24]				while (j <= 100)
-[25]	
-[26]				i = i + 1;
-[27]	
-[28]	
-[29]			while (i <= 100)
-[30]	
-[31]			int t2 = GetMsTime() - t1;
-[32]	
-[33]	
-[34]			print("Calculation 4 result:" + sum);
-[35]	
-[36]	
-[37]	
-[38]			print("Calculation 4 time:" + t2 +"ms");
-[39]	
-[40]	
-[41]	
-[42]	
+[0]	CallBack	FunIndex:7	ParmSize:1
 ********************************
 FibTest
 ********************************
-[0]			if (n < 2)
-[1]	
-[2]	
-[3]				return n;
-[4]	
-[5]			if (n < 2)
-[6]				return FibTest(n-2) + FibTest(n-1);
-[7]	
-[8]	
-[9]	
-[10]	
-[11]	
-[12]	
-[13]	
-[14]	
-[15]	
-[16]	
-[17]	
-[18]			if (n < 2)
+[0]	BINARY_OPER	
+[1]	JUMP_FALSE	Index:4
+[2]	RETURN	 
+[3]	JUMP	Index:10
+[4]	BINARY_OPER	
+[5]	CallScript	FunIndex:1	ParmSize:1
+[6]	BINARY_OPER	
+[7]	CallScript	FunIndex:1	ParmSize:1
+[8]	BINARY_OPER	
+[9]	RETURN	 
+[10]	SIGN
 ********************************
-testAdd
+CalculationTest
 ********************************
-[0]			return a+b;
-[1]	
-[2]	
-********************************
-test1
-********************************
-[0]			print("检测参数顺序");
-[1]	
-[2]	
-[3]			print(a);
-[4]	
-[5]	
-[6]			print(b);
-[7]	
-[8]	
+[0]	CallBack	FunIndex:6	ParmSize:0
+[1]	VOLUATION	
+[2]	VOLUATION	
+[3]	VOLUATION	
+[4]	BINARY_OPER	
+[5]	JUMP_FALSE	Index:19
+[6]	VOLUATION	
+[7]	BINARY_OPER	
+[8]	JUMP_FALSE	Index:15
+[9]	BINARY_OPER	
+[10]	BINARY_OPER	
+[11]	VOLUATION	
+[12]	BINARY_OPER	
+[13]	VOLUATION	
+[14]	JUMP	Index:7
+[15]	SIGN
+[16]	BINARY_OPER	
+[17]	VOLUATION	
+[18]	JUMP	Index:4
+[19]	SIGN
+[20]	CallBack	FunIndex:6	ParmSize:0
+[21]	BINARY_OPER	
+[22]	VOLUATION	
+[23]	BINARY_OPER	
+[24]	CallBack	FunIndex:7	ParmSize:1
+[25]	BINARY_OPER	
+[26]	BINARY_OPER	
+[27]	CallBack	FunIndex:7	ParmSize:1
 ********************************
 CalculationTest2
 ********************************
-[0]			int t1 = GetMsTime();
-[1]	
-[2]			CTest test = new CTest;
-[3]	
-[4]			int sum = 0;
-[5]	
-[6]			int i = 1;
-[7]	
-[8]			while (i <= 100)
-[9]	
-[10]	
-[11]				int j = 1;
-[12]	
-[13]				while (j <= 100)
-[14]	
-[15]	
-[16]					sum = test->Add(sum , i*j);
-[17]	
-[18]	
-[19]	
-[20]	
-[21]	
-[22]	
-[23]	
-[24]					j = j + 1;
-[25]	
-[26]	
-[27]				while (j <= 100)
-[28]	
-[29]				i = i + 1;
-[30]	
-[31]	
-[32]			while (i <= 100)
-[33]	
-[34]			int t2 = GetMsTime() - t1;
-[35]	
-[36]	
-[37]			print("Calculation 2 result:" + sum);
-[38]	
-[39]	
-[40]	
-[41]			print("Calculation 2 time:" + t2 +"ms");
-[42]	
-[43]	
-[44]	
-[45]	
+[0]	CallBack	FunIndex:6	ParmSize:0
+[1]	VOLUATION	
+[2]	NEW_CLASS	ResultRegister:0	ClassIndex:3
+[3]	VOLUATION	
+[4]	VOLUATION	
+[5]	VOLUATION	
+[6]	BINARY_OPER	
+[7]	JUMP_FALSE	Index:21
+[8]	VOLUATION	
+[9]	BINARY_OPER	
+[10]	JUMP_FALSE	Index:17
+[11]	BINARY_OPER	
+[12]	CALL_CLASS_FUN	Type:2	dwPos:1	FunIndex:0	ParmSize:2
+[13]	VOLUATION	
+[14]	BINARY_OPER	
+[15]	VOLUATION	
+[16]	JUMP	Index:9
+[17]	SIGN
+[18]	BINARY_OPER	
+[19]	VOLUATION	
+[20]	JUMP	Index:6
+[21]	SIGN
+[22]	CallBack	FunIndex:6	ParmSize:0
+[23]	BINARY_OPER	
+[24]	VOLUATION	
+[25]	BINARY_OPER	
+[26]	CallBack	FunIndex:7	ParmSize:1
+[27]	BINARY_OPER	
+[28]	BINARY_OPER	
+[29]	CallBack	FunIndex:7	ParmSize:1
 ********************************
 CalculationTest3
 ********************************
-[0]			int t1 = GetMsTime();
-[1]	
-[2]			int i = 1;
-[3]	
-[4]			test->bbb = 0;
-[5]	
-[6]	
-[7]			while (i <= 100)
-[8]	
-[9]	
-[10]				int j = 1;
-[11]	
-[12]				while (j <= 100)
-[13]	
-[14]	
-[15]					test->bbb = test->bbb + i*j;
-[16]	
-[17]	
-[18]	
-[19]	
-[20]	
-[21]	
-[22]	
-[23]	
-[24]					j = j + 1;
-[25]	
-[26]	
-[27]				while (j <= 100)
-[28]	
-[29]				i = i + 1;
-[30]	
-[31]	
-[32]			while (i <= 100)
-[33]	
-[34]			int t2 = GetMsTime() - t1;
-[35]	
-[36]	
-[37]			print("Calculation 3 test->bbb:" + test->bbb);
-[38]	
-[39]	
-[40]	
-[41]	
-[42]	
-[43]	
-[44]	
-[45]			print("Calculation 3 time:" + t2 +"ms");
-[46]	
-[47]	
-[48]	
-[49]	
+[0]	CallBack	FunIndex:6	ParmSize:0
+[1]	VOLUATION	
+[2]	VOLUATION	
+[3]	SetClassParam	Param:(2,0)	pos:2
+[4]	BINARY_OPER	
+[5]	JUMP_FALSE	Index:20
+[6]	VOLUATION	
+[7]	BINARY_OPER	
+[8]	JUMP_FALSE	Index:16
+[9]	GetClassParam	Param:(2,0)	pos:2
+[10]	BINARY_OPER	
+[11]	BINARY_OPER	
+[12]	SetClassParam	Param:(2,0)	pos:2
+[13]	BINARY_OPER	
+[14]	VOLUATION	
+[15]	JUMP	Index:7
+[16]	SIGN
+[17]	BINARY_OPER	
+[18]	VOLUATION	
+[19]	JUMP	Index:4
+[20]	SIGN
+[21]	CallBack	FunIndex:6	ParmSize:0
+[22]	BINARY_OPER	
+[23]	VOLUATION	
+[24]	GetClassParam	Param:(2,0)	pos:2
+[25]	BINARY_OPER	
+[26]	CallBack	FunIndex:7	ParmSize:1
+[27]	BINARY_OPER	
+[28]	BINARY_OPER	
+[29]	CallBack	FunIndex:7	ParmSize:1
+********************************
+test1
+********************************
+[0]	CallBack	FunIndex:7	ParmSize:1
+[1]	CallBack	FunIndex:7	ParmSize:1
+[2]	CallBack	FunIndex:7	ParmSize:1
+********************************
+testAdd
+********************************
+[0]	BINARY_OPER	
+[1]	RETURN	 
+********************************
+CalculationTest4
+********************************
+[0]	CallBack	FunIndex:6	ParmSize:0
+[1]	VOLUATION	
+[2]	VOLUATION	
+[3]	VOLUATION	
+[4]	BINARY_OPER	
+[5]	JUMP_FALSE	Index:19
+[6]	VOLUATION	
+[7]	BINARY_OPER	
+[8]	JUMP_FALSE	Index:15
+[9]	BINARY_OPER	
+[10]	CallScript	FunIndex:6	ParmSize:2
+[11]	VOLUATION	
+[12]	BINARY_OPER	
+[13]	VOLUATION	
+[14]	JUMP	Index:7
+[15]	SIGN
+[16]	BINARY_OPER	
+[17]	VOLUATION	
+[18]	JUMP	Index:4
+[19]	SIGN
+[20]	CallBack	FunIndex:6	ParmSize:0
+[21]	BINARY_OPER	
+[22]	VOLUATION	
+[23]	BINARY_OPER	
+[24]	CallBack	FunIndex:7	ParmSize:1
+[25]	BINARY_OPER	
+[26]	BINARY_OPER	
+[27]	CallBack	FunIndex:7	ParmSize:1
+********************************
+testClass
+********************************
+[0]	NEW_CLASS	ResultRegister:0	ClassIndex:3
+[1]	VOLUATION	
+[2]	NEW_CLASS	ResultRegister:0	ClassIndex:4
+[3]	VOLUATION	
+[4]	CALL_CLASS_FUN	Type:2	dwPos:0	FunIndex:1	ParmSize:0
+[5]	CALL_CLASS_FUN	Type:2	dwPos:0	FunIndex:2	ParmSize:0
+[6]	CALL_CLASS_FUN	Type:2	dwPos:1	FunIndex:3	ParmSize:0
+[7]	CALL_CLASS_FUN	Type:2	dwPos:1	FunIndex:2	ParmSize:0
+[8]	CALL_CLASS_FUN	Type:2	dwPos:1	FunIndex:4	ParmSize:0
 ********************************
 main
 ********************************
-[0]			print("begin");
-[1]	
-[2]	
-[3]			int nVal = 0;
-[4]	
-[5]			int t1 = GetMsTime();
-[6]	
-[7]			nVal = FibTest(20);
-[8]	
-[9]	
-[10]	
-[11]			int t2 = GetMsTime() - t1;
-[12]	
-[13]	
-[14]			print("fibtest result:" + nVal);
-[15]	
-[16]	
-[17]	
-[18]			print("fibtest time:"+t2+"ms");
-[19]	
-[20]	
-[21]	
-[22]	
-[23]			CTest test = new CTest;
-[24]	
-[25]			CalculationTest();
-[26]			CalculationTest2();
-[27]			CalculationTest3(test);
-[28]	
-[29]	
-[30]			CalculationTest4();
-[31]			print(nVal2);
-[32]	
-[33]	
+[0]	CallBack	FunIndex:7	ParmSize:1
+[1]	CallScript	FunIndex:8	ParmSize:0
+[2]	VOLUATION	
+[3]	CallBack	FunIndex:6	ParmSize:0
+[4]	VOLUATION	
+[5]	CallScript	FunIndex:1	ParmSize:1
+[6]	VOLUATION	
+[7]	CallBack	FunIndex:6	ParmSize:0
+[8]	BINARY_OPER	
+[9]	VOLUATION	
+[10]	BINARY_OPER	
+[11]	CallBack	FunIndex:7	ParmSize:1
+[12]	BINARY_OPER	
+[13]	BINARY_OPER	
+[14]	CallBack	FunIndex:7	ParmSize:1
+[15]	NEW_CLASS	ResultRegister:0	ClassIndex:3
+[16]	VOLUATION	
+[17]	CallScript	FunIndex:2	ParmSize:0
+[18]	CallScript	FunIndex:3	ParmSize:0
+[19]	CallScript	FunIndex:4	ParmSize:1
+[20]	CallScript	FunIndex:7	ParmSize:0
+[21]	CallBack	FunIndex:7	ParmSize:1
