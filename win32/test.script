@@ -112,6 +112,22 @@ void CalculationTest4()
 	print("Calculation 4 result:" + sum);
 	print("Calculation 4 time:" + t2 +"ms");
 }
+void CalculationTest5()
+{
+	int t1 = GetMsTime();
+
+	int sum = 0;
+	int i = 1;
+	while (i <= 1000000)
+	{
+		sum = 1;
+		i = i + 1;
+	}
+
+	int t2 = GetMsTime() - t1;
+	print("Calculation 5 result:" + sum);
+	print("Calculation 5 time:" + t2 +"ms");
+}
 void testClass()
 {
 	CTest test = new CTest;
@@ -139,6 +155,7 @@ void main()
 	CalculationTest2();
 	CalculationTest3(test);
 	CalculationTest4();
+	CalculationTest5();
 	//RunScript(0,"CalculationTest");
 	//RunScript(0,"CalculationTest2");
 	//RunScript(0,"CalculationTest3",test);

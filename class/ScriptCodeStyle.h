@@ -42,8 +42,8 @@ namespace zlscript
 		virtual int Run(CScriptExecBlock *pBlock, CBaseExeCode **pNextPoint) = 0;
 		virtual std::string GetCodeString() { return ""; }
 
-		bool MakeParamInfo(CScriptExecBlock* pBlock, CExeParamInfo& info);
-		void ReleaseParamInfo(CExeParamInfo& info);
+		inline bool MakeParamInfo(CScriptExecBlock* pBlock, CExeParamInfo& info);
+		inline void ReleaseParamInfo(CExeParamInfo& info);
 	public:
 		CBaseExeCode* m_pNext;
 

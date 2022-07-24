@@ -12,9 +12,9 @@ namespace zlscript
 		{
 			return false;
 		}
-		CIntVar result;
-		result.Set(pVar1->ToInt() + pVar2->ToInt());
-		STACK_PUSH_COPY(stack, (&result));
+		CIntVar* result = (CIntVar*)CScriptVarTypeMgr::GetInstance()->GetVar(CScriptClassInfo<CIntVar>::GetInstance().nClassType);
+		result->Set(pVar1->ToInt() + pVar2->ToInt());
+		STACK_PUSH_MOVE(stack, result);
 		return true;
 	}
 
@@ -53,9 +53,9 @@ namespace zlscript
 		{
 			return false;
 		}
-		CIntVar result;
-		result.Set(pVar1->ToInt() - pVar2->ToInt());
-		STACK_PUSH_COPY(stack, (&result));
+		CIntVar* result = (CIntVar*)CScriptVarTypeMgr::GetInstance()->GetVar(CScriptClassInfo<CIntVar>::GetInstance().nClassType);
+		result->Set(pVar1->ToInt() - pVar2->ToInt());
+		STACK_PUSH_MOVE(stack, result);
 		return true;
 	}
 

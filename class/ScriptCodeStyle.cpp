@@ -43,9 +43,9 @@ namespace zlscript
 		}
 		break;
 		default:
-			return true;
+			return false;
 		}
-		return false;
+		return true;
 	}
 
 	void CBaseExeCode::ReleaseParamInfo(CExeParamInfo& info)

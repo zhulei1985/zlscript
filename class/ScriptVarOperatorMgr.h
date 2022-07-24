@@ -19,6 +19,7 @@
 
 
 #include <functional> 
+#include <unordered_map>
 #include "ScriptVarInfo.h"
 #include "ScriptStack.h"
 //赋值管理
@@ -26,8 +27,8 @@ namespace zlscript
 {
 	typedef std::function<bool(const CBaseVar*, tagScriptVarStack& stack)> UnaryOperFun;
 	typedef std::function<bool(const CBaseVar*, const CBaseVar*, tagScriptVarStack& stack)> BinaryOperFun;
-	typedef std::map<__int64, UnaryOperFun> UnaryOperGroup;
-	typedef std::map<__int64, BinaryOperFun> BinaryOperGroup;
+	typedef std::unordered_map<__int64, UnaryOperFun> UnaryOperGroup;
+	typedef std::unordered_map<__int64, BinaryOperFun> BinaryOperGroup;
 	class CScriptVarOperatorMgr
 	{
 	public:
