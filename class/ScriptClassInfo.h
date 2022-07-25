@@ -31,6 +31,7 @@ namespace zlscript
 
 	struct stScriptClassParamInfo
 	{
+		int nVarType;
 		unsigned short m_flag;
 		unsigned short m_index;
 		std::string m_strAttrName;

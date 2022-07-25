@@ -618,6 +618,7 @@ namespace zlscript
 			{
 				nLoadType = E_VAR_SCOPE_LOACL;
 				VarIndex = pInfo->index;
+				nResultVarType = pInfo->nType;
 			}
 			else
 			{
@@ -625,6 +626,12 @@ namespace zlscript
 				int nGVarIndex = CScriptGlobalVarMgr::GetInstance()->GetIndex(nextWord.word);
 				if (nGVarIndex != -1)
 				{
+					const CBaseVar* pGVar = CScriptGlobalVarMgr::GetInstance()->Get(nGVarIndex);
+					if (pGVar)
+					{
+						nResultVarType = pGVar->GetType();
+					}
+					CScriptGlobalVarMgr::GetInstance()->Revert(nGVarIndex);
 					nLoadType = E_VAR_SCOPE_GLOBAL;
 					VarIndex = nGVarIndex;
 				}
@@ -674,6 +681,7 @@ namespace zlscript
 		bool bResult = true;
 		if (m_pConst)
 		{
+			nResultVarType = m_pConst->GetType();
 			nLoadType = E_VAR_SCOPE_CONST;
 			VarIndex = vOut.GetConstVarIndex(m_pConst);
 		}
@@ -847,6 +855,7 @@ namespace zlscript
 				if (it != pInfo->mapDicString2ParamInfo.end())
 				{
 					nParamIndex = it->second.m_index;
+					nResultVarType = it->second.nVarType;
 				}
 				else
 				{
@@ -949,32 +958,61 @@ namespace zlscript
 	}
 	bool CMinusICode::MakeExeCode(CExeCodeData& vOut)
 	{
-		CUnaryOperExeCode* pCode = CExeCodeMgr::GetInstance()->New<CUnaryOperExeCode>(m_unBeginSoureIndex);
+		
 		if (pRightOperand->MakeExeCode(vOut) == false)
 		{
 			return false;
 		}
-		if (pRightOperand->GetType() == E_I_CODE_LOADVAR)
-		{
-			CLoadVarICode* pLoadCode = (CLoadVarICode*)pRightOperand;
-			pCode->param.nType = pLoadCode->nLoadType;
-			pCode->param.dwPos = pLoadCode->VarIndex;
-		}
-		else
-		{
-			pCode->param.nType = E_VAR_SCOPE_REGISTER;
-		}
 		auto group = CScriptVarOperatorMgr::GetInstance()->GetUnaryOperGroup(ECODE_MINUS);
-		if (group != nullptr)
-		{
-			pCode->operGroup = group;
-		}
-		else
+		if (group == nullptr)
 		{
 			//TODO 报错
 			return false;
 		}
-		vOut.AddCode(pCode);
+		nResultVarType = pRightOperand->GetResultVarType();
+		if (pRightOperand->GetResultVarType() == -1)
+		{
+			CUnaryOperGroupExeCode* pCode = CExeCodeMgr::GetInstance()->New<CUnaryOperGroupExeCode>(m_unBeginSoureIndex);
+			if (pRightOperand->GetType() == E_I_CODE_LOADVAR)
+			{
+				CLoadVarICode* pLoadCode = (CLoadVarICode*)pRightOperand;
+				pCode->param.nType = pLoadCode->nLoadType;
+				pCode->param.dwPos = pLoadCode->VarIndex;
+			}
+			else
+			{
+				pCode->param.nType = E_VAR_SCOPE_REGISTER;
+			}
+
+			pCode->operGroup = group;
+
+			vOut.AddCode(pCode);			
+		}
+		else
+		{
+			CUnaryOperExeCode* pCode = CExeCodeMgr::GetInstance()->New<CUnaryOperExeCode>(m_unBeginSoureIndex);
+			if (pRightOperand->GetType() == E_I_CODE_LOADVAR)
+			{
+				CLoadVarICode* pLoadCode = (CLoadVarICode*)pRightOperand;
+				pCode->param.nType = pLoadCode->nLoadType;
+				pCode->param.dwPos = pLoadCode->VarIndex;
+			}
+			else
+			{
+				pCode->param.nType = E_VAR_SCOPE_REGISTER;
+			}
+			auto it = group->find(pRightOperand->GetResultVarType());
+			if (it != group->end())
+			{
+				pCode->oper = it->second;
+			}
+			else
+			{
+				return false;
+			}
+
+			vOut.AddCode(pCode);
+		}
 		return true;
 	}
 	//int CMinusICode::Run(CScriptExecBlock* pBlock)
@@ -1099,7 +1137,7 @@ namespace zlscript
 	}
 	bool COperatorICode::MakeExeCode(CExeCodeData& vOut)
 	{
-		CBinaryOperExeCode* pCode = CExeCodeMgr::GetInstance()->New<CBinaryOperExeCode>(m_unBeginSoureIndex);
+
 		if (pLeftOperand->MakeExeCode(vOut) == false)
 		{
 			return false;
@@ -1108,32 +1146,88 @@ namespace zlscript
 		{
 			return false;
 		}
-		if (pLeftOperand->GetType() == E_I_CODE_LOADVAR)
+		nResultVarType = pLeftOperand->GetResultVarType();
+		if (pLeftOperand->GetResultVarType() == -1 || pRightOperand->GetResultVarType() == -1)
 		{
-			CLoadVarICode* pLoadCode = (CLoadVarICode*)pLeftOperand;
-			pCode->leftParam.nType = pLoadCode->nLoadType;
-			pCode->leftParam.dwPos = pLoadCode->VarIndex;
+			CBinaryOperGroupExeCode* pCode = CExeCodeMgr::GetInstance()->New<CBinaryOperGroupExeCode>(m_unBeginSoureIndex);
+
+			nResultVarType = pLeftOperand->GetResultVarType();
+			if (pLeftOperand->GetType() == E_I_CODE_LOADVAR)
+			{
+				CLoadVarICode* pLoadCode = (CLoadVarICode*)pLeftOperand;
+				pCode->leftParam.nType = pLoadCode->nLoadType;
+				pCode->leftParam.dwPos = pLoadCode->VarIndex;
+			}
+			else
+			{
+				pCode->leftParam.nType = E_VAR_SCOPE_REGISTER;
+			}
+
+			if (pRightOperand->GetType() == E_I_CODE_LOADVAR)
+			{
+				CLoadVarICode* pLoadCode = (CLoadVarICode*)pRightOperand;
+				pCode->rightParam.nType = pLoadCode->nLoadType;
+				pCode->rightParam.dwPos = pLoadCode->VarIndex;
+			}
+			else
+			{
+				pCode->rightParam.nType = E_VAR_SCOPE_REGISTER;
+			}
+
+			pCode->operGroup = pOperGroup;
+
+			vOut.AddCode(pCode);
+			return true;
 		}
 		else
 		{
-			pCode->leftParam.nType = E_VAR_SCOPE_REGISTER;
+			CBinaryOperExeCode* pCode = CExeCodeMgr::GetInstance()->New<CBinaryOperExeCode>(m_unBeginSoureIndex);
+
+			nResultVarType = pLeftOperand->GetResultVarType();
+			if (pLeftOperand->GetType() == E_I_CODE_LOADVAR)
+			{
+				CLoadVarICode* pLoadCode = (CLoadVarICode*)pLeftOperand;
+				pCode->leftParam.nType = pLoadCode->nLoadType;
+				pCode->leftParam.dwPos = pLoadCode->VarIndex;
+			}
+			else
+			{
+				pCode->leftParam.nType = E_VAR_SCOPE_REGISTER;
+			}
+
+			if (pRightOperand->GetType() == E_I_CODE_LOADVAR)
+			{
+				CLoadVarICode* pLoadCode = (CLoadVarICode*)pRightOperand;
+				pCode->rightParam.nType = pLoadCode->nLoadType;
+				pCode->rightParam.dwPos = pLoadCode->VarIndex;
+			}
+			else
+			{
+				pCode->rightParam.nType = E_VAR_SCOPE_REGISTER;
+			}
+
+			union {
+				struct
+				{
+					int type1;
+					int type2;
+				};
+				__int64 index;
+			} trans;
+			trans.type1 = pLeftOperand->GetResultVarType();
+			trans.type2 = pRightOperand->GetResultVarType();
+			auto it = pOperGroup->find(trans.index);
+			if (it != pOperGroup->end())
+			{
+				pCode->oper = it->second;
+			}
+			else
+			{
+				return false;
+			}
+			vOut.AddCode(pCode);
+			return true;
 		}
-
-		if (pRightOperand->GetType() == E_I_CODE_LOADVAR)
-		{
-			CLoadVarICode* pLoadCode = (CLoadVarICode*)pRightOperand;
-			pCode->rightParam.nType = pLoadCode->nLoadType;
-			pCode->rightParam.dwPos = pLoadCode->VarIndex;
-		}
-		else
-		{
-			pCode->rightParam.nType = E_VAR_SCOPE_REGISTER;
-		}
-
-
-		pCode->operGroup = pOperGroup;
-
-		vOut.AddCode(pCode);
 		return true;
 	}
 

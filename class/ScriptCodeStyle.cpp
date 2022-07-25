@@ -59,6 +59,33 @@ namespace zlscript
 	int CUnaryOperExeCode::Run(CScriptExecBlock* pBlock, CBaseExeCode** pNextPoint)
 	{
 		MakeParamInfo(pBlock, param);
+		if (oper(param.pVar, pBlock->registerStack) == false)
+		{
+			Clear();
+			return CScriptExecBlock::ERESULT_ERROR;
+		}
+		if (pNextPoint)
+		{
+			*pNextPoint = this->m_pNext;
+		}
+		Clear();
+		return CScriptExecBlock::ERESULT_CONTINUE;
+	}
+	std::string CUnaryOperExeCode::GetCodeString()
+	{
+		char strbuff[128] = { 0 };
+		sprintf(strbuff, "UNARY_OPER\t");
+		return strbuff;
+	}
+
+	void CUnaryOperExeCode::Clear()
+	{
+		ReleaseParamInfo(param);
+	}
+
+	int CUnaryOperGroupExeCode::Run(CScriptExecBlock* pBlock, CBaseExeCode** pNextPoint)
+	{
+		MakeParamInfo(pBlock, param);
 		if (CScriptVarOperatorMgr::GetInstance()->Operator(operGroup,param.pVar,pBlock->registerStack) == false)
 		{
 			Clear();
@@ -72,19 +99,52 @@ namespace zlscript
 		return CScriptExecBlock::ERESULT_CONTINUE;
 	}
 
-	std::string CUnaryOperExeCode::GetCodeString()
+	std::string CUnaryOperGroupExeCode::GetCodeString()
 	{
 		char strbuff[128] = { 0 };
-		sprintf(strbuff, "UNARY_OPER\t");
+		sprintf(strbuff, "UNARY_OPER_GROUP\t");
 		return strbuff;
 	}
 
-	void CUnaryOperExeCode::Clear()
+	void CUnaryOperGroupExeCode::Clear()
 	{
 		ReleaseParamInfo(param);
 	}
 
 	int CBinaryOperExeCode::Run(CScriptExecBlock* pBlock, CBaseExeCode** pNextPoint)
+	{
+		MakeParamInfo(pBlock, rightParam);
+		MakeParamInfo(pBlock, leftParam);
+
+		if (oper(leftParam.pVar, rightParam.pVar, pBlock->registerStack) == false)
+		{
+			Clear();
+			return CScriptExecBlock::ERESULT_ERROR;
+		}
+		if (pNextPoint)
+		{
+			*pNextPoint = this->m_pNext;
+		}
+		Clear();
+		return CScriptExecBlock::ERESULT_CONTINUE;
+
+	}
+
+	std::string CBinaryOperExeCode::GetCodeString()
+	{
+		char strbuff[128] = { 0 };
+		sprintf(strbuff, "BINARY_OPER\t");
+		return strbuff;
+	}
+
+	void CBinaryOperExeCode::Clear()
+	{
+		ReleaseParamInfo(leftParam);
+		ReleaseParamInfo(rightParam);
+	}
+
+
+	int CBinaryOperGroupExeCode::Run(CScriptExecBlock* pBlock, CBaseExeCode** pNextPoint)
 	{
 		MakeParamInfo(pBlock, rightParam);
 		MakeParamInfo(pBlock, leftParam);
@@ -102,14 +162,14 @@ namespace zlscript
 		return CScriptExecBlock::ERESULT_CONTINUE;
 	}
 
-	std::string CBinaryOperExeCode::GetCodeString()
+	std::string CBinaryOperGroupExeCode::GetCodeString()
 	{
 		char strbuff[128] = { 0 };
-		sprintf(strbuff, "BINARY_OPER\t");
+		sprintf(strbuff, "BINARY_OPER_GROUP\t");
 		return strbuff;
 	}
 
-	void CBinaryOperExeCode::Clear()
+	void CBinaryOperGroupExeCode::Clear()
 	{
 		ReleaseParamInfo(leftParam);
 		ReleaseParamInfo(rightParam);
@@ -667,6 +727,7 @@ namespace zlscript
 		}
 		m_listExeCode.clear();
 	}
+
 
 
 

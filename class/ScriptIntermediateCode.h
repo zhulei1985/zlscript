@@ -189,7 +189,10 @@ namespace zlscript
 		virtual bool Compile(SentenceSourceCode& vIn, CScriptCompiler* pCompiler);
 
 		virtual bool MakeExeCode(CExeCodeData& vOut);
+
+		virtual int GetResultVarType() { return nResultVarType; }
 	public:
+		int nResultVarType{ -1 };
 
 		int nLoadType;
 
@@ -244,7 +247,10 @@ namespace zlscript
 		virtual bool Compile(SentenceSourceCode& vIn, CScriptCompiler* pCompiler);
 		virtual bool MakeExeCode(CExeCodeData& vOut);
 
+		virtual int GetResultVarType() { return nResultVarType; }
 	public:
+		int nResultVarType{ -1 };
+
 		std::string strClassVarName;//类对象名
 		std::string strParamName;//类成员变量名
 
@@ -304,6 +310,11 @@ namespace zlscript
 		virtual bool Compile(SentenceSourceCode& vIn, CScriptCompiler* pCompiler);
 
 		virtual bool MakeExeCode(CExeCodeData& vOut);
+
+		virtual int GetResultVarType() { return nResultVarType; }
+
+	public:
+		int nResultVarType{ -1 };
 		CBaseICode* pRightOperand;//右操作数
 
 	//public:
@@ -338,7 +349,10 @@ namespace zlscript
 		virtual bool Compile(SentenceSourceCode& vIn, CScriptCompiler* pCompiler);
 
 		virtual bool MakeExeCode(CExeCodeData& vOut);
+
+		virtual int GetResultVarType() { return nResultVarType; }
 	public:
+		int nResultVarType{-1};//结果的数据类型，与左操作符相等
 		std::string strOperator;//操作符
 		int nPriorityLv;//优先级
 		//int nOperatorFlag;

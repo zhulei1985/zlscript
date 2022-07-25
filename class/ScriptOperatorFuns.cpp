@@ -6,8 +6,17 @@ namespace zlscript
 {
 	bool addIntInt(const CBaseVar* var1, const CBaseVar* var2,tagScriptVarStack& stack)
 	{
-		const CIntVar* pVar1 = dynamic_cast<const CIntVar*>(var1);
-		const CIntVar* pVar2 = dynamic_cast<const CIntVar*>(var2);
+		if (var1 == nullptr || var2 == nullptr)
+		{
+			return false;
+		}
+		if (var1->GetType() != CScriptClassInfo<CIntVar>::GetInstance().nClassType ||
+			var2->GetType() != CScriptClassInfo<CIntVar>::GetInstance().nClassType)
+		{
+			return false;
+		}
+		const CIntVar* pVar1 = (const CIntVar*)(var1);
+		const CIntVar* pVar2 = (const CIntVar*)(var2);
 		if (pVar1 == nullptr || pVar2 == nullptr)
 		{
 			return false;
@@ -20,12 +29,18 @@ namespace zlscript
 
 	bool addStrInt(const CBaseVar* var1, const CBaseVar* var2, tagScriptVarStack& stack)
 	{
-		const CStringVar* pVar1 = dynamic_cast<const CStringVar*>(var1);
-		const CIntVar* pVar2 = dynamic_cast<const CIntVar*>(var2);
-		if (pVar1 == nullptr || pVar2 == nullptr)
+		if (var1 == nullptr || var2 == nullptr)
 		{
 			return false;
 		}
+		if (var1->GetType() != CScriptClassInfo<CStringVar>::GetInstance().nClassType ||
+			var2->GetType() != CScriptClassInfo<CIntVar>::GetInstance().nClassType)
+		{
+			return false;
+		}
+		const CStringVar* pVar1 = (const CStringVar*)(var1);
+		const CIntVar* pVar2 = (const CIntVar*)(var2);
+
 		CStringVar result;
 		result.Set(pVar1->ToString() + pVar2->ToString());
 		STACK_PUSH_COPY(stack, (&result));
@@ -33,12 +48,18 @@ namespace zlscript
 	}
 	bool addStrStr(const CBaseVar* var1, const CBaseVar* var2, tagScriptVarStack& stack)
 	{
-		const CStringVar* pVar1 = dynamic_cast<const CStringVar*>(var1);
-		const CStringVar* pVar2 = dynamic_cast<const CStringVar*>(var2);
-		if (pVar1 == nullptr || pVar2 == nullptr)
+		if (var1 == nullptr || var2 == nullptr)
 		{
 			return false;
 		}
+		if (var1->GetType() != CScriptClassInfo<CStringVar>::GetInstance().nClassType ||
+			var2->GetType() != CScriptClassInfo<CStringVar>::GetInstance().nClassType)
+		{
+			return false;
+		}
+		const CStringVar* pVar1 = (const CStringVar*)(var1);
+		const CStringVar* pVar2 = (const CStringVar*)(var2);
+
 		CStringVar result;
 		result.Set(pVar1->ToString() + pVar2->ToString());
 		STACK_PUSH_COPY(stack, (&result));
@@ -47,12 +68,17 @@ namespace zlscript
 
 	bool sumIntInt(const CBaseVar* var1, const CBaseVar* var2, tagScriptVarStack& stack)
 	{
-		const CIntVar* pVar1 = dynamic_cast<const CIntVar*>(var1);
-		const CIntVar* pVar2 = dynamic_cast<const CIntVar*>(var2);
-		if (pVar1 == nullptr || pVar2 == nullptr)
+		if (var1 == nullptr || var2 == nullptr)
 		{
 			return false;
 		}
+		if (var1->GetType() != CScriptClassInfo<CIntVar>::GetInstance().nClassType ||
+			var2->GetType() != CScriptClassInfo<CIntVar>::GetInstance().nClassType)
+		{
+			return false;
+		}
+		const CIntVar* pVar1 = (const CIntVar*)(var1);
+		const CIntVar* pVar2 = (const CIntVar*)(var2);
 		CIntVar* result = (CIntVar*)CScriptVarTypeMgr::GetInstance()->GetVar(CScriptClassInfo<CIntVar>::GetInstance().nClassType);
 		result->Set(pVar1->ToInt() - pVar2->ToInt());
 		STACK_PUSH_MOVE(stack, result);
@@ -61,56 +87,74 @@ namespace zlscript
 
 	bool mulIntInt(const CBaseVar* var1, const CBaseVar* var2, tagScriptVarStack& stack)
 	{
-		const CIntVar* pVar1 = dynamic_cast<const CIntVar*>(var1);
-		const CIntVar* pVar2 = dynamic_cast<const CIntVar*>(var2);
-		if (pVar1 == nullptr || pVar2 == nullptr)
+		if (var1 == nullptr || var2 == nullptr)
 		{
 			return false;
 		}
-		CIntVar result;
-		result.Set(pVar1->ToInt() * pVar2->ToInt());
-		STACK_PUSH_COPY(stack, (&result));
+		if (var1->GetType() != CScriptClassInfo<CIntVar>::GetInstance().nClassType ||
+			var2->GetType() != CScriptClassInfo<CIntVar>::GetInstance().nClassType)
+		{
+			return false;
+		}
+		const CIntVar* pVar1 = (const CIntVar*)(var1);
+		const CIntVar* pVar2 = (const CIntVar*)(var2);
+		CIntVar* result = (CIntVar*)CScriptVarTypeMgr::GetInstance()->GetVar(CScriptClassInfo<CIntVar>::GetInstance().nClassType);
+		//CIntVar result;
+		result->Set(pVar1->ToInt() * pVar2->ToInt());
+		STACK_PUSH_MOVE(stack, result);
 		return true;
 	}
 
 	bool lessIntInt(const CBaseVar* var1, const CBaseVar* var2, tagScriptVarStack& stack)
 	{
-		const CIntVar* pVar1 = dynamic_cast<const CIntVar*>(var1);
-		const CIntVar* pVar2 = dynamic_cast<const CIntVar*>(var2);
-		if (pVar1 == nullptr || pVar2 == nullptr)
+		if (var1 == nullptr || var2 == nullptr)
 		{
 			return false;
 		}
-		CIntVar result;
+		if (var1->GetType() != CScriptClassInfo<CIntVar>::GetInstance().nClassType ||
+			var2->GetType() != CScriptClassInfo<CIntVar>::GetInstance().nClassType)
+		{
+			return false;
+		}
+		const CIntVar* pVar1 = (const CIntVar*)(var1);
+		const CIntVar* pVar2 = (const CIntVar*)(var2);
+		CIntVar* result = (CIntVar*)CScriptVarTypeMgr::GetInstance()->GetVar(CScriptClassInfo<CIntVar>::GetInstance().nClassType);
+		//CIntVar result;
 		if (pVar1->ToInt() < pVar2->ToInt())
 		{
-			result.Set((__int64)1);
+			result->Set((__int64)1);
 		}
 		else
 		{
-			result.Set((__int64)0);
+			result->Set((__int64)0);
 		}
-		STACK_PUSH_COPY(stack, (&result));
+		STACK_PUSH_MOVE(stack, result);
 		return true;
 	}
 	bool lessEqualIntInt(const CBaseVar* var1, const CBaseVar* var2, tagScriptVarStack& stack)
 	{
-		const CIntVar* pVar1 = dynamic_cast<const CIntVar*>(var1);
-		const CIntVar* pVar2 = dynamic_cast<const CIntVar*>(var2);
-		if (pVar1 == nullptr || pVar2 == nullptr)
+		if (var1 == nullptr || var2 == nullptr)
 		{
 			return false;
 		}
-		CIntVar result;
+		if (var1->GetType() != CScriptClassInfo<CIntVar>::GetInstance().nClassType ||
+			var2->GetType() != CScriptClassInfo<CIntVar>::GetInstance().nClassType)
+		{
+			return false;
+		}
+		const CIntVar* pVar1 = (const CIntVar*)(var1);
+		const CIntVar* pVar2 = (const CIntVar*)(var2);
+		CIntVar* result = (CIntVar*)CScriptVarTypeMgr::GetInstance()->GetVar(CScriptClassInfo<CIntVar>::GetInstance().nClassType);
+		//CIntVar result;
 		if (pVar1->ToInt() <= pVar2->ToInt())
 		{
-			result.Set((__int64)1);
+			result->Set((__int64)1);
 		}
 		else
 		{
-			result.Set((__int64)0);
+			result->Set((__int64)0);
 		}
-		STACK_PUSH_COPY(stack, (&result));
+		STACK_PUSH_MOVE(stack, result);
 		return true;
 	}
 	void InitOperFun()

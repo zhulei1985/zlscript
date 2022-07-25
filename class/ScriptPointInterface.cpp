@@ -323,6 +323,7 @@ namespace zlscript
 			if (pAttr)
 			{
 				stScriptClassParamInfo paramInfo;
+				paramInfo.nVarType = pAttr->ToVarType();
 				paramInfo.m_flag = pAttr->m_flag;
 				paramInfo.m_index = pAttr->m_index;
 				paramInfo.m_strAttrName = pAttr->m_strAttrName;

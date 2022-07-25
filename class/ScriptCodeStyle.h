@@ -50,12 +50,28 @@ namespace zlscript
 		unsigned int nSoureWordIndex;
 		unsigned int nCodeIndex;
 	};
-
 	//操作符执行(一元),结果压入堆栈
 	class CUnaryOperExeCode : public CBaseExeCode
 	{
 	public:
 		CUnaryOperExeCode()
+		{
+			//operGroup = nullptr;
+		}
+		virtual int Run(CScriptExecBlock* pBlock, CBaseExeCode** pNextPoint);
+		virtual std::string GetCodeString();
+
+		void Clear();
+	public:
+		UnaryOperFun oper;
+
+		CExeParamInfo param;
+	};
+	//操作符执行(一元),结果压入堆栈
+	class CUnaryOperGroupExeCode : public CBaseExeCode
+	{
+	public:
+		CUnaryOperGroupExeCode()
 		{
 			operGroup = nullptr;
 		}
@@ -74,6 +90,25 @@ namespace zlscript
 	{
 	public:
 		CBinaryOperExeCode()
+		{
+
+		}
+		virtual int Run(CScriptExecBlock* pBlock, CBaseExeCode** pNextPoint);
+		virtual std::string GetCodeString();
+
+		void Clear();
+	public:
+		BinaryOperFun oper;
+
+		CExeParamInfo leftParam;
+		CExeParamInfo rightParam;
+	};
+
+	//操作符执行(二元),结果压入堆栈
+	class CBinaryOperGroupExeCode : public CBaseExeCode
+	{
+	public:
+		CBinaryOperGroupExeCode()
 		{
 			operGroup = nullptr;
 		}

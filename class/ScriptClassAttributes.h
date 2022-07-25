@@ -51,6 +51,7 @@ namespace zlscript
 		//{
 		//	return DecodeData4Bytes(pBuff, pos, len);
 		//}
+		virtual int ToVarType() { return -1; }
 		virtual std::string ToType() = 0;
 		virtual std::string ToString() = 0;
 		virtual CBaseVar* ToScriptVal() { return nullptr; }
@@ -104,6 +105,7 @@ namespace zlscript
 		CIntVar m_val;
 		operator int();
 		int operator =(int val);
+		virtual int ToVarType() { return m_val.GetType(); }
 		virtual std::string ToType();
 		virtual std::string ToString();
 		virtual CBaseVar* ToScriptVal();
@@ -121,6 +123,7 @@ namespace zlscript
 		CIntVar m_val;
 		operator __int64();
 		__int64 operator =(__int64 val);
+		virtual int ToVarType() { return m_val.GetType(); }
 		virtual std::string ToType();
 		virtual std::string ToString();
 		virtual CBaseVar* ToScriptVal();
@@ -139,6 +142,7 @@ namespace zlscript
 
 		operator float();
 		float operator =(float val);
+		virtual int ToVarType() { return m_val.GetType(); }
 		virtual std::string ToType();
 		virtual std::string ToString();
 		virtual CBaseVar* ToScriptVal();
@@ -157,6 +161,7 @@ namespace zlscript
 
 		operator double();
 		double operator =(double val);
+		virtual int ToVarType() { return m_val.GetType(); }
 		virtual std::string ToType();
 		virtual std::string ToString();
 		virtual CBaseVar* ToScriptVal();
@@ -178,6 +183,7 @@ namespace zlscript
 		std::string& operator =(std::string& val);
 		std::string& operator =(char* val);
 		std::string& operator =(const char* val);
+		virtual int ToVarType() { return m_val.GetType(); }
 		virtual std::string ToType();
 		virtual std::string ToString();
 		virtual CBaseVar* ToScriptVal();
@@ -203,6 +209,7 @@ namespace zlscript
 		bool SetVal(unsigned int index, __int64 nVal);
 		__int64 GetVal(unsigned int index);
 		void clear();
+
 		virtual std::string ToType();
 		virtual std::string ToString();
 		bool SetVal(std::string str);
@@ -227,6 +234,7 @@ namespace zlscript
 		bool Remove(__int64 index);
 
 		void clear();
+
 		virtual std::string ToType();
 		virtual std::string ToString();
 		bool SetVal(std::string str);
@@ -251,6 +259,7 @@ namespace zlscript
 		operator CScriptPointInterface* ();
 		CScriptPointInterface* operator =(CScriptPointInterface* pPoint);
 
+		virtual int ToVarType() { return m_val.GetType(); }
 		virtual std::string ToType();
 		virtual std::string ToString();
 		bool SetVal(std::string str);

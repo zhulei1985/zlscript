@@ -46,6 +46,8 @@ namespace zlscript
 
 		virtual void AddICode(int nType, CBaseICode* pCode);
 		virtual CBaseICode* GetICode(int nType, int index);
+
+		virtual int GetResultVarType() { return-1; }//返回结果的数据类型，没有即为-1
 	private:
 		CBaseICode* m_pFather;
 

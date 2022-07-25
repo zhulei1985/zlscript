@@ -13,7 +13,7 @@ FibTest
 [5]	CallScript	FunIndex:1	ParmSize:1
 [6]	BINARY_OPER	
 [7]	CallScript	FunIndex:1	ParmSize:1
-[8]	BINARY_OPER	
+[8]	BINARY_OPER_GROUP	
 [9]	RETURN	 
 [10]	SIGN
 ********************************
@@ -40,7 +40,7 @@ CalculationTest
 [18]	JUMP	Index:4
 [19]	SIGN
 [20]	CallBack	FunIndex:6	ParmSize:0
-[21]	BINARY_OPER	
+[21]	BINARY_OPER_GROUP	
 [22]	VOLUATION	
 [23]	BINARY_OPER	
 [24]	CallBack	FunIndex:7	ParmSize:1
@@ -73,7 +73,7 @@ CalculationTest2
 [20]	JUMP	Index:6
 [21]	SIGN
 [22]	CallBack	FunIndex:6	ParmSize:0
-[23]	BINARY_OPER	
+[23]	BINARY_OPER_GROUP	
 [24]	VOLUATION	
 [25]	BINARY_OPER	
 [26]	CallBack	FunIndex:7	ParmSize:1
@@ -105,7 +105,7 @@ CalculationTest3
 [19]	JUMP	Index:4
 [20]	SIGN
 [21]	CallBack	FunIndex:6	ParmSize:0
-[22]	BINARY_OPER	
+[22]	BINARY_OPER_GROUP	
 [23]	VOLUATION	
 [24]	GetClassParam	Param:(2,0)	pos:2
 [25]	BINARY_OPER	
@@ -148,7 +148,7 @@ CalculationTest4
 [18]	JUMP	Index:4
 [19]	SIGN
 [20]	CallBack	FunIndex:6	ParmSize:0
-[21]	BINARY_OPER	
+[21]	BINARY_OPER_GROUP	
 [22]	VOLUATION	
 [23]	BINARY_OPER	
 [24]	CallBack	FunIndex:7	ParmSize:1
@@ -163,20 +163,22 @@ CalculationTest5
 [2]	VOLUATION	
 [3]	VOLUATION	
 [4]	BINARY_OPER	
-[5]	JUMP_FALSE	Index:10
-[6]	VOLUATION	
+[5]	JUMP_FALSE	Index:12
+[6]	BINARY_OPER	
 [7]	BINARY_OPER	
 [8]	VOLUATION	
-[9]	JUMP	Index:4
-[10]	SIGN
-[11]	CallBack	FunIndex:6	ParmSize:0
-[12]	BINARY_OPER	
-[13]	VOLUATION	
-[14]	BINARY_OPER	
-[15]	CallBack	FunIndex:7	ParmSize:1
+[9]	BINARY_OPER	
+[10]	VOLUATION	
+[11]	JUMP	Index:4
+[12]	SIGN
+[13]	CallBack	FunIndex:6	ParmSize:0
+[14]	BINARY_OPER_GROUP	
+[15]	VOLUATION	
 [16]	BINARY_OPER	
-[17]	BINARY_OPER	
-[18]	CallBack	FunIndex:7	ParmSize:1
+[17]	CallBack	FunIndex:7	ParmSize:1
+[18]	BINARY_OPER	
+[19]	BINARY_OPER	
+[20]	CallBack	FunIndex:7	ParmSize:1
 ********************************
 testClass
 ********************************
@@ -200,7 +202,7 @@ main
 [5]	CallScript	FunIndex:1	ParmSize:1
 [6]	VOLUATION	
 [7]	CallBack	FunIndex:6	ParmSize:0
-[8]	BINARY_OPER	
+[8]	BINARY_OPER_GROUP	
 [9]	VOLUATION	
 [10]	BINARY_OPER	
 [11]	CallBack	FunIndex:7	ParmSize:1
