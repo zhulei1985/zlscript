@@ -97,10 +97,10 @@ void CalculationTest4()
 	int t1 = GetMsTime();
 	int sum = 0;
 	int i = 1;
-	while (i <= 100)
+	while (i <= 2)
 	{
 		int j = 1;
-		while (j <= 100)
+		while (j <= 2)
 		{
 			sum = testAdd(sum , i*j);
 			j = j + 1;
@@ -128,6 +128,33 @@ void CalculationTest5()
 	print("Calculation 5 result:" + sum);
 	print("Calculation 5 time:" + t2 +"ms");
 }
+void CalculationTest6()
+{
+	int t1 = GetMsTime();
+
+	int sum = 0;
+	int i = 1;
+	while (i <= 100)
+	{
+		int j = 1;
+		while (j <= 100)
+		{
+			int r = 1;
+			while (r <= 100)
+			{
+				sum = sum + i * j;
+				r = r + 1;
+			}
+
+			j = j + 1;
+		}
+		i = i + 1;
+	}
+
+	int t2 = GetMsTime() - t1;
+	print("Calculation 6 result:" + sum);
+	print("Calculation 6 time:" + t2 +"ms");
+}
 void testClass()
 {
 	CTest test = new CTest;
@@ -137,6 +164,15 @@ void testClass()
 	subtest->Fun1();
 	subtest->Fun2();
 	subtest->Fun3();
+}
+void main2()
+{
+
+	//CalculationTest2();
+
+	CalculationTest4();
+
+	return;
 }
 void main()
 {
@@ -156,6 +192,7 @@ void main()
 	CalculationTest3(test);
 	CalculationTest4();
 	CalculationTest5();
+	CalculationTest6();
 	//RunScript(0,"CalculationTest");
 	//RunScript(0,"CalculationTest2");
 	//RunScript(0,"CalculationTest3",test);

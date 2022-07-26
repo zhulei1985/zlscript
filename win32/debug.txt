@@ -180,6 +180,44 @@ CalculationTest5
 [19]	BINARY_OPER	
 [20]	CallBack	FunIndex:7	ParmSize:1
 ********************************
+CalculationTest6
+********************************
+[0]	CallBack	FunIndex:6	ParmSize:0
+[1]	VOLUATION	
+[2]	VOLUATION	
+[3]	VOLUATION	
+[4]	BINARY_OPER	
+[5]	JUMP_FALSE	Index:26
+[6]	VOLUATION	
+[7]	BINARY_OPER	
+[8]	JUMP_FALSE	Index:22
+[9]	VOLUATION	
+[10]	BINARY_OPER	
+[11]	JUMP_FALSE	Index:18
+[12]	BINARY_OPER	
+[13]	BINARY_OPER	
+[14]	VOLUATION	
+[15]	BINARY_OPER	
+[16]	VOLUATION	
+[17]	JUMP	Index:10
+[18]	SIGN
+[19]	BINARY_OPER	
+[20]	VOLUATION	
+[21]	JUMP	Index:7
+[22]	SIGN
+[23]	BINARY_OPER	
+[24]	VOLUATION	
+[25]	JUMP	Index:4
+[26]	SIGN
+[27]	CallBack	FunIndex:6	ParmSize:0
+[28]	BINARY_OPER_GROUP	
+[29]	VOLUATION	
+[30]	BINARY_OPER	
+[31]	CallBack	FunIndex:7	ParmSize:1
+[32]	BINARY_OPER	
+[33]	BINARY_OPER	
+[34]	CallBack	FunIndex:7	ParmSize:1
+********************************
 testClass
 ********************************
 [0]	NEW_CLASS	ResultRegister:0	ClassIndex:3
@@ -192,10 +230,15 @@ testClass
 [7]	CALL_CLASS_FUN	Type:2	dwPos:1	FunIndex:2	ParmSize:0
 [8]	CALL_CLASS_FUN	Type:2	dwPos:1	FunIndex:4	ParmSize:0
 ********************************
+main2
+********************************
+[0]	CallScript	FunIndex:7	ParmSize:0
+[1]	RETURN	 
+********************************
 main
 ********************************
 [0]	CallBack	FunIndex:7	ParmSize:1
-[1]	CallScript	FunIndex:9	ParmSize:0
+[1]	CallScript	FunIndex:10	ParmSize:0
 [2]	VOLUATION	
 [3]	CallBack	FunIndex:6	ParmSize:0
 [4]	VOLUATION	
@@ -216,4 +259,5 @@ main
 [19]	CallScript	FunIndex:4	ParmSize:1
 [20]	CallScript	FunIndex:7	ParmSize:0
 [21]	CallScript	FunIndex:8	ParmSize:0
-[22]	CallBack	FunIndex:7	ParmSize:1
+[22]	CallScript	FunIndex:9	ParmSize:0
+[23]	CallBack	FunIndex:7	ParmSize:1

@@ -173,18 +173,59 @@ int main()
 		}
 		i = i + 1;
 	}
-	//double sum = 0;
-	//double i = 0;
-	//while (i < 1000000000.0)
-	//{
-	//	sum = sum + 2.0;
-	//	i = i + 1.0;
-	//}
 	auto t2 = std::chrono::steady_clock::now();
 	auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1);
 	printf("Calculation result : %lld\n", sum);
 	printf("Calculation time : %d\n", duration.count());
-
+	{
+		auto pOperGroup = CScriptVarOperatorMgr::GetInstance()->GetBinaryOperGroup(EMicroCodeType::ECODE_ADD);
+		BinaryOperFun oper;
+		int intType = CScriptClassInfo<CIntVar>::GetInstance().nClassType;
+		union {
+			struct
+			{
+				int type1;
+				int type2;
+			};
+			__int64 index;
+		} trans;
+		trans.type1 = intType;
+		trans.type2 = intType;
+		auto it = pOperGroup->find(trans.index);
+		if (it != pOperGroup->end())
+		{
+			oper = it->second;
+		}
+		tagScriptVarStack stack;
+		CIntVar var1,var2;
+		var1.Set((__int64)1);
+		var2.Set((__int64)1);
+		t1 = std::chrono::steady_clock::now();
+		i = 1;
+		CIntVar* result = new CIntVar();
+		std::mutex m_Lock;
+		while (i <= 1000)
+		{
+			int j = 1;
+			while (j <= 1000)
+			{
+				//oper(&var1, &var2, stack);
+				//m_Lock.lock();
+				//CIntVar* result = (CIntVar*)CScriptVarTypeMgr::GetInstance()->GetVar(CScriptClassInfo<CIntVar>::GetInstance().nClassType);
+				//CScriptVarTypeMgr::GetInstance()->ReleaseVar(result);
+				//STACK_PUSH_MOVE(stack, result);
+				//CBaseVar* pTemp = nullptr;
+				//STACK_POP(stack, pTemp)
+				//m_Lock.unlock();
+				//STACK_CLEAR(stack);
+				j = j + 1;
+			}
+			i = i + 1;
+		}
+		t2 = std::chrono::steady_clock::now();
+		auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1);
+		printf("check time : %d\n", duration.count());
+	}
 	//for (int i = 0; i < 10; i++)
 	//{
 	//	std::thread tbg(BackGroundThreadFun);
@@ -201,7 +242,7 @@ int main()
 	//Machine.RunFunImmediately("init", parm);
 
 	std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-	zlscript::RunScript("main");
+	zlscript::RunScript("main2");
 	while (1)
 	{
 		auto nowTime = std::chrono::steady_clock::now();

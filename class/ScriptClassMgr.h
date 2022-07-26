@@ -22,6 +22,7 @@
 #include "ScriptPointInterface.h"
 #include "ScriptSuperPointer.h"
 #include "ScriptVarInfo.h"
+#include "zAllocator.h"
 namespace zlscript
 {
 	class CScriptBasePointer;
@@ -31,7 +32,7 @@ namespace zlscript
 		CBaseScriptVarMgr();
 		~CBaseScriptVarMgr();
 
-		virtual CBaseVar* New(int autorelease) = 0;
+		virtual CBaseVar* New() = 0;
 
 		virtual void Release(CBaseVar* pPoint) ;
 
@@ -45,10 +46,10 @@ namespace zlscript
 	};
 
 	template<class T>
-	class CScriptVarMgr : public CBaseScriptVarMgr
+	class CScriptVarMgr : public CBaseScriptVarMgr ,protected CAllocatorPool<T>
 	{
 	public:
-		CScriptVarMgr()
+		CScriptVarMgr():CAllocatorPool<T>(4096)
 		{
 
 		}
@@ -57,7 +58,7 @@ namespace zlscript
 
 		}
 
-		CBaseVar* New(int autorelease);
+		CBaseVar* New();
 		void Release(CBaseVar* pPoint);
 	
 	protected:
@@ -66,31 +67,32 @@ namespace zlscript
 
 
 	template<class T>
-	inline CBaseVar* CScriptVarMgr<T>::New(int autorelease)
+	inline CBaseVar* CScriptVarMgr<T>::New()
 	{
-		CBaseVar* pPoint = nullptr;
-		if (!cache.empty())
-		{
-			pPoint = cache.front();
-			cache.pop_front();
-		}
-		if (pPoint == nullptr)
-		{
-			pPoint = new T;
-			if (pPoint)
-			{
-				pPoint->SetType(m_nType);
-			}
+		CBaseVar* pPoint = CAllocatorPool<T>::New();
+		//if (!cache.empty())
+		//{
+		//	pPoint = cache.front();
+		//	cache.pop_front();
+		//}
+		//if (pPoint == nullptr)
+		//{
+		//	pPoint = new T;
+		//	if (pPoint)
+		//	{
+		//		pPoint->SetType(m_nType);
+		//	}
 
-		}
+		//}
 		return pPoint;
 	}
 
 	template<class T>
 	inline void CScriptVarMgr<T>::Release(CBaseVar* pPoint)
 	{
-		if (pPoint)
-			cache.push_back(pPoint);
+		CAllocatorPool<T>::Release((T*)pPoint);
+		//if (pPoint)
+		//	cache.push_back(pPoint);
 		//if (pPoint)
 		//	delete pPoint;
 	}
@@ -171,7 +173,7 @@ namespace zlscript
 
 		}
 
-		virtual CBaseVar* New(int autorelease);
+		virtual CBaseVar* New();
 
 		virtual void Release(CBaseVar* pPoint);
 
@@ -184,7 +186,7 @@ namespace zlscript
 	};
 
 	template<class T>
-	inline CBaseVar* CScriptClassVarMgr<T>::New(int autorelease)
+	inline CBaseVar* CScriptClassVarMgr<T>::New()
 	{
 		//std::lock_guard<std::mutex> Lock(m_MutexLock);
 		//TODO 以后做缓存优化

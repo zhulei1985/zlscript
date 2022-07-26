@@ -14,6 +14,7 @@ namespace zlscript
 	CScriptCallState::~CScriptCallState()
 	{
 		CScriptVarTypeMgr::GetInstance()->ReleaseVar(m_varReturn);
+		STACK_CLEAR(m_stackRegister);
 	}
 	__int64 CScriptCallState::GetMasterID()
 	{

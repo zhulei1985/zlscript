@@ -28,7 +28,7 @@ namespace zlscript
 	{
 		if (type < m_vVarTypeMgr.size())
 		{
-			return m_vVarTypeMgr[type]->New(1);
+			return m_vVarTypeMgr[type]->New();
 		}
 		return nullptr;
 	}
