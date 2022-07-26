@@ -211,8 +211,8 @@ int main()
 			{
 				//oper(&var1, &var2, stack);
 				//m_Lock.lock();
-				//CIntVar* result = (CIntVar*)CScriptVarTypeMgr::GetInstance()->GetVar(CScriptClassInfo<CIntVar>::GetInstance().nClassType);
-				//CScriptVarTypeMgr::GetInstance()->ReleaseVar(result);
+				CIntVar* result = (CIntVar*)CScriptVarTypeMgr::GetInstance()->GetVar(CScriptClassInfo<CIntVar>::GetInstance().nClassType);
+				CScriptVarTypeMgr::GetInstance()->ReleaseVar(result);
 				//STACK_PUSH_MOVE(stack, result);
 				//CBaseVar* pTemp = nullptr;
 				//STACK_POP(stack, pTemp)
@@ -242,7 +242,7 @@ int main()
 	//Machine.RunFunImmediately("init", parm);
 
 	std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-	zlscript::RunScript("main2");
+	zlscript::RunScript("main");
 	while (1)
 	{
 		auto nowTime = std::chrono::steady_clock::now();

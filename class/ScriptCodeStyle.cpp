@@ -36,7 +36,7 @@ namespace zlscript
 			info.pVar = pBlock->GetLoaclVar(info.dwPos);
 		}
 		break;
-		case E_VAR_SCOPE_REGISTER:
+		case E_VAR_SCOPE_REGISTER_STACK:
 		{
 			info.isNeedRelease = true;
 			STACK_POP(pBlock->registerStack, info.pVar);

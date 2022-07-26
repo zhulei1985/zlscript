@@ -240,9 +240,6 @@
     <ClCompile Include="..\class\ScriptExeCodeData.cpp">
       <Filter>code</Filter>
     </ClCompile>
-    <ClCompile Include="..\class\zAllocator.cpp">
-      <Filter>code</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="test.script">

@@ -757,7 +757,7 @@ namespace zlscript
 		}
 		else
 		{
-			pCode->param.nType = E_VAR_SCOPE_REGISTER;
+			pCode->param.nType = E_VAR_SCOPE_REGISTER_STACK;
 		}
 		pCode->cType = nSaveType;
 		pCode->dwPos = VarIndex;
@@ -918,7 +918,7 @@ namespace zlscript
 		}
 		else
 		{
-			pSetCode->valInfo.nType = E_VAR_SCOPE_REGISTER;
+			pSetCode->valInfo.nType = E_VAR_SCOPE_REGISTER_STACK;
 		}
 
 		if (isGlobal)
@@ -981,7 +981,7 @@ namespace zlscript
 			}
 			else
 			{
-				pCode->param.nType = E_VAR_SCOPE_REGISTER;
+				pCode->param.nType = E_VAR_SCOPE_REGISTER_STACK;
 			}
 
 			pCode->operGroup = group;
@@ -999,7 +999,7 @@ namespace zlscript
 			}
 			else
 			{
-				pCode->param.nType = E_VAR_SCOPE_REGISTER;
+				pCode->param.nType = E_VAR_SCOPE_REGISTER_STACK;
 			}
 			auto it = group->find(pRightOperand->GetResultVarType());
 			if (it != group->end())
@@ -1160,7 +1160,7 @@ namespace zlscript
 			}
 			else
 			{
-				pCode->leftParam.nType = E_VAR_SCOPE_REGISTER;
+				pCode->leftParam.nType = E_VAR_SCOPE_REGISTER_STACK;
 			}
 
 			if (pRightOperand->GetType() == E_I_CODE_LOADVAR)
@@ -1171,7 +1171,7 @@ namespace zlscript
 			}
 			else
 			{
-				pCode->rightParam.nType = E_VAR_SCOPE_REGISTER;
+				pCode->rightParam.nType = E_VAR_SCOPE_REGISTER_STACK;
 			}
 
 			pCode->operGroup = pOperGroup;
@@ -1192,7 +1192,7 @@ namespace zlscript
 			}
 			else
 			{
-				pCode->leftParam.nType = E_VAR_SCOPE_REGISTER;
+				pCode->leftParam.nType = E_VAR_SCOPE_REGISTER_STACK;
 			}
 
 			if (pRightOperand->GetType() == E_I_CODE_LOADVAR)
@@ -1203,7 +1203,7 @@ namespace zlscript
 			}
 			else
 			{
-				pCode->rightParam.nType = E_VAR_SCOPE_REGISTER;
+				pCode->rightParam.nType = E_VAR_SCOPE_REGISTER_STACK;
 			}
 
 			union {
@@ -1316,7 +1316,7 @@ namespace zlscript
 					}
 					else
 					{
-						info.nType = E_VAR_SCOPE_REGISTER;
+						info.nType = E_VAR_SCOPE_REGISTER_STACK;
 					}
 				}
 
@@ -1487,7 +1487,7 @@ namespace zlscript
 					}
 					else
 					{
-						info.nType = E_VAR_SCOPE_REGISTER;
+						info.nType = E_VAR_SCOPE_REGISTER_STACK;
 					}
 				}
 			}
@@ -2081,7 +2081,7 @@ namespace zlscript
 				}
 				else
 				{
-					pIfCode->condParam.nType = E_VAR_SCOPE_REGISTER;
+					pIfCode->condParam.nType = E_VAR_SCOPE_REGISTER_STACK;
 				}
 			}
 		}
@@ -2337,7 +2337,7 @@ namespace zlscript
 			}
 			else
 			{
-				pIfCode->condParam.nType = E_VAR_SCOPE_REGISTER;
+				pIfCode->condParam.nType = E_VAR_SCOPE_REGISTER_STACK;
 			}
 		}
 
@@ -2627,7 +2627,7 @@ namespace zlscript
 				}
 				else
 				{
-					pCode->returnParam.nType = E_VAR_SCOPE_REGISTER;
+					pCode->returnParam.nType = E_VAR_SCOPE_REGISTER_STACK;
 				}
 			}
 		}

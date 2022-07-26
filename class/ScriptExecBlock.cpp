@@ -32,6 +32,13 @@ namespace zlscript
 	CScriptExecBlock::~CScriptExecBlock(void)
 	{
 		STACK_CLEAR(registerStack);
+		for (unsigned int i = 0; i < m_pCodeData->vLocalVarType.size(); i++)
+		{
+			CScriptVarTypeMgr::GetInstance()->ReleaseVar(loaclVarStack.m_vData[i]);
+		}
+		loaclVarStack.m_vData.clear();
+		loaclVarStack.nIndex = 0;
+		loaclVarStack.nSize = 0;
 	}
 
 	int CScriptExecBlock::GetFunType()
@@ -175,7 +182,7 @@ namespace zlscript
 			//	fputs(str.c_str(), fp);
 			//	fputc('\n', fp);
 			//}
-			printf("run %s\n", m_pCurExeCode->GetCodeString().c_str());
+			//printf("run %s\n", m_pCurExeCode->GetCodeString().c_str());
 			nResult = m_pCurExeCode->Run(this, &m_pCurExeCode);
 
 			if (nResult != ERESULT_CONTINUE)

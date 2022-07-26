@@ -31,6 +31,6 @@ namespace zlscript
 		E_VAR_SCOPE_CONST,//常量
 		E_VAR_SCOPE_GLOBAL,//全局变量 
 		E_VAR_SCOPE_LOACL,//临时变量
-		E_VAR_SCOPE_REGISTER,//寄存器
+		E_VAR_SCOPE_REGISTER_STACK,//寄存器堆栈
 	};
 }

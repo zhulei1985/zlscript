@@ -163,22 +163,21 @@ CalculationTest5
 [2]	VOLUATION	
 [3]	VOLUATION	
 [4]	BINARY_OPER	
-[5]	JUMP_FALSE	Index:12
+[5]	JUMP_FALSE	Index:11
 [6]	BINARY_OPER	
-[7]	BINARY_OPER	
-[8]	VOLUATION	
-[9]	BINARY_OPER	
-[10]	VOLUATION	
-[11]	JUMP	Index:4
-[12]	SIGN
-[13]	CallBack	FunIndex:6	ParmSize:0
-[14]	BINARY_OPER_GROUP	
-[15]	VOLUATION	
-[16]	BINARY_OPER	
-[17]	CallBack	FunIndex:7	ParmSize:1
+[7]	VOLUATION	
+[8]	BINARY_OPER	
+[9]	VOLUATION	
+[10]	JUMP	Index:4
+[11]	SIGN
+[12]	CallBack	FunIndex:6	ParmSize:0
+[13]	BINARY_OPER_GROUP	
+[14]	VOLUATION	
+[15]	BINARY_OPER	
+[16]	CallBack	FunIndex:7	ParmSize:1
+[17]	BINARY_OPER	
 [18]	BINARY_OPER	
-[19]	BINARY_OPER	
-[20]	CallBack	FunIndex:7	ParmSize:1
+[19]	CallBack	FunIndex:7	ParmSize:1
 ********************************
 CalculationTest6
 ********************************

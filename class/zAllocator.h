@@ -53,7 +53,7 @@ namespace zlscript
 				}
 				pData->pos = nNum;
 
-				printf("move datablock (%d) \n", vData.size());
+				printf("add datablock (%d) \n", vData.size());
 				vData.push_back(pData);
 			}
 			return pData;
@@ -100,7 +100,7 @@ namespace zlscript
 				pData->pos--;
 				char* pBuf = pData->buff + pData->indexes[pData->pos]* nObjSize;
 				T* pObj = new (pBuf) T;
-				printf("new this(%d) data(%d) buf(%lld) remain size(%d)\n",this, i, pBuf, pData->pos);
+				//printf("new this(%d) data(%d) buf(%lld) remain size(%d)\n",this, i, pBuf, pData->pos);
 				return pObj;
 			}
 		}
@@ -110,7 +110,7 @@ namespace zlscript
 			pData->pos--;
 			char* pBuf = pData->buff + pData->indexes[pData->pos] * nObjSize;
 			T* pObj = new (pBuf) T;
-			printf("new this(%d) data(add) buf(%lld) remain size(%d)\n", this, pBuf, pData->pos);
+			//printf("new this(%d) data(add) buf(%lld) remain size(%d)\n", this, pBuf, pData->pos);
 			return (T*)pBuf;
 		}
 		return nullptr;
@@ -128,7 +128,7 @@ namespace zlscript
 				pVar->~T();
 				pData->indexes[pData->pos] = val/ nObjSize;
 				pData->pos++;
-				printf("Release this(%d) data(%d) buf(%lld) index(%d) remain size(%d)\n",this, i, pVar, val / nObjSize, pData->pos);
+				//printf("Release this(%d) data(%d) buf(%lld) index(%d) remain size(%d)\n",this, i, pVar, val / nObjSize, pData->pos);
 				return true;
 			}
 		}

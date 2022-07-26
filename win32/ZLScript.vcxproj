@@ -210,7 +210,6 @@
     <ClCompile Include="..\class\ScriptVirtualMachine.cpp" />
     <ClCompile Include="..\class\ScriptVarInfo.cpp" />
     <ClCompile Include="..\class\TempScriptRunState.cpp" />
-    <ClCompile Include="..\class\zAllocator.cpp" />
     <ClCompile Include="..\class\zBinaryBuffer.cpp" />
     <ClCompile Include="..\class\zStringBuffer.cpp" />
     <ClCompile Include="main.cpp" />
