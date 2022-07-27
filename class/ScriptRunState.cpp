@@ -15,6 +15,7 @@ namespace zlscript
 	{
 		CScriptVarTypeMgr::GetInstance()->ReleaseVar(m_varReturn);
 		STACK_CLEAR(m_stackRegister);
+
 	}
 	__int64 CScriptCallState::GetMasterID()
 	{
@@ -72,6 +73,12 @@ namespace zlscript
 		SCRIPTVAR_RELEASE(m_varReturn);
 		ClearStack();
 		ClearExecBlock();
+
+		for (auto it = m_mapVarCache.begin(); it != m_mapVarCache.end(); it++)
+		{
+			tagScriptVarStack& stack = it->second;
+			STACK_CLEAR(stack);
+		}
 	}
 	void CScriptRunState::SetWatingTime(unsigned int nTime)
 	{
@@ -505,6 +512,37 @@ namespace zlscript
 		//	return ERunTime_Error;
 		//}
 		return ERunTime_Continue;
+	}
+
+	CBaseVar* CScriptRunState::NewVar(int type)
+	{
+		auto it = m_mapVarCache.find(type);
+		if (it != m_mapVarCache.end())
+		{
+			tagScriptVarStack& stack = it->second;
+			CBaseVar* pResult = nullptr;
+			STACK_POP(stack, pResult);
+			if (pResult)
+			{
+				return pResult;
+			}
+		}
+		return CScriptVarTypeMgr::GetInstance()->GetVar(type);
+	}
+
+	void CScriptRunState::ReleaseVar(CBaseVar* pVar)
+	{
+		if (pVar == nullptr)
+		{
+			return;
+		}
+		if (!pVar->isClassPoint())
+		{
+			tagScriptVarStack& stack = m_mapVarCache[pVar->GetType()];
+			STACK_PUSH_MOVE(stack, pVar);
+			return;
+		}
+		CScriptVarTypeMgr::GetInstance()->ReleaseVar(pVar);
 	}
 
 

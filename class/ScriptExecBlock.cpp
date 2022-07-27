@@ -47,11 +47,11 @@ namespace zlscript
 		//}
 		//fixedRegister.clear();
 		
-		for (auto it = m_mapVarCache.begin(); it != m_mapVarCache.end(); it++)
-		{
-			tagScriptVarStack& stack = it->second;
-			STACK_CLEAR(stack);
-		}
+		//for (auto it = m_mapVarCache.begin(); it != m_mapVarCache.end(); it++)
+		//{
+		//	tagScriptVarStack& stack = it->second;
+		//	STACK_CLEAR(stack);
+		//}
 	}
 
 	int CScriptExecBlock::GetFunType()
@@ -134,33 +134,35 @@ namespace zlscript
 
 	CBaseVar* CScriptExecBlock::NewVar(int type)
 	{
-		auto it = m_mapVarCache.find(type);
-		if (it != m_mapVarCache.end())
-		{
-			tagScriptVarStack& stack = it->second;
-			CBaseVar* pResult = nullptr;
-			STACK_POP(stack, pResult);
-			if (pResult)
-			{
-				return pResult;
-			}
-		}
-		return CScriptVarTypeMgr::GetInstance()->GetVar(type);
+		return m_pMaster->NewVar(type);
+		//auto it = m_mapVarCache.find(type);
+		//if (it != m_mapVarCache.end())
+		//{
+		//	tagScriptVarStack& stack = it->second;
+		//	CBaseVar* pResult = nullptr;
+		//	STACK_POP(stack, pResult);
+		//	if (pResult)
+		//	{
+		//		return pResult;
+		//	}
+		//}
+		//return CScriptVarTypeMgr::GetInstance()->GetVar(type);
 	}
 
 	void CScriptExecBlock::ReleaseVar(CBaseVar* pVar)
 	{
-		if (pVar == nullptr)
-		{
-			return;
-		}
-		if (!pVar->isClassPoint())
-		{
-			tagScriptVarStack& stack = m_mapVarCache[pVar->GetType()];
-			STACK_PUSH_MOVE(stack, pVar);
-			return;
-		}
-		CScriptVarTypeMgr::GetInstance()->ReleaseVar(pVar);
+		m_pMaster->ReleaseVar(pVar);
+		//if (pVar == nullptr)
+		//{
+		//	return;
+		//}
+		//if (!pVar->isClassPoint())
+		//{
+		//	tagScriptVarStack& stack = m_mapVarCache[pVar->GetType()];
+		//	STACK_PUSH_MOVE(stack, pVar);
+		//	return;
+		//}
+		//CScriptVarTypeMgr::GetInstance()->ReleaseVar(pVar);
 	}
 
 	//void CScriptExecBlock::RegisterRunState(int size)
@@ -230,7 +232,7 @@ namespace zlscript
 			//	fputs(str.c_str(), fp);
 			//	fputc('\n', fp);
 			//}
-			printf("run %s\n", m_pCurExeCode->GetCodeString().c_str());
+			//printf("run %s\n", m_pCurExeCode->GetCodeString().c_str());
 			nResult = m_pCurExeCode->Run(this, &m_pCurExeCode);
 
 			if (nResult != ERESULT_CONTINUE)

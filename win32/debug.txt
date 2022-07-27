@@ -163,21 +163,19 @@ CalculationTest5
 [2]	VOLUATION	
 [3]	VOLUATION	
 [4]	BINARY_OPER	
-[5]	JUMP_FALSE	Index:11
+[5]	JUMP_FALSE	Index:9
 [6]	BINARY_OPER	
 [7]	VOLUATION	
-[8]	BINARY_OPER	
-[9]	VOLUATION	
-[10]	JUMP	Index:4
-[11]	SIGN
-[12]	CallBack	FunIndex:6	ParmSize:0
-[13]	BINARY_OPER_GROUP	
-[14]	VOLUATION	
+[8]	JUMP	Index:4
+[9]	SIGN
+[10]	CallBack	FunIndex:6	ParmSize:0
+[11]	BINARY_OPER_GROUP	
+[12]	VOLUATION	
+[13]	BINARY_OPER	
+[14]	CallBack	FunIndex:7	ParmSize:1
 [15]	BINARY_OPER	
-[16]	CallBack	FunIndex:7	ParmSize:1
-[17]	BINARY_OPER	
-[18]	BINARY_OPER	
-[19]	CallBack	FunIndex:7	ParmSize:1
+[16]	BINARY_OPER	
+[17]	CallBack	FunIndex:7	ParmSize:1
 ********************************
 CalculationTest6
 ********************************
@@ -231,7 +229,7 @@ testClass
 ********************************
 main2
 ********************************
-[0]	CallScript	FunIndex:3	ParmSize:0
+[0]	CallScript	FunIndex:7	ParmSize:0
 [1]	RETURN	 
 ********************************
 main
@@ -258,5 +256,4 @@ main
 [19]	CallScript	FunIndex:4	ParmSize:1
 [20]	CallScript	FunIndex:7	ParmSize:0
 [21]	CallScript	FunIndex:8	ParmSize:0
-[22]	CallScript	FunIndex:9	ParmSize:0
-[23]	CallBack	FunIndex:7	ParmSize:1
+[22]	CallBack	FunIndex:7	ParmSize:1

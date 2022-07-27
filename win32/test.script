@@ -43,10 +43,10 @@ void CalculationTest2()
 	CTest test = new CTest;
 	int sum = 0;
 	int i = 1;
-	while (i <= 2)
+	while (i <= 100)
 	{
 		int j = 1;
-		while (j <= 2)
+		while (j <= 100)
 		{
 			sum = test->Add(sum , i*j);
 			j = j + 1;
@@ -120,7 +120,7 @@ void CalculationTest5()
 	int i = 1;
 	while (i <= 1000000)
 	{
-		sum = sum + i ;//* 2;
+		//sum = sum + i * 2;
 		i = i + 1;
 	}
 
@@ -168,9 +168,9 @@ void testClass()
 void main2()
 {
 
-	CalculationTest2();
+	//CalculationTest2();
 
-	//CalculationTest4();
+	CalculationTest4();
 
 	return;
 }
@@ -192,7 +192,7 @@ void main()
 	CalculationTest3(test);
 	CalculationTest4();
 	CalculationTest5();
-	CalculationTest6();
+
 	//RunScript(0,"CalculationTest");
 	//RunScript(0,"CalculationTest2");
 	//RunScript(0,"CalculationTest3",test);

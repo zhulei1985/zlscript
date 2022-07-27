@@ -141,6 +141,13 @@ namespace zlscript
 		bool IsEnd;
 
 		char strbuff[2048];
+	public:
+		CBaseVar* NewVar(int type);
+		void ReleaseVar(CBaseVar* pVar);
+	protected:
+		//变量缓存
+		typedef std::vector<CBaseVar*> VecVars;
+		std::unordered_map<int, tagScriptVarStack> m_mapVarCache;
 	};
 
 	//template<class T>

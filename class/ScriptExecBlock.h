@@ -71,10 +71,10 @@ namespace zlscript
 
 		CBaseVar* NewVar(int type);
 		void ReleaseVar(CBaseVar* pVar);
-	protected:
-		//变量缓存
-		typedef std::vector<CBaseVar*> VecVars;
-		std::unordered_map<int, tagScriptVarStack> m_mapVarCache;
+	//protected:
+	//	//变量缓存
+	//	typedef std::vector<CBaseVar*> VecVars;
+	//	std::unordered_map<int, tagScriptVarStack> m_mapVarCache;
 	public:
 		enum ERESULT_TYPE
 		{
@@ -98,6 +98,36 @@ namespace zlscript
 		friend class CScriptVirtualMachine;
 		friend class CScriptRunState;
 	};
+//#define BLOCK_SCRIPTVAR_RELEASE(pBlock,pVar) {\
+//		if (pVar)\
+//		{\
+//			pBlock->ReleaseVar((CBaseVar*)pVar);\
+//			pVar = nullptr;\
+//		}\
+//	}
+//
+//#define BLOCK_SCRIPTVAR_COPY_VAR(pBlock,pVar1,pVar2) {\
+//		if (pVar2)\
+//		{\
+//			if (pVar1 && pVar1->GetType() == pVar2->GetType())\
+//			{\
+//				pVar1->Set(pVar2);\
+//			}\
+//			else \
+//			{\
+//				BLOCK_SCRIPTVAR_RELEASE(pVar1);\
+//				pVar1 = pBlock->NewVar(pVar2->GetType());\
+//				pVar1->Set(pVar2);\
+//			}\
+//		}\
+//	}
+//#define BLOCK_STACK_PUSH_COPY(pBlock,stack, var) {\
+//		\
+//			STACK_CHECK_SIZE(stack)\
+//			auto& pVar1 = stack.m_vData[stack.nIndex]; \
+//			BLOCK_SCRIPTVAR_COPY_VAR(pBlock,pVar1, var); \
+//			stack.nIndex++; \
+//	}
 
 	class CScriptExecBlockStack
 	{

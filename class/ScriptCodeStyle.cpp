@@ -253,7 +253,12 @@ namespace zlscript
 			if (pAttribute)
 			{
 				CBaseVar* pAttrVar = pAttribute->ToScriptVal();
-				STACK_PUSH_COPY(pBlock->registerStack, pAttrVar);
+				if (pAttrVar)
+				{
+					CBaseVar* pResult = pBlock->NewVar(pAttrVar->GetType());
+					pResult->Set(pAttrVar);
+					STACK_PUSH_MOVE(pBlock->registerStack, pResult);
+				}
 			}
 			else
 			{
@@ -358,7 +363,11 @@ namespace zlscript
 				break;
 			case ECALLBACK_FINISH:
 				if (pCallState->GetResult())
-					STACK_PUSH_COPY(pBlock->registerStack, pCallState->GetResult());
+				{
+					CBaseVar* pResult = pBlock->NewVar(pCallState->GetResult()->GetType());
+					pResult->Set(pCallState->GetResult());
+					STACK_PUSH_MOVE(pBlock->registerStack, pResult);
+				}
 				break;
 			}
 			//执行完将结果放入寄存器
@@ -554,7 +563,13 @@ namespace zlscript
 		if (bNeedReturnVar)
 		{
 			MakeParamInfo(pBlock, returnParam);
-			STACK_PUSH_COPY(pBlock->registerStack, returnParam.pVar);
+			if (returnParam.pVar)
+			{
+				CBaseVar* pResult = pBlock->NewVar(returnParam.pVar->GetType());
+				pResult->Set(returnParam.pVar);
+				STACK_PUSH_MOVE(pBlock->registerStack, pResult);
+			}
+			//STACK_PUSH_COPY(pBlock->registerStack, returnParam.pVar);
 			ReleaseParamInfo(pBlock,returnParam);
 		}
 
@@ -605,7 +620,12 @@ namespace zlscript
 					break;
 				case ECALLBACK_FINISH:
 					//执行完将结果放入寄存器
-					STACK_PUSH_COPY(pBlock->registerStack, pCallState->GetResult());
+					if (pCallState->GetResult())
+					{
+						CBaseVar* pResult = pBlock->NewVar(pCallState->GetResult()->GetType());
+						pResult->Set(pCallState->GetResult());
+						STACK_PUSH_MOVE(pBlock->registerStack, pResult);
+					}
 					break;
 				}
 				if (pNextPoint)
