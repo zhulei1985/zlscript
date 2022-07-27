@@ -25,8 +25,8 @@
 //赋值管理
 namespace zlscript
 {
-	typedef std::function<bool(const CBaseVar*, tagScriptVarStack& stack)> UnaryOperFun;
-	typedef std::function<bool(const CBaseVar*, const CBaseVar*, tagScriptVarStack& stack)> BinaryOperFun;
+	typedef std::function<bool(const CBaseVar*, CBaseVar* result)> UnaryOperFun;
+	typedef std::function<bool(const CBaseVar*, const CBaseVar*, CBaseVar* result)> BinaryOperFun;
 	typedef std::unordered_map<__int64, UnaryOperFun> UnaryOperGroup;
 	typedef std::unordered_map<__int64, BinaryOperFun> BinaryOperGroup;
 	class CScriptVarOperatorMgr
@@ -41,16 +41,16 @@ namespace zlscript
 		static CScriptVarOperatorMgr s_Instance;
 	public:
 		void RegisterFun(int OperType, int type1, int type2, BinaryOperFun pFun);
-		bool Operator(int OperType, const CBaseVar* pLeft, const CBaseVar* pRight, tagScriptVarStack& stack);
+		bool Operator(int OperType, const CBaseVar* pLeft, const CBaseVar* pRight, CBaseVar* result);
 
 		BinaryOperGroup* GetBinaryOperGroup(int OperType);
-		bool Operator(BinaryOperGroup *group, const CBaseVar* pLeft, const CBaseVar* pRight, tagScriptVarStack &stack);
+		bool Operator(BinaryOperGroup *group, const CBaseVar* pLeft, const CBaseVar* pRight, CBaseVar* result);
 
 		void RegisterFun(int OperType, int type, UnaryOperFun pFun);
-		bool Operator(int OperType, const CBaseVar* pVar, tagScriptVarStack& stack);
+		bool Operator(int OperType, const CBaseVar* pVar, CBaseVar* result);
 
 		UnaryOperGroup* GetUnaryOperGroup(int OperType);
-		bool Operator(UnaryOperGroup* group, const CBaseVar* pVar,  tagScriptVarStack& stack);
+		bool Operator(UnaryOperGroup* group, const CBaseVar* pVar, CBaseVar* result);
 	protected:
 		std::map<int, BinaryOperGroup> m_mapBinaryOperGroup;
 		std::map<int, UnaryOperGroup> m_mapUnaryOperGroup;

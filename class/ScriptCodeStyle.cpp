@@ -48,27 +48,37 @@ namespace zlscript
 		return true;
 	}
 
-	void CBaseExeCode::ReleaseParamInfo(CExeParamInfo& info)
+	void CBaseExeCode::ReleaseParamInfo(CScriptExecBlock* pBlock, CExeParamInfo& info)
 	{
 		if (info.isNeedRelease)
 		{
-			SCRIPTVAR_RELEASE(info.pVar);
+			pBlock->ReleaseVar((CBaseVar*)info.pVar);
+			info.pVar = nullptr;
 		}
 
 	}
 	int CUnaryOperExeCode::Run(CScriptExecBlock* pBlock, CBaseExeCode** pNextPoint)
 	{
 		MakeParamInfo(pBlock, param);
-		if (oper(param.pVar, pBlock->registerStack) == false)
+		if (param.pVar)
 		{
-			Clear();
+			CBaseVar* result = pBlock->NewVar(param.pVar->GetType());
+			if (oper(param.pVar, result) == false)
+			{
+				Clear(pBlock);
+				return CScriptExecBlock::ERESULT_ERROR;
+			}
+			STACK_PUSH_MOVE(pBlock->registerStack, result);
+		}
+		else
+		{
 			return CScriptExecBlock::ERESULT_ERROR;
 		}
 		if (pNextPoint)
 		{
 			*pNextPoint = this->m_pNext;
 		}
-		Clear();
+		Clear(pBlock);
 		return CScriptExecBlock::ERESULT_CONTINUE;
 	}
 	std::string CUnaryOperExeCode::GetCodeString()
@@ -78,24 +88,33 @@ namespace zlscript
 		return strbuff;
 	}
 
-	void CUnaryOperExeCode::Clear()
+	void CUnaryOperExeCode::Clear(CScriptExecBlock* pBlock)
 	{
-		ReleaseParamInfo(param);
+		ReleaseParamInfo(pBlock,param);
 	}
 
 	int CUnaryOperGroupExeCode::Run(CScriptExecBlock* pBlock, CBaseExeCode** pNextPoint)
 	{
 		MakeParamInfo(pBlock, param);
-		if (CScriptVarOperatorMgr::GetInstance()->Operator(operGroup,param.pVar,pBlock->registerStack) == false)
+		if (param.pVar)
 		{
-			Clear();
+			CBaseVar* result = pBlock->NewVar(param.pVar->GetType());
+			if (CScriptVarOperatorMgr::GetInstance()->Operator(operGroup, param.pVar, result) == false)
+			{
+				Clear(pBlock);
+				return CScriptExecBlock::ERESULT_ERROR;
+			}
+			STACK_PUSH_MOVE(pBlock->registerStack,result);
+		}
+		else
+		{
 			return CScriptExecBlock::ERESULT_ERROR;
 		}
 		if (pNextPoint)
 		{
 			*pNextPoint = this->m_pNext;
 		}
-		Clear();
+		Clear(pBlock);
 		return CScriptExecBlock::ERESULT_CONTINUE;
 	}
 
@@ -106,26 +125,32 @@ namespace zlscript
 		return strbuff;
 	}
 
-	void CUnaryOperGroupExeCode::Clear()
+	void CUnaryOperGroupExeCode::Clear(CScriptExecBlock* pBlock)
 	{
-		ReleaseParamInfo(param);
+		ReleaseParamInfo(pBlock,param);
 	}
 
 	int CBinaryOperExeCode::Run(CScriptExecBlock* pBlock, CBaseExeCode** pNextPoint)
 	{
 		MakeParamInfo(pBlock, rightParam);
 		MakeParamInfo(pBlock, leftParam);
-
-		if (oper(leftParam.pVar, rightParam.pVar, pBlock->registerStack) == false)
+		
+		CBaseVar* result = nullptr;
+		if (leftParam.pVar)
 		{
-			Clear();
+			result = pBlock->NewVar(leftParam.pVar->GetType());
+		}
+		if (oper(leftParam.pVar, rightParam.pVar, result) == false)
+		{
+			Clear(pBlock);
 			return CScriptExecBlock::ERESULT_ERROR;
 		}
+		STACK_PUSH_MOVE(pBlock->registerStack, result);
 		if (pNextPoint)
 		{
 			*pNextPoint = this->m_pNext;
 		}
-		Clear();
+		Clear(pBlock);
 		return CScriptExecBlock::ERESULT_CONTINUE;
 
 	}
@@ -137,10 +162,10 @@ namespace zlscript
 		return strbuff;
 	}
 
-	void CBinaryOperExeCode::Clear()
+	void CBinaryOperExeCode::Clear(CScriptExecBlock* pBlock)
 	{
-		ReleaseParamInfo(leftParam);
-		ReleaseParamInfo(rightParam);
+		ReleaseParamInfo(pBlock,leftParam);
+		ReleaseParamInfo(pBlock,rightParam);
 	}
 
 
@@ -148,17 +173,22 @@ namespace zlscript
 	{
 		MakeParamInfo(pBlock, rightParam);
 		MakeParamInfo(pBlock, leftParam);
-
-		if (CScriptVarOperatorMgr::GetInstance()->Operator(operGroup, leftParam.pVar, rightParam.pVar, pBlock->registerStack) == false)
+		CBaseVar* result = nullptr;
+		if (leftParam.pVar)
 		{
-			Clear();
+			result = pBlock->NewVar(leftParam.pVar->GetType());
+		}
+		if (CScriptVarOperatorMgr::GetInstance()->Operator(operGroup, leftParam.pVar, rightParam.pVar, result) == false)
+		{
+			Clear(pBlock);
 			return CScriptExecBlock::ERESULT_ERROR;
 		}
+		STACK_PUSH_MOVE(pBlock->registerStack, result);
 		if (pNextPoint)
 		{
 			*pNextPoint = this->m_pNext;
 		}
-		Clear();
+		Clear(pBlock);
 		return CScriptExecBlock::ERESULT_CONTINUE;
 	}
 
@@ -169,10 +199,10 @@ namespace zlscript
 		return strbuff;
 	}
 
-	void CBinaryOperGroupExeCode::Clear()
+	void CBinaryOperGroupExeCode::Clear(CScriptExecBlock* pBlock)
 	{
-		ReleaseParamInfo(leftParam);
-		ReleaseParamInfo(rightParam);
+		ReleaseParamInfo(pBlock,leftParam);
+		ReleaseParamInfo(pBlock,rightParam);
 	}
 	int CVoluationExeCode::Run(CScriptExecBlock* pBlock, CBaseExeCode** pNextPoint)
 	{
@@ -190,7 +220,7 @@ namespace zlscript
 		{
 			*pNextPoint = this->m_pNext;
 		}
-		ReleaseParamInfo(param);
+		ReleaseParamInfo(pBlock,param);
 		return CScriptExecBlock::ERESULT_CONTINUE;
 	}
 
@@ -209,7 +239,7 @@ namespace zlscript
 		CPointVar* pVar = dynamic_cast<CPointVar*>((CBaseVar*)param.pVar);
 		if (pVar == nullptr)
 		{
-			ReleaseParamInfo(param);
+			ReleaseParamInfo(pBlock,param);
 			return CScriptExecBlock::ERESULT_ERROR;
 		}
 
@@ -237,7 +267,7 @@ namespace zlscript
 		{
 			*pNextPoint = this->m_pNext;
 		}
-		ReleaseParamInfo(param);
+		ReleaseParamInfo(pBlock,param);
 		return nResult;
 	}
 	std::string CGetClassParamExeCode::GetCodeString()
@@ -254,7 +284,7 @@ namespace zlscript
 		CPointVar* pVar = dynamic_cast<CPointVar*>((CBaseVar*)param.pVar);
 		if (pVar == nullptr)
 		{
-			Clear();
+			Clear(pBlock);
 			return CScriptExecBlock::ERESULT_ERROR;
 		}
 		CScriptPointInterface* pPoint = pVar->ToPoint();
@@ -279,7 +309,7 @@ namespace zlscript
 		{
 			*pNextPoint = this->m_pNext;
 		}
-		Clear();
+		Clear(pBlock);
 		return nResult;
 	}
 	std::string CSetClassParamExeCode::GetCodeString()
@@ -288,10 +318,10 @@ namespace zlscript
 		sprintf(strbuff, "SetClassParam\tParam:(%d,%d)\tpos:%d", (int)param.nType, (int)param.dwPos, (int)dwPos);
 		return strbuff;
 	}
-	void CSetClassParamExeCode::Clear()
+	void CSetClassParamExeCode::Clear(CScriptExecBlock* pBlock)
 	{
-		ReleaseParamInfo(param);
-		ReleaseParamInfo(valInfo);
+		ReleaseParamInfo(pBlock,param);
+		ReleaseParamInfo(pBlock,valInfo);
 	}
 	int CCallBackExeCode::Run(CScriptExecBlock* pBlock, CBaseExeCode** pNextPoint)
 	{
@@ -340,7 +370,7 @@ namespace zlscript
 		{
 			*pNextPoint = this->m_pNext;
 		}
-		Clear();
+		Clear(pBlock);
 		return nResult;
 	}
 	std::string CCallBackExeCode::GetCodeString()
@@ -349,11 +379,11 @@ namespace zlscript
 		sprintf(strbuff, "CallBack\tFunIndex:%d\tParmSize:%d", (int)unFunIndex, (int)params.size());
 		return strbuff;
 	}
-	void CCallBackExeCode::Clear()
+	void CCallBackExeCode::Clear(CScriptExecBlock* pBlock)
 	{
 		for (unsigned int i = 0; i < params.size(); i++)
 		{
-			ReleaseParamInfo(params[i]);
+			ReleaseParamInfo(pBlock,params[i]);
 		}
 	}
 	int CCallScriptExeCode::Run(CScriptExecBlock* pBlock, CBaseExeCode** pNextPoint)
@@ -390,7 +420,7 @@ namespace zlscript
 		{
 			*pNextPoint = this->m_pNext;
 		}
-		Clear();
+		Clear(pBlock);
 		return nResult;
 	}
 	std::string CCallScriptExeCode::GetCodeString()
@@ -399,11 +429,11 @@ namespace zlscript
 		sprintf(strbuff, "CallScript\tFunIndex:%d\tParmSize:%d", (int)unFunIndex, (int)params.size());
 		return strbuff;
 	}
-	void CCallScriptExeCode::Clear()
+	void CCallScriptExeCode::Clear(CScriptExecBlock* pBlock)
 	{
 		for (unsigned int i = 0; i < params.size(); i++)
 		{
-			ReleaseParamInfo(params[i]);
+			ReleaseParamInfo(pBlock,params[i]);
 		}
 	}
 	int CJumpExeCode::Run(CScriptExecBlock* pBlock, CBaseExeCode** pNextPoint)
@@ -480,7 +510,7 @@ namespace zlscript
 				*pNextPoint = this->m_pNext;
 			}
 		}
-		ReleaseParamInfo(condParam);
+		ReleaseParamInfo(pBlock,condParam);
 		return CScriptExecBlock::ERESULT_CONTINUE;
 	}
 	std::string CJumpTrueExeCode::GetCodeString()
@@ -506,7 +536,7 @@ namespace zlscript
 				*pNextPoint = this->m_pNext;
 			}
 		}
-		ReleaseParamInfo(condParam);
+		ReleaseParamInfo(pBlock,condParam);
 		return CScriptExecBlock::ERESULT_CONTINUE;
 	}
 	std::string CJumpFalseExeCode::GetCodeString()
@@ -525,7 +555,7 @@ namespace zlscript
 		{
 			MakeParamInfo(pBlock, returnParam);
 			STACK_PUSH_COPY(pBlock->registerStack, returnParam.pVar);
-			ReleaseParamInfo(returnParam);
+			ReleaseParamInfo(pBlock,returnParam);
 		}
 
 		return CScriptExecBlock::ERESULT_CONTINUE;
@@ -547,7 +577,7 @@ namespace zlscript
 		const CPointVar* pPointVar = dynamic_cast<const CPointVar*>(object.pVar);
 		if (pPointVar == nullptr)
 		{
-			Clear();
+			Clear(pBlock);
 			return CScriptExecBlock::ERESULT_ERROR;
 		}
 		CACHE_NEW(CScriptCallState, pCallState, pBlock->m_pMaster);
@@ -589,7 +619,7 @@ namespace zlscript
 			}
 		}
 		CACHE_DELETE(pCallState);
-		Clear();
+		Clear(pBlock);
 		return nResult;
 	}
 	std::string CCallClassFunExeCode::GetCodeString()
@@ -598,12 +628,12 @@ namespace zlscript
 		sprintf(strbuff, "CALL_CLASS_FUN\tType:%d\tdwPos:%d\tFunIndex:%d\tParmSize:%d", (int)object.nType, (int)object.dwPos, (int)funIndex, (int)params.size());
 		return strbuff;
 	}
-	void CCallClassFunExeCode::Clear()
+	void CCallClassFunExeCode::Clear(CScriptExecBlock* pBlock)
 	{
-		ReleaseParamInfo(object);
+		ReleaseParamInfo(pBlock,object);
 		for (unsigned int i = 0; i < params.size(); i++)
 		{
-			ReleaseParamInfo(params[i]);
+			ReleaseParamInfo(pBlock,params[i]);
 		}
 	}
 	int CNewClassExeCode::Run(CScriptExecBlock* pBlock, CBaseExeCode** pNextPoint)

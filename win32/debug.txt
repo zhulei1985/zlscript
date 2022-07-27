@@ -231,7 +231,7 @@ testClass
 ********************************
 main2
 ********************************
-[0]	CallScript	FunIndex:7	ParmSize:0
+[0]	CallScript	FunIndex:3	ParmSize:0
 [1]	RETURN	 
 ********************************
 main

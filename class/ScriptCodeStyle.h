@@ -43,7 +43,7 @@ namespace zlscript
 		virtual std::string GetCodeString() { return ""; }
 
 		inline bool MakeParamInfo(CScriptExecBlock* pBlock, CExeParamInfo& info);
-		inline void ReleaseParamInfo(CExeParamInfo& info);
+		inline void ReleaseParamInfo(CScriptExecBlock* pBlock, CExeParamInfo& info);
 	public:
 		CBaseExeCode* m_pNext;
 
@@ -61,7 +61,7 @@ namespace zlscript
 		virtual int Run(CScriptExecBlock* pBlock, CBaseExeCode** pNextPoint);
 		virtual std::string GetCodeString();
 
-		void Clear();
+		void Clear(CScriptExecBlock* pBlock);
 	public:
 		UnaryOperFun oper;
 
@@ -78,7 +78,7 @@ namespace zlscript
 		virtual int Run(CScriptExecBlock* pBlock, CBaseExeCode** pNextPoint);
 		virtual std::string GetCodeString();
 
-		void Clear();
+		void Clear(CScriptExecBlock* pBlock);
 	public:
 		UnaryOperGroup* operGroup;
 
@@ -96,7 +96,7 @@ namespace zlscript
 		virtual int Run(CScriptExecBlock* pBlock, CBaseExeCode** pNextPoint);
 		virtual std::string GetCodeString();
 
-		void Clear();
+		void Clear(CScriptExecBlock* pBlock);
 	public:
 		BinaryOperFun oper;
 
@@ -115,7 +115,7 @@ namespace zlscript
 		virtual int Run(CScriptExecBlock* pBlock, CBaseExeCode** pNextPoint);
 		virtual std::string GetCodeString();
 
-		void Clear();
+		void Clear(CScriptExecBlock* pBlock);
 	public:
 		BinaryOperGroup* operGroup;
 
@@ -188,7 +188,7 @@ namespace zlscript
 		int Run(CScriptExecBlock* pBlock, CBaseExeCode **pNextPoint);
 		virtual std::string GetCodeString();
 
-		void Clear();
+		void Clear(CScriptExecBlock* pBlock);
 	public:
 
 		unsigned int dwPos;
@@ -208,7 +208,7 @@ namespace zlscript
 		int Run(CScriptExecBlock * pBlock, CBaseExeCode** pNextPoint);
 		virtual std::string GetCodeString();
 
-		void Clear();
+		void Clear(CScriptExecBlock* pBlock);
 	public:
 		std::vector<CExeParamInfo> params;
 
@@ -224,7 +224,7 @@ namespace zlscript
 		}
 		int Run(CScriptExecBlock* pBlock, CBaseExeCode **pNextPoint);
 		virtual std::string GetCodeString();
-		void Clear();
+		void Clear(CScriptExecBlock* pBlock);
 	public:
 		std::vector<CExeParamInfo> params;
 		unsigned int unFunIndex;
@@ -299,7 +299,7 @@ namespace zlscript
 		}
 		int Run(CScriptExecBlock* pBlock, CBaseExeCode** pNextPoint);
 		virtual std::string GetCodeString();
-		void Clear();
+		void Clear(CScriptExecBlock* pBlock);
 	public:
 		CExeParamInfo object;//类对象所在位置
 		std::vector<CExeParamInfo> params;

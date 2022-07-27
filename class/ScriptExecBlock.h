@@ -31,6 +31,7 @@ namespace zlscript
 	class CScriptRunState;
 	class CScriptVirtualMachine;
 	class CBaseExeCode;
+	//class CBaseVar;
 
 	class CScriptExecBlock
 	{
@@ -42,6 +43,7 @@ namespace zlscript
 		int GetFunType();
 
 		void initLocalVar();
+		//void initFixedRegister();
 	private:
 		CExeCodeData* m_pCodeData;
 		CBaseExeCode* m_pCurExeCode;
@@ -52,7 +54,9 @@ namespace zlscript
 		//变量寄存器
 		tagScriptVarStack loaclVarStack;
 	public:
-		tagScriptVarStack registerStack;
+		tagScriptVarStack registerStack;//寄存器堆栈
+		//std::vector<CBaseVar*> fixedRegister;//固定寄存器
+		const unsigned int nRegNumOneType{3};//每种变量在寄存器里的数量
 	public:
 		CScriptRunState* m_pMaster;
 		
@@ -64,6 +68,13 @@ namespace zlscript
 		//void RegisterRunState(int size);
 		//int& GetRunState(int index);
 		//void RevertRunState(int index);
+
+		CBaseVar* NewVar(int type);
+		void ReleaseVar(CBaseVar* pVar);
+	protected:
+		//变量缓存
+		typedef std::vector<CBaseVar*> VecVars;
+		std::unordered_map<int, tagScriptVarStack> m_mapVarCache;
 	public:
 		enum ERESULT_TYPE
 		{

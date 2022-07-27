@@ -23,6 +23,7 @@ namespace zlscript
 		m_pCodeData = pCode;
 
 		initLocalVar();
+		//initFixedRegister();
 		if (m_pCodeData)
 		{
 			m_pCurExeCode = m_pCodeData->pBeginCode;
@@ -39,6 +40,18 @@ namespace zlscript
 		loaclVarStack.m_vData.clear();
 		loaclVarStack.nIndex = 0;
 		loaclVarStack.nSize = 0;
+
+		//for (unsigned int i = 0; i < fixedRegister.size(); i++)
+		//{
+		//	CScriptVarTypeMgr::GetInstance()->ReleaseVar(fixedRegister[i]);
+		//}
+		//fixedRegister.clear();
+		
+		for (auto it = m_mapVarCache.begin(); it != m_mapVarCache.end(); it++)
+		{
+			tagScriptVarStack& stack = it->second;
+			STACK_CLEAR(stack);
+		}
 	}
 
 	int CScriptExecBlock::GetFunType()
@@ -64,6 +77,10 @@ namespace zlscript
 			loaclVarStack.m_vData[i] = CScriptVarTypeMgr::GetInstance()->GetVar(m_pCodeData->vLocalVarType[i]);
 		}
 	}
+
+	//void CScriptExecBlock::initFixedRegister()
+	//{
+	//}
 
 	int CScriptExecBlock::GetDefaultReturnType()
 	{
@@ -113,6 +130,37 @@ namespace zlscript
 			return m_pCodeData->vConstVar[index];
 		}
 		return nullptr;
+	}
+
+	CBaseVar* CScriptExecBlock::NewVar(int type)
+	{
+		auto it = m_mapVarCache.find(type);
+		if (it != m_mapVarCache.end())
+		{
+			tagScriptVarStack& stack = it->second;
+			CBaseVar* pResult = nullptr;
+			STACK_POP(stack, pResult);
+			if (pResult)
+			{
+				return pResult;
+			}
+		}
+		return CScriptVarTypeMgr::GetInstance()->GetVar(type);
+	}
+
+	void CScriptExecBlock::ReleaseVar(CBaseVar* pVar)
+	{
+		if (pVar == nullptr)
+		{
+			return;
+		}
+		if (!pVar->isClassPoint())
+		{
+			tagScriptVarStack& stack = m_mapVarCache[pVar->GetType()];
+			STACK_PUSH_MOVE(stack, pVar);
+			return;
+		}
+		CScriptVarTypeMgr::GetInstance()->ReleaseVar(pVar);
 	}
 
 	//void CScriptExecBlock::RegisterRunState(int size)
@@ -182,7 +230,7 @@ namespace zlscript
 			//	fputs(str.c_str(), fp);
 			//	fputc('\n', fp);
 			//}
-			//printf("run %s\n", m_pCurExeCode->GetCodeString().c_str());
+			printf("run %s\n", m_pCurExeCode->GetCodeString().c_str());
 			nResult = m_pCurExeCode->Run(this, &m_pCurExeCode);
 
 			if (nResult != ERESULT_CONTINUE)

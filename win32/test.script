@@ -43,10 +43,10 @@ void CalculationTest2()
 	CTest test = new CTest;
 	int sum = 0;
 	int i = 1;
-	while (i <= 100)
+	while (i <= 2)
 	{
 		int j = 1;
-		while (j <= 100)
+		while (j <= 2)
 		{
 			sum = test->Add(sum , i*j);
 			j = j + 1;
@@ -168,9 +168,9 @@ void testClass()
 void main2()
 {
 
-	//CalculationTest2();
+	CalculationTest2();
 
-	CalculationTest4();
+	//CalculationTest4();
 
 	return;
 }

@@ -21,6 +21,10 @@ namespace zlscript
 		{
 			m_nType = type;
 		}
+		virtual bool isClassPoint() const
+		{
+			return false;
+		}
 	protected:
 		int m_nType;
 	public:
@@ -167,6 +171,11 @@ namespace zlscript
 	public:
 		CPointVar() {}
 		~CPointVar();
+
+		virtual bool isClassPoint() const
+		{
+			return true;
+		}
 	public:
 		std::size_t GetHash() const
 		{

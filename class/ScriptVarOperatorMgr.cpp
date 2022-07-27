@@ -19,7 +19,7 @@ namespace zlscript
 		group[trans.index] = pFun;
 	}
 
-	bool CScriptVarOperatorMgr::Operator(int OperType, const CBaseVar* pLeft, const CBaseVar* pRight, tagScriptVarStack& stack)
+	bool CScriptVarOperatorMgr::Operator(int OperType, const CBaseVar* pLeft, const CBaseVar* pRight,  CBaseVar* result)
 	{
 		if (pLeft == nullptr || pRight == nullptr)
 		{
@@ -41,7 +41,7 @@ namespace zlscript
 		if (it != group.end())
 		{
 			BinaryOperFun& fun = it->second;
-			return fun(pLeft, pRight, stack);
+			return fun(pLeft, pRight, result);
 		}
 
 		return false;
@@ -51,7 +51,7 @@ namespace zlscript
 		BinaryOperGroup& group = m_mapBinaryOperGroup[OperType];
 		return &group;
 	}
-	bool CScriptVarOperatorMgr::Operator(BinaryOperGroup* group, const CBaseVar* pLeft, const CBaseVar* pRight, tagScriptVarStack& stack)
+	bool CScriptVarOperatorMgr::Operator(BinaryOperGroup* group, const CBaseVar* pLeft, const CBaseVar* pRight, CBaseVar* result)
 	{
 		if (group == nullptr)
 		{
@@ -76,7 +76,7 @@ namespace zlscript
 		if (it != group->end())
 		{
 			BinaryOperFun& fun = it->second;
-			return fun(pLeft, pRight, stack);
+			return fun(pLeft, pRight, result);
 		}
 		return false;
 	}
@@ -86,7 +86,7 @@ namespace zlscript
 
 		group[type] = pFun;
 	}
-	bool CScriptVarOperatorMgr::Operator(int OperType, const CBaseVar* pVar, tagScriptVarStack& stack)
+	bool CScriptVarOperatorMgr::Operator(int OperType, const CBaseVar* pVar, CBaseVar* result)
 	{
 		if (pVar == nullptr)
 		{
@@ -97,7 +97,7 @@ namespace zlscript
 		if (it != group.end())
 		{
 			UnaryOperFun& fun = it->second;
-			return fun(pVar, stack);
+			return fun(pVar, result);
 		}
 		return false;
 	}
@@ -111,7 +111,7 @@ namespace zlscript
 
 		return nullptr;
 	}
-	bool CScriptVarOperatorMgr::Operator(UnaryOperGroup* group, const CBaseVar* pVar, tagScriptVarStack& stack)
+	bool CScriptVarOperatorMgr::Operator(UnaryOperGroup* group, const CBaseVar* pVar, CBaseVar* result)
 	{
 		if (group == nullptr || pVar == nullptr)
 		{
@@ -121,7 +121,7 @@ namespace zlscript
 		if (it != group->end())
 		{
 			UnaryOperFun& fun = it->second;
-			return fun(pVar, stack);
+			return fun(pVar, result);
 		}
 		return false;
 	}
