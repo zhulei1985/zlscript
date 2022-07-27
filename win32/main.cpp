@@ -209,7 +209,7 @@ int main()
 			int j = 1;
 			while (j <= 1000)
 			{
-				//oper(&var1, &var2, stack);
+				oper(&var1, &var2, result);
 				//m_Lock.lock();
 				//CIntVar* result = (CIntVar*)CScriptVarTypeMgr::GetInstance()->GetVar(CScriptClassInfo<CIntVar>::GetInstance().nClassType);
 				//CScriptVarTypeMgr::GetInstance()->ReleaseVar(result);

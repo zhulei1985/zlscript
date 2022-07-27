@@ -67,6 +67,7 @@ namespace zlscript
 		m_id = s_nIDSum++;
 
 		SetEnd(false);
+		m_mapVarCache.resize(3);
 	}
 	CScriptRunState::~CScriptRunState()
 	{
@@ -76,7 +77,7 @@ namespace zlscript
 
 		for (auto it = m_mapVarCache.begin(); it != m_mapVarCache.end(); it++)
 		{
-			tagScriptVarStack& stack = it->second;
+			tagScriptVarStack& stack = *it;// ->second;
 			STACK_CLEAR(stack);
 		}
 	}
@@ -516,10 +517,11 @@ namespace zlscript
 
 	CBaseVar* CScriptRunState::NewVar(int type)
 	{
-		auto it = m_mapVarCache.find(type);
-		if (it != m_mapVarCache.end())
+		//auto it = m_mapVarCache.find(type);
+		//if (it != m_mapVarCache.end())
+		if (type >=0 && type < m_mapVarCache.size())
 		{
-			tagScriptVarStack& stack = it->second;
+			tagScriptVarStack& stack = m_mapVarCache[type];// it->second;
 			CBaseVar* pResult = nullptr;
 			STACK_POP(stack, pResult);
 			if (pResult)

@@ -146,8 +146,8 @@ namespace zlscript
 		void ReleaseVar(CBaseVar* pVar);
 	protected:
 		//变量缓存
-		typedef std::vector<CBaseVar*> VecVars;
-		std::unordered_map<int, tagScriptVarStack> m_mapVarCache;
+		std::vector<tagScriptVarStack> m_mapVarCache;
+		//std::unordered_map<int, tagScriptVarStack> m_mapVarCache;
 	};
 
 	//template<class T>
