@@ -958,7 +958,6 @@ namespace zlscript
 	}
 	bool CMinusICode::MakeExeCode(CExeCodeData& vOut)
 	{
-		
 		if (pRightOperand->MakeExeCode(vOut) == false)
 		{
 			return false;
@@ -973,6 +972,7 @@ namespace zlscript
 		if (pRightOperand->GetResultVarType() == -1)
 		{
 			CUnaryOperGroupExeCode* pCode = CExeCodeMgr::GetInstance()->New<CUnaryOperGroupExeCode>(m_unBeginSoureIndex);
+			pCode->registerIndex = this->registerIndex;
 			if (pRightOperand->GetType() == E_I_CODE_LOADVAR)
 			{
 				CLoadVarICode* pLoadCode = (CLoadVarICode*)pRightOperand;
@@ -1015,50 +1015,6 @@ namespace zlscript
 		}
 		return true;
 	}
-	//int CMinusICode::Run(CScriptExecBlock* pBlock)
-	//{
-	//	int& state = pBlock->GetRunState(m_nRunStateIndex);
-	//	if (state == 0)
-	//	{
-	//		if (pRightOperand)
-	//		{
-	//			int result = pRightOperand->Run(pBlock);
-	//			if (result != CScriptExecBlock::ERESULT_CONTINUE)
-	//			{
-	//				return result;
-	//			}
-	//		}
-	//		state++;
-	//	}
-	//	CBaseVar* pVar = nullptr;
-	//	STACK_POP(pBlock->registerStack, pVar);
-	//	if (pVar == nullptr)
-	//	{
-	//		//TODO 报错
-	//		return CScriptExecBlock::ERESULT_ERROR;
-	//	}
-	//	if (pVar->GetType() == CScriptClassInfo<CIntVar>::GetInstance().nClassType)
-	//	{
-	//		CIntVar* pIntVar = (CIntVar*)pVar;
-	//		pIntVar->Set(-pIntVar->ToInt());
-	//	}
-	//	else if (pVar->GetType() == CScriptClassInfo<CFloatVar>::GetInstance().nClassType)
-	//	{
-	//		CFloatVar* pFLoatVar = (CFloatVar*)pVar;
-	//		pFLoatVar->Set(-pFLoatVar->ToFloat());
-	//	}
-	//	else
-	//	{
-	//		//TODO 报错
-	//		STACK_PUSH_MOVE(pBlock->registerStack, pVar);
-	//		return CScriptExecBlock::ERESULT_ERROR;
-	//	}
-
-	//	STACK_PUSH_MOVE(pBlock->registerStack, pVar);
-	//	state = 0;
-	//	pBlock->RevertRunState(m_nRunStateIndex);
-	//	return CScriptExecBlock::ERESULT_CONTINUE;
-	//}
 
 	void COperatorICode::AddICode(int nType, CBaseICode* pCode)
 	{
@@ -1137,20 +1093,22 @@ namespace zlscript
 	}
 	bool COperatorICode::MakeExeCode(CExeCodeData& vOut)
 	{
-
+		//pLeftOperand->registerIndex = R_A;
 		if (pLeftOperand->MakeExeCode(vOut) == false)
 		{
 			return false;
 		}
+		//pRightOperand->registerIndex = R_B;
 		if (pRightOperand->MakeExeCode(vOut) == false)
 		{
 			return false;
 		}
+		CBaseExeCode *pExeCode = nullptr;
 		nResultVarType = pLeftOperand->GetResultVarType();
 		if (pLeftOperand->GetResultVarType() == -1 || pRightOperand->GetResultVarType() == -1)
 		{
 			CBinaryOperGroupExeCode* pCode = CExeCodeMgr::GetInstance()->New<CBinaryOperGroupExeCode>(m_unBeginSoureIndex);
-
+			pCode->registerIndex = this->registerIndex;
 			nResultVarType = pLeftOperand->GetResultVarType();
 			if (pLeftOperand->GetType() == E_I_CODE_LOADVAR)
 			{
@@ -1160,6 +1118,10 @@ namespace zlscript
 			}
 			else
 			{
+				//if (pLeftOperand->registerIndex < R_SIZE)
+				//{
+
+				//}
 				pCode->leftParam.nType = E_VAR_SCOPE_REGISTER_STACK;
 			}
 
@@ -1176,13 +1138,12 @@ namespace zlscript
 
 			pCode->operGroup = pOperGroup;
 
-			vOut.AddCode(pCode);
-			return true;
+			pExeCode = pCode;
 		}
 		else
 		{
 			CBinaryOperExeCode* pCode = CExeCodeMgr::GetInstance()->New<CBinaryOperExeCode>(m_unBeginSoureIndex);
-
+			pCode->registerIndex = this->registerIndex;
 			nResultVarType = pLeftOperand->GetResultVarType();
 			if (pLeftOperand->GetType() == E_I_CODE_LOADVAR)
 			{
@@ -1225,9 +1186,13 @@ namespace zlscript
 			{
 				return false;
 			}
-			vOut.AddCode(pCode);
-			return true;
+			pExeCode = pCode;
 		}
+		if (pExeCode == nullptr)
+		{
+			return false;
+		}
+		vOut.AddCode(pExeCode);
 		return true;
 	}
 
@@ -1858,10 +1823,12 @@ namespace zlscript
 	{
 		if (m_pRoot)
 		{
+			m_pRoot->registerIndex = this->registerIndex;
 			return m_pRoot->MakeExeCode(vOut);
 		}
 		else if (pOperandCode)
 		{
+			pOperandCode->registerIndex = this->registerIndex;
 			return pOperandCode->MakeExeCode(vOut);
 		}
 		return false;
@@ -2066,6 +2033,7 @@ namespace zlscript
 		CJumpFalseExeCode* pIfCode = CExeCodeMgr::GetInstance()->New<CJumpFalseExeCode>(m_unBeginSoureIndex);
 		if (pCondCode)
 		{
+			pCondCode->registerIndex = R_A;
 			if (pCondCode->MakeExeCode(vOut) == false)
 			{
 				return false;
@@ -2081,7 +2049,8 @@ namespace zlscript
 				}
 				else
 				{
-					pIfCode->condParam.nType = E_VAR_SCOPE_REGISTER_STACK;
+					pIfCode->condParam.nType = E_VAR_SCOPE_REGISTER;
+					pIfCode->condParam.dwPos = R_A;
 				}
 			}
 		}
@@ -2322,6 +2291,7 @@ namespace zlscript
 		}
 		CBaseExeCode* pBegin = vOut.pEndCode;
 		CJumpFalseExeCode* pIfCode = CExeCodeMgr::GetInstance()->New<CJumpFalseExeCode>(m_unBeginSoureIndex);
+		pCondCode->registerIndex = R_A;
 		if (pCondCode->MakeExeCode(vOut) == false)
 		{
 			return false;
@@ -2337,7 +2307,8 @@ namespace zlscript
 			}
 			else
 			{
-				pIfCode->condParam.nType = E_VAR_SCOPE_REGISTER_STACK;
+				pIfCode->condParam.nType = E_VAR_SCOPE_REGISTER;
+				pIfCode->condParam.dwPos = R_A;
 			}
 		}
 

@@ -1,5 +1,6 @@
 
 #include "scriptcommon.h"
+#include "EMicroCodeType.h"
 #include "ScriptExecBlock.h"
 #include "ScriptRunState.h"
 #include "ScriptClassMgr.h"
@@ -9,6 +10,29 @@
 
 namespace zlscript
 {
+#define BLOCK_SCRIPTVAR_RELEASE(pVar) {\
+			if (pVar)\
+			{\
+				pBlock->ReleaseVar((CBaseVar*)pVar); \
+				pVar = nullptr; \
+			}\
+	}\
+
+#define BLOCK_SCRIPTVAR_COPY_VAR(pVar1,pVar2) {\
+		if (pVar2)\
+		{\
+			if (pVar1 && pVar1->GetType() == pVar2->GetType())\
+			{\
+				pVar1->Set(pVar2);\
+			}\
+			else \
+			{\
+				BLOCK_SCRIPTVAR_RELEASE(pVar1);\
+				pVar1 = pBlock->NewVar(pVar2->GetType());\
+				pVar1->Set(pVar2);\
+			}\
+		}\
+	}
 
 	bool CBaseExeCode::MakeParamInfo(CScriptExecBlock* pBlock, CExeParamInfo& info)
 	{
@@ -25,7 +49,7 @@ namespace zlscript
 			const CBaseVar* pGVar = CScriptGlobalVarMgr::GetInstance()->Get(info.dwPos);
 			info.isNeedRelease = true;
 			CBaseVar* pTemp = nullptr;
-			SCRIPTVAR_COPY_VAR(pTemp, pGVar);
+			BLOCK_SCRIPTVAR_COPY_VAR(pTemp, pGVar);
 			info.pVar = pTemp;
 			CScriptGlobalVarMgr::GetInstance()->Revert(info.dwPos);
 		}
@@ -40,6 +64,12 @@ namespace zlscript
 		{
 			info.isNeedRelease = true;
 			STACK_POP(pBlock->registerStack, info.pVar);
+		}
+		break;
+		case E_VAR_SCOPE_REGISTER:
+		{
+			info.isNeedRelease = false;
+			info.pVar = pBlock->fixedRegister[info.dwPos];
 		}
 		break;
 		default:
@@ -62,13 +92,31 @@ namespace zlscript
 		MakeParamInfo(pBlock, param);
 		if (param.pVar)
 		{
-			CBaseVar* result = pBlock->NewVar(param.pVar->GetType());
-			if (oper(param.pVar, result) == false)
+			if (registerIndex < R_SIZE)
 			{
-				Clear(pBlock);
-				return CScriptExecBlock::ERESULT_ERROR;
+				CBaseVar* pVar = pBlock->fixedRegister[registerIndex];
+				if (pVar == nullptr ||
+					pVar->GetType() != param.pVar->GetType())
+				{
+					pBlock->ReleaseVar(pVar);
+					pBlock->fixedRegister[registerIndex] = pBlock->NewVar(param.pVar->GetType());
+				}
+				if (oper(param.pVar, pBlock->fixedRegister[registerIndex]) == false)
+				{
+					Clear(pBlock);
+					return CScriptExecBlock::ERESULT_ERROR;
+				}
 			}
-			STACK_PUSH_MOVE(pBlock->registerStack, result);
+			else
+			{
+				CBaseVar* result = pBlock->NewVar(param.pVar->GetType());
+				if (oper(param.pVar, result) == false)
+				{
+					Clear(pBlock);
+					return CScriptExecBlock::ERESULT_ERROR;
+				}
+				STACK_PUSH_MOVE(pBlock->registerStack, result);
+			}
 		}
 		else
 		{
@@ -84,7 +132,7 @@ namespace zlscript
 	std::string CUnaryOperExeCode::GetCodeString()
 	{
 		char strbuff[128] = { 0 };
-		sprintf(strbuff, "UNARY_OPER\t");
+		sprintf(strbuff, "UNARY_OPER\tregister %d\t", registerIndex);
 		return strbuff;
 	}
 
@@ -98,13 +146,33 @@ namespace zlscript
 		MakeParamInfo(pBlock, param);
 		if (param.pVar)
 		{
-			CBaseVar* result = pBlock->NewVar(param.pVar->GetType());
-			if (CScriptVarOperatorMgr::GetInstance()->Operator(operGroup, param.pVar, result) == false)
+			if (registerIndex < R_SIZE)
 			{
-				Clear(pBlock);
-				return CScriptExecBlock::ERESULT_ERROR;
+				CBaseVar* pVar = pBlock->fixedRegister[registerIndex];
+				if (pVar == nullptr ||
+					pVar->GetType() != param.pVar->GetType())
+				{
+					pBlock->ReleaseVar(pVar);
+					pBlock->fixedRegister[registerIndex] = pBlock->NewVar(param.pVar->GetType());
+				}
+				if (CScriptVarOperatorMgr::GetInstance()->Operator(operGroup, param.pVar, pBlock->fixedRegister[registerIndex]) == false)
+				{
+					Clear(pBlock);
+					return CScriptExecBlock::ERESULT_ERROR;
+				}
 			}
-			STACK_PUSH_MOVE(pBlock->registerStack,result);
+			else
+			{
+				CBaseVar* result = pBlock->NewVar(param.pVar->GetType());
+				if (CScriptVarOperatorMgr::GetInstance()->Operator(operGroup, param.pVar, result) == false)
+				{
+					Clear(pBlock);
+					return CScriptExecBlock::ERESULT_ERROR;
+				}
+
+				STACK_PUSH_MOVE(pBlock->registerStack,result);
+			}
+
 		}
 		else
 		{
@@ -121,7 +189,7 @@ namespace zlscript
 	std::string CUnaryOperGroupExeCode::GetCodeString()
 	{
 		char strbuff[128] = { 0 };
-		sprintf(strbuff, "UNARY_OPER_GROUP\t");
+		sprintf(strbuff, "UNARY_OPER_GROUP\tregister %d\t", registerIndex);
 		return strbuff;
 	}
 
@@ -135,17 +203,36 @@ namespace zlscript
 		MakeParamInfo(pBlock, rightParam);
 		MakeParamInfo(pBlock, leftParam);
 		
-		CBaseVar* result = nullptr;
-		if (leftParam.pVar)
+		if (registerIndex < R_SIZE)
 		{
-			result = pBlock->NewVar(leftParam.pVar->GetType());
+			CBaseVar* pVar = pBlock->fixedRegister[registerIndex];
+			if (pVar == nullptr ||
+				pVar->GetType() != leftParam.pVar->GetType())
+			{
+				pBlock->ReleaseVar(pVar);
+				pBlock->fixedRegister[registerIndex] = pBlock->NewVar(leftParam.pVar->GetType());
+
+			}
+			if (oper(leftParam.pVar, rightParam.pVar, pBlock->fixedRegister[registerIndex]) == false)
+			{
+				Clear(pBlock);
+				return CScriptExecBlock::ERESULT_ERROR;
+			}
 		}
-		if (oper(leftParam.pVar, rightParam.pVar, result) == false)
+		else
 		{
-			Clear(pBlock);
-			return CScriptExecBlock::ERESULT_ERROR;
+			CBaseVar* result = nullptr;
+			if (leftParam.pVar)
+			{
+				result = pBlock->NewVar(leftParam.pVar->GetType());
+			}
+			if (oper(leftParam.pVar, rightParam.pVar, result) == false)
+			{
+				Clear(pBlock);
+				return CScriptExecBlock::ERESULT_ERROR;
+			}
+			STACK_PUSH_MOVE(pBlock->registerStack, result);
 		}
-		STACK_PUSH_MOVE(pBlock->registerStack, result);
 		if (pNextPoint)
 		{
 			*pNextPoint = this->m_pNext;
@@ -158,7 +245,7 @@ namespace zlscript
 	std::string CBinaryOperExeCode::GetCodeString()
 	{
 		char strbuff[128] = { 0 };
-		sprintf(strbuff, "BINARY_OPER\t");
+		sprintf(strbuff, "BINARY_OPER\tregister %d\t", registerIndex);
 		return strbuff;
 	}
 
@@ -173,17 +260,35 @@ namespace zlscript
 	{
 		MakeParamInfo(pBlock, rightParam);
 		MakeParamInfo(pBlock, leftParam);
-		CBaseVar* result = nullptr;
-		if (leftParam.pVar)
+		if (registerIndex < R_SIZE)
 		{
-			result = pBlock->NewVar(leftParam.pVar->GetType());
+			CBaseVar* pVar = pBlock->fixedRegister[registerIndex];
+			if (pVar == nullptr ||
+				pVar->GetType() != leftParam.pVar->GetType())
+			{
+				pBlock->ReleaseVar(pVar);
+				pBlock->fixedRegister[registerIndex] = pBlock->NewVar(leftParam.pVar->GetType());
+			}
+			if (CScriptVarOperatorMgr::GetInstance()->Operator(operGroup,leftParam.pVar, rightParam.pVar, pBlock->fixedRegister[registerIndex]) == false)
+			{
+				Clear(pBlock);
+				return CScriptExecBlock::ERESULT_ERROR;
+			}
 		}
-		if (CScriptVarOperatorMgr::GetInstance()->Operator(operGroup, leftParam.pVar, rightParam.pVar, result) == false)
+		else
 		{
-			Clear(pBlock);
-			return CScriptExecBlock::ERESULT_ERROR;
+			CBaseVar* result = nullptr;
+			if (leftParam.pVar)
+			{
+				result = pBlock->NewVar(leftParam.pVar->GetType());
+			}
+			if (CScriptVarOperatorMgr::GetInstance()->Operator(operGroup, leftParam.pVar, rightParam.pVar, result) == false)
+			{
+				Clear(pBlock);
+				return CScriptExecBlock::ERESULT_ERROR;
+			}
+			STACK_PUSH_MOVE(pBlock->registerStack, result);
 		}
-		STACK_PUSH_MOVE(pBlock->registerStack, result);
 		if (pNextPoint)
 		{
 			*pNextPoint = this->m_pNext;
@@ -195,7 +300,7 @@ namespace zlscript
 	std::string CBinaryOperGroupExeCode::GetCodeString()
 	{
 		char strbuff[128] = { 0 };
-		sprintf(strbuff, "BINARY_OPER_GROUP\t");
+		sprintf(strbuff, "BINARY_OPER_GROUP\t register %d\t",registerIndex);
 		return strbuff;
 	}
 

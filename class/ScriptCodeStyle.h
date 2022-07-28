@@ -45,6 +45,7 @@ namespace zlscript
 		inline bool MakeParamInfo(CScriptExecBlock* pBlock, CExeParamInfo& info);
 		inline void ReleaseParamInfo(CScriptExecBlock* pBlock, CExeParamInfo& info);
 	public:
+		unsigned int registerIndex{ 0xffffffff };
 		CBaseExeCode* m_pNext;
 
 		unsigned int nSoureWordIndex;
@@ -63,6 +64,8 @@ namespace zlscript
 
 		void Clear(CScriptExecBlock* pBlock);
 	public:
+		//unsigned int registerIndex{ 0xffffffff };
+
 		UnaryOperFun oper;
 
 		CExeParamInfo param;
@@ -80,6 +83,7 @@ namespace zlscript
 
 		void Clear(CScriptExecBlock* pBlock);
 	public:
+		//unsigned int registerIndex{0xffffffff};
 		UnaryOperGroup* operGroup;
 
 		CExeParamInfo param;
@@ -98,6 +102,8 @@ namespace zlscript
 
 		void Clear(CScriptExecBlock* pBlock);
 	public:
+
+
 		BinaryOperFun oper;
 
 		CExeParamInfo leftParam;
@@ -117,6 +123,8 @@ namespace zlscript
 
 		void Clear(CScriptExecBlock* pBlock);
 	public:
+		//unsigned int registerIndex{ 0xffffffff };
+
 		BinaryOperGroup* operGroup;
 
 		CExeParamInfo leftParam;

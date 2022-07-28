@@ -52,13 +52,13 @@ namespace zlscript
 		CBaseICode* m_pFather;
 
 	public:
+		unsigned int registerIndex{ 0xffffffff };
+	public:
 		unsigned int m_unBeginSoureIndex;
 
 	public:
 		virtual bool MakeExeCode(CExeCodeData& vOut);
 
-	protected:
-		int m_nRunStateIndex;//运行状态索引
 	public:
 		virtual void SetMaxRunState(int val);
 	};

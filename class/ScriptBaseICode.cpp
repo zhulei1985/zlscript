@@ -10,11 +10,7 @@ namespace zlscript
 	void CBaseICode::SetFather(CBaseICode* pCode)
 	{
 		m_pFather = pCode;
-		if (m_pFather)
-			m_nRunStateIndex = m_pFather->m_nRunStateIndex + 1;
-		else
-			m_nRunStateIndex = 0;
-		SetMaxRunState(m_nRunStateIndex);
+
 	}
 	//CScriptCompiler* CBaseICode::GetCompiler()
 	//{

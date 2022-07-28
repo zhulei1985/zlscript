@@ -103,8 +103,7 @@ namespace zlscript
 	public:
 		CFunICode()
 		{
-			//pBodyCode = nullptr;
-			m_nRunStateIndex = 0;
+
 		}
 		int GetType()
 		{

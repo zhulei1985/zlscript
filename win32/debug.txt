@@ -5,15 +5,15 @@ init
 ********************************
 FibTest
 ********************************
-[0]	BINARY_OPER	
+[0]	BINARY_OPER	register 0	
 [1]	JUMP_FALSE	Index:4
 [2]	RETURN	 
 [3]	JUMP	Index:10
-[4]	BINARY_OPER	
+[4]	BINARY_OPER	register -1	
 [5]	CallScript	FunIndex:1	ParmSize:1
-[6]	BINARY_OPER	
+[6]	BINARY_OPER	register -1	
 [7]	CallScript	FunIndex:1	ParmSize:1
-[8]	BINARY_OPER_GROUP	
+[8]	BINARY_OPER_GROUP	 register -1	
 [9]	RETURN	 
 [10]	SIGN
 ********************************
@@ -23,29 +23,29 @@ CalculationTest
 [1]	VOLUATION	
 [2]	VOLUATION	
 [3]	VOLUATION	
-[4]	BINARY_OPER	
+[4]	BINARY_OPER	register 0	
 [5]	JUMP_FALSE	Index:19
 [6]	VOLUATION	
-[7]	BINARY_OPER	
+[7]	BINARY_OPER	register 0	
 [8]	JUMP_FALSE	Index:15
-[9]	BINARY_OPER	
-[10]	BINARY_OPER	
+[9]	BINARY_OPER	register -1	
+[10]	BINARY_OPER	register -1	
 [11]	VOLUATION	
-[12]	BINARY_OPER	
+[12]	BINARY_OPER	register -1	
 [13]	VOLUATION	
 [14]	JUMP	Index:7
 [15]	SIGN
-[16]	BINARY_OPER	
+[16]	BINARY_OPER	register -1	
 [17]	VOLUATION	
 [18]	JUMP	Index:4
 [19]	SIGN
 [20]	CallBack	FunIndex:6	ParmSize:0
-[21]	BINARY_OPER_GROUP	
+[21]	BINARY_OPER_GROUP	 register -1	
 [22]	VOLUATION	
-[23]	BINARY_OPER	
+[23]	BINARY_OPER	register -1	
 [24]	CallBack	FunIndex:7	ParmSize:1
-[25]	BINARY_OPER	
-[26]	BINARY_OPER	
+[25]	BINARY_OPER	register -1	
+[26]	BINARY_OPER	register -1	
 [27]	CallBack	FunIndex:7	ParmSize:1
 ********************************
 CalculationTest2
@@ -56,29 +56,29 @@ CalculationTest2
 [3]	VOLUATION	
 [4]	VOLUATION	
 [5]	VOLUATION	
-[6]	BINARY_OPER	
+[6]	BINARY_OPER	register 0	
 [7]	JUMP_FALSE	Index:21
 [8]	VOLUATION	
-[9]	BINARY_OPER	
+[9]	BINARY_OPER	register 0	
 [10]	JUMP_FALSE	Index:17
-[11]	BINARY_OPER	
+[11]	BINARY_OPER	register -1	
 [12]	CALL_CLASS_FUN	Type:2	dwPos:1	FunIndex:0	ParmSize:2
 [13]	VOLUATION	
-[14]	BINARY_OPER	
+[14]	BINARY_OPER	register -1	
 [15]	VOLUATION	
 [16]	JUMP	Index:9
 [17]	SIGN
-[18]	BINARY_OPER	
+[18]	BINARY_OPER	register -1	
 [19]	VOLUATION	
 [20]	JUMP	Index:6
 [21]	SIGN
 [22]	CallBack	FunIndex:6	ParmSize:0
-[23]	BINARY_OPER_GROUP	
+[23]	BINARY_OPER_GROUP	 register -1	
 [24]	VOLUATION	
-[25]	BINARY_OPER	
+[25]	BINARY_OPER	register -1	
 [26]	CallBack	FunIndex:7	ParmSize:1
-[27]	BINARY_OPER	
-[28]	BINARY_OPER	
+[27]	BINARY_OPER	register -1	
+[28]	BINARY_OPER	register -1	
 [29]	CallBack	FunIndex:7	ParmSize:1
 ********************************
 CalculationTest3
@@ -87,31 +87,31 @@ CalculationTest3
 [1]	VOLUATION	
 [2]	VOLUATION	
 [3]	SetClassParam	Param:(2,0)	pos:2
-[4]	BINARY_OPER	
+[4]	BINARY_OPER	register 0	
 [5]	JUMP_FALSE	Index:20
 [6]	VOLUATION	
-[7]	BINARY_OPER	
+[7]	BINARY_OPER	register 0	
 [8]	JUMP_FALSE	Index:16
 [9]	GetClassParam	Param:(2,0)	pos:2
-[10]	BINARY_OPER	
-[11]	BINARY_OPER	
+[10]	BINARY_OPER	register -1	
+[11]	BINARY_OPER	register -1	
 [12]	SetClassParam	Param:(2,0)	pos:2
-[13]	BINARY_OPER	
+[13]	BINARY_OPER	register -1	
 [14]	VOLUATION	
 [15]	JUMP	Index:7
 [16]	SIGN
-[17]	BINARY_OPER	
+[17]	BINARY_OPER	register -1	
 [18]	VOLUATION	
 [19]	JUMP	Index:4
 [20]	SIGN
 [21]	CallBack	FunIndex:6	ParmSize:0
-[22]	BINARY_OPER_GROUP	
+[22]	BINARY_OPER_GROUP	 register -1	
 [23]	VOLUATION	
 [24]	GetClassParam	Param:(2,0)	pos:2
-[25]	BINARY_OPER	
+[25]	BINARY_OPER	register -1	
 [26]	CallBack	FunIndex:7	ParmSize:1
-[27]	BINARY_OPER	
-[28]	BINARY_OPER	
+[27]	BINARY_OPER	register -1	
+[28]	BINARY_OPER	register -1	
 [29]	CallBack	FunIndex:7	ParmSize:1
 ********************************
 test1
@@ -122,7 +122,7 @@ test1
 ********************************
 testAdd
 ********************************
-[0]	BINARY_OPER	
+[0]	BINARY_OPER	register -1	
 [1]	RETURN	 
 ********************************
 CalculationTest4
@@ -131,29 +131,29 @@ CalculationTest4
 [1]	VOLUATION	
 [2]	VOLUATION	
 [3]	VOLUATION	
-[4]	BINARY_OPER	
+[4]	BINARY_OPER	register 0	
 [5]	JUMP_FALSE	Index:19
 [6]	VOLUATION	
-[7]	BINARY_OPER	
+[7]	BINARY_OPER	register 0	
 [8]	JUMP_FALSE	Index:15
-[9]	BINARY_OPER	
+[9]	BINARY_OPER	register -1	
 [10]	CallScript	FunIndex:6	ParmSize:2
 [11]	VOLUATION	
-[12]	BINARY_OPER	
+[12]	BINARY_OPER	register -1	
 [13]	VOLUATION	
 [14]	JUMP	Index:7
 [15]	SIGN
-[16]	BINARY_OPER	
+[16]	BINARY_OPER	register -1	
 [17]	VOLUATION	
 [18]	JUMP	Index:4
 [19]	SIGN
 [20]	CallBack	FunIndex:6	ParmSize:0
-[21]	BINARY_OPER_GROUP	
+[21]	BINARY_OPER_GROUP	 register -1	
 [22]	VOLUATION	
-[23]	BINARY_OPER	
+[23]	BINARY_OPER	register -1	
 [24]	CallBack	FunIndex:7	ParmSize:1
-[25]	BINARY_OPER	
-[26]	BINARY_OPER	
+[25]	BINARY_OPER	register -1	
+[26]	BINARY_OPER	register -1	
 [27]	CallBack	FunIndex:7	ParmSize:1
 ********************************
 CalculationTest5
@@ -162,20 +162,23 @@ CalculationTest5
 [1]	VOLUATION	
 [2]	VOLUATION	
 [3]	VOLUATION	
-[4]	BINARY_OPER	
-[5]	JUMP_FALSE	Index:9
-[6]	BINARY_OPER	
-[7]	VOLUATION	
-[8]	JUMP	Index:4
-[9]	SIGN
-[10]	CallBack	FunIndex:6	ParmSize:0
-[11]	BINARY_OPER_GROUP	
-[12]	VOLUATION	
-[13]	BINARY_OPER	
-[14]	CallBack	FunIndex:7	ParmSize:1
-[15]	BINARY_OPER	
-[16]	BINARY_OPER	
+[4]	BINARY_OPER	register 0	
+[5]	JUMP_FALSE	Index:12
+[6]	BINARY_OPER	register -1	
+[7]	BINARY_OPER	register -1	
+[8]	VOLUATION	
+[9]	BINARY_OPER	register -1	
+[10]	VOLUATION	
+[11]	JUMP	Index:4
+[12]	SIGN
+[13]	CallBack	FunIndex:6	ParmSize:0
+[14]	BINARY_OPER_GROUP	 register -1	
+[15]	VOLUATION	
+[16]	BINARY_OPER	register -1	
 [17]	CallBack	FunIndex:7	ParmSize:1
+[18]	BINARY_OPER	register -1	
+[19]	BINARY_OPER	register -1	
+[20]	CallBack	FunIndex:7	ParmSize:1
 ********************************
 CalculationTest6
 ********************************
@@ -183,36 +186,36 @@ CalculationTest6
 [1]	VOLUATION	
 [2]	VOLUATION	
 [3]	VOLUATION	
-[4]	BINARY_OPER	
+[4]	BINARY_OPER	register 0	
 [5]	JUMP_FALSE	Index:26
 [6]	VOLUATION	
-[7]	BINARY_OPER	
+[7]	BINARY_OPER	register 0	
 [8]	JUMP_FALSE	Index:22
 [9]	VOLUATION	
-[10]	BINARY_OPER	
+[10]	BINARY_OPER	register 0	
 [11]	JUMP_FALSE	Index:18
-[12]	BINARY_OPER	
-[13]	BINARY_OPER	
+[12]	BINARY_OPER	register -1	
+[13]	BINARY_OPER	register -1	
 [14]	VOLUATION	
-[15]	BINARY_OPER	
+[15]	BINARY_OPER	register -1	
 [16]	VOLUATION	
 [17]	JUMP	Index:10
 [18]	SIGN
-[19]	BINARY_OPER	
+[19]	BINARY_OPER	register -1	
 [20]	VOLUATION	
 [21]	JUMP	Index:7
 [22]	SIGN
-[23]	BINARY_OPER	
+[23]	BINARY_OPER	register -1	
 [24]	VOLUATION	
 [25]	JUMP	Index:4
 [26]	SIGN
 [27]	CallBack	FunIndex:6	ParmSize:0
-[28]	BINARY_OPER_GROUP	
+[28]	BINARY_OPER_GROUP	 register -1	
 [29]	VOLUATION	
-[30]	BINARY_OPER	
+[30]	BINARY_OPER	register -1	
 [31]	CallBack	FunIndex:7	ParmSize:1
-[32]	BINARY_OPER	
-[33]	BINARY_OPER	
+[32]	BINARY_OPER	register -1	
+[33]	BINARY_OPER	register -1	
 [34]	CallBack	FunIndex:7	ParmSize:1
 ********************************
 testClass
@@ -229,7 +232,7 @@ testClass
 ********************************
 main2
 ********************************
-[0]	CallScript	FunIndex:7	ParmSize:0
+[0]	CallScript	FunIndex:8	ParmSize:0
 [1]	RETURN	 
 ********************************
 main
@@ -242,12 +245,12 @@ main
 [5]	CallScript	FunIndex:1	ParmSize:1
 [6]	VOLUATION	
 [7]	CallBack	FunIndex:6	ParmSize:0
-[8]	BINARY_OPER_GROUP	
+[8]	BINARY_OPER_GROUP	 register -1	
 [9]	VOLUATION	
-[10]	BINARY_OPER	
+[10]	BINARY_OPER	register -1	
 [11]	CallBack	FunIndex:7	ParmSize:1
-[12]	BINARY_OPER	
-[13]	BINARY_OPER	
+[12]	BINARY_OPER	register -1	
+[13]	BINARY_OPER	register -1	
 [14]	CallBack	FunIndex:7	ParmSize:1
 [15]	NEW_CLASS	ResultRegister:0	ClassIndex:3
 [16]	VOLUATION	

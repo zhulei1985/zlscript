@@ -120,7 +120,7 @@ void CalculationTest5()
 	int i = 1;
 	while (i <= 1000000)
 	{
-		//sum = sum + i * 2;
+		sum = sum + i * 2;
 		i = i + 1;
 	}
 
@@ -170,7 +170,7 @@ void main2()
 
 	//CalculationTest2();
 
-	CalculationTest4();
+	CalculationTest5();
 
 	return;
 }

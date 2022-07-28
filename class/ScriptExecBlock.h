@@ -55,7 +55,7 @@ namespace zlscript
 		tagScriptVarStack loaclVarStack;
 	public:
 		tagScriptVarStack registerStack;//寄存器堆栈
-		//std::vector<CBaseVar*> fixedRegister;//固定寄存器
+		std::vector<CBaseVar*> fixedRegister;//固定寄存器
 		const unsigned int nRegNumOneType{3};//每种变量在寄存器里的数量
 	public:
 		CScriptRunState* m_pMaster;
@@ -71,10 +71,7 @@ namespace zlscript
 
 		CBaseVar* NewVar(int type);
 		void ReleaseVar(CBaseVar* pVar);
-	//protected:
-	//	//变量缓存
-	//	typedef std::vector<CBaseVar*> VecVars;
-	//	std::unordered_map<int, tagScriptVarStack> m_mapVarCache;
+
 	public:
 		enum ERESULT_TYPE
 		{

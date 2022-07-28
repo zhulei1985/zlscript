@@ -24,6 +24,7 @@ namespace zlscript
 
 		initLocalVar();
 		//initFixedRegister();
+		fixedRegister.resize(R_SIZE);
 		if (m_pCodeData)
 		{
 			m_pCurExeCode = m_pCodeData->pBeginCode;
@@ -41,10 +42,10 @@ namespace zlscript
 		loaclVarStack.nIndex = 0;
 		loaclVarStack.nSize = 0;
 
-		//for (unsigned int i = 0; i < fixedRegister.size(); i++)
-		//{
-		//	CScriptVarTypeMgr::GetInstance()->ReleaseVar(fixedRegister[i]);
-		//}
+		for (unsigned int i = 0; i < fixedRegister.size(); i++)
+		{
+			ReleaseVar(fixedRegister[i]);
+		}
 		//fixedRegister.clear();
 		
 		//for (auto it = m_mapVarCache.begin(); it != m_mapVarCache.end(); it++)
@@ -232,7 +233,7 @@ namespace zlscript
 			//	fputs(str.c_str(), fp);
 			//	fputc('\n', fp);
 			//}
-			//printf("run %s\n", m_pCurExeCode->GetCodeString().c_str());
+			//printf("run [%d]%s\n", m_pCurExeCode->nCodeIndex,m_pCurExeCode->GetCodeString().c_str());
 			nResult = m_pCurExeCode->Run(this, &m_pCurExeCode);
 
 			if (nResult != ERESULT_CONTINUE)
