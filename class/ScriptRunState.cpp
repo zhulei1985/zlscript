@@ -7,6 +7,7 @@
 #include "ScriptExeCodeData.h"
 #include "ScriptVarAssignmentMgr.h"
 #include "ScriptCodeLoader.h"
+#include "EMicroCodeType.h"
 #include <chrono>
 
 namespace zlscript
@@ -358,7 +359,7 @@ namespace zlscript
 		}
 		return nReturn;
 	}
-	int CScriptRunState::CallFun_Script(CScriptVirtualMachine* pMachine, int FunIndex, std::vector<const CBaseVar*>& vParams)
+	int CScriptRunState::CallFun_Script(CScriptVirtualMachine* pMachine, int FunIndex, std::vector<const CBaseVar*>& vParams, unsigned int registerIndex)
 	{
 		int nReturn = ECALLBACK_FINISH;
 		{
@@ -370,6 +371,7 @@ namespace zlscript
 
 				if (pBlock)
 				{
+					pBlock->returnRegisterIndex = registerIndex;
 					//提取参数
 
 					for (unsigned int i = 0; i < vParams.size() && i < pCodeData->nFunParamNums; i++)
@@ -468,7 +470,15 @@ namespace zlscript
 						{
 							CBaseVar* pTemp = nullptr;
 							STACK_POP(pBlock->registerStack, pTemp);
-							STACK_PUSH_MOVE(pCurBlock->registerStack, pTemp)
+							if (pBlock->returnRegisterIndex < R_SIZE)
+							{
+								ReleaseVar(pCurBlock->fixedRegister[pBlock->returnRegisterIndex]);
+								pCurBlock->fixedRegister[pBlock->returnRegisterIndex] = pTemp;
+							}
+							else
+							{
+								STACK_PUSH_MOVE(pCurBlock->registerStack, pTemp);
+							}
 						}
 					}
 					SAFE_DELETE(pBlock);

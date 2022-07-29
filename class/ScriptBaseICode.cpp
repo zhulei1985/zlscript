@@ -70,11 +70,4 @@ namespace zlscript
 		return true;
 	}
 
-	void CBaseICode::SetMaxRunState(int val)
-	{
-		if (m_pFather)
-		{
-			m_pFather->SetMaxRunState(val);
-		}
-	}
 }

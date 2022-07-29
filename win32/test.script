@@ -177,8 +177,9 @@ void main2()
 void main()
 {
 	print("begin");
-	testClass();
+
 	int nVal = 0;
+	testClass();
 	int t1 = GetMsTime();
 	//nVal = FibTest(40);
 	nVal = FibTest(20);

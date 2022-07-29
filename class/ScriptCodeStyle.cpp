@@ -132,7 +132,7 @@ namespace zlscript
 	std::string CUnaryOperExeCode::GetCodeString()
 	{
 		char strbuff[128] = { 0 };
-		sprintf(strbuff, "UNARY_OPER\tregister %d\t", registerIndex);
+		sprintf(strbuff, "UNARY_OPER\tregister %d\tparam(%d,%d)", registerIndex, param.nType, param.dwPos);
 		return strbuff;
 	}
 
@@ -189,7 +189,7 @@ namespace zlscript
 	std::string CUnaryOperGroupExeCode::GetCodeString()
 	{
 		char strbuff[128] = { 0 };
-		sprintf(strbuff, "UNARY_OPER_GROUP\tregister %d\t", registerIndex);
+		sprintf(strbuff, "UNARY_OPER_GROUP\tregister %d\tparam(%d,%d)", registerIndex, param.nType, param.dwPos);
 		return strbuff;
 	}
 
@@ -245,7 +245,8 @@ namespace zlscript
 	std::string CBinaryOperExeCode::GetCodeString()
 	{
 		char strbuff[128] = { 0 };
-		sprintf(strbuff, "BINARY_OPER\tregister %d\t", registerIndex);
+		sprintf(strbuff, "BINARY_OPER\t register %d\tleftParam(%d,%d)\trightParam(%d,%d)\t",
+			registerIndex, leftParam.nType, leftParam.dwPos, rightParam.nType, rightParam.dwPos);
 		return strbuff;
 	}
 
@@ -300,7 +301,8 @@ namespace zlscript
 	std::string CBinaryOperGroupExeCode::GetCodeString()
 	{
 		char strbuff[128] = { 0 };
-		sprintf(strbuff, "BINARY_OPER_GROUP\t register %d\t",registerIndex);
+		sprintf(strbuff, "BINARY_OPER_GROUP\t register %d\tleftParam(%d,%d)\trightParam(%d,%d)\t",
+			registerIndex, leftParam.nType, leftParam.dwPos, rightParam.nType, rightParam.dwPos);
 		return strbuff;
 	}
 
@@ -332,7 +334,7 @@ namespace zlscript
 	std::string CVoluationExeCode::GetCodeString()
 	{
 		char strbuff[128] = { 0 };
-		sprintf(strbuff, "VOLUATION\t");
+		sprintf(strbuff, "VOLUATION tregister %d\tparam(%d,%d)",registerIndex, param.nType, param.dwPos);
 		return strbuff;
 	}
 
@@ -360,9 +362,18 @@ namespace zlscript
 				CBaseVar* pAttrVar = pAttribute->ToScriptVal();
 				if (pAttrVar)
 				{
-					CBaseVar* pResult = pBlock->NewVar(pAttrVar->GetType());
-					pResult->Set(pAttrVar);
-					STACK_PUSH_MOVE(pBlock->registerStack, pResult);
+					if (registerIndex < R_SIZE)
+					{
+						//CBaseVar* pResult = pBlock->fixedRegister[registerIndex];
+						BLOCK_SCRIPTVAR_COPY_VAR(pBlock->fixedRegister[registerIndex], pAttrVar);
+					}
+					else
+					{
+						CBaseVar* pResult = pBlock->NewVar(pAttrVar->GetType());
+						pResult->Set(pAttrVar);
+						STACK_PUSH_MOVE(pBlock->registerStack, pResult);
+					}
+
 				}
 			}
 			else
@@ -383,7 +394,7 @@ namespace zlscript
 	std::string CGetClassParamExeCode::GetCodeString()
 	{
 		char strbuff[128] = { 0 };
-		sprintf(strbuff, "GetClassParam\tParam:(%d,%d)\tpos:%d", (int)param.nType, (int)param.dwPos, (int)dwPos);
+		sprintf(strbuff, "GetClassParam\tregister %d\tParam:(%d,%d)\tpos:%d",registerIndex, (int)param.nType, (int)param.dwPos, (int)dwPos);
 		return strbuff;
 	}
 	int CSetClassParamExeCode::Run(CScriptExecBlock* pBlock, CBaseExeCode** pNextPoint)
@@ -425,7 +436,7 @@ namespace zlscript
 	std::string CSetClassParamExeCode::GetCodeString()
 	{
 		char strbuff[128] = { 0 };
-		sprintf(strbuff, "SetClassParam\tParam:(%d,%d)\tpos:%d", (int)param.nType, (int)param.dwPos, (int)dwPos);
+		sprintf(strbuff, "SetClassParam\tregister\tParam:(%d,%d)\tpos:%d", registerIndex,(int)param.nType, (int)param.dwPos, (int)dwPos);
 		return strbuff;
 	}
 	void CSetClassParamExeCode::Clear(CScriptExecBlock* pBlock)
@@ -469,9 +480,16 @@ namespace zlscript
 			case ECALLBACK_FINISH:
 				if (pCallState->GetResult())
 				{
-					CBaseVar* pResult = pBlock->NewVar(pCallState->GetResult()->GetType());
-					pResult->Set(pCallState->GetResult());
-					STACK_PUSH_MOVE(pBlock->registerStack, pResult);
+					if (registerIndex < R_SIZE)
+					{
+						BLOCK_SCRIPTVAR_COPY_VAR(pBlock->fixedRegister[registerIndex], pCallState->GetResult());
+					}
+					else
+					{
+						CBaseVar* pResult = pBlock->NewVar(pCallState->GetResult()->GetType());
+						pResult->Set(pCallState->GetResult());
+						STACK_PUSH_MOVE(pBlock->registerStack, pResult);
+					}
 				}
 				break;
 			}
@@ -490,7 +508,7 @@ namespace zlscript
 	std::string CCallBackExeCode::GetCodeString()
 	{
 		char strbuff[128] = { 0 };
-		sprintf(strbuff, "CallBack\tFunIndex:%d\tParmSize:%d", (int)unFunIndex, (int)params.size());
+		sprintf(strbuff, "CallBack\tregister %d\tFunIndex:%d\tParmSize:%d", registerIndex,(int)unFunIndex, (int)params.size());
 		return strbuff;
 	}
 	void CCallBackExeCode::Clear(CScriptExecBlock* pBlock)
@@ -517,7 +535,7 @@ namespace zlscript
 			paramsCache[i] = params[i].pVar;
 		}
 		//运行回调函数
-		switch (pBlock->m_pMaster->CallFun_Script(pBlock->m_pMaster->m_pMachine, unFunIndex, paramsCache))
+		switch (pBlock->m_pMaster->CallFun_Script(pBlock->m_pMaster->m_pMachine, unFunIndex, paramsCache, registerIndex))
 		{
 		case ECALLBACK_ERROR:
 			nResult = CScriptExecBlock::ERESULT_ERROR;
@@ -540,7 +558,7 @@ namespace zlscript
 	std::string CCallScriptExeCode::GetCodeString()
 	{
 		char strbuff[128] = { 0 };
-		sprintf(strbuff, "CallScript\tFunIndex:%d\tParmSize:%d", (int)unFunIndex, (int)params.size());
+		sprintf(strbuff, "CallScript\tregister %d\tFunIndex:%d\tParmSize:%d",registerIndex, (int)unFunIndex, (int)params.size());
 		return strbuff;
 	}
 	void CCallScriptExeCode::Clear(CScriptExecBlock* pBlock)
@@ -630,7 +648,7 @@ namespace zlscript
 	std::string CJumpTrueExeCode::GetCodeString()
 	{
 		char strbuff[128] = { 0 };
-		sprintf(strbuff, "JUMP_TRUE\tIndex:%d", (int)pJumpCode ? pJumpCode->nCodeIndex : 0);
+		sprintf(strbuff, "JUMP_TRUE\tcondParam(%d,%d)\tIndex:%d", condParam.nType, condParam.dwPos,(int)pJumpCode ? pJumpCode->nCodeIndex : 0);
 		return strbuff;
 	}
 	int CJumpFalseExeCode::Run(CScriptExecBlock* pBlock, CBaseExeCode** pNextPoint)
@@ -656,7 +674,7 @@ namespace zlscript
 	std::string CJumpFalseExeCode::GetCodeString()
 	{
 		char strbuff[128] = { 0 };
-		sprintf(strbuff, "JUMP_FALSE\tIndex:%d", (int)pJumpCode ? pJumpCode->nCodeIndex : 0);
+		sprintf(strbuff, "JUMP_FALSE\tcondParam(%d,%d)\tIndex:%d", condParam.nType, condParam.dwPos, (int)pJumpCode ? pJumpCode->nCodeIndex : 0);
 		return strbuff;
 	}
 	int CReturnExeCode::Run(CScriptExecBlock* pBlock, CBaseExeCode** pNextPoint)
@@ -683,7 +701,7 @@ namespace zlscript
 	std::string CReturnExeCode::GetCodeString()
 	{
 		char strbuff[128] = { 0 };
-		sprintf(strbuff, "RETURN\t ");
+		sprintf(strbuff, "RETURN\tparam(%d,%d) ", returnParam.nType, returnParam.dwPos);
 		return strbuff;
 	}
 	int CCallClassFunExeCode::Run(CScriptExecBlock* pBlock, CBaseExeCode** pNextPoint)
@@ -727,9 +745,16 @@ namespace zlscript
 					//执行完将结果放入寄存器
 					if (pCallState->GetResult())
 					{
-						CBaseVar* pResult = pBlock->NewVar(pCallState->GetResult()->GetType());
-						pResult->Set(pCallState->GetResult());
-						STACK_PUSH_MOVE(pBlock->registerStack, pResult);
+						if (registerIndex < R_SIZE)
+						{
+							BLOCK_SCRIPTVAR_COPY_VAR(pBlock->fixedRegister[registerIndex], pCallState->GetResult());
+						}
+						else
+						{
+							CBaseVar* pResult = pBlock->NewVar(pCallState->GetResult()->GetType());
+							pResult->Set(pCallState->GetResult());
+							STACK_PUSH_MOVE(pBlock->registerStack, pResult);
+						}
 					}
 					break;
 				}
@@ -750,7 +775,7 @@ namespace zlscript
 	std::string CCallClassFunExeCode::GetCodeString()
 	{
 		char strbuff[128] = { 0 };
-		sprintf(strbuff, "CALL_CLASS_FUN\tType:%d\tdwPos:%d\tFunIndex:%d\tParmSize:%d", (int)object.nType, (int)object.dwPos, (int)funIndex, (int)params.size());
+		sprintf(strbuff, "CALL_CLASS_FUN\t reigster %d\tType:%d\tdwPos:%d\tFunIndex:%d\tParmSize:%d", registerIndex,(int)object.nType, (int)object.dwPos, (int)funIndex, (int)params.size());
 		return strbuff;
 	}
 	void CCallClassFunExeCode::Clear(CScriptExecBlock* pBlock)
@@ -771,7 +796,14 @@ namespace zlscript
 			if (pVar)
 			{
 				pVar->Set(pNewPoint);
-				STACK_PUSH_MOVE(pBlock->registerStack, pVar);
+				if (registerIndex < R_SIZE)
+				{
+					BLOCK_SCRIPTVAR_COPY_VAR(pBlock->fixedRegister[registerIndex], pVar);
+				}
+				else
+				{
+					STACK_PUSH_MOVE(pBlock->registerStack, pVar);
+				}
 				nResult = CScriptExecBlock::ERESULT_CONTINUE;
 			}
 		}
@@ -784,7 +816,7 @@ namespace zlscript
 	std::string CNewClassExeCode::GetCodeString()
 	{
 		char strbuff[128] = { 0 };
-		sprintf(strbuff, "NEW_CLASS\tResultRegister:%d\tClassIndex:%d", (int)0, (int)dwClassIndex);
+		sprintf(strbuff, "NEW_CLASS\tregister:%d\tClassIndex:%d", (int)registerIndex, (int)dwClassIndex);
 		return strbuff;
 	}
 	//	int CReleaseClassExeCode::Run(CScriptExecBlock* pBlock, CBaseExeCode** pNextPoint)

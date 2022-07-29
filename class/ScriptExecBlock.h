@@ -56,7 +56,7 @@ namespace zlscript
 	public:
 		tagScriptVarStack registerStack;//寄存器堆栈
 		std::vector<CBaseVar*> fixedRegister;//固定寄存器
-		const unsigned int nRegNumOneType{3};//每种变量在寄存器里的数量
+		unsigned int returnRegisterIndex{0xffffffff};
 	public:
 		CScriptRunState* m_pMaster;
 		

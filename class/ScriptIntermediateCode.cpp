@@ -743,6 +743,8 @@ namespace zlscript
 		{
 			return false;
 		}
+
+		pRightOperand->SetRegisterIndex(R_A);
 		if (pRightOperand->MakeExeCode(vOut) == false)
 		{
 			return false;
@@ -757,7 +759,15 @@ namespace zlscript
 		}
 		else
 		{
-			pCode->param.nType = E_VAR_SCOPE_REGISTER_STACK;
+			if (pRightOperand->GetRegisterIndex() < R_SIZE)
+			{
+				pCode->param.nType = E_VAR_SCOPE_REGISTER;
+				pCode->param.dwPos = pRightOperand->GetRegisterIndex();
+			}
+			else
+			{
+				pCode->param.nType = E_VAR_SCOPE_REGISTER_STACK;
+			}
 		}
 		pCode->cType = nSaveType;
 		pCode->dwPos = VarIndex;
@@ -882,6 +892,7 @@ namespace zlscript
 	bool CGetClassParamICode::MakeExeCode(CExeCodeData& vOut)
 	{
 		CGetClassParamExeCode* pGetCode = CExeCodeMgr::GetInstance()->New<CGetClassParamExeCode>(m_unBeginSoureIndex);
+		pGetCode->registerIndex = this->GetRegisterIndex();
 		if (isGlobal)
 			pGetCode->param.nType = E_VAR_SCOPE_GLOBAL;
 		else
@@ -906,6 +917,7 @@ namespace zlscript
 	bool CSetClassParamICode::MakeExeCode(CExeCodeData& vOut)
 	{
 		CSetClassParamExeCode* pSetCode = CExeCodeMgr::GetInstance()->New<CSetClassParamExeCode>(m_unBeginSoureIndex);
+		pRightOperand->SetRegisterIndex(R_A);
 		if (pRightOperand->MakeExeCode(vOut) == false)
 		{
 			return false;
@@ -918,7 +930,15 @@ namespace zlscript
 		}
 		else
 		{
-			pSetCode->valInfo.nType = E_VAR_SCOPE_REGISTER_STACK;
+			if (pRightOperand->GetRegisterIndex() < R_SIZE)
+			{
+				pSetCode->valInfo.nType = E_VAR_SCOPE_REGISTER;
+				pSetCode->valInfo.dwPos = pRightOperand->GetRegisterIndex();
+			}
+			else
+			{
+				pSetCode->valInfo.nType = E_VAR_SCOPE_REGISTER_STACK;
+			}
 		}
 
 		if (isGlobal)
@@ -958,6 +978,7 @@ namespace zlscript
 	}
 	bool CMinusICode::MakeExeCode(CExeCodeData& vOut)
 	{
+		pRightOperand->SetRegisterIndex(R_A);
 		if (pRightOperand->MakeExeCode(vOut) == false)
 		{
 			return false;
@@ -972,7 +993,7 @@ namespace zlscript
 		if (pRightOperand->GetResultVarType() == -1)
 		{
 			CUnaryOperGroupExeCode* pCode = CExeCodeMgr::GetInstance()->New<CUnaryOperGroupExeCode>(m_unBeginSoureIndex);
-			pCode->registerIndex = this->registerIndex;
+			pCode->registerIndex = this->GetRegisterIndex();
 			if (pRightOperand->GetType() == E_I_CODE_LOADVAR)
 			{
 				CLoadVarICode* pLoadCode = (CLoadVarICode*)pRightOperand;
@@ -981,7 +1002,15 @@ namespace zlscript
 			}
 			else
 			{
-				pCode->param.nType = E_VAR_SCOPE_REGISTER_STACK;
+				if (pRightOperand->GetRegisterIndex() < R_SIZE)
+				{
+					pCode->param.nType = E_VAR_SCOPE_REGISTER;
+					pCode->param.dwPos = pRightOperand->GetRegisterIndex();
+				}
+				else
+				{
+					pCode->param.nType = E_VAR_SCOPE_REGISTER_STACK;
+				}
 			}
 
 			pCode->operGroup = group;
@@ -991,6 +1020,7 @@ namespace zlscript
 		else
 		{
 			CUnaryOperExeCode* pCode = CExeCodeMgr::GetInstance()->New<CUnaryOperExeCode>(m_unBeginSoureIndex);
+			pCode->registerIndex = this->GetRegisterIndex();
 			if (pRightOperand->GetType() == E_I_CODE_LOADVAR)
 			{
 				CLoadVarICode* pLoadCode = (CLoadVarICode*)pRightOperand;
@@ -999,7 +1029,15 @@ namespace zlscript
 			}
 			else
 			{
-				pCode->param.nType = E_VAR_SCOPE_REGISTER_STACK;
+				if (pRightOperand->GetRegisterIndex() < R_SIZE)
+				{
+					pCode->param.nType = E_VAR_SCOPE_REGISTER;
+					pCode->param.dwPos = pRightOperand->GetRegisterIndex();
+				}
+				else
+				{
+					pCode->param.nType = E_VAR_SCOPE_REGISTER_STACK;
+				}
 			}
 			auto it = group->find(pRightOperand->GetResultVarType());
 			if (it != group->end())
@@ -1093,12 +1131,17 @@ namespace zlscript
 	}
 	bool COperatorICode::MakeExeCode(CExeCodeData& vOut)
 	{
-		//pLeftOperand->registerIndex = R_A;
+		pLeftOperand->SetRegisterIndex(R_A);
+
+		pRightOperand->SetRegisterIndex(R_B);
+		if (pRightOperand->GetType() != E_I_CODE_LOADVAR)
+		{
+			pLeftOperand->SetRegisterIndex(0xffffffff);
+		}
 		if (pLeftOperand->MakeExeCode(vOut) == false)
 		{
 			return false;
 		}
-		//pRightOperand->registerIndex = R_B;
 		if (pRightOperand->MakeExeCode(vOut) == false)
 		{
 			return false;
@@ -1108,23 +1151,8 @@ namespace zlscript
 		if (pLeftOperand->GetResultVarType() == -1 || pRightOperand->GetResultVarType() == -1)
 		{
 			CBinaryOperGroupExeCode* pCode = CExeCodeMgr::GetInstance()->New<CBinaryOperGroupExeCode>(m_unBeginSoureIndex);
-			pCode->registerIndex = this->registerIndex;
+			pCode->registerIndex = this->GetRegisterIndex();
 			nResultVarType = pLeftOperand->GetResultVarType();
-			if (pLeftOperand->GetType() == E_I_CODE_LOADVAR)
-			{
-				CLoadVarICode* pLoadCode = (CLoadVarICode*)pLeftOperand;
-				pCode->leftParam.nType = pLoadCode->nLoadType;
-				pCode->leftParam.dwPos = pLoadCode->VarIndex;
-			}
-			else
-			{
-				//if (pLeftOperand->registerIndex < R_SIZE)
-				//{
-
-				//}
-				pCode->leftParam.nType = E_VAR_SCOPE_REGISTER_STACK;
-			}
-
 			if (pRightOperand->GetType() == E_I_CODE_LOADVAR)
 			{
 				CLoadVarICode* pLoadCode = (CLoadVarICode*)pRightOperand;
@@ -1133,7 +1161,34 @@ namespace zlscript
 			}
 			else
 			{
-				pCode->rightParam.nType = E_VAR_SCOPE_REGISTER_STACK;
+				if (pRightOperand->GetRegisterIndex() < R_SIZE)
+				{
+					pCode->rightParam.nType = E_VAR_SCOPE_REGISTER;
+					pCode->rightParam.dwPos = pRightOperand->GetRegisterIndex();
+				}
+				else
+				{
+					pCode->rightParam.nType = E_VAR_SCOPE_REGISTER_STACK;
+				}
+			}
+
+			if (pLeftOperand->GetType() == E_I_CODE_LOADVAR)
+			{
+				CLoadVarICode* pLoadCode = (CLoadVarICode*)pLeftOperand;
+				pCode->leftParam.nType = pLoadCode->nLoadType;
+				pCode->leftParam.dwPos = pLoadCode->VarIndex;
+			}
+			else
+			{
+				if (pLeftOperand->GetRegisterIndex() < R_SIZE)
+				{
+					pCode->leftParam.nType = E_VAR_SCOPE_REGISTER;
+					pCode->leftParam.dwPos = pLeftOperand->GetRegisterIndex();
+				}
+				else
+				{
+					pCode->leftParam.nType = E_VAR_SCOPE_REGISTER_STACK;
+				}
 			}
 
 			pCode->operGroup = pOperGroup;
@@ -1143,18 +1198,8 @@ namespace zlscript
 		else
 		{
 			CBinaryOperExeCode* pCode = CExeCodeMgr::GetInstance()->New<CBinaryOperExeCode>(m_unBeginSoureIndex);
-			pCode->registerIndex = this->registerIndex;
+			pCode->registerIndex = this->GetRegisterIndex();
 			nResultVarType = pLeftOperand->GetResultVarType();
-			if (pLeftOperand->GetType() == E_I_CODE_LOADVAR)
-			{
-				CLoadVarICode* pLoadCode = (CLoadVarICode*)pLeftOperand;
-				pCode->leftParam.nType = pLoadCode->nLoadType;
-				pCode->leftParam.dwPos = pLoadCode->VarIndex;
-			}
-			else
-			{
-				pCode->leftParam.nType = E_VAR_SCOPE_REGISTER_STACK;
-			}
 
 			if (pRightOperand->GetType() == E_I_CODE_LOADVAR)
 			{
@@ -1164,7 +1209,35 @@ namespace zlscript
 			}
 			else
 			{
-				pCode->rightParam.nType = E_VAR_SCOPE_REGISTER_STACK;
+				pLeftOperand->SetRegisterIndex(0xffffffff);
+				if (pRightOperand->GetRegisterIndex() < R_SIZE)
+				{
+					pCode->rightParam.nType = E_VAR_SCOPE_REGISTER;
+					pCode->rightParam.dwPos = pRightOperand->GetRegisterIndex();
+				}
+				else
+				{
+					pCode->rightParam.nType = E_VAR_SCOPE_REGISTER_STACK;
+				}
+			}
+
+			if (pLeftOperand->GetType() == E_I_CODE_LOADVAR)
+			{
+				CLoadVarICode* pLoadCode = (CLoadVarICode*)pLeftOperand;
+				pCode->leftParam.nType = pLoadCode->nLoadType;
+				pCode->leftParam.dwPos = pLoadCode->VarIndex;
+			}
+			else
+			{
+				if (pLeftOperand->GetRegisterIndex() < R_SIZE)
+				{
+					pCode->leftParam.nType = E_VAR_SCOPE_REGISTER;
+					pCode->leftParam.dwPos = pLeftOperand->GetRegisterIndex();
+				}
+				else
+				{
+					pCode->leftParam.nType = E_VAR_SCOPE_REGISTER_STACK;
+				}
 			}
 
 			union {
@@ -1292,6 +1365,7 @@ namespace zlscript
 		if (nCallBack >= 0)
 		{
 			CCallBackExeCode* pFunCode = CExeCodeMgr::GetInstance()->New<CCallBackExeCode>(m_unBeginSoureIndex);
+			pFunCode->registerIndex = this->GetRegisterIndex();
 			pFunCode->unFunIndex = nCallBack;
 			pFunCode->params = params;
 			vOut.AddCode(pFunCode);
@@ -1304,6 +1378,7 @@ namespace zlscript
 				return false;
 			}
 			CCallScriptExeCode* pFunCode = CExeCodeMgr::GetInstance()->New<CCallScriptExeCode>(m_unBeginSoureIndex);
+			pFunCode->registerIndex = this->GetRegisterIndex();
 			pFunCode->unFunIndex = nFunIndex;
 			pFunCode->params = params;
 			vOut.AddCode(pFunCode);
@@ -1428,6 +1503,7 @@ namespace zlscript
 	bool CCallClassFunICode::MakeExeCode(CExeCodeData& vOut)
 	{
 		CCallClassFunExeCode* pCallCode = CExeCodeMgr::GetInstance()->New<CCallClassFunExeCode>(m_unBeginSoureIndex);
+		pCallCode->registerIndex = this->GetRegisterIndex();
 		if (isGlobal)
 			pCallCode->object.nType = E_VAR_SCOPE_GLOBAL;
 		else
@@ -1823,12 +1899,12 @@ namespace zlscript
 	{
 		if (m_pRoot)
 		{
-			m_pRoot->registerIndex = this->registerIndex;
+			m_pRoot->SetRegisterIndex(this->GetRegisterIndex());
 			return m_pRoot->MakeExeCode(vOut);
 		}
 		else if (pOperandCode)
 		{
-			pOperandCode->registerIndex = this->registerIndex;
+			pOperandCode->SetRegisterIndex(this->GetRegisterIndex());
 			return pOperandCode->MakeExeCode(vOut);
 		}
 		return false;
@@ -2033,7 +2109,7 @@ namespace zlscript
 		CJumpFalseExeCode* pIfCode = CExeCodeMgr::GetInstance()->New<CJumpFalseExeCode>(m_unBeginSoureIndex);
 		if (pCondCode)
 		{
-			pCondCode->registerIndex = R_A;
+			pCondCode->SetRegisterIndex(R_A);
 			if (pCondCode->MakeExeCode(vOut) == false)
 			{
 				return false;
@@ -2049,8 +2125,15 @@ namespace zlscript
 				}
 				else
 				{
-					pIfCode->condParam.nType = E_VAR_SCOPE_REGISTER;
-					pIfCode->condParam.dwPos = R_A;
+					if (pCondCode->GetRegisterIndex() < R_SIZE)
+					{
+						pIfCode->condParam.nType = E_VAR_SCOPE_REGISTER;
+						pIfCode->condParam.dwPos = pCondCode->GetRegisterIndex();
+					}
+					else
+					{
+						pIfCode->condParam.nType = E_VAR_SCOPE_REGISTER_STACK;
+					}
 				}
 			}
 		}
@@ -2291,7 +2374,7 @@ namespace zlscript
 		}
 		CBaseExeCode* pBegin = vOut.pEndCode;
 		CJumpFalseExeCode* pIfCode = CExeCodeMgr::GetInstance()->New<CJumpFalseExeCode>(m_unBeginSoureIndex);
-		pCondCode->registerIndex = R_A;
+		pCondCode->SetRegisterIndex(R_A);
 		if (pCondCode->MakeExeCode(vOut) == false)
 		{
 			return false;
@@ -2307,8 +2390,15 @@ namespace zlscript
 			}
 			else
 			{
-				pIfCode->condParam.nType = E_VAR_SCOPE_REGISTER;
-				pIfCode->condParam.dwPos = R_A;
+				if (pCondCode->GetRegisterIndex() < R_SIZE)
+				{
+					pIfCode->condParam.nType = E_VAR_SCOPE_REGISTER;
+					pIfCode->condParam.dwPos = pCondCode->GetRegisterIndex();
+				}
+				else
+				{
+					pIfCode->condParam.nType = E_VAR_SCOPE_REGISTER_STACK;
+				}
 			}
 		}
 

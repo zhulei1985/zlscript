@@ -247,7 +247,16 @@ namespace zlscript
 		virtual bool MakeExeCode(CExeCodeData& vOut);
 
 		virtual int GetResultVarType() { return nResultVarType; }
+		virtual unsigned int GetRegisterIndex()
+		{
+			return registerIndex;
+		}
+		virtual void SetRegisterIndex(unsigned int val)
+		{
+			registerIndex = val;
+		}
 	public:
+		unsigned int registerIndex{ 0xffffffff };
 		int nResultVarType{ -1 };
 
 		std::string strClassVarName;//类对象名
@@ -312,7 +321,16 @@ namespace zlscript
 
 		virtual int GetResultVarType() { return nResultVarType; }
 
+		virtual unsigned int GetRegisterIndex()
+		{
+			return registerIndex;
+		}
+		virtual void SetRegisterIndex(unsigned int val)
+		{
+			registerIndex = val;
+		}
 	public:
+		unsigned int registerIndex{ 0xffffffff };
 		int nResultVarType{ -1 };
 		CBaseICode* pRightOperand;//右操作数
 
@@ -350,7 +368,17 @@ namespace zlscript
 		virtual bool MakeExeCode(CExeCodeData& vOut);
 
 		virtual int GetResultVarType() { return nResultVarType; }
+
+		virtual unsigned int GetRegisterIndex()
+		{
+			return registerIndex;
+		}
+		virtual void SetRegisterIndex(unsigned int val)
+		{
+			registerIndex = val;
+		}
 	public:
+		unsigned int registerIndex{ 0xffffffff };
 		int nResultVarType{-1};//结果的数据类型，与左操作符相等
 		std::string strOperator;//操作符
 		int nPriorityLv;//优先级
@@ -404,7 +432,16 @@ namespace zlscript
 		virtual bool Compile(SentenceSourceCode& vIn, CScriptCompiler* pCompiler);
 
 		virtual bool MakeExeCode(CExeCodeData& vOut);
+		virtual unsigned int GetRegisterIndex()
+		{
+			return registerIndex;
+		}
+		virtual void SetRegisterIndex(unsigned int val)
+		{
+			registerIndex = val;
+		}
 	public:
+		unsigned int registerIndex{ 0xffffffff };
 		int nCallBack{ -1 };
 		int nFunIndex{ -1 };
 		std::string strFunName;
@@ -437,7 +474,16 @@ namespace zlscript
 		virtual bool MakeExeCode(CExeCodeData& vOut);
 
 		//int RunClassFun(CScriptExecBlock* pBlock,CScriptPointInterface* pPoint, int funIndex);
+		virtual unsigned int GetRegisterIndex()
+		{
+			return registerIndex;
+		}
+		virtual void SetRegisterIndex(unsigned int val)
+		{
+			registerIndex = val;
+		}
 	public:
+		unsigned int registerIndex{ 0xffffffff };
 		std::string strClassVarName;
 		std::string strFunName;
 		std::vector<CBaseICode*> vParams;//参数
@@ -500,7 +546,16 @@ namespace zlscript
 			E_STATE_OPERAND,
 			E_STATE_SIZE,
 		};
+		virtual unsigned int GetRegisterIndex()
+		{
+			return registerIndex;
+		}
+		virtual void SetRegisterIndex(unsigned int val)
+		{
+			registerIndex = val;
+		}
 	public:
+		unsigned int registerIndex{ 0xffffffff };
 		COperatorICode* m_pRoot;
 
 		CBaseICode* pOperandCode;
