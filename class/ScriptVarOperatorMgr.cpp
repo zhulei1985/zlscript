@@ -2,7 +2,7 @@
 namespace zlscript
 {
 	CScriptVarOperatorMgr CScriptVarOperatorMgr::s_Instance;
-	void CScriptVarOperatorMgr::RegisterFun(int OperType, int type1, int type2, BinaryOperFun pFun)
+	void CScriptVarOperatorMgr::RegisterFun(int OperType, int type1, int type2, int resultType, BinaryOperFun pFun)
 	{
 		BinaryOperGroup &group = m_mapBinaryOperGroup[OperType];
 		union {
@@ -16,7 +16,8 @@ namespace zlscript
 		trans.type1 = type1;
 		trans.type2 = type2;
 
-		group[trans.index] = pFun;
+		group[trans.index].resultVarType = resultType;
+		group[trans.index].fun = pFun;
 	}
 
 	bool CScriptVarOperatorMgr::Operator(int OperType, const CBaseVar* pLeft, const CBaseVar* pRight,  CBaseVar* result)
@@ -40,7 +41,7 @@ namespace zlscript
 		auto it = group.find(trans.index);
 		if (it != group.end())
 		{
-			BinaryOperFun& fun = it->second;
+			BinaryOperFun& fun = it->second.fun;
 			return fun(pLeft, pRight, result);
 		}
 
@@ -75,16 +76,17 @@ namespace zlscript
 		auto it = group->find(trans.index);
 		if (it != group->end())
 		{
-			BinaryOperFun& fun = it->second;
+			BinaryOperFun& fun = it->second.fun;
 			return fun(pLeft, pRight, result);
 		}
 		return false;
 	}
-	void CScriptVarOperatorMgr::RegisterFun(int OperType, int type, UnaryOperFun pFun)
+	void CScriptVarOperatorMgr::RegisterFun(int OperType, int type, int resultType, UnaryOperFun pFun)
 	{
 		UnaryOperGroup& group = m_mapUnaryOperGroup[OperType];
 
-		group[type] = pFun;
+		group[type].resultVarType = resultType;
+		group[type].fun = pFun;
 	}
 	bool CScriptVarOperatorMgr::Operator(int OperType, const CBaseVar* pVar, CBaseVar* result)
 	{
@@ -96,7 +98,7 @@ namespace zlscript
 		auto it = group.find(pVar->GetType());
 		if (it != group.end())
 		{
-			UnaryOperFun& fun = it->second;
+			UnaryOperFun& fun = it->second.fun;
 			return fun(pVar, result);
 		}
 		return false;
@@ -120,7 +122,7 @@ namespace zlscript
 		auto it = group->find(pVar->GetType());
 		if (it != group->end())
 		{
-			UnaryOperFun& fun = it->second;
+			UnaryOperFun& fun = it->second.fun;
 			return fun(pVar, result);
 		}
 		return false;

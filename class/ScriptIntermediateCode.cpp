@@ -1042,7 +1042,8 @@ namespace zlscript
 			auto it = group->find(pRightOperand->GetResultVarType());
 			if (it != group->end())
 			{
-				pCode->oper = it->second;
+				pCode->oper = it->second.fun;
+				pCode->resultVarType = it->second.resultVarType;
 			}
 			else
 			{
@@ -1253,7 +1254,8 @@ namespace zlscript
 			auto it = pOperGroup->find(trans.index);
 			if (it != pOperGroup->end())
 			{
-				pCode->oper = it->second;
+				pCode->oper = it->second.fun;
+				pCode->resultVarType = it->second.resultVarType;
 			}
 			else
 			{

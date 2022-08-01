@@ -92,14 +92,18 @@ namespace zlscript
 		MakeParamInfo(pBlock, param);
 		if (param.pVar)
 		{
+			if (resultVarType == -1)
+			{
+				resultVarType = param.pVar->GetType();
+			}
 			if (registerIndex < R_SIZE)
 			{
 				CBaseVar* pVar = pBlock->fixedRegister[registerIndex];
 				if (pVar == nullptr ||
-					pVar->GetType() != param.pVar->GetType())
+					pVar->GetType() != resultVarType)
 				{
 					pBlock->ReleaseVar(pVar);
-					pBlock->fixedRegister[registerIndex] = pBlock->NewVar(param.pVar->GetType());
+					pBlock->fixedRegister[registerIndex] = pBlock->NewVar(resultVarType);
 				}
 				if (oper(param.pVar, pBlock->fixedRegister[registerIndex]) == false)
 				{
@@ -109,7 +113,7 @@ namespace zlscript
 			}
 			else
 			{
-				CBaseVar* result = pBlock->NewVar(param.pVar->GetType());
+				CBaseVar* result = pBlock->NewVar(resultVarType);
 				if (oper(param.pVar, result) == false)
 				{
 					Clear(pBlock);
@@ -148,14 +152,24 @@ namespace zlscript
 		{
 			if (registerIndex < R_SIZE)
 			{
-				CBaseVar* pVar = pBlock->fixedRegister[registerIndex];
-				if (pVar == nullptr ||
-					pVar->GetType() != param.pVar->GetType())
+				auto it = operGroup->find(param.pVar->GetType());
+				if (it != operGroup->end())
 				{
-					pBlock->ReleaseVar(pVar);
-					pBlock->fixedRegister[registerIndex] = pBlock->NewVar(param.pVar->GetType());
+					UnaryOperFun& fun = it->second.fun;
+					CBaseVar* pVar = pBlock->fixedRegister[registerIndex];
+					if (pVar == nullptr ||
+						pVar->GetType() != it->second.resultVarType)
+					{
+						pBlock->ReleaseVar(pVar);
+						pBlock->fixedRegister[registerIndex] = pBlock->NewVar(it->second.resultVarType);
+					}
+					if (fun(pVar, pBlock->fixedRegister[registerIndex]) == false)
+					{
+						Clear(pBlock);
+						return CScriptExecBlock::ERESULT_ERROR;
+					}
 				}
-				if (CScriptVarOperatorMgr::GetInstance()->Operator(operGroup, param.pVar, pBlock->fixedRegister[registerIndex]) == false)
+				else
 				{
 					Clear(pBlock);
 					return CScriptExecBlock::ERESULT_ERROR;
@@ -163,14 +177,24 @@ namespace zlscript
 			}
 			else
 			{
-				CBaseVar* result = pBlock->NewVar(param.pVar->GetType());
-				if (CScriptVarOperatorMgr::GetInstance()->Operator(operGroup, param.pVar, result) == false)
+				auto it = operGroup->find(param.pVar->GetType());
+				if (it != operGroup->end())
+				{
+					CBaseVar* result = pBlock->NewVar(it->second.resultVarType);
+					UnaryOperFun& fun = it->second.fun;
+					if (fun(param.pVar, result) == false)
+					{
+						Clear(pBlock);
+						return CScriptExecBlock::ERESULT_ERROR;
+					}
+
+					STACK_PUSH_MOVE(pBlock->registerStack,result);
+				}
+				else
 				{
 					Clear(pBlock);
 					return CScriptExecBlock::ERESULT_ERROR;
 				}
-
-				STACK_PUSH_MOVE(pBlock->registerStack,result);
 			}
 
 		}
@@ -203,14 +227,18 @@ namespace zlscript
 		MakeParamInfo(pBlock, rightParam);
 		MakeParamInfo(pBlock, leftParam);
 		
+		if (resultVarType == -1)
+		{
+			resultVarType = leftParam.pVar->GetType();
+		}
 		if (registerIndex < R_SIZE)
 		{
 			CBaseVar* pVar = pBlock->fixedRegister[registerIndex];
 			if (pVar == nullptr ||
-				pVar->GetType() != leftParam.pVar->GetType())
+				pVar->GetType() != resultVarType)
 			{
 				pBlock->ReleaseVar(pVar);
-				pBlock->fixedRegister[registerIndex] = pBlock->NewVar(leftParam.pVar->GetType());
+				pBlock->fixedRegister[registerIndex] = pBlock->NewVar(resultVarType);
 
 			}
 			if (oper(leftParam.pVar, rightParam.pVar, pBlock->fixedRegister[registerIndex]) == false)
@@ -224,7 +252,7 @@ namespace zlscript
 			CBaseVar* result = nullptr;
 			if (leftParam.pVar)
 			{
-				result = pBlock->NewVar(leftParam.pVar->GetType());
+				result = pBlock->NewVar(resultVarType);
 			}
 			if (oper(leftParam.pVar, rightParam.pVar, result) == false)
 			{
@@ -261,34 +289,60 @@ namespace zlscript
 	{
 		MakeParamInfo(pBlock, rightParam);
 		MakeParamInfo(pBlock, leftParam);
-		if (registerIndex < R_SIZE)
+		if (leftParam.pVar == nullptr || rightParam.pVar == nullptr)
 		{
-			CBaseVar* pVar = pBlock->fixedRegister[registerIndex];
-			if (pVar == nullptr ||
-				pVar->GetType() != leftParam.pVar->GetType())
+			Clear(pBlock);
+			return CScriptExecBlock::ERESULT_ERROR;
+		}
+		union {
+			struct
 			{
-				pBlock->ReleaseVar(pVar);
-				pBlock->fixedRegister[registerIndex] = pBlock->NewVar(leftParam.pVar->GetType());
+				int type1;
+				int type2;
+			};
+			__int64 index;
+		} trans;
+		trans.type1 = leftParam.pVar->GetType();
+		trans.type2 = rightParam.pVar->GetType();
+
+		auto it = operGroup->find(trans.index);
+		if (it != operGroup->end())
+		{
+			BinaryOperFun& fun = it->second.fun;
+			if (registerIndex < R_SIZE)
+			{
+				CBaseVar* pVar = pBlock->fixedRegister[registerIndex];
+				if (pVar == nullptr ||
+					pVar->GetType() != it->second.resultVarType)
+				{
+					pBlock->ReleaseVar(pVar);
+					pBlock->fixedRegister[registerIndex] = pBlock->NewVar(it->second.resultVarType);
+				}
+				if (fun(leftParam.pVar, rightParam.pVar, pBlock->fixedRegister[registerIndex]) == false)
+				{
+					Clear(pBlock);
+					return CScriptExecBlock::ERESULT_ERROR;
+				}
 			}
-			if (CScriptVarOperatorMgr::GetInstance()->Operator(operGroup,leftParam.pVar, rightParam.pVar, pBlock->fixedRegister[registerIndex]) == false)
+			else
 			{
-				Clear(pBlock);
-				return CScriptExecBlock::ERESULT_ERROR;
+				CBaseVar* result = nullptr;
+				if (leftParam.pVar)
+				{
+					result = pBlock->NewVar(it->second.resultVarType);
+				}
+				if (fun(leftParam.pVar, rightParam.pVar, result) == false)
+				{
+					Clear(pBlock);
+					return CScriptExecBlock::ERESULT_ERROR;
+				}
+				STACK_PUSH_MOVE(pBlock->registerStack, result);
 			}
 		}
 		else
 		{
-			CBaseVar* result = nullptr;
-			if (leftParam.pVar)
-			{
-				result = pBlock->NewVar(leftParam.pVar->GetType());
-			}
-			if (CScriptVarOperatorMgr::GetInstance()->Operator(operGroup, leftParam.pVar, rightParam.pVar, result) == false)
-			{
-				Clear(pBlock);
-				return CScriptExecBlock::ERESULT_ERROR;
-			}
-			STACK_PUSH_MOVE(pBlock->registerStack, result);
+			Clear(pBlock);
+			return CScriptExecBlock::ERESULT_ERROR;
 		}
 		if (pNextPoint)
 		{

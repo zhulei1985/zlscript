@@ -26,9 +26,19 @@
 namespace zlscript
 {
 	typedef std::function<bool(const CBaseVar*, CBaseVar* result)> UnaryOperFun;
+	struct stUnaryOperFunInfo
+	{
+		UnaryOperFun fun;
+		int resultVarType{ -1 };
+	};
 	typedef std::function<bool(const CBaseVar*, const CBaseVar*, CBaseVar* result)> BinaryOperFun;
-	typedef std::unordered_map<__int64, UnaryOperFun> UnaryOperGroup;
-	typedef std::unordered_map<__int64, BinaryOperFun> BinaryOperGroup;
+	struct stBinaryOperFunInfo
+	{
+		BinaryOperFun fun;
+		int resultVarType{ -1 };
+	};
+	typedef std::unordered_map<__int64, stUnaryOperFunInfo> UnaryOperGroup;
+	typedef std::unordered_map<__int64, stBinaryOperFunInfo> BinaryOperGroup;
 	class CScriptVarOperatorMgr
 	{
 	public:
@@ -40,13 +50,13 @@ namespace zlscript
 		CScriptVarOperatorMgr() {};
 		static CScriptVarOperatorMgr s_Instance;
 	public:
-		void RegisterFun(int OperType, int type1, int type2, BinaryOperFun pFun);
+		void RegisterFun(int OperType, int type1, int type2, int resultType, BinaryOperFun pFun);
 		bool Operator(int OperType, const CBaseVar* pLeft, const CBaseVar* pRight, CBaseVar* result);
 
 		BinaryOperGroup* GetBinaryOperGroup(int OperType);
 		bool Operator(BinaryOperGroup *group, const CBaseVar* pLeft, const CBaseVar* pRight, CBaseVar* result);
 
-		void RegisterFun(int OperType, int type, UnaryOperFun pFun);
+		void RegisterFun(int OperType, int type, int resultType, UnaryOperFun pFun);
 		bool Operator(int OperType, const CBaseVar* pVar, CBaseVar* result);
 
 		UnaryOperGroup* GetUnaryOperGroup(int OperType);

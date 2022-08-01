@@ -194,7 +194,7 @@ int main()
 		auto it = pOperGroup->find(trans.index);
 		if (it != pOperGroup->end())
 		{
-			oper = it->second;
+			oper = it->second.fun;
 		}
 		tagScriptVarStack stack;
 		CIntVar var1,var2;

@@ -65,6 +65,7 @@ namespace zlscript
 		void Clear(CScriptExecBlock* pBlock);
 	public:
 		//unsigned int registerIndex{ 0xffffffff };
+		int resultVarType{ -1 };
 
 		UnaryOperFun oper;
 
@@ -102,7 +103,7 @@ namespace zlscript
 
 		void Clear(CScriptExecBlock* pBlock);
 	public:
-
+		int resultVarType{ -1 };
 
 		BinaryOperFun oper;
 

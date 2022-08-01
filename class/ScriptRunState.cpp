@@ -501,7 +501,7 @@ namespace zlscript
 			}
 			case CScriptExecBlock::ERESULT_NEXTCONTINUE:
 			{
-
+				return ERunTime_Continue;
 			}
 			break;
 			}
