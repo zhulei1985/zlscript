@@ -20,12 +20,12 @@
 #include <unordered_map>
 #include <type_traits>
 #include "ScriptPointInterface.h"
-#include "ScriptSuperPointer.h"
+//#include "ScriptSuperPointer.h"
 #include "ScriptVarInfo.h"
 #include "zAllocator.h"
 namespace zlscript
 {
-	class CScriptBasePointer;
+	//class CScriptBasePointer;
 	class CBaseScriptVarMgr
 	{
 	public:

@@ -3,6 +3,7 @@
 #include "zStringBuffer.h"
 #include "zBinaryBuffer.h"
 #include <zByteArray.h>
+#include <functional>
 //基础变量对象
 namespace zlscript
 {
@@ -23,6 +24,11 @@ namespace zlscript
 		}
 		virtual bool isClassPoint() const
 		{
+			return false;
+		}
+
+		virtual bool AddVar2Bytes(std::vector<char>& vBuff) { return false; }
+		virtual bool DecodeVar4Bytes(std::function<bool(std::vector<char>&, unsigned int)>& fun) {
 			return false;
 		}
 	protected:

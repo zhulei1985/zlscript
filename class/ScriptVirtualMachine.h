@@ -25,7 +25,7 @@
 #include "ScriptStack.h"
 #include "ScriptExecBlock.h"
 #include "ScriptCodeLoader.h"
-#include "ScriptSuperPointer.h"
+//#include "ScriptSuperPointer.h"
 #include "ScriptEventMgr.h"
 #include "ScriptExecFrame.h"
 #include "ScriptRunState.h"

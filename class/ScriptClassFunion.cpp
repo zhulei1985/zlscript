@@ -1,7 +1,7 @@
 ﻿#include "ZLScript.h"
 #include "zByteArray.h"
 #include "ScriptClassFunion.h"
-#include "ScriptSuperPointer.h"
+//#include "ScriptSuperPointer.h"
 #include "EScriptVariableType.h"
 #include "ScriptPointInterface.h"
 namespace zlscript

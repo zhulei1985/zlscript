@@ -29,7 +29,7 @@
 #include "ScriptDebugPrint.h"
 
 #include "zByteArray.h"
-#include "ScriptSuperPointer.h"
+//#include "ScriptSuperPointer.h"
 #include "ScriptIntermediateCode.h"
 
 #include "ScriptCompiler.h"

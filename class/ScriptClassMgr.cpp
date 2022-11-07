@@ -1,6 +1,6 @@
 
 #include "ScriptClassMgr.h"
-#include "ScriptSuperPointer.h"
+//#include "ScriptSuperPointer.h"
 
 namespace zlscript
 {

@@ -43,9 +43,6 @@
     <ClInclude Include="..\class\ScriptStack.h">
       <Filter>code</Filter>
     </ClInclude>
-    <ClInclude Include="..\class\ScriptSuperPointer.h">
-      <Filter>code</Filter>
-    </ClInclude>
     <ClInclude Include="..\class\ScriptVirtualMachine.h">
       <Filter>code</Filter>
     </ClInclude>
@@ -62,9 +59,6 @@
       <Filter>code</Filter>
     </ClInclude>
     <ClInclude Include="..\class\ScriptTriggerMgr.h">
-      <Filter>code</Filter>
-    </ClInclude>
-    <ClInclude Include="..\class\ScriptClassMgr.h">
       <Filter>code</Filter>
     </ClInclude>
     <ClInclude Include="..\class\ScriptPointInterface.h">
@@ -139,6 +133,9 @@
     <ClInclude Include="..\class\zAllocator.h">
       <Filter>code</Filter>
     </ClInclude>
+    <ClInclude Include="..\class\ScriptClassMgr.h">
+      <Filter>code</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\class\ScriptCallBackFunion.cpp">
@@ -159,9 +156,6 @@
     <ClCompile Include="..\class\ScriptStack.cpp">
       <Filter>code</Filter>
     </ClCompile>
-    <ClCompile Include="..\class\ScriptSuperPointer.cpp">
-      <Filter>code</Filter>
-    </ClCompile>
     <ClCompile Include="..\class\ScriptVirtualMachine.cpp">
       <Filter>code</Filter>
     </ClCompile>
@@ -175,9 +169,6 @@
       <Filter>code</Filter>
     </ClCompile>
     <ClCompile Include="..\class\ScriptTriggerMg.cpp">
-      <Filter>code</Filter>
-    </ClCompile>
-    <ClCompile Include="..\class\ScriptClassMgr.cpp">
       <Filter>code</Filter>
     </ClCompile>
     <ClCompile Include="..\class\ScriptPointInterface.cpp">
@@ -238,6 +229,9 @@
       <Filter>code</Filter>
     </ClCompile>
     <ClCompile Include="..\class\ScriptExeCodeData.cpp">
+      <Filter>code</Filter>
+    </ClCompile>
+    <ClCompile Include="..\class\ScriptClassMgr.cpp">
       <Filter>code</Filter>
     </ClCompile>
   </ItemGroup>

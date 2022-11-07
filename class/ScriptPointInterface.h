@@ -187,13 +187,10 @@ namespace zlscript
 		std::map<std::string, CBaseScriptClassAttribute*> m_mapDBAttributes;
 
 		std::unordered_map<unsigned int, CBaseScriptClassAttribute*> m_mapAllAttributes;
-		//std::unordered_map<std::string, unsigned int> m_mapAttributeName2Index;
 
 		std::vector<CBaseScriptClassFun*> m_vecScriptClassFun;
-		//std::unordered_map<std::string, unsigned int> m_mapFun2Index;
 
 		std::mutex m_FunLock;
-		//std::shared_ptr<std::mutex> m_FunLock;
 	public:
 		void GetBaseClassInfo(CBaseScriptClassInfo& info);
 	};

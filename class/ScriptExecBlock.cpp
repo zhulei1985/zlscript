@@ -7,7 +7,7 @@
 #include "EScriptVariableType.h"
 #include "ScriptCallBackFunion.h"
 #include "ScriptExecBlock.h"
-#include "ScriptSuperPointer.h"
+//#include "ScriptSuperPointer.h"
 #include "ScriptClassMgr.h"
 #include "ScriptIntermediateCode.h"
 #include "ScriptCodeStyle.h"

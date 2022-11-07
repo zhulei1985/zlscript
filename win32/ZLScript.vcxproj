@@ -142,9 +142,9 @@
     <ClInclude Include="..\class\ScriptBaseICode.h" />
     <ClInclude Include="..\class\ScriptClassFunion.h" />
     <ClInclude Include="..\class\ScriptClassInfo.h" />
+    <ClInclude Include="..\class\ScriptClassMgr.h" />
     <ClInclude Include="..\class\ScriptCodeStyle.h" />
     <ClInclude Include="..\class\ScriptClassAttributes.h" />
-    <ClInclude Include="..\class\ScriptClassMgr.h" />
     <ClInclude Include="..\class\ScriptCompiler.h" />
     <ClInclude Include="..\class\ScriptCompileInfo.h" />
     <ClInclude Include="..\class\ScriptDebugPrint.h" />
@@ -174,7 +174,6 @@
     <ClInclude Include="..\class\ScriptEventMgr.h" />
     <ClInclude Include="..\class\ScriptExecBlock.h" />
     <ClInclude Include="..\class\ScriptStack.h" />
-    <ClInclude Include="..\class\ScriptSuperPointer.h" />
     <ClInclude Include="..\class\ScriptVirtualMachine.h" />
     <ClInclude Include="..\class\ZLScript.h" />
     <ClInclude Include="..\class\zStringBuffer.h" />
@@ -202,7 +201,6 @@
     <ClCompile Include="..\class\ScriptPointInterface.cpp" />
     <ClCompile Include="..\class\ScriptRunState.cpp" />
     <ClCompile Include="..\class\ScriptStack.cpp" />
-    <ClCompile Include="..\class\ScriptSuperPointer.cpp" />
     <ClCompile Include="..\class\ScriptTriggerMg.cpp" />
     <ClCompile Include="..\class\ScriptVarAssignmentMgr.cpp" />
     <ClCompile Include="..\class\ScriptVarOperatorMgr.cpp" />

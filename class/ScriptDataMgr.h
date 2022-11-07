@@ -23,7 +23,7 @@
 #include <atomic>
 #include <string>
 #include "ScriptStack.h"
-#include "ScriptSuperPointer.h"
+//#include "ScriptSuperPointer.h"
 #include "ScriptClassMgr.h"
 
 namespace zlscript

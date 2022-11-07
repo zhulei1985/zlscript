@@ -1,7 +1,7 @@
 #include "ZLScript.h"
 #include "zByteArray.h"
 #include "ScriptClassAttributes.h"
-#include "ScriptSuperPointer.h"
+//#include "ScriptSuperPointer.h"
 #include "EScriptVariableType.h"
 #include "ScriptPointInterface.h"
 #include "ScriptVarAssignmentMgr.h"
