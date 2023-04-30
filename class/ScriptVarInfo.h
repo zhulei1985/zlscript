@@ -150,7 +150,7 @@ namespace zlscript
 	class CBinaryVar : public CBaseVar
 	{
 	public:
-		CBinaryVar() {}
+		CBinaryVar();
 		~CBinaryVar();
 	public:
 
@@ -165,7 +165,8 @@ namespace zlscript
 
 		virtual bool Set(const CBaseVar* pVar);
 		virtual bool Set(CScriptPointInterface* pVal);
-
+		
+		bool Set(const char* pData, int len);
 	private:
 		void clear();
 		__int64 nBinaryIndex{ 0 };

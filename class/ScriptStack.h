@@ -63,15 +63,43 @@ namespace zlscript
 		stack.nIndex++;\
 	}
 
-//#define STACK_PUSH_VAR(stack,intvar) {\
-//		StackVarInfo var(intvar);\
-//		STACK_PUSH(stack, var);\
-//	}
-//#define STACK_PUSH_INTERFACE(stack,point) {\
-//		StackVarInfo var;\
-//		SCRIPTVAR_SET_INTERFACE_POINT(var,point);\
-//		STACK_PUSH(stack, var);\
-//	}
+#define STACK_PUSH_INT(stack,intvar) {\
+		CIntVar *pVar = (CIntVar*)CScriptVarTypeMgr::GetInstance()->GetVar(CScriptClassInfo<CIntVar>::GetInstance().nClassType);\
+		if (pVar){ \
+			pVar->Set(intvar);\
+			STACK_PUSH_MOVE(stack, pVar);\
+		}\
+	}
+#define STACK_PUSH_FLOAT(stack,floatvar) {\
+		CFloatVar *pVar = (CFloatVar*)CScriptVarTypeMgr::GetInstance()->GetVar(CScriptClassInfo<CFloatVar>::GetInstance().nClassType);\
+		if (pVar){ \
+			pVar->Set(floatvar);\
+			STACK_PUSH_MOVE(stack, pVar);\
+		}\
+	}
+#define STACK_PUSH_STR(stack,strvar) {\
+		CStringVar *pVar = (CStringVar*)CScriptVarTypeMgr::GetInstance()->GetVar(CScriptClassInfo<CStringVar>::GetInstance().nClassType);\
+		if (pVar){ \
+			pVar->Set(strvar);\
+			STACK_PUSH_MOVE(stack, pVar);\
+		}\
+	}
+#define	STACK_PUSH_BYTES(stack, pBuff, len) {\
+		CBinaryVar *pVar = (CBinaryVar*)CScriptVarTypeMgr::GetInstance()->GetVar(CScriptClassInfo<CBinaryVar>::GetInstance().nClassType);\
+		if (pVar){ \
+			pVar->Set(pBuff,len);\
+			STACK_PUSH_MOVE(stack, pVar);\
+		}\
+	}
+
+#define STACK_PUSH_CLASSPOINT(stack,point) {\
+		CPointVar* pVar = (CPointVar*)CScriptVarTypeMgr::GetInstance()->GetVar(point->getClassInfo()->nClassType);\
+		if (pVar){ \
+			pVar->Set(point);\
+			STACK_PUSH_MOVE(stack, pVar);\
+		}\
+	}
+
 #define STACK_PUSH_FRONT(stack,var) {\
 		STACK_CHECK_SIZE(stack)\
 		memcpy(&stack.m_vData[1],&stack.m_vData[0],sizeof(CBaseVar*)*(stack.nIndex));\

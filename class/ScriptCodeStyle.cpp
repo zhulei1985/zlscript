@@ -853,6 +853,7 @@ namespace zlscript
 				if (registerIndex < R_SIZE)
 				{
 					BLOCK_SCRIPTVAR_COPY_VAR(pBlock->fixedRegister[registerIndex], pVar);
+					CScriptVarTypeMgr::GetInstance()->ReleaseVar(pVar);
 				}
 				else
 				{

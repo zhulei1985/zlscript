@@ -260,6 +260,10 @@ namespace zlscript
 
 
 	zlscript::CBinaryPool CBinaryVar::s_binPool;
+	CBinaryVar::CBinaryVar()
+	{
+		m_nType = CScriptClassInfo<CBinaryVar>::GetInstance().nClassType;
+	}
 	CBinaryVar::~CBinaryVar()
 	{
 		clear();
@@ -295,6 +299,17 @@ namespace zlscript
 	bool CBinaryVar::Set(CScriptPointInterface* pVal)
 	{
 		return false;
+	}
+
+	bool CBinaryVar::Set(const char* pData, int len)
+	{
+		if (pData == nullptr)
+		{
+			return false;
+		}
+		clear();
+		nBinaryIndex = s_binPool.NewBinary(pData, len);
+		return true;
 	}
 
 	void CBinaryVar::clear()
